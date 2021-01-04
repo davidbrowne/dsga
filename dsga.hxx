@@ -2091,7 +2091,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
@@ -2099,7 +2099,7 @@ namespace dsga
 	constexpr auto &operator +=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2138,7 +2138,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
@@ -2146,7 +2146,7 @@ namespace dsga
 	constexpr auto &operator -=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2185,7 +2185,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
@@ -2193,7 +2193,7 @@ namespace dsga
 	constexpr auto &operator *=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2232,7 +2232,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
@@ -2240,7 +2240,7 @@ namespace dsga
 	constexpr auto &operator /=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2279,7 +2279,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
@@ -2287,7 +2287,7 @@ namespace dsga
 	constexpr auto &operator %=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2336,7 +2336,7 @@ namespace dsga
 								 const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
@@ -2344,7 +2344,7 @@ namespace dsga
 	constexpr auto &operator <<=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2383,7 +2383,7 @@ namespace dsga
 								 const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
@@ -2391,7 +2391,7 @@ namespace dsga
 	constexpr auto &operator >>=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2430,7 +2430,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
@@ -2438,7 +2438,7 @@ namespace dsga
 	constexpr auto &operator &=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2477,7 +2477,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
@@ -2485,7 +2485,7 @@ namespace dsga
 	constexpr auto &operator |=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2524,7 +2524,7 @@ namespace dsga
 								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
@@ -2532,7 +2532,7 @@ namespace dsga
 	constexpr auto &operator ^=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
-		return lhs;
+		return lhs.as_derived();
 	}
 
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
@@ -2590,20 +2590,12 @@ namespace dsga
 	// unary operators ++
 
 	// pre-increment
-	template <dimensional_scalar ScalarType, std::size_t Count>
-	requires is_non_bool_arithmetic<ScalarType>
-	constexpr basic_vector<ScalarType, Count> &operator ++(basic_vector<ScalarType, Count> &arg) noexcept
+	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
+	requires Writable && is_non_bool_arithmetic<ScalarType>
+	constexpr auto &operator ++(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
 	{
 		arg += ScalarType(1);
-		return arg;
-	}
-
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-	requires lvalue_swizzle_indexes<Size, IndexCount, Indexes...> && is_non_bool_arithmetic<ScalarType>
-	constexpr indexed_vector<ScalarType, Size, IndexCount, Indexes...> &operator ++(indexed_vector<ScalarType, Size, IndexCount, Indexes...> &arg) noexcept
-	{
-		arg += ScalarType(1);
-		return arg;
+		return arg.as_derived();
 	}
 
 	// post-increment
@@ -2628,20 +2620,12 @@ namespace dsga
 	// unary operators --
 
 	// pre-decrement
-	template <dimensional_scalar ScalarType, std::size_t Count>
-	requires is_non_bool_arithmetic<ScalarType>
-	constexpr basic_vector<ScalarType, Count> &operator --(basic_vector<ScalarType, Count> &arg) noexcept
+	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
+	requires Writable && is_non_bool_arithmetic<ScalarType>
+	constexpr auto &operator --(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
 	{
 		arg -= ScalarType(1);
-		return arg;
-	}
-
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-	requires lvalue_swizzle_indexes<Size, IndexCount, Indexes...> && is_non_bool_arithmetic<ScalarType>
-	constexpr indexed_vector<ScalarType, Size, IndexCount, Indexes...> &operator --(indexed_vector<ScalarType, Size, IndexCount, Indexes...> &arg) noexcept
-	{
-		arg -= ScalarType(1);
-		return arg;
+		return arg.as_derived();
 	}
 
 	// post-decrement
@@ -2690,6 +2674,15 @@ namespace dsga
 				return false;
 
 		return true;
+	}
+
+	template <bool Writable, dimensional_scalar ScalarType, typename Derived, dimensional_scalar OtherScalarType>
+	constexpr bool operator ==(const vector_base<Writable, ScalarType, 1u, Derived> &first,
+							   OtherScalarType second) noexcept
+	{
+		using CommonType = std::common_type_t<ScalarType, OtherScalarType>;
+
+		return static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second);
 	}
 
 	//
