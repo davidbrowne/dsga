@@ -20,6 +20,14 @@ auto playing()
 
 fvec4 sometest()
 {
+	iscal first = 9;
+	iscal first2 = 100;
+	ivec2 second{ 20, 30 };
+
+[[ maybe_unused]] auto third = first + second;
+[[ maybe_unused]] auto third2 = second + first;
+[[ maybe_unused]] auto third3 = first + first2;
+
 	// vector declarations
 	ivec4 somethingoranother{ 0, 1, 2, 3 };
 
