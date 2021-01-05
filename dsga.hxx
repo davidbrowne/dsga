@@ -1982,6 +1982,7 @@ namespace dsga
 			return basic_vector<unary_op_return_t<UnOp, ScalarType>, Count>(lambda(arg[Indexes])...);
 		}
 
+		// when Count == 1, treat it like a scalar value
 		template <bool Writable, dimensional_scalar ScalarType, typename Derived, typename UnOp, std::size_t ...Indexes>
 		constexpr auto unary_op_execute(std::index_sequence<Indexes...> /* dummy */,
 										 const vector_base<Writable, ScalarType, 1u, Derived> &arg,
@@ -2020,6 +2021,7 @@ namespace dsga
 			return basic_vector<binary_op_return_t<BinOp, OtherScalarType, ScalarType>, Count>(lambda(lhs, rhs[Indexes])...);
 		}
 
+		// when Count == 1, treat it like a scalar value
 		template <bool Writable, dimensional_scalar ScalarType, typename Derived,
 			bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived, typename BinOp, std::size_t ...Indexes>
 		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
@@ -2030,6 +2032,7 @@ namespace dsga
 			return static_cast<binary_op_return_t<BinOp, ScalarType, OtherScalarType>>(lambda(lhs[0u], rhs[0u]));
 		}
 
+		// when Count == 1, treat it like a scalar value
 		template <bool Writable, dimensional_scalar ScalarType, typename Derived,
 			dimensional_scalar OtherScalarType, typename BinOp, std::size_t ...Indexes>
 		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
@@ -2040,6 +2043,7 @@ namespace dsga
 			return static_cast<binary_op_return_t<BinOp, ScalarType, OtherScalarType>>(lambda(lhs[0u], rhs));
 		}
 
+		// when Count == 1, treat it like a scalar value
 		template <bool Writable, dimensional_scalar ScalarType, typename Derived,
 			dimensional_scalar OtherScalarType, typename BinOp, std::size_t ...Indexes>
 		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
@@ -2111,6 +2115,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2120,6 +2125,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, plus_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2176,6 +2182,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2185,6 +2192,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, minus_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2241,6 +2249,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2250,6 +2259,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, times_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2306,6 +2316,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2315,6 +2326,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, div_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2371,6 +2383,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2380,6 +2393,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, mod_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2446,6 +2460,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2455,6 +2470,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, lshift_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2511,6 +2527,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2520,6 +2537,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, rshift_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2576,6 +2594,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2585,6 +2604,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, and_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2641,6 +2661,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2650,6 +2671,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, or_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2706,6 +2728,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2715,6 +2738,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, xor_op);
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
 		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
 	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
@@ -2749,6 +2773,7 @@ namespace dsga
 		return basic_vector(arg);						// no-op copy
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
 	requires is_non_bool_arithmetic<ScalarType>
 	constexpr ScalarType operator +(const vector_base<Writable, ScalarType, 1u, Derived> &arg) noexcept
@@ -2788,6 +2813,7 @@ namespace dsga
 		return value;
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
 	requires Writable && is_non_bool_arithmetic<ScalarType>
 	constexpr ScalarType operator ++(vector_base<Writable, ScalarType, 1u, Derived> &arg, int) noexcept
@@ -2818,6 +2844,7 @@ namespace dsga
 		return value;
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
 	requires Writable && is_non_bool_arithmetic<ScalarType>
 	constexpr ScalarType operator --(vector_base<Writable, ScalarType, 1u, Derived> &arg, int) noexcept
@@ -2844,8 +2871,7 @@ namespace dsga
 		return true;
 	}
 
-	template <bool FirstWritable, dimensional_scalar ScalarType, std::size_t Count, typename FirstDerived,
-		bool SecondWritable, typename SecondDerived>
+	template <bool FirstWritable, dimensional_scalar ScalarType, std::size_t Count, typename FirstDerived, bool SecondWritable, typename SecondDerived>
 	constexpr bool operator ==(const vector_base<FirstWritable, ScalarType, Count, FirstDerived> &first,
 							   const vector_base<SecondWritable, ScalarType, Count, SecondDerived> &second) noexcept
 	{
@@ -2856,12 +2882,13 @@ namespace dsga
 		return true;
 	}
 
+	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived, dimensional_scalar OtherScalarType>
+	requires (std::same_as<ScalarType, bool> == std::same_as<OtherScalarType, bool>)
 	constexpr bool operator ==(const vector_base<Writable, ScalarType, 1u, Derived> &first,
 							   OtherScalarType second) noexcept
 	{
 		using CommonType = std::common_type_t<ScalarType, OtherScalarType>;
-
 		return static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second);
 	}
 
