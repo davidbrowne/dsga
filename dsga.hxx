@@ -223,7 +223,7 @@ namespace dsga
 		constexpr const	ScalarType	&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
 	};
 
-	// this is the class/struct that will act as the vector class
+	// basic_vector will act as the primary vector class in this library.
 	//
 	// Size is number of elements referencable in vector/storage
 	// ScalarType is the type of the elements stored in the vector/storage
@@ -232,11 +232,11 @@ namespace dsga
 	requires dimensional_storage_concept<ScalarType, Size>
 	struct basic_vector;
 
-	// this is the class/struct that will act as a swizzle of a vector
+	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
 	//
 	// Size relates to the number of elements in the underlying storage, which informs the values the Indexes can hold
 	// ScalarType is the type of the elements stored in the underlying storage
-	// IndexCount is the number of elements accessible in swizzle -- more like Size in struct basic_vector
+	// IndexCount is the number of elements accessible in swizzle -- often works alongside with basic_vector's Size
 	// Indexes... are the number of swizzlable values available -- there are IndexCount of them, and their values are in the range:  0 <= Indexes < Size
 
 	// we want indexed_vector (vector swizzles) to have length from 1 to 4 (1 is just a sneaky type of ScalarType swizzle) in order
@@ -1976,8 +1976,8 @@ namespace dsga
 
 		template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename UnOp, std::size_t ...Indexes>
 		constexpr auto unary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 const vector_base<Writable, ScalarType, Count, Derived> &arg,
-										 UnOp &lambda) noexcept
+										const vector_base<Writable, ScalarType, Count, Derived> &arg,
+										UnOp &lambda) noexcept
 		{
 			return basic_vector<unary_op_return_t<UnOp, ScalarType>, Count>(lambda(arg[Indexes])...);
 		}
@@ -1985,8 +1985,8 @@ namespace dsga
 		// when Count == 1, treat it like a scalar value
 		template <bool Writable, dimensional_scalar ScalarType, typename Derived, typename UnOp, std::size_t ...Indexes>
 		constexpr auto unary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 const vector_base<Writable, ScalarType, 1u, Derived> &arg,
-										 UnOp &lambda) noexcept
+										const vector_base<Writable, ScalarType, 1u, Derived> &arg,
+										UnOp &lambda) noexcept
 		{
 			return static_cast<unary_op_return_t<UnOp, ScalarType>>(lambda(arg[0u]));
 		}
