@@ -28,6 +28,10 @@ fvec4 sometest()
 [[ maybe_unused]] auto third2 = second + first;
 [[ maybe_unused]] auto third3 = first + first2;
 
+
+	dsga::storage_wrapper<int, 4> sw{ 999, 9999, 99999, 999999 };
+	sw.set(1, 2, 3, 4);
+
 	// vector declarations
 	ivec4 somethingoranother{ 0, 1, 2, 3 };
 
@@ -312,6 +316,74 @@ void test_bin_op()
 
 	ivec2 vec_from_cvref(nine_k_ref, nine_k_ref);
 }
+
+
+// https://twitter.com/the_whole_daisy/status/1379580525078147072
+// https://godbolt.org/z/h5P1Mxsrz
+// TLDR -- operator precedence ('=' is right to left, ',' is left to right) matters with binary fold extpressions.
+//
+//#include <iostream>
+//
+//template <class... Ts>
+//void print_args_backwards(Ts... ts)
+//{
+//	auto print_one = [](auto t)
+//	{
+//		std::cout << t << std::endl;
+//
+//		// Anything with a reasonable assignment operator will work here
+//		return std::type_identity<void>{};
+//	};
+//
+//	// Backwards:
+//	(print_one(ts) = ...);
+//
+//	// Forwards:
+//	(print_one(ts), ...);
+//}
+//
+//int main()
+//{
+//	print_args_backwards(1, 2, "hello", 3, 4, "world");
+//}
+
+
+// https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
+//
+//#include <utility>
+//#include <type_traits>
+//
+//template <std::size_t ... Is>
+//constexpr auto indexSequenceReverse (std::index_sequence<Is...> const &)
+//-> decltype( std::index_sequence<sizeof...(Is)-1U-Is...>{} );
+//
+//template <std::size_t N>
+//using makeIndexSequenceReverse = decltype(indexSequenceReverse(std::make_index_sequence<N>{}));
+//
+//int main()
+//{
+//	static_assert( std::is_same<std::index_sequence<4U, 3U, 2U, 1U, 0U>,
+//				   makeIndexSequenceReverse<5U>>::value, "!" );
+//}
+
+
+// https://stackoverflow.com/questions/47303466/compile-time-reversal-of-parameter-pack-expansion
+//
+//template<typename T>
+//struct Test
+//{
+//	template <std::size_t...Is, typename... B>
+//	Test(std::index_sequence<Is...>, B&&... vv) :
+//		b{std::get<sizeof...(Is) - 1 - Is>(std::tie(vv...))...}
+//	{}
+//
+//	public:
+//		template<typename... B>
+//		explicit Test(B... vv) : Test(std::index_sequence_for<B...>{}, vv...) {}
+//	private:
+//		std::byte b[sizeof(T)];
+//};
+
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"

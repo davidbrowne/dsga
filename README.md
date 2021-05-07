@@ -165,7 +165,7 @@ It provides 3 functions that can be used to build up the constructors, equality 
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. The tests have been run on:
 
-* MSVC 2019 - v16.9 Preview 1 or higher (required for constexpr with anonymous unions)
+* MSVC 2019 - v16.9 or higher (required for constexpr with anonymous unions)
 
 ```
 ===============================================================================
@@ -179,7 +179,7 @@ The official tests have not been run with these compilers, but the project compi
 * gcc 10.2
 * clang 11.0
 
-It could work on earlier versions of gcc and clang, and it certainly should work on later versions. MSVC requires v16.9 Preview 1 for VS2019 at a minimum.
+It could work on earlier versions of gcc and clang, and it certainly should work on later versions. MSVC requires v16.9 for VS2019 at a minimum.
 
 ## Similar Projects
 
@@ -187,7 +187,7 @@ It is a common pastime for people to write these kind of vector libraries. The t
 
 * [glm](https://github.com/g-truc/glm) - popular long lived project that is similar in goals with respect to being based on OpenGL Shading Language specification, but is much more mature. It will work with c\+\+98, while dsga is for c\+\+20.
 * [DirectXMath](https://github.com/microsoft/DirectXMath) - this is from Microsoft and basically performs the same role as glm, but with DirectX instead of OpenGL. It is also long lived and much more mature than dsga.
-* [mango](https://github.com/t0rakka/mango) - this is the project that I read the blog about for vector component access and swizzling, so it is nice to have as another example. Again, more mature than dsga.
+* mango (repo has been removed by owner) - this is the project that I read the blog about for vector component access and swizzling, so it is nice to have as another example. Again, more mature than dsga.
 
 ## License [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
 

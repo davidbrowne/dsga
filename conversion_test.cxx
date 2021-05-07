@@ -133,14 +133,6 @@ TEST_SUITE("test conversions")
 			std::copy(cx_one.begin(), cx_one.end(), simple_dest.begin());
 			CHECK_EQ(simple_dest, iscal(9));
 
-			// const data()/size()
-			std::copy(all_elevens.data(), all_elevens.data() + all_elevens.size(), simple_dest.begin());
-			CHECK_EQ(simple_dest, iscal(11));
-
-			// non-const data(), cbegin()/cend()
-			std::copy(all_sixty_sixes.cbegin(), all_sixty_sixes.cend(), simple_dest.data());
-			CHECK_EQ(simple_dest, iscal(66));
-
 			// non-const operator[]
 			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
@@ -171,14 +163,9 @@ TEST_SUITE("test conversions")
 			}
 			CHECK_EQ(simple_dest, iscal(9));
 
-			// swap()
-			simple_data.swap(simple_dest);
-			CHECK_EQ(simple_data, iscal(9));
-			CHECK_EQ(simple_dest, iscal(999));
-
 			// tuple interface -- structured bindings and get<>
 			auto [a] = simple_data;
-			CHECK_EQ(a, 9);
+			CHECK_EQ(a, 999);
 			CHECK_EQ(a, get<0>(simple_data));
 
 			const iscal get_tester(-10);
@@ -190,7 +177,7 @@ TEST_SUITE("test conversions")
 
 		SUBCASE("2D basic_vector primitive conversions")
 		{
-			ivec2 simple_data(999);
+			ivec2 simple_data(999, 9999);
 			ivec2 simple_dest;
 
 			constexpr ivec2 all_elevens(11);
@@ -198,19 +185,11 @@ TEST_SUITE("test conversions")
 
 			// non-const begin()/end()
 			std::copy(simple_data.begin(), simple_data.end(), simple_dest.begin());
-			CHECK_EQ(simple_dest, ivec2(999, 999));
+			CHECK_EQ(simple_dest, ivec2(999, 9999));
 
 			// const begin()/end()
 			std::copy(cx_two.begin(), cx_two.end(), simple_dest.begin());
 			CHECK_EQ(simple_dest, ivec2(7, 8));
-
-			// const data()/size()
-			std::copy(all_elevens.data(), all_elevens.data() + all_elevens.size(), simple_dest.begin());
-			CHECK_EQ(simple_dest, ivec2(11, 11));
-
-			// non-const data(), cbegin()/cend()
-			std::copy(all_sixty_sixes.cbegin(), all_sixty_sixes.cend(), simple_dest.data());
-			CHECK_EQ(simple_dest, ivec2(66, 66));
 
 			// non-const operator[]
 			for (std::size_t i = 0; i < simple_dest.size(); ++i)
@@ -242,15 +221,10 @@ TEST_SUITE("test conversions")
 			}
 			CHECK_EQ(simple_dest, ivec2(7, 8));
 
-			// swap()
-			simple_data.swap(simple_dest);
-			CHECK_EQ(simple_data, ivec2(7, 8));
-			CHECK_EQ(simple_dest, ivec2(999, 999));
-
 			// tuple interface -- structured bindings and get<>
 			auto [a, b] = simple_data;
-			CHECK_EQ(a, 7);
-			CHECK_EQ(b, 8);
+			CHECK_EQ(a, 999);
+			CHECK_EQ(b, 9999);
 			CHECK_EQ(a, get<0>(simple_data));
 			CHECK_EQ(b, get<1>(simple_data));
 
@@ -263,7 +237,7 @@ TEST_SUITE("test conversions")
 
 		SUBCASE("3D basic_vector primitive conversions")
 		{
-			ivec3 simple_data(999);
+			ivec3 simple_data(999, 9999, 99999);
 			ivec3 simple_dest;
 
 			constexpr ivec3 all_elevens(11);
@@ -271,19 +245,11 @@ TEST_SUITE("test conversions")
 
 			// non-const begin()/end()
 			std::copy(simple_data.begin(), simple_data.end(), simple_dest.begin());
-			CHECK_EQ(simple_dest, ivec3(999, 999, 999));
+			CHECK_EQ(simple_dest, ivec3(999, 9999, 99999));
 
 			// const begin()/end()
 			std::copy(cx_three.begin(), cx_three.end(), simple_dest.begin());
 			CHECK_EQ(simple_dest, ivec3(4, 5, 6));
-
-			// const data()/size()
-			std::copy(all_elevens.data(), all_elevens.data() + all_elevens.size(), simple_dest.begin());
-			CHECK_EQ(simple_dest, ivec3(11, 11, 11));
-
-			// non-const data(), cbegin()/cend()
-			std::copy(all_sixty_sixes.cbegin(), all_sixty_sixes.cend(), simple_dest.data());
-			CHECK_EQ(simple_dest, ivec3(66, 66, 66));
 
 			// non-const operator[]
 			for (std::size_t i = 0; i < simple_dest.size(); ++i)
@@ -315,16 +281,11 @@ TEST_SUITE("test conversions")
 			}
 			CHECK_EQ(simple_dest, ivec3(4, 5, 6));
 
-			// swap()
-			simple_data.swap(simple_dest);
-			CHECK_EQ(simple_data, ivec3(4, 5, 6));
-			CHECK_EQ(simple_dest, ivec3(999, 999, 999));
-
 			// tuple interface -- structured bindings and get<>
 			auto [a, b, c] = simple_data;
-			CHECK_EQ(a, 4);
-			CHECK_EQ(b, 5);
-			CHECK_EQ(c, 6);
+			CHECK_EQ(a, 999);
+			CHECK_EQ(b, 9999);
+			CHECK_EQ(c, 99999);
 			CHECK_EQ(a, get<0>(simple_data));
 			CHECK_EQ(b, get<1>(simple_data));
 			CHECK_EQ(c, get<2>(simple_data));
@@ -338,7 +299,7 @@ TEST_SUITE("test conversions")
 
 		SUBCASE("4D basic_vector primitive conversions")
 		{
-			ivec4 simple_data(999);
+			ivec4 simple_data(999, 9999, 99999, 999999);
 			ivec4 simple_dest;
 
 			constexpr ivec4 all_elevens(11);
@@ -346,19 +307,11 @@ TEST_SUITE("test conversions")
 
 			// non-const begin()/end()
 			std::copy(simple_data.begin(), simple_data.end(), simple_dest.begin());
-			CHECK_EQ(simple_dest, ivec4(999, 999, 999, 999));
+			CHECK_EQ(simple_dest, ivec4(999, 9999, 99999, 999999));
 
 			// const begin()/end()
 			std::copy(cx_four.begin(), cx_four.end(), simple_dest.begin());
 			CHECK_EQ(simple_dest, ivec4(0, 1, 2, 3));
-
-			// const data()/size()
-			std::copy(all_elevens.data(), all_elevens.data() + all_elevens.size(), simple_dest.begin());
-			CHECK_EQ(simple_dest, ivec4(11, 11, 11, 11));
-
-			// non-const data(), cbegin()/cend()
-			std::copy(all_sixty_sixes.cbegin(), all_sixty_sixes.cend(), simple_dest.data());
-			CHECK_EQ(simple_dest, ivec4(66, 66, 66, 66));
 
 			// non-const operator[]
 			for (std::size_t i = 0; i < simple_dest.size(); ++i)
@@ -390,17 +343,12 @@ TEST_SUITE("test conversions")
 			}
 			CHECK_EQ(simple_dest, ivec4(0, 1, 2, 3));
 
-			// swap()
-			simple_data.swap(simple_dest);
-			CHECK_EQ(simple_data, ivec4(0, 1, 2, 3));
-			CHECK_EQ(simple_dest, ivec4(999, 999, 999, 999));
-
 			// tuple interface -- structured bindings and get<>
 			auto [a, b, c, d] = simple_data;
-			CHECK_EQ(a, 0);
-			CHECK_EQ(b, 1);
-			CHECK_EQ(c, 2);
-			CHECK_EQ(d, 3);
+			CHECK_EQ(a, 999);
+			CHECK_EQ(b, 9999);
+			CHECK_EQ(c, 99999);
+			CHECK_EQ(d, 999999);
 			CHECK_EQ(a, get<0>(simple_data));
 			CHECK_EQ(b, get<1>(simple_data));
 			CHECK_EQ(c, get<2>(simple_data));

@@ -1,9 +1,11 @@
-#pragma once
-
 //          Copyright David Browne 2020-2021.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
+
+// opening include guard
+#if !defined(DSGA_DSGA_HXX)
+#define DSGA_DSGA_HXX
 
 #include <type_traits>				// requirements
 #include <concepts>					// requirements
@@ -12,6 +14,7 @@
 #include <algorithm>				// min()
 #include <span>						// external types to/from vectors
 #include <stdexcept>
+#include <bit>						// bit_cast
 
 //
 // Data Structures for Geometric Algebra (dsga)
@@ -20,26 +23,30 @@
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
-constexpr inline int DSGA_MINOR_VERSION = 1;
+constexpr inline int DSGA_MINOR_VERSION = 2;
 constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
-	// we want dimensional_storage (to have length from 1 to 4 (1 is just a sneaky type of ScalarType that can swizzle),
-	// and it the storage has to have room for all the data. We also need dimensional_storage to support operator[]
-	// to access the data.
-
+	// plain undecorated arithmetic types
 	template <typename T>
 	concept dimensional_scalar = std::is_arithmetic_v<T> && std::same_as<T, std::remove_cvref_t<T>>;
 
+	// plain undecorated integral types
 	template <typename T>
 	concept integral_dimensional_scalar = std::integral<T> && dimensional_scalar<T>;
 
+	// want the size to be between 1 and 4, inclusive
 	template <std::size_t Size>
 	concept dimensional_size = ((Size > 0u) && (Size <= 4u));
 
+	// dimensional storage needs the arithmetic type and size restrictions
 	template <typename ScalarType, std::size_t Size>
-	concept dimensional_storage_concept = dimensional_size<Size> && dimensional_scalar<ScalarType>;
+	concept dimensional_storage = dimensional_size<Size> && dimensional_scalar<ScalarType>;
+
+	// we want dimensional_storage_t to have length from 1 to 4 (1 gives just a sneaky kind of ScalarType that can swizzle),
+	// and the storage has to have room for all the data. We also need dimensional_storage_t to support operator[] to access
+	// the data. It needs to also support iterators so we can use it in ranged-for loops, algorithms, etc.
 
 	// the underlying storage for vector and indexed_vector types. originally this was to be a template parameter and
 	// fairly generic, but that is a detail that can happen in a future version of this library. it makes things
@@ -49,15 +56,11 @@ namespace dsga
 	// the vector, and 2) the backing storage used by a swizzle of a vector (storage is in that vector), that
 	// is used to index into as required by the swizzle.
 
-	template <dimensional_scalar ScalarType, std::size_t Size>
-	requires dimensional_storage_concept<ScalarType, Size>
-	struct dimensional_storage
-	{
-		using type = std::array<ScalarType, Size>;
-	};
+	// this implementation uses std::array as the backing storage type.
 
 	template <dimensional_scalar ScalarType, std::size_t Size>
-	using dimensional_storage_t = typename dimensional_storage<ScalarType, Size>::type;
+	requires dimensional_storage<ScalarType, Size>
+	using dimensional_storage_t = std::array<ScalarType, Size>;
 
 
 	// for our vector and swizzling, we need to rely on union and the common initial sequence.
@@ -89,29 +92,36 @@ namespace dsga
 
 	// common initial sequence wrapper with basic storage access -- forwards function calls to wrapped storage
 	template <dimensional_scalar ScalarType, std::size_t Size>
+	requires dimensional_storage<ScalarType, Size>
 	struct storage_wrapper
 	{
 		dimensional_storage_t<ScalarType, Size> value;
 
-		// access to raw underlying C-array
-		constexpr		ScalarType	*data()									noexcept	{ return value.data(); }
-		constexpr const	ScalarType	*data()							const	noexcept	{ return value.data(); }
+		constexpr		std::size_t	size()							const	noexcept	{ return Size; }
 
-		constexpr		int			length()						const	noexcept	{ return Size; }
-
-		// universal access to data for vector and swizzling is operator []
+		// physically contiguous access to data
 		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	{ return value[index]; }
 		constexpr const ScalarType  &operator [](std::size_t index)	const	noexcept	{ return value[index]; }
 
-		constexpr		void		swap(storage_wrapper &other)			noexcept	{ this->value.swap(other.value); }
+		template <dimensional_scalar ...Args>
+		requires (sizeof...(Args) == Size)
+		constexpr		void		set(Args ...args)						noexcept	{ set_impl(std::make_index_sequence<Size>{}, args...); }
 
 		// support for range-for loop
-		constexpr auto		begin()											noexcept	{ return value.begin(); }
-		constexpr auto		begin()									const	noexcept	{ return value.cbegin(); }
-		constexpr auto		cbegin()								const	noexcept	{ return value.cbegin(); }
-		constexpr auto		end()											noexcept	{ return value.end(); }
-		constexpr auto		end()									const	noexcept	{ return value.cend(); }
-		constexpr auto		cend()									const	noexcept	{ return value.cend(); }
+		constexpr		auto		begin()									noexcept	{ return value.begin(); }
+		constexpr		auto		begin()							const	noexcept	{ return value.cbegin(); }
+		constexpr		auto		cbegin()						const	noexcept	{ return value.cbegin(); }
+		constexpr		auto		end()									noexcept	{ return value.end(); }
+		constexpr		auto		end()							const	noexcept	{ return value.cend(); }
+		constexpr		auto		cend()							const	noexcept	{ return value.cend(); }
+
+		// details
+		private:
+			template <dimensional_scalar ...Args, std::size_t ...Is>
+			requires (sizeof...(Args) == Size) && (sizeof...(Is) == Size)
+			constexpr void set_impl(std::index_sequence<Is...> /* dummy */,
+									Args ...args) noexcept { ((value[Is] = static_cast<ScalarType>(args)),...); }
+
 	};
 
 
@@ -172,7 +182,7 @@ namespace dsga
 	//
 
 	template <typename T>
-	concept is_non_bool_arithmetic = std::is_arithmetic_v<std::remove_cvref_t<T>> && !std::same_as<std::remove_cvref_t<T>, bool>;
+	concept non_bool_arithmetic = std::is_arithmetic_v<std::remove_cvref_t<T>> && !std::same_as<std::remove_cvref_t<T>, bool>;
 
 	template <typename T, typename U>
 	concept latter_same_as_common_type =
@@ -183,7 +193,7 @@ namespace dsga
 	};
 
 	template <typename T, typename U>
-	concept implicitly_convertible_to = is_non_bool_arithmetic<T> && is_non_bool_arithmetic<U> && latter_same_as_common_type<T, U>;
+	concept implicitly_convertible_to = non_bool_arithmetic<T> && non_bool_arithmetic<U> && latter_same_as_common_type<T, U>;
 
 	template <typename T, typename U>
 	concept same_sizeof = (sizeof(T) == sizeof(U));
@@ -204,23 +214,29 @@ namespace dsga
 	//
 	// It provides:
 	// 
-	// 	   set() - relies on init() in Derived
-	// 	   operator[] - relies on at() in Derived
+	// 		set() - relies on init() in Derived
+	// 		operator[] - relies on at() in Derived
+	// 		size() - relies on Count template parameter
 	//
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires dimensional_storage_concept<ScalarType, Count>
+	requires dimensional_storage<ScalarType, Count>
 	struct vector_base
 	{
+		// CRTP access to Derived class
 		constexpr		Derived		&as_derived()							noexcept	requires Writable	{ return static_cast<Derived &>(*this); }
 		constexpr const Derived		&as_derived()					const	noexcept						{ return static_cast<const Derived &>(*this); }
 
-		template <typename ...Args>
+		// logically contiguous write access to all data that allows for self-assignment that works properly
+		template <dimensional_scalar ...Args>
 		requires Writable && (sizeof...(Args) == Count)
-		constexpr		void		 set(Args ...args)						noexcept						{ this->as_derived().init(args...); }
+		constexpr		void		set(Args ...args)						noexcept						{ this->as_derived().init(args...); }
 
-		
+		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
 		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
 		constexpr const	ScalarType	&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
+
+		// number of accessible ScalarType elements
+		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
 	};
 
 	// basic_vector will act as the primary vector class in this library.
@@ -229,7 +245,7 @@ namespace dsga
 	// ScalarType is the type of the elements stored in the vector/storage
 
 	template <dimensional_scalar ScalarType, std::size_t Size>
-	requires dimensional_storage_concept<ScalarType, Size>
+	requires dimensional_storage<ScalarType, Size>
 	struct basic_vector;
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
@@ -244,10 +260,10 @@ namespace dsga
 	// The indexes are valid for indexing into the values in the storage which is Size big.
 
 	template <typename ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-	concept indexed_vector_concept = dimensional_storage_concept<ScalarType, Size> && valid_index_count<IndexCount, Indexes...> && valid_range_indexes<Size, Indexes...>;
+	concept indexable = dimensional_storage<ScalarType, Size> && valid_index_count<IndexCount, Indexes...> && valid_range_indexes<Size, Indexes...>;
 
 	template <typename ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-	requires indexed_vector_concept <ScalarType, Size, IndexCount, Indexes...>
+	requires indexable <ScalarType, Size, IndexCount, Indexes...>
 	struct indexed_vector;
 
 	//
@@ -255,7 +271,7 @@ namespace dsga
 	//
 
 	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ... Indexes>
-	requires indexed_vector_concept <ScalarType, Size, IndexCount, Indexes...>
+	requires indexable <ScalarType, Size, IndexCount, Indexes...>
 	struct indexed_vector_iterator
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
@@ -318,7 +334,7 @@ namespace dsga
 	};
 
 	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ... Indexes>
-	requires indexed_vector_concept <ScalarType, Size, IndexCount, Indexes...>
+	requires indexable <ScalarType, Size, IndexCount, Indexes...>
 	struct indexed_vector_const_iterator
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
@@ -386,10 +402,14 @@ namespace dsga
 		: vector_base<lvalue_swizzle_indexes<Size, 1u, Index>, ScalarType, 1u, indexed_vector<ScalarType, Size, 1u, Index>>
 	{
 		// we have partial specialization, so can't use template parameter for IndexCount
+		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 1u;
 
-		// can this be used in a non const way
+		// can this be used as an lvalue
 		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 1u, Index>;
+
+		// the underlying ordered storage sequence for this logical vector
+		using access_sequence = std::index_sequence<Index>;
 
 		// common initial sequence data
 		dimensional_storage_t<ScalarType, Size> value;
@@ -398,7 +418,8 @@ namespace dsga
 		indexed_vector() noexcept = default;
 		~indexed_vector() noexcept = default;
 
-		// set() allows for self-assignment that works properly
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType>
 		requires Writable
 		constexpr void init(OtherScalarType value0) noexcept
@@ -450,7 +471,7 @@ namespace dsga
 			return value[Index];
 		}
 
-		// operator []() read/write access to data
+		// logically contiguous - used by operator [] for read/write access to data
 		constexpr ScalarType &at(std::size_t index) requires Writable
 		{
 			switch (index)
@@ -462,7 +483,7 @@ namespace dsga
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
-		// operator []() read access to data
+		// logically contiguous - used by operator [] for read access to data
 		constexpr const ScalarType &at(std::size_t index) const
 		{
 			switch (index)
@@ -503,10 +524,14 @@ namespace dsga
 		: vector_base<lvalue_swizzle_indexes<Size, 2u, Index0, Index1>, ScalarType, 2u, indexed_vector<ScalarType, Size, 2u, Index0, Index1>>
 	{
 		// we have partial specialization, so can't use template parameter for Size
+		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 2u;
 
-		// can this be used in a non const way
+		// can this be used as an lvalue
 		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 2u, Index0, Index1>;
+
+		// the underlying ordered storage sequence for this logical vector
+		using access_sequence = std::index_sequence<Index0, Index1>;
 
 		// common initial sequence data
 		dimensional_storage_t<ScalarType, Size> value;
@@ -515,7 +540,8 @@ namespace dsga
 		indexed_vector() noexcept = default;
 		~indexed_vector() noexcept = default;
 
-		// set() allows for self-assignment that works properly
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType>
 		requires Writable
 		constexpr void init(OtherScalarType value0, OtherScalarType value1) noexcept
@@ -543,7 +569,7 @@ namespace dsga
 			return *this;
 		}
 
-		// operator []() read/write access to data
+		// logically contiguous - used by operator [] for read/write access to data
 		constexpr ScalarType &at(std::size_t index) requires Writable
 		{
 			switch (index)
@@ -557,7 +583,7 @@ namespace dsga
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
-		// operator []() read access to data
+		// logically contiguous - used by operator [] for read access to data
 		constexpr const ScalarType &at(std::size_t index) const
 		{
 			switch (index)
@@ -601,10 +627,14 @@ namespace dsga
 		: vector_base<lvalue_swizzle_indexes<Size, 3u, Index0, Index1, Index2>, ScalarType, 3u, indexed_vector<ScalarType, Size, 3u, Index0, Index1, Index2>>
 	{
 		// we have partial specialization, so can't use template parameter for Size
+		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 3u;
 
-		// can this be used in a non const way
+		// can this be used as an lvalue
 		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 3u, Index0, Index1, Index2>;
+
+		// the underlying ordered storage sequence for this logical vector
+		using access_sequence = std::index_sequence<Index0, Index1, Index2>;
 
 		// common initial sequence data
 		dimensional_storage_t<ScalarType, Size> value;
@@ -613,7 +643,8 @@ namespace dsga
 		indexed_vector() noexcept = default;
 		~indexed_vector() noexcept = default;
 
-		// set() allows for self-assignment that works properly
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType>
 		requires Writable
 		constexpr void init(OtherScalarType value0, OtherScalarType value1, OtherScalarType value2) noexcept
@@ -642,7 +673,7 @@ namespace dsga
 			return *this;
 		}
 
-		// operator []() read/write access to data
+		// logically contiguous - used by operator [] for read/write access to data
 		constexpr ScalarType &at(std::size_t index) requires Writable
 		{
 			switch (index)
@@ -658,7 +689,7 @@ namespace dsga
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
-		// operator []() read access to data
+		// logically contiguous - used by operator [] for read access to data
 		constexpr const ScalarType &at(std::size_t index) const
 		{
 			switch (index)
@@ -705,10 +736,14 @@ namespace dsga
 		: vector_base<lvalue_swizzle_indexes<Size, 4u, Index0, Index1, Index2, Index3>, ScalarType, 4u, indexed_vector<ScalarType, Size, 4u, Index0, Index1, Index2, Index3>>
 	{
 		// we have partial specialization, so can't use template parameter for Size
+		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 4u;
 
-		// can this be used in a non const way
+		// can this be used as an lvalue
 		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 4u, Index0, Index1, Index2, Index3>;
+
+		// the underlying ordered storage sequence for this logical vector
+		using access_sequence = std::index_sequence<Index0, Index1, Index2, Index3>;
 
 		// common initial sequence data
 		dimensional_storage_t<ScalarType, Size> value;
@@ -717,7 +752,8 @@ namespace dsga
 		indexed_vector() noexcept = default;
 		~indexed_vector() noexcept = default;
 
-		// set() allows for self-assignment that works properly
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType>
 		requires Writable
 		constexpr void init(OtherScalarType value0, OtherScalarType value1, OtherScalarType value2, OtherScalarType value3) noexcept
@@ -747,7 +783,7 @@ namespace dsga
 			return *this;
 		}
 
-		// operator []() read/write access to data
+		// logically contiguous - used by operator [] for read/write access to data
 		constexpr ScalarType &at(std::size_t index) requires Writable
 		{
 			switch (index)
@@ -765,7 +801,7 @@ namespace dsga
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
-		// operator []() read access to data
+		// logically contiguous - used by operator [] for read access to data
 		constexpr const ScalarType &at(std::size_t index) const
 		{
 			switch (index)
@@ -828,7 +864,14 @@ namespace dsga
 	template <dimensional_scalar ScalarType>
 	struct basic_vector<ScalarType, 1u> : vector_base<true, ScalarType, 1u, basic_vector<ScalarType, 1u>>
 	{
-		constexpr static std::size_t Size = 1u;
+		// number of physical storage elements
+		static constexpr std::size_t Size = 1u;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		// the underlying ordered storage sequence for this physical vector
+		using access_sequence = std::make_index_sequence<Size>;
 
 		union
 		{
@@ -935,22 +978,17 @@ namespace dsga
 		// data access
 		//
 
-		// init() allows for self-assignment that works properly
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType>
 		constexpr void init(OtherScalarType value) noexcept
 		{
 			store.value[0u] = static_cast<ScalarType>(value);
 		}
 
-		constexpr		ScalarType	*data()									noexcept	{ return store.value.data(); }
-		constexpr const	ScalarType	*data()							const	noexcept	{ return store.value.data(); }
-
-		constexpr		std::size_t	size()							const	noexcept	{ return Size; }
-
+		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
-
-		constexpr		void		swap(basic_vector &dim_data)			noexcept	{ this->store.value.swap(dim_data.store.value); }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -964,7 +1002,14 @@ namespace dsga
 	template <dimensional_scalar ScalarType>
 	struct basic_vector<ScalarType, 2u> : vector_base<true, ScalarType, 2u, basic_vector<ScalarType, 2u>>
 	{
-		constexpr static std::size_t Size = 2u;
+		// number of physical storage elements
+		static constexpr std::size_t Size = 2u;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		// the underlying ordered storage sequence for this physical vector
+		using access_sequence = std::make_index_sequence<Size>;
 
 		union
 		{
@@ -1077,7 +1122,8 @@ namespace dsga
 		// data access
 		//
 
-		// init() allows for self-assignment that works properly
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType0, typename OtherScalarType1>
 		constexpr void init(OtherScalarType0 value0, OtherScalarType1 value1) noexcept
 		{
@@ -1085,15 +1131,9 @@ namespace dsga
 			store.value[1u] = static_cast<ScalarType>(value1);
 		}
 
-		constexpr		ScalarType	*data()									noexcept	{ return store.value.data(); }
-		constexpr const	ScalarType	*data()							const	noexcept	{ return store.value.data(); }
-
-		constexpr		std::size_t	size()							const	noexcept	{ return Size; }
-
+		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
-
-		constexpr		void		swap(basic_vector &dim_data)			noexcept	{ this->store.value.swap(dim_data.store.value); }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1107,7 +1147,14 @@ namespace dsga
 	template <dimensional_scalar ScalarType>
 	struct basic_vector<ScalarType, 3u> : vector_base<true, ScalarType, 3u, basic_vector<ScalarType, 3u>>
 	{
-		constexpr static std::size_t Size = 3u;
+		// number of physical storage elements
+		static constexpr std::size_t Size = 3u;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		// the underlying ordered storage sequence for this physical vector
+		using access_sequence = std::make_index_sequence<Size>;
 
 		union
 		{
@@ -1342,7 +1389,8 @@ namespace dsga
 		// data access
 		//
 
-		// init() allows for self-assignment that works properly
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType0, typename OtherScalarType1, typename OtherScalarType2>
 		constexpr void init(OtherScalarType0 value0, OtherScalarType1 value1, OtherScalarType2 value2) noexcept
 		{
@@ -1351,15 +1399,9 @@ namespace dsga
 			store.value[2u] = static_cast<ScalarType>(value2);
 		}
 
-		constexpr		ScalarType	*data()									noexcept	{ return store.value.data(); }
-		constexpr const	ScalarType	*data()							const	noexcept	{ return store.value.data(); }
-
-		constexpr		std::size_t	size()							const	noexcept	{ return Size; }
-
+		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
-
-		constexpr		void		swap(basic_vector &dim_data)			noexcept	{ this->store.value.swap(dim_data.store.value); }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1373,7 +1415,14 @@ namespace dsga
 	template <dimensional_scalar ScalarType>
 	struct basic_vector<ScalarType, 4u> : vector_base<true, ScalarType, 4u, basic_vector<ScalarType, 4u>>
 	{
-		constexpr static std::size_t Size = 4u;
+		// number of physical storage elements
+		static constexpr std::size_t Size = 4u;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		// the underlying ordered storage sequence for this physical vector
+		using access_sequence = std::make_index_sequence<Size>;
 
 		union
 		{
@@ -1901,7 +1950,8 @@ namespace dsga
 		// data access
 		//
 
-		// init() allows for self-assignment that works properly
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
 		template <typename OtherScalarType0, typename OtherScalarType1, typename OtherScalarType2, typename OtherScalarType3>
 		constexpr void init(OtherScalarType0 value0, OtherScalarType1 value1, OtherScalarType2 value2, OtherScalarType3 value3) noexcept
 		{
@@ -1911,15 +1961,9 @@ namespace dsga
 			store.value[3u] = static_cast<ScalarType>(value3);
 		}
 
-		constexpr		ScalarType	*data()									noexcept	{ return store.value.data(); }
-		constexpr const	ScalarType	*data()							const	noexcept	{ return store.value.data(); }
-
-		constexpr		std::size_t	size()							const	noexcept	{ return Size; }
-
+		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
-
-		constexpr		void		swap(basic_vector &dim_data)			noexcept	{ this->store.value.swap(dim_data.store.value); }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1939,7 +1983,7 @@ namespace dsga
 		// convert a parameter pack into a basic_vector vector
 
 		template <typename ...Ts>
-		requires dimensional_storage_concept<std::common_type_t<Ts...>, sizeof...(Ts)>
+		requires dimensional_storage<std::common_type_t<Ts...>, sizeof...(Ts)>
 			constexpr auto parameter_pack_to_vec(Ts ...args) noexcept
 		{
 			using ArgType = std::common_type_t<Ts...>;
@@ -2767,7 +2811,7 @@ namespace dsga
 	// unary operator +
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires is_non_bool_arithmetic<ScalarType>
+	requires non_bool_arithmetic<ScalarType>
 	constexpr basic_vector<ScalarType, Count> operator +(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
 	{
 		return basic_vector(arg);						// no-op copy
@@ -2775,7 +2819,7 @@ namespace dsga
 
 	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
-	requires is_non_bool_arithmetic<ScalarType>
+	requires non_bool_arithmetic<ScalarType>
 	constexpr ScalarType operator +(const vector_base<Writable, ScalarType, 1u, Derived> &arg) noexcept
 	{
 		return arg[0u];									// no-op scalar copy
@@ -2786,7 +2830,7 @@ namespace dsga
 	constexpr inline auto neg_op = [](auto arg) { return -arg; };
 
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires is_non_bool_arithmetic<ScalarType>
+	requires non_bool_arithmetic<ScalarType>
 	constexpr auto operator -(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
 	{
 		return detail::unary_op_execute(std::make_index_sequence<Count>{}, arg, neg_op);
@@ -2796,7 +2840,7 @@ namespace dsga
 
 	// pre-increment
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && is_non_bool_arithmetic<ScalarType>
+	requires Writable && non_bool_arithmetic<ScalarType>
 	constexpr auto &operator ++(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
 	{
 		arg += ScalarType(1);
@@ -2805,7 +2849,7 @@ namespace dsga
 
 	// post-increment
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && is_non_bool_arithmetic<ScalarType>
+	requires Writable && non_bool_arithmetic<ScalarType>
 	constexpr basic_vector<ScalarType, Count> operator ++(vector_base<Writable, ScalarType, Count, Derived> &arg, int) noexcept
 	{
 		basic_vector<ScalarType, Count> value(arg);
@@ -2815,7 +2859,7 @@ namespace dsga
 
 	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
-	requires Writable && is_non_bool_arithmetic<ScalarType>
+	requires Writable && non_bool_arithmetic<ScalarType>
 	constexpr ScalarType operator ++(vector_base<Writable, ScalarType, 1u, Derived> &arg, int) noexcept
 	{
 		ScalarType value = arg[0u];
@@ -2827,7 +2871,7 @@ namespace dsga
 
 	// pre-decrement
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && is_non_bool_arithmetic<ScalarType>
+	requires Writable && non_bool_arithmetic<ScalarType>
 	constexpr auto &operator --(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
 	{
 		arg -= ScalarType(1);
@@ -2836,7 +2880,7 @@ namespace dsga
 
 	// post-decrement
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && is_non_bool_arithmetic<ScalarType>
+	requires Writable && non_bool_arithmetic<ScalarType>
 	constexpr basic_vector<ScalarType, Count> operator --(vector_base<Writable, ScalarType, Count, Derived> &arg, int) noexcept
 	{
 		basic_vector<ScalarType, Count> value(arg);
@@ -2846,7 +2890,7 @@ namespace dsga
 
 	// when Count == 1, treat it like a scalar value
 	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
-	requires Writable && is_non_bool_arithmetic<ScalarType>
+	requires Writable && non_bool_arithmetic<ScalarType>
 	constexpr ScalarType operator --(vector_base<Writable, ScalarType, 1u, Derived> &arg, int) noexcept
 	{
 		ScalarType value = arg[0u];
@@ -2966,14 +3010,14 @@ struct std::tuple_element<element_index, dsga::vector_base<Writable, ScalarType,
 // converting from external vector type or data to internal vector type
 
 template <dsga::dimensional_scalar ScalarType, std::size_t Size>
-requires dsga::dimensional_storage_concept<ScalarType, Size>
+requires dsga::dimensional_storage<ScalarType, Size>
 constexpr auto to_vec(const std::array<ScalarType, Size> &arg) noexcept
 {
 	return dsga::detail::passthru_execute(std::make_index_sequence<Size>{}, arg);
 }
 
 template <dsga::dimensional_scalar ScalarType, std::size_t Size>
-requires dsga::dimensional_storage_concept<ScalarType, Size>
+requires dsga::dimensional_storage<ScalarType, Size>
 constexpr auto to_vec(const ScalarType (&arg)[Size]) noexcept
 {
 	return dsga::detail::passthru_execute(std::make_index_sequence<Size>{}, arg);
@@ -2990,7 +3034,7 @@ constexpr std::array<ScalarType, Size> from_vec(const dsga::basic_vector<ScalarT
 // fill vectors from spans
 
 template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent != 0) && (Extent != std::dynamic_extent)) && dsga::is_non_bool_arithmetic<OtherScalarType> && std::convertible_to<OtherScalarType, ScalarType>
+requires ((Extent != 0) && (Extent != std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<OtherScalarType, ScalarType>
 constexpr void copy_to_vec(dsga::basic_vector<ScalarType, Size> &lhs, std::span<OtherScalarType, Extent> rhs)
 {
 	constexpr std::size_t count = std::min(Size, Extent);
@@ -2999,7 +3043,7 @@ constexpr void copy_to_vec(dsga::basic_vector<ScalarType, Size> &lhs, std::span<
 }
 
 template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent == 0) || (Extent == std::dynamic_extent)) && dsga::is_non_bool_arithmetic<OtherScalarType> && std::convertible_to<OtherScalarType, ScalarType>
+requires ((Extent == 0) || (Extent == std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<OtherScalarType, ScalarType>
 constexpr void copy_to_vec(dsga::basic_vector<ScalarType, Size> &lhs, std::span<OtherScalarType, Extent> rhs)
 {
 	std::size_t count = std::min(Size, rhs.size());
@@ -3010,7 +3054,7 @@ constexpr void copy_to_vec(dsga::basic_vector<ScalarType, Size> &lhs, std::span<
 // fill spans from vectors
 
 template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent != 0) && (Extent != std::dynamic_extent)) && dsga::is_non_bool_arithmetic<OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>
+requires ((Extent != 0) && (Extent != std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>
 constexpr void copy_from_vec(std::span<OtherScalarType, Extent> lhs, const dsga::basic_vector<ScalarType, Size> &rhs)
 {
 	constexpr std::size_t count = std::min(Size, Extent);
@@ -3019,7 +3063,7 @@ constexpr void copy_from_vec(std::span<OtherScalarType, Extent> lhs, const dsga:
 }
 
 template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent == 0) || (Extent == std::dynamic_extent)) && dsga::is_non_bool_arithmetic<OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>
+requires ((Extent == 0) || (Extent == std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>
 constexpr void copy_from_vec(std::span<OtherScalarType, Extent> lhs, const dsga::basic_vector<ScalarType, Size> &rhs)
 {
 	std::size_t count = std::min(Size, lhs.size());
@@ -3094,3 +3138,6 @@ using dscal = vectype1<double>;
 using dvec2 = vectype2<double>;
 using dvec3 = vectype3<double>;
 using dvec4 = vectype4<double>;
+
+// closing include guard
+#endif
