@@ -198,6 +198,16 @@ namespace dsga
 	template <typename T, typename U>
 	concept same_sizeof = (sizeof(T) == sizeof(U));
 
+	//
+	// helper template function to convert a std::index_sequence to a std::array.
+	// can be used for indirect indexing.
+	//
+
+	template <std::size_t... Is>
+	static constexpr std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */)
+	{
+		return { Is... };
+	}
 
 	// there is no use for this enum, it is meant as FEO (For Exposition Only). we will separate domains by the names of the swizzle union
 	// members we create, as opposed to using this enum class as a template parameter. we only intend to implement the xyzw swizzle accessors.
@@ -396,23 +406,30 @@ namespace dsga
 		}
 	};
 
-	// for swizzling 1D parts of dimension_data - like a scalar accessor
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index>
-	struct indexed_vector<ScalarType, Size, 1u, Index>
-		: vector_base<writable_swizzle<Size, 1u, Index>, ScalarType, 1u, indexed_vector<ScalarType, Size, 1u, Index>>
+	// for swizzling 1D parts of basic_vector - like a scalar accessor
+	template <dimensional_scalar T, std::size_t Size, std::size_t I>
+	struct indexed_vector<T, Size, 1u, I>
+		: vector_base<writable_swizzle<Size, 1u, I>, T, 1u, indexed_vector<T, Size, 1u, I>>
 	{
-		// we have partial specialization, so can't use template parameter for IndexCount
-		// number of logical storage elements
-		static constexpr std::size_t IndexCount = 1u;
+		// we have partial specialization, so can't use template parameter for Count number of logical storage elements
+		static constexpr std::size_t Count = 1u;
 
-		// can this be used as an lvalue
-		static constexpr bool Writable = writable_swizzle<Size, 1u, Index>;
+		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
+		static constexpr bool Writable = writable_swizzle<Size, Count, I>;
 
-		// the underlying ordered storage sequence for this logical vector
-		using access_sequence = std::index_sequence<Index>;
+		//
+		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
+		// currently unused because at() does this logically for us.
+		//
 
-		// common initial sequence data
-		dimensional_storage_t<ScalarType, Size> value;
+		// as a parameter pack
+		using sequence_pack = std::index_sequence<I>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+
+		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
+		dimensional_storage_t<T, Size> value;
 
 		// default/deleted boilerplate
 		indexed_vector() noexcept = default;
@@ -420,26 +437,26 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType>
+		template <dimensional_scalar U>
 		requires Writable
-		constexpr void init(OtherScalarType value0) noexcept
+		constexpr void init(U value0) noexcept
 		{
-			value[Index] = static_cast<ScalarType>(value0);
+			value[I] = static_cast<T>(value0);
 		}
 
 		// copy assignment
-		template <bool OtherWritable, dimensional_scalar OtherScalarType, typename Derived>
-		requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, OtherScalarType, IndexCount, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u]);
 
 			return *this;
 		}
 
-		template <bool OtherWritable, typename Derived>
+		template <bool W, typename D>
 		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, ScalarType, IndexCount, Derived> &other) noexcept
+		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
 		{
 			init(other[0u]);
 
@@ -447,17 +464,17 @@ namespace dsga
 		}
 
 		// scalar assignment
-		// assignment for some scalar type that converts to our ScalarType type and is only for indexed_vector of [Size == 1]
-		template <typename OtherScalarType>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr indexed_vector &operator =(const OtherScalarType other) noexcept
+		// assignment for some scalar type that converts to T and is only for indexed_vector of [Size == 1]
+		template <dimensional_scalar U>
+		requires implicitly_convertible_to<U, T>
+		constexpr indexed_vector &operator =(U other) noexcept
 		{
 			init(other);
 
 			return *this;
 		}
 
-		constexpr indexed_vector &operator =(const ScalarType other) noexcept
+		constexpr indexed_vector &operator =(T other) noexcept
 		{
 			init(other);
 
@@ -465,31 +482,31 @@ namespace dsga
 		}
 
 		// scalar conversion operator
-		// this is extremely important and is only for indexed_vector of [Size == 1]
-		constexpr operator ScalarType() const noexcept
+		// this is extremely important and is only for indexed_vector of [Count == 1]
+		constexpr operator T() const noexcept
 		{
-			return value[Index];
+			return value[I];
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
-		constexpr ScalarType &at(std::size_t index) requires Writable
+		constexpr T &at(std::size_t index) requires Writable
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index];
+					return value[I];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		constexpr const ScalarType &at(std::size_t index) const
+		constexpr const T &at(std::size_t index) const
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index];
+					return value[I];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
@@ -497,44 +514,51 @@ namespace dsga
 
 		// basic_vector conversion operator
 		// this is extremely important.
-		constexpr operator basic_vector<ScalarType, IndexCount>() const noexcept
+		constexpr operator basic_vector<T, Count>() const noexcept
 		{
-			return basic_vector<ScalarType, IndexCount>(value[Index]);
+			return basic_vector<T, Count>(value[I]);
 		}
 
-		template <dimensional_scalar OtherScalarType>
-		requires (!std::same_as<ScalarType, OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>)
-		explicit constexpr operator basic_vector<OtherScalarType, IndexCount>() const noexcept
+		template <dimensional_scalar U>
+		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
+		explicit constexpr operator basic_vector<U, Count>() const noexcept
 		{
-			return basic_vector<OtherScalarType, IndexCount>(static_cast<OtherScalarType>(value[Index]));
+			return basic_vector<U, Count>(static_cast<U>(value[I]));
 		}
 
 		// support for range-for loop
-		constexpr auto begin()				noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index>(*this, 0u); }
-		constexpr auto begin()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index>(*this, 0u); }
-		constexpr auto cbegin()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index>(*this, 0u); }
-		constexpr auto end()				noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index>(*this, IndexCount); }
-		constexpr auto end()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index>(*this, IndexCount); }
-		constexpr auto cend()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index>(*this, IndexCount); }
+		constexpr auto begin()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto begin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto cbegin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto end()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
+		constexpr auto end()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
+		constexpr auto cend()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
 	};
 
-	// for swizzling 2D parts of dimension_data
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1>
-	struct indexed_vector<ScalarType, Size, 2u, Index0, Index1>
-		: vector_base<writable_swizzle<Size, 2u, Index0, Index1>, ScalarType, 2u, indexed_vector<ScalarType, Size, 2u, Index0, Index1>>
+	// for swizzling 2D parts of basic_vector
+	template <dimensional_scalar T, std::size_t Size, std::size_t I0, std::size_t I1>
+	struct indexed_vector<T, Size, 2u, I0, I1>
+		: vector_base<writable_swizzle<Size, 2u, I0, I1>, T, 2u, indexed_vector<T, Size, 2u, I0, I1>>
 	{
-		// we have partial specialization, so can't use template parameter for Size
-		// number of logical storage elements
-		static constexpr std::size_t IndexCount = 2u;
+		// we have partial specialization, so can't use template parameter for Count number of logical storage elements
+		static constexpr std::size_t Count = 2u;
 
-		// can this be used as an lvalue
-		static constexpr bool Writable = writable_swizzle<Size, 2u, Index0, Index1>;
+		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
+		static constexpr bool Writable = writable_swizzle<Size, Count, I0, I1>;
 
-		// the underlying ordered storage sequence for this logical vector
-		using access_sequence = std::index_sequence<Index0, Index1>;
+		//
+		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
+		// currently unused because at() does this logically for us.
+		//
 
-		// common initial sequence data
-		dimensional_storage_t<ScalarType, Size> value;
+		// as a parameter pack
+		using sequence_pack = std::index_sequence<I0, I1>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+
+		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
+		dimensional_storage_t<T, Size> value;
 
 		// default/deleted boilerplate
 		indexed_vector() noexcept = default;
@@ -542,27 +566,27 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType>
+		template <dimensional_scalar U>
 		requires Writable
-		constexpr void init(OtherScalarType value0, OtherScalarType value1) noexcept
+		constexpr void init(U value0, U value1) noexcept
 		{
-			value[Index0] = static_cast<ScalarType>(value0);
-			value[Index1] = static_cast<ScalarType>(value1);
+			value[I0] = static_cast<T>(value0);
+			value[I1] = static_cast<T>(value1);
 		}
 
 		// copy assignment
-		template <bool OtherWritable, dimensional_scalar OtherScalarType, typename Derived>
-		requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, OtherScalarType, IndexCount, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u]);
 
 			return *this;
 		}
 
-		template <bool OtherWritable, typename Derived>
+		template <bool W, typename D>
 		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, ScalarType, IndexCount, Derived> &other) noexcept
+		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u]);
 
@@ -570,28 +594,28 @@ namespace dsga
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
-		constexpr ScalarType &at(std::size_t index) requires Writable
+		constexpr T &at(std::size_t index) requires Writable
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index0];
+					return value[I0];
 				case 1u:
-					return value[Index1];
+					return value[I1];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		constexpr const ScalarType &at(std::size_t index) const
+		constexpr const T &at(std::size_t index) const
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index0];
+					return value[I0];
 				case 1u:
-					return value[Index1];
+					return value[I1];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
@@ -599,45 +623,52 @@ namespace dsga
 
 		// basic_vector conversion operator
 		// this is extremely important.
-		constexpr operator basic_vector<ScalarType, IndexCount>() const noexcept
+		constexpr operator basic_vector<T, Count>() const noexcept
 		{
-			return basic_vector<ScalarType, IndexCount>(value[Index0], value[Index1]);
+			return basic_vector<T, Count>(value[I0], value[I1]);
 		}
 
-		template <dimensional_scalar OtherScalarType>
-		requires (!std::same_as<ScalarType, OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>)
-		explicit constexpr operator basic_vector<OtherScalarType, IndexCount>() const noexcept
+		template <dimensional_scalar U>
+		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
+		explicit constexpr operator basic_vector<U, Count>() const noexcept
 		{
-			return basic_vector<OtherScalarType, IndexCount>(static_cast<OtherScalarType>(value[Index0]),
-															 static_cast<OtherScalarType>(value[Index1]));
+			return basic_vector<U, Count>(static_cast<U>(value[I0]),
+										  static_cast<U>(value[I1]));
 		}
 
 		// support for range-for loop
-		constexpr auto begin()				noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index0, Index1>(*this, 0u); }
-		constexpr auto begin()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1>(*this, 0u); }
-		constexpr auto cbegin()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1>(*this, 0u); }
-		constexpr auto end()				noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index0, Index1>(*this, IndexCount); }
-		constexpr auto end()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1>(*this, IndexCount); }
-		constexpr auto cend()		const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1>(*this, IndexCount); }
+		constexpr auto begin()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1>(*this, 0u); }
+		constexpr auto begin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, 0u); }
+		constexpr auto cbegin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, 0u); }
+		constexpr auto end()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1>(*this, Count); }
+		constexpr auto end()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, Count); }
+		constexpr auto cend()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, Count); }
 	};
 
-	// for swizzling 3D parts of dimension_data
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1, std::size_t Index2>
-	struct indexed_vector<ScalarType, Size, 3u, Index0, Index1, Index2>
-		: vector_base<writable_swizzle<Size, 3u, Index0, Index1, Index2>, ScalarType, 3u, indexed_vector<ScalarType, Size, 3u, Index0, Index1, Index2>>
+	// for swizzling 3D parts of basic_vector
+	template <dimensional_scalar T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2>
+	struct indexed_vector<T, Size, 3u, I0, I1, I2>
+		: vector_base<writable_swizzle<Size, 3u, I0, I1, I2>, T, 3u, indexed_vector<T, Size, 3u, I0, I1, I2>>
 	{
-		// we have partial specialization, so can't use template parameter for Size
-		// number of logical storage elements
-		static constexpr std::size_t IndexCount = 3u;
+		// we have partial specialization, so can't use template parameter for Count number of logical storage elements
+		static constexpr std::size_t Count = 3u;
 
-		// can this be used as an lvalue
-		static constexpr bool Writable = writable_swizzle<Size, 3u, Index0, Index1, Index2>;
+		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
+		static constexpr bool Writable = writable_swizzle<Size, Count, I0, I1, I2>;
 
-		// the underlying ordered storage sequence for this logical vector
-		using access_sequence = std::index_sequence<Index0, Index1, Index2>;
+		//
+		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
+		// currently unused because at() does this logically for us.
+		//
 
-		// common initial sequence data
-		dimensional_storage_t<ScalarType, Size> value;
+		// as a parameter pack
+		using sequence_pack = std::index_sequence<I0, I1, I2>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+
+		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
+		dimensional_storage_t<T, Size> value;
 
 		// default/deleted boilerplate
 		indexed_vector() noexcept = default;
@@ -645,28 +676,28 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType>
+		template <dimensional_scalar U>
 		requires Writable
-		constexpr void init(OtherScalarType value0, OtherScalarType value1, OtherScalarType value2) noexcept
+		constexpr void init(U value0, U value1, U value2) noexcept
 		{
-			value[Index0] = static_cast<ScalarType>(value0);
-			value[Index1] = static_cast<ScalarType>(value1);
-			value[Index2] = static_cast<ScalarType>(value2);
+			value[I0] = static_cast<T>(value0);
+			value[I1] = static_cast<T>(value1);
+			value[I2] = static_cast<T>(value2);
 		}
 
 		// copy assignment
-		template <bool OtherWritable, dimensional_scalar OtherScalarType, typename Derived>
-		requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, OtherScalarType, IndexCount, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u], other[2u]);
 
 			return *this;
 		}
 
-		template <bool OtherWritable, typename Derived>
+		template <bool W, typename D>
 		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, ScalarType, IndexCount, Derived> &other) noexcept
+		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u], other[2u]);
 
@@ -674,32 +705,32 @@ namespace dsga
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
-		constexpr ScalarType &at(std::size_t index) requires Writable
+		constexpr T &at(std::size_t index) requires Writable
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index0];
+					return value[I0];
 				case 1u:
-					return value[Index1];
+					return value[I1];
 				case 2u:
-					return value[Index2];
+					return value[I2];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		constexpr const ScalarType &at(std::size_t index) const
+		constexpr const T &at(std::size_t index) const
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index0];
+					return value[I0];
 				case 1u:
-					return value[Index1];
+					return value[I1];
 				case 2u:
-					return value[Index2];
+					return value[I2];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
@@ -707,46 +738,53 @@ namespace dsga
 
 		// basic_vector conversion operator
 		// this is extremely important.
-		constexpr operator basic_vector<ScalarType, IndexCount>() const noexcept
+		constexpr operator basic_vector<T, Count>() const noexcept
 		{
-			return basic_vector<ScalarType, IndexCount>(value[Index0], value[Index1], value[Index2]);
+			return basic_vector<T, Count>(value[I0], value[I1], value[I2]);
 		}
 
-		template <dimensional_scalar OtherScalarType>
-		requires (!std::same_as<ScalarType, OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>)
-		explicit constexpr operator basic_vector<OtherScalarType, IndexCount>() const noexcept
+		template <dimensional_scalar U>
+		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
+		explicit constexpr operator basic_vector<U, Count>() const noexcept
 		{
-			return basic_vector<OtherScalarType, IndexCount>(static_cast<OtherScalarType>(value[Index0]),
-															 static_cast<OtherScalarType>(value[Index1]),
-															 static_cast<OtherScalarType>(value[Index2]));
+			return basic_vector<U, Count>(static_cast<U>(value[I0]),
+										  static_cast<U>(value[I1]),
+										  static_cast<U>(value[I2]));
 		}
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2>(*this, 0u); }
-		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2>(*this, 0u); }
-		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2>(*this, 0u); }
-		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2>(*this, IndexCount); }
-		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2>(*this, IndexCount); }
-		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2>(*this, IndexCount); }
+		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2>(*this, 0u); }
+		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, 0u); }
+		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, 0u); }
+		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2>(*this, Count); }
+		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, Count); }
+		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, Count); }
 	};
 
-	// for swizzling 4D parts of dimension_data
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1, std::size_t Index2, std::size_t Index3>
-	struct indexed_vector<ScalarType, Size, 4u, Index0, Index1, Index2, Index3>
-		: vector_base<writable_swizzle<Size, 4u, Index0, Index1, Index2, Index3>, ScalarType, 4u, indexed_vector<ScalarType, Size, 4u, Index0, Index1, Index2, Index3>>
+	// for swizzling 4D parts of basic_vector
+	template <dimensional_scalar T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2, std::size_t I3>
+	struct indexed_vector<T, Size, 4u, I0, I1, I2, I3>
+		: vector_base<writable_swizzle<Size, 4u, I0, I1, I2, I3>, T, 4u, indexed_vector<T, Size, 4u, I0, I1, I2, I3>>
 	{
-		// we have partial specialization, so can't use template parameter for Size
-		// number of logical storage elements
-		static constexpr std::size_t IndexCount = 4u;
+		// we have partial specialization, so can't use template parameter for Count number of logical storage elements
+		static constexpr std::size_t Count = 4u;
 
-		// can this be used as an lvalue
-		static constexpr bool Writable = writable_swizzle<Size, 4u, Index0, Index1, Index2, Index3>;
+		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
+		static constexpr bool Writable = writable_swizzle<Size, Count, I0, I1, I2, I3>;
 
-		// the underlying ordered storage sequence for this logical vector
-		using access_sequence = std::index_sequence<Index0, Index1, Index2, Index3>;
+		//
+		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
+		// currently unused because at() does this logically for us.
+		//
 
-		// common initial sequence data
-		dimensional_storage_t<ScalarType, Size> value;
+		// as a parameter pack
+		using sequence_pack = std::index_sequence<I0, I1, I2, I3>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+
+		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
+		dimensional_storage_t<T, Size> value;
 
 		// default/deleted boilerplate
 		indexed_vector() noexcept = default;
@@ -754,29 +792,29 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType>
+		template <dimensional_scalar U>
 		requires Writable
-		constexpr void init(OtherScalarType value0, OtherScalarType value1, OtherScalarType value2, OtherScalarType value3) noexcept
+		constexpr void init(U value0, U value1, U value2, U value3) noexcept
 		{
-			value[Index0] = static_cast<ScalarType>(value0);
-			value[Index1] = static_cast<ScalarType>(value1);
-			value[Index2] = static_cast<ScalarType>(value2);
-			value[Index3] = static_cast<ScalarType>(value3);
+			value[I0] = static_cast<T>(value0);
+			value[I1] = static_cast<T>(value1);
+			value[I2] = static_cast<T>(value2);
+			value[I3] = static_cast<T>(value3);
 		}
 
 		// copy assignment
-		template <bool OtherWritable, dimensional_scalar OtherScalarType, typename Derived>
-		requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, OtherScalarType, IndexCount, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u], other[2u], other[3u]);
 
 			return *this;
 		}
 
-		template <bool OtherWritable, typename Derived>
+		template <bool W, typename D>
 		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<OtherWritable, ScalarType, IndexCount, Derived> &other) noexcept
+		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u], other[2u], other[3u]);
 
@@ -784,36 +822,36 @@ namespace dsga
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
-		constexpr ScalarType &at(std::size_t index) requires Writable
+		constexpr T &at(std::size_t index) requires Writable
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index0];
+					return value[I0];
 				case 1u:
-					return value[Index1];
+					return value[I1];
 				case 2u:
-					return value[Index2];
+					return value[I2];
 				case 3u:
-					return value[Index3];
+					return value[I3];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		constexpr const ScalarType &at(std::size_t index) const
+		constexpr const T &at(std::size_t index) const
 		{
 			switch (index)
 			{
 				case 0u:
-					return value[Index0];
+					return value[I0];
 				case 1u:
-					return value[Index1];
+					return value[I1];
 				case 2u:
-					return value[Index2];
+					return value[I2];
 				case 3u:
-					return value[Index3];
+					return value[I3];
 			}
 
 			throw std::out_of_range("invalid indexed_vector subscript");
@@ -821,28 +859,28 @@ namespace dsga
 
 		// basic_vector conversion operator
 		// this is extremely important.
-		constexpr operator basic_vector<ScalarType, IndexCount>() const noexcept
+		constexpr operator basic_vector<T, Count>() const noexcept
 		{
-			return basic_vector<ScalarType, IndexCount>(value[Index0], value[Index1], value[Index2], value[Index3]);
+			return basic_vector<T, Count>(value[I0], value[I1], value[I2], value[I3]);
 		}
 
-		template <dimensional_scalar OtherScalarType>
-		requires (!std::same_as<ScalarType, OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>)
-		explicit constexpr operator basic_vector<OtherScalarType, IndexCount>() const noexcept
+		template <dimensional_scalar U>
+		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
+		explicit constexpr operator basic_vector<U, Count>() const noexcept
 		{
-			return basic_vector<OtherScalarType, IndexCount>(static_cast<OtherScalarType>(value[Index0]),
-															 static_cast<OtherScalarType>(value[Index1]),
-															 static_cast<OtherScalarType>(value[Index2]),
-															 static_cast<OtherScalarType>(value[Index3]));
+			return basic_vector<U, Count>(static_cast<U>(value[I0]),
+										  static_cast<U>(value[I1]),
+										  static_cast<U>(value[I2]),
+										  static_cast<U>(value[I3]));
 		}
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2, Index3>(*this, 0u); }
-		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2, Index3>(*this, 0u); }
-		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2, Index3>(*this, 0u); }
-		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2, Index3>(*this, IndexCount); }
-		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2, Index3>(*this, IndexCount); }
-		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<ScalarType, Size, IndexCount, Index0, Index1, Index2, Index3>(*this, IndexCount); }
+		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2, I3>(*this, 0u); }
+		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, 0u); }
+		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, 0u); }
+		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2, I3>(*this, Count); }
+		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, Count); }
+		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, Count); }
 	};
 
 
@@ -867,11 +905,22 @@ namespace dsga
 		// number of physical storage elements
 		static constexpr std::size_t Size = 1u;
 
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
 
-		// the underlying ordered storage sequence for this physical vector
-		using access_sequence = std::make_index_sequence<Size>;
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because at() does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Size>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
@@ -1005,11 +1054,22 @@ namespace dsga
 		// number of physical storage elements
 		static constexpr std::size_t Size = 2u;
 
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
 
-		// the underlying ordered storage sequence for this physical vector
-		using access_sequence = std::make_index_sequence<Size>;
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because at() does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Size>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
@@ -1150,11 +1210,22 @@ namespace dsga
 		// number of physical storage elements
 		static constexpr std::size_t Size = 3u;
 
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
 
-		// the underlying ordered storage sequence for this physical vector
-		using access_sequence = std::make_index_sequence<Size>;
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because at() does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Size>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
@@ -1418,11 +1489,22 @@ namespace dsga
 		// number of physical storage elements
 		static constexpr std::size_t Size = 4u;
 
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
 
-		// the underlying ordered storage sequence for this physical vector
-		using access_sequence = std::make_index_sequence<Size>;
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because at() does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Size>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
