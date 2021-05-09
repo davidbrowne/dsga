@@ -1385,8 +1385,8 @@ TEST_SUITE("lvalue swizzle copy assignment")
 		CHECK_UNARY_FALSE(dsga::unique_indexes<3, 3, 2>);
 		CHECK_UNARY_FALSE(dsga::unique_indexes<3, 3, 3>);
 
-		CHECK_UNARY(dsga::lvalue_swizzle_indexes<4, 3, 3, 2, 1>);
-		CHECK_UNARY_FALSE(dsga::lvalue_swizzle_indexes<4, 3, 3, 2, 2>);
+		CHECK_UNARY(dsga::writable_swizzle<4, 3, 3, 2, 1>);
+		CHECK_UNARY_FALSE(dsga::writable_swizzle<4, 3, 3, 2, 2>);
 	}
 
 

@@ -38,13 +38,13 @@ namespace dsga
 
 	// want the size to be between 1 and 4, inclusive
 	template <std::size_t Size>
-	concept dimensional_size = ((Size > 0u) && (Size <= 4u));
+	concept dimensional_size = ((Size >= 1u) && (Size <= 4u));
 
 	// dimensional storage needs the arithmetic type and size restrictions
-	template <typename ScalarType, std::size_t Size>
-	concept dimensional_storage = dimensional_size<Size> && dimensional_scalar<ScalarType>;
+	template <typename T, std::size_t Size>
+	concept dimensional_storage = dimensional_scalar<T> && dimensional_size<Size>;
 
-	// we want dimensional_storage_t to have length from 1 to 4 (1 gives just a sneaky kind of ScalarType that can swizzle),
+	// we want dimensional_storage_t to have length from 1 to 4 (1 gives just a sneaky kind of T that can swizzle),
 	// and the storage has to have room for all the data. We also need dimensional_storage_t to support operator[] to access
 	// the data. It needs to also support iterators so we can use it in ranged-for loops, algorithms, etc.
 
@@ -56,11 +56,11 @@ namespace dsga
 	// the vector, and 2) the backing storage used by a swizzle of a vector (storage is in that vector), that
 	// is used to index into as required by the swizzle.
 
-	// this implementation uses std::array as the backing storage type.
+	// this implementation uses std::array as the backing storage type. It satisfies the requirements described above.
 
-	template <dimensional_scalar ScalarType, std::size_t Size>
-	requires dimensional_storage<ScalarType, Size>
-	using dimensional_storage_t = std::array<ScalarType, Size>;
+	template <dimensional_scalar T, std::size_t Size>
+	requires dimensional_storage<T, Size>
+	using dimensional_storage_t = std::array<T, Size>;
 
 
 	// for our vector and swizzling, we need to rely on union and the common initial sequence.
@@ -91,17 +91,17 @@ namespace dsga
 	// https://stackoverflow.com/questions/48058545/are-there-any-guarantees-for-unions-that-contain-a-wrapped-type-and-the-type-its
 
 	// common initial sequence wrapper with basic storage access -- forwards function calls to wrapped storage
-	template <dimensional_scalar ScalarType, std::size_t Size>
-	requires dimensional_storage<ScalarType, Size>
+	template <dimensional_scalar T, std::size_t Size>
+	requires dimensional_storage<T, Size>
 	struct storage_wrapper
 	{
-		dimensional_storage_t<ScalarType, Size> value;
+		dimensional_storage_t<T, Size> value;
 
 		constexpr		std::size_t	size()							const	noexcept	{ return Size; }
 
 		// physically contiguous access to data
-		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	{ return value[index]; }
-		constexpr const ScalarType  &operator [](std::size_t index)	const	noexcept	{ return value[index]; }
+		constexpr		T			&operator [](std::size_t index)			noexcept	{ return value[index]; }
+		constexpr const T			&operator [](std::size_t index)	const	noexcept	{ return value[index]; }
 
 		template <dimensional_scalar ...Args>
 		requires (sizeof...(Args) == Size)
@@ -120,7 +120,7 @@ namespace dsga
 			template <dimensional_scalar ...Args, std::size_t ...Is>
 			requires (sizeof...(Args) == Size) && (sizeof...(Is) == Size)
 			constexpr void set_impl(std::index_sequence<Is...> /* dummy */,
-									Args ...args) noexcept { ((value[Is] = static_cast<ScalarType>(args)),...); }
+									Args ...args) noexcept { ((value[Is] = static_cast<T>(args)),...); }
 
 	};
 
@@ -128,11 +128,11 @@ namespace dsga
 	namespace detail
 	{
 		// the concepts will help indexed_vector determine if it can be assigned to, like an lvalue reference,
-		// i.e., if all indexes are unique then it can be used as an lvalue reference.
+		// i.e., if all indexes are unique then it can be used as an lvalue reference, i.e., is writable to.
 
 		// see if all the std::size_t index values are unique
 
-		template <std::size_t ...Indexes>
+		template <std::size_t ...Is>
 		struct unique_indexes_impl;
 
 		template <>
@@ -145,37 +145,37 @@ namespace dsga
 		{
 		};
 
-		template <std::size_t FirstIndex, std::size_t ...RestIndexes>
-		struct unique_indexes_impl<FirstIndex, RestIndexes...>
+		template <std::size_t First, std::size_t ...Rest>
+		struct unique_indexes_impl<First, Rest...>
 		{
-			static constexpr bool value = ((FirstIndex != RestIndexes) && ...) && unique_indexes_impl<RestIndexes...>::value;
+			static constexpr bool value = ((First != Rest) && ...) && unique_indexes_impl<Rest...>::value;
 		};
 
-		// all Index values must be in ranged [0, Size) -- not checking here about Size and number of Indexes
+		// all Index values must be in ranged [0, Size) -- not checking here about Size and number of Is
 
-		template <std::size_t Size, std::size_t ...Indexes>
+		template <std::size_t Size, std::size_t ...Is>
 		struct valid_indexes_impl
 		{
-			static constexpr bool value = ((Indexes < Size) && ...);
+			static constexpr bool value = ((Is < Size) && ...);
 		};
 
 	}
 
-	// concepts required to build concept for testing for lvalue swizzle indexes
+	// concepts required to build concept for testing for writable swizzle indexes
 
-	template <std::size_t ...Indexes>
-	concept unique_indexes = (sizeof...(Indexes) > 0) && detail::unique_indexes_impl<Indexes...>::value;
+	template <std::size_t ...Is>
+	concept unique_indexes = (sizeof...(Is) > 0) && detail::unique_indexes_impl<Is...>::value;
 
-	template <std::size_t IndexCount, std::size_t ...Indexes>
-	concept valid_index_count = (sizeof...(Indexes) == IndexCount) && (IndexCount > 0) && (IndexCount <= 4u);
+	template <std::size_t Count, std::size_t ...Is>
+	concept valid_index_count = (sizeof...(Is) == Count) && dimensional_size<Count>;
 
-	template <std::size_t Size, std::size_t ...Indexes>
-	concept valid_range_indexes = detail::valid_indexes_impl<Size, Indexes...>::value;
+	template <std::size_t Size, std::size_t ...Is>
+	concept valid_range_indexes = detail::valid_indexes_impl<Size, Is...>::value;
 
-	// lvalue_swizzle_indexes can determine whether a particular indexed_vector can be used as an lvalue reference
+	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 
-	template <std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-	constexpr inline bool lvalue_swizzle_indexes = valid_index_count<IndexCount, Indexes...> && unique_indexes<Indexes...> && valid_range_indexes<Size, Indexes...>;
+	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
+	constexpr inline bool writable_swizzle = valid_index_count<Count, Is...> && unique_indexes<Is...> && valid_range_indexes<Size, Is...>;
 
 	//
 	// helper template functions to determine whether implicit conversions are allowed
@@ -218,8 +218,8 @@ namespace dsga
 	// 		operator[] - relies on at() in Derived
 	// 		size() - relies on Count template parameter
 	//
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires dimensional_storage<ScalarType, Count>
+	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
+	requires dimensional_storage<T, Count>
 	struct vector_base
 	{
 		// CRTP access to Derived class
@@ -232,69 +232,69 @@ namespace dsga
 		constexpr		void		set(Args ...args)						noexcept						{ this->as_derived().init(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
-		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
-		constexpr const	ScalarType	&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
+		constexpr		T			&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
+		constexpr const	T			&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
 
-		// number of accessible ScalarType elements
+		// number of accessible T elements
 		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
 	};
 
 	// basic_vector will act as the primary vector class in this library.
 	//
+	// T is the type of the elements stored in the vector/storage
 	// Size is number of elements referencable in vector/storage
-	// ScalarType is the type of the elements stored in the vector/storage
 
-	template <dimensional_scalar ScalarType, std::size_t Size>
-	requires dimensional_storage<ScalarType, Size>
+	template <dimensional_scalar T, std::size_t Size>
+	requires dimensional_storage<T, Size>
 	struct basic_vector;
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
 	//
-	// Size relates to the number of elements in the underlying storage, which informs the values the Indexes can hold
-	// ScalarType is the type of the elements stored in the underlying storage
-	// IndexCount is the number of elements accessible in swizzle -- often works alongside with basic_vector's Size
-	// Indexes... are the number of swizzlable values available -- there are IndexCount of them, and their values are in the range:  0 <= Indexes < Size
+	// T is the type of the elements stored in the underlying storage
+	// Size relates to the number of elements in the underlying storage, which informs the values the Is can hold
+	// Count is the number of elements accessible in swizzle -- often works alongside with basic_vector's Size
+	// Is... are the number of swizzlable values available -- there are Count of them, and their values are in the range:  0 <= Indexes < Size
 
-	// we want indexed_vector (vector swizzles) to have length from 1 to 4 (1 is just a sneaky type of ScalarType swizzle) in order
-	// to work with the basic_vector which also has these lengths. The number of indexes is the same as the IndexCount, between 1 and 4.
+	// we want indexed_vector (vector swizzles) to have length from 1 to 4 (1 is just a sneaky type of T swizzle) in order
+	// to work with the basic_vector which also has these lengths. The number of indexes is the same as the Count, between 1 and 4.
 	// The indexes are valid for indexing into the values in the storage which is Size big.
 
-	template <typename ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-	concept indexable = dimensional_storage<ScalarType, Size> && valid_index_count<IndexCount, Indexes...> && valid_range_indexes<Size, Indexes...>;
+	template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	concept indexable = dimensional_storage<T, Size> && valid_index_count<Count, Is...> && valid_range_indexes<Size, Is...>;
 
-	template <typename ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-	requires indexable <ScalarType, Size, IndexCount, Indexes...>
+	template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	requires indexable<T, Size, Count, Is...>
 	struct indexed_vector;
 
 	//
 	// iterators for indexed_vector so it can participate in range-for loop
 	//
 
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ... Indexes>
-	requires indexable <ScalarType, Size, IndexCount, Indexes...>
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
+	requires indexable<T, Size, Count, Is...>
 	struct indexed_vector_iterator
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
 		// since c++17 deprecated std::iterator
 		using iterator_category = std::forward_iterator_tag;
-		using value_type = ScalarType;
+		using value_type = T;
 		using difference_type = int;
-		using pointer = ScalarType *;
-		using reference = ScalarType &;
+		using pointer = T *;
+		using reference = T &;
 
 		constexpr static std::size_t begin_index = 0;
-		constexpr static std::size_t end_index = IndexCount;
+		constexpr static std::size_t end_index = Count;
 
 		// the data
-		indexed_vector<ScalarType, Size, IndexCount, Indexes ...> *mapper_ptr;
+		indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
 		std::size_t mapper_index;
 
 		// index == 0 is begin iterator
-		// index == IndexCount is end iterator -- clamp index in [0, IndexCount] range
-		constexpr indexed_vector_iterator(indexed_vector<ScalarType, Size, IndexCount, Indexes ...> &mapper, std::size_t index) noexcept
+		// index == Count is end iterator -- clamp index in [0, Count] range
+		constexpr indexed_vector_iterator(indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
 		{
 			mapper_ptr = std::addressof(mapper);
-			mapper_index = (index > IndexCount) ? IndexCount : index;			// std::size_t, so don't need lower bound check
+			mapper_index = (index > Count) ? Count : index;			// std::size_t, so don't need lower bound check
 		}
 
 		indexed_vector_iterator(const indexed_vector_iterator &) noexcept = default;
@@ -314,7 +314,7 @@ namespace dsga
 
 		constexpr indexed_vector_iterator& operator++() noexcept
 		{
-			if (mapper_index < IndexCount)
+			if (mapper_index < Count)
 				mapper_index++;
 			return *this;
 		}
@@ -322,7 +322,7 @@ namespace dsga
 		constexpr indexed_vector_iterator operator++(int) noexcept
 		{
 			indexed_vector_iterator temp = *this;
-			if (mapper_index < IndexCount)
+			if (mapper_index < Count)
 				mapper_index++;
 			return temp;
 		}
@@ -333,31 +333,31 @@ namespace dsga
 		}
 	};
 
-	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ... Indexes>
-	requires indexable <ScalarType, Size, IndexCount, Indexes...>
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
+	requires indexable <T, Size, Count, Is...>
 	struct indexed_vector_const_iterator
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
 		// since c++17 deprecated std::iterator
 		using iterator_category = std::forward_iterator_tag;
-		using value_type = ScalarType;
+		using value_type = T;
 		using difference_type = int;
-		using pointer = const ScalarType *;
-		using reference = const ScalarType &;
+		using pointer = const T *;
+		using reference = const T &;
 
 		constexpr static std::size_t begin_index = 0;
-		constexpr static std::size_t end_index = IndexCount;
+		constexpr static std::size_t end_index = Count;
 
 		// the data
-		const indexed_vector<ScalarType, Size, IndexCount, Indexes ...> *mapper_ptr;
+		const indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
 		std::size_t mapper_index;
 
 		// index == 0 is begin iterator
-		// index == IndexCount is end iterator -- clamp index in [0, IndexCount] range
-		constexpr indexed_vector_const_iterator(const indexed_vector<ScalarType, Size, IndexCount, Indexes ...> &mapper, std::size_t index) noexcept
+		// index == Count is end iterator -- clamp index in [0, Count] range
+		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
 		{
 			mapper_ptr = std::addressof(mapper);
-			mapper_index = (index > IndexCount) ? IndexCount : index;			// std::size_t, so don't need lower bound check
+			mapper_index = (index > Count) ? Count : index;			// std::size_t, so don't need lower bound check
 		}
 
 		indexed_vector_const_iterator(const indexed_vector_const_iterator &) noexcept = default;
@@ -377,7 +377,7 @@ namespace dsga
 
 	   constexpr indexed_vector_const_iterator& operator++() noexcept
 		{
-			if (mapper_index < IndexCount)
+			if (mapper_index < Count)
 				mapper_index++;
 			return *this;
 		}
@@ -385,7 +385,7 @@ namespace dsga
 		constexpr indexed_vector_const_iterator operator++(int) noexcept
 		{
 			indexed_vector_const_iterator temp = *this;
-			if (mapper_index < IndexCount)
+			if (mapper_index < Count)
 				mapper_index++;
 			return temp;
 		}
@@ -399,14 +399,14 @@ namespace dsga
 	// for swizzling 1D parts of dimension_data - like a scalar accessor
 	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index>
 	struct indexed_vector<ScalarType, Size, 1u, Index>
-		: vector_base<lvalue_swizzle_indexes<Size, 1u, Index>, ScalarType, 1u, indexed_vector<ScalarType, Size, 1u, Index>>
+		: vector_base<writable_swizzle<Size, 1u, Index>, ScalarType, 1u, indexed_vector<ScalarType, Size, 1u, Index>>
 	{
 		// we have partial specialization, so can't use template parameter for IndexCount
 		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 1u;
 
 		// can this be used as an lvalue
-		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 1u, Index>;
+		static constexpr bool Writable = writable_swizzle<Size, 1u, Index>;
 
 		// the underlying ordered storage sequence for this logical vector
 		using access_sequence = std::index_sequence<Index>;
@@ -521,14 +521,14 @@ namespace dsga
 	// for swizzling 2D parts of dimension_data
 	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1>
 	struct indexed_vector<ScalarType, Size, 2u, Index0, Index1>
-		: vector_base<lvalue_swizzle_indexes<Size, 2u, Index0, Index1>, ScalarType, 2u, indexed_vector<ScalarType, Size, 2u, Index0, Index1>>
+		: vector_base<writable_swizzle<Size, 2u, Index0, Index1>, ScalarType, 2u, indexed_vector<ScalarType, Size, 2u, Index0, Index1>>
 	{
 		// we have partial specialization, so can't use template parameter for Size
 		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 2u;
 
 		// can this be used as an lvalue
-		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 2u, Index0, Index1>;
+		static constexpr bool Writable = writable_swizzle<Size, 2u, Index0, Index1>;
 
 		// the underlying ordered storage sequence for this logical vector
 		using access_sequence = std::index_sequence<Index0, Index1>;
@@ -624,14 +624,14 @@ namespace dsga
 	// for swizzling 3D parts of dimension_data
 	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1, std::size_t Index2>
 	struct indexed_vector<ScalarType, Size, 3u, Index0, Index1, Index2>
-		: vector_base<lvalue_swizzle_indexes<Size, 3u, Index0, Index1, Index2>, ScalarType, 3u, indexed_vector<ScalarType, Size, 3u, Index0, Index1, Index2>>
+		: vector_base<writable_swizzle<Size, 3u, Index0, Index1, Index2>, ScalarType, 3u, indexed_vector<ScalarType, Size, 3u, Index0, Index1, Index2>>
 	{
 		// we have partial specialization, so can't use template parameter for Size
 		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 3u;
 
 		// can this be used as an lvalue
-		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 3u, Index0, Index1, Index2>;
+		static constexpr bool Writable = writable_swizzle<Size, 3u, Index0, Index1, Index2>;
 
 		// the underlying ordered storage sequence for this logical vector
 		using access_sequence = std::index_sequence<Index0, Index1, Index2>;
@@ -733,14 +733,14 @@ namespace dsga
 	// for swizzling 4D parts of dimension_data
 	template <dimensional_scalar ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1, std::size_t Index2, std::size_t Index3>
 	struct indexed_vector<ScalarType, Size, 4u, Index0, Index1, Index2, Index3>
-		: vector_base<lvalue_swizzle_indexes<Size, 4u, Index0, Index1, Index2, Index3>, ScalarType, 4u, indexed_vector<ScalarType, Size, 4u, Index0, Index1, Index2, Index3>>
+		: vector_base<writable_swizzle<Size, 4u, Index0, Index1, Index2, Index3>, ScalarType, 4u, indexed_vector<ScalarType, Size, 4u, Index0, Index1, Index2, Index3>>
 	{
 		// we have partial specialization, so can't use template parameter for Size
 		// number of logical storage elements
 		static constexpr std::size_t IndexCount = 4u;
 
 		// can this be used as an lvalue
-		static constexpr bool Writable = lvalue_swizzle_indexes<Size, 4u, Index0, Index1, Index2, Index3>;
+		static constexpr bool Writable = writable_swizzle<Size, 4u, Index0, Index1, Index2, Index3>;
 
 		// the underlying ordered storage sequence for this logical vector
 		using access_sequence = std::index_sequence<Index0, Index1, Index2, Index3>;
