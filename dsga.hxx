@@ -28,6 +28,17 @@ constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
+	//
+	// helper template function to convert a std::index_sequence to a std::array.
+	// can be used for indirect indexing.
+	//
+
+	template <std::size_t... Is>
+	static constexpr std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */)
+	{
+		return { Is... };
+	}
+
 	// plain undecorated arithmetic types
 	template <typename T>
 	concept dimensional_scalar = std::is_arithmetic_v<T> && std::same_as<T, std::remove_cvref_t<T>>;
@@ -95,6 +106,22 @@ namespace dsga
 	requires dimensional_storage<T, Size>
 	struct storage_wrapper
 	{
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		//
+		// the underlying ordered storage sequence for this physical storage - indirection is same as physical contiguous order.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Count>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+
 		dimensional_storage_t<T, Size> value;
 
 		constexpr		std::size_t	size()							const	noexcept	{ return Size; }
@@ -103,9 +130,9 @@ namespace dsga
 		constexpr		T			&operator [](std::size_t index)			noexcept	{ return value[index]; }
 		constexpr const T			&operator [](std::size_t index)	const	noexcept	{ return value[index]; }
 
-		template <dimensional_scalar ...Args>
-		requires (sizeof...(Args) == Size)
-		constexpr		void		set(Args ...args)						noexcept	{ set_impl(std::make_index_sequence<Size>{}, args...); }
+		template <typename ...Args>
+		requires (sizeof...(Args) == Size) && (std::convertible_to<Args, T> &&...)
+		constexpr		void		set(Args ...args)						noexcept	{ set_impl(sequence_pack{}, args...); }
 
 		// support for range-for loop
 		constexpr		auto		begin()									noexcept	{ return value.begin(); }
@@ -117,8 +144,8 @@ namespace dsga
 
 		// details
 		private:
-			template <dimensional_scalar ...Args, std::size_t ...Is>
-			requires (sizeof...(Args) == Size) && (sizeof...(Is) == Size)
+			template <typename ...Args, std::size_t ...Is>
+			requires (sizeof...(Args) == Size) && (sizeof...(Is) == Size) && (std::convertible_to<Args, T> &&...)
 			constexpr void set_impl(std::index_sequence<Is...> /* dummy */,
 									Args ...args) noexcept { ((value[Is] = static_cast<T>(args)),...); }
 
@@ -198,17 +225,6 @@ namespace dsga
 	template <typename T, typename U>
 	concept same_sizeof = (sizeof(T) == sizeof(U));
 
-	//
-	// helper template function to convert a std::index_sequence to a std::array.
-	// can be used for indirect indexing.
-	//
-
-	template <std::size_t... Is>
-	static constexpr std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */)
-	{
-		return { Is... };
-	}
-
 	// there is no use for this enum, it is meant as FEO (For Exposition Only). we will separate domains by the names of the swizzle union
 	// members we create, as opposed to using this enum class as a template parameter. we only intend to implement the xyzw swizzle accessors.
 	// if we intend to implement the other swizzle mask sets, then values of this enum class would come in handy as a template parameter (can we
@@ -237,8 +253,8 @@ namespace dsga
 		constexpr const Derived		&as_derived()					const	noexcept						{ return static_cast<const Derived &>(*this); }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
-		template <dimensional_scalar ...Args>
-		requires Writable && (sizeof...(Args) == Count)
+		template <typename ...Args>
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr		void		set(Args ...args)						noexcept						{ this->as_derived().init(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
@@ -437,8 +453,8 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <dimensional_scalar U>
-		requires Writable
+		template <typename U>
+		requires Writable && std::convertible_to<U, T>
 		constexpr void init(U value0) noexcept
 		{
 			value[I] = static_cast<T>(value0);
@@ -566,9 +582,9 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <dimensional_scalar U>
-		requires Writable
-		constexpr void init(U value0, U value1) noexcept
+		template <typename U1, typename U2>
+		requires Writable && std::convertible_to<U1, T> && std::convertible_to<U2, T>
+		constexpr void init(U1 value0, U2 value1) noexcept
 		{
 			value[I0] = static_cast<T>(value0);
 			value[I1] = static_cast<T>(value1);
@@ -676,9 +692,9 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <dimensional_scalar U>
-		requires Writable
-		constexpr void init(U value0, U value1, U value2) noexcept
+		template <typename U1, typename U2, typename U3>
+		requires Writable && std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		constexpr void init(U1 value0, U2 value1, U3 value2) noexcept
 		{
 			value[I0] = static_cast<T>(value0);
 			value[I1] = static_cast<T>(value1);
@@ -792,9 +808,11 @@ namespace dsga
 
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <dimensional_scalar U>
-		requires Writable
-		constexpr void init(U value0, U value1, U value2, U value3) noexcept
+		template <typename U1, typename U2, typename U3, typename U4>
+		requires Writable &&
+			std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
+			std::convertible_to<U3, T> && std::convertible_to<U4, T>
+		constexpr void init(U1 value0, U2 value1, U3 value2, U4 value3) noexcept
 		{
 			value[I0] = static_cast<T>(value0);
 			value[I1] = static_cast<T>(value1);
@@ -886,21 +904,21 @@ namespace dsga
 
 	// convenience using types for indexed_vector as members of basic_vector
 
-	template <typename ScalarType, std::size_t Size, std::size_t Index>
-	using index1_vector = indexed_vector<std::remove_cvref_t<ScalarType>, Size, 1u, Index>;
+	template <typename T, std::size_t Size, std::size_t I>
+	using index1_vector = indexed_vector<std::remove_cvref_t<T>, Size, 1u, I>;
 
-	template <typename ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1>
-	using index2_vector = indexed_vector<std::remove_cvref_t<ScalarType>, Size, 2u, Index0, Index1>;
+	template <typename T, std::size_t Size, std::size_t I0, std::size_t I1>
+	using index2_vector = indexed_vector<std::remove_cvref_t<T>, Size, 2u, I0, I1>;
 
-	template <typename ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1, std::size_t Index2>
-	using index3_vector = indexed_vector<std::remove_cvref_t<ScalarType>, Size, 3u, Index0, Index1, Index2>;
+	template <typename T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2>
+	using index3_vector = indexed_vector<std::remove_cvref_t<T>, Size, 3u, I0, I1, I2>;
 
-	template <typename ScalarType, std::size_t Size, std::size_t Index0, std::size_t Index1, std::size_t Index2, std::size_t Index3>
-	using index4_vector = indexed_vector<std::remove_cvref_t<ScalarType>, Size, 4u, Index0, Index1, Index2, Index3>;
+	template <typename T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2, std::size_t I3>
+	using index4_vector = indexed_vector<std::remove_cvref_t<T>, Size, 4u, I0, I1, I2, I3>;
 
 
-	template <dimensional_scalar ScalarType>
-	struct basic_vector<ScalarType, 1u> : vector_base<true, ScalarType, 1u, basic_vector<ScalarType, 1u>>
+	template <dimensional_scalar T>
+	struct basic_vector<T, 1u> : vector_base<true, T, 1u, basic_vector<T, 1u>>
 	{
 		// number of physical storage elements
 		static constexpr std::size_t Size = 1u;
@@ -917,22 +935,22 @@ namespace dsga
 		//
 
 		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Size>;
+		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<ScalarType, Size>				store;
+			storage_wrapper<T, Size>				store;
 
-			index1_vector<ScalarType, Size, 0>				x;				// can modify as lvalue
+			index1_vector<T, Size, 0>				x;				// Writable
 
-			index2_vector<ScalarType, Size, 0, 0>			xx;
+			index2_vector<T, Size, 0, 0>			xx;
 
-			index3_vector<ScalarType, Size, 0, 0, 0>		xxx;
+			index3_vector<T, Size, 0, 0, 0>			xxx;
 
-			index4_vector<ScalarType, Size, 0, 0, 0, 0>		xxxx;
+			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
 		};
 
 		//
@@ -951,33 +969,33 @@ namespace dsga
 		// constructors
 		//
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector(const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, std::size_t C, typename D>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store()
 		{
 			init(other[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
-		requires (!implicitly_convertible_to<OtherScalarType, ScalarType> && std::convertible_to<OtherScalarType, ScalarType>)
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, std::size_t C, typename D>
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
+		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store()
 		{
 			init(other[0u]);
 		}
 
-		template <typename OtherScalarType>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector(OtherScalarType value) noexcept
+		template <typename U>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector(U value) noexcept
 			: store()
 		{
 			init(value);
 		}
 
-		template <typename OtherScalarType>
-		requires (!implicitly_convertible_to<OtherScalarType, ScalarType> && std::convertible_to<OtherScalarType, ScalarType>)
-		explicit constexpr basic_vector(OtherScalarType value) noexcept
+		template <typename U>
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
+		explicit constexpr basic_vector(U value) noexcept
 			: store()
 		{
 			init(value);
@@ -987,17 +1005,17 @@ namespace dsga
 		// implicit assignment operators
 		//
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector &operator =(const vector_base<Writable, OtherScalarType, Size, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u]);
 			return *this;
 		}
 
-		template <typename OtherScalarType>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector &operator =(OtherScalarType value) noexcept
+		template <dimensional_scalar U>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector &operator =(U value) noexcept
 		{
 			init(value);
 			return *this;
@@ -1009,18 +1027,18 @@ namespace dsga
 
 		// this is extremely important and is only for basic_vector of [Size == 1]
 
-		template <typename OtherScalarType>
-		requires implicitly_convertible_to<ScalarType, OtherScalarType>
-		constexpr operator OtherScalarType() const noexcept
+		template <typename U>
+		requires implicitly_convertible_to<T, U>
+		constexpr operator U() const noexcept
 		{
-			return static_cast<OtherScalarType>(store.value[0u]);
+			return static_cast<U>(store.value[0u]);
 		}
 
-		template <typename OtherScalarType>
-		requires (!implicitly_convertible_to<ScalarType, OtherScalarType>) && std::convertible_to<ScalarType, OtherScalarType>
-		explicit constexpr operator OtherScalarType() const noexcept
+		template <typename U>
+		requires (!implicitly_convertible_to<T, U>) && std::convertible_to<T, U>
+		explicit constexpr operator U() const noexcept
 		{
-			return static_cast<OtherScalarType>(store.value[0u]);
+			return static_cast<U>(store.value[0u]);
 		}
 
 		//
@@ -1029,15 +1047,16 @@ namespace dsga
 
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType>
-		constexpr void init(OtherScalarType value) noexcept
+		template <typename U>
+		requires std::convertible_to<U, T>
+		constexpr void init(U value) noexcept
 		{
-			store.value[0u] = static_cast<ScalarType>(value);
+			store.value[0u] = static_cast<T>(value);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
+		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1048,8 +1067,8 @@ namespace dsga
 		constexpr auto cend()	const	noexcept	{ return store.value.cend(); }
 	};
 
-	template <dimensional_scalar ScalarType>
-	struct basic_vector<ScalarType, 2u> : vector_base<true, ScalarType, 2u, basic_vector<ScalarType, 2u>>
+	template <dimensional_scalar T>
+	struct basic_vector<T, 2u> : vector_base<true, T, 2u, basic_vector<T, 2u>>
 	{
 		// number of physical storage elements
 		static constexpr std::size_t Size = 2u;
@@ -1066,48 +1085,48 @@ namespace dsga
 		//
 
 		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Size>;
+		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<ScalarType, Size>				store;
+			storage_wrapper<T, Size>				store;
 
-			index1_vector<ScalarType, Size, 0>				x;				// can modify as lvalue
-			index1_vector<ScalarType, Size, 1>				y;				// can modify as lvalue
+			index1_vector<T, Size, 0>				x;				// Writable
+			index1_vector<T, Size, 1>				y;				// Writable
 
-			index2_vector<ScalarType, Size, 0, 0>			xx;
-			index2_vector<ScalarType, Size, 0, 1>			xy;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 1, 0>			yx;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 1, 1>			yy;
+			index2_vector<T, Size, 0, 0>			xx;
+			index2_vector<T, Size, 0, 1>			xy;				// Writable
+			index2_vector<T, Size, 1, 0>			yx;				// Writable
+			index2_vector<T, Size, 1, 1>			yy;
 
-			index3_vector<ScalarType, Size, 0, 0, 0>		xxx;
-			index3_vector<ScalarType, Size, 0, 0, 1>		xxy;
-			index3_vector<ScalarType, Size, 0, 1, 0>		xyx;
-			index3_vector<ScalarType, Size, 0, 1, 1>		xyy;
-			index3_vector<ScalarType, Size, 1, 0, 0>		yxx;
-			index3_vector<ScalarType, Size, 1, 0, 1>		yxy;
-			index3_vector<ScalarType, Size, 1, 1, 0>		yyx;
-			index3_vector<ScalarType, Size, 1, 1, 1>		yyy;
+			index3_vector<T, Size, 0, 0, 0>			xxx;
+			index3_vector<T, Size, 0, 0, 1>			xxy;
+			index3_vector<T, Size, 0, 1, 0>			xyx;
+			index3_vector<T, Size, 0, 1, 1>			xyy;
+			index3_vector<T, Size, 1, 0, 0>			yxx;
+			index3_vector<T, Size, 1, 0, 1>			yxy;
+			index3_vector<T, Size, 1, 1, 0>			yyx;
+			index3_vector<T, Size, 1, 1, 1>			yyy;
 
-			index4_vector<ScalarType, Size, 0, 0, 0, 0>		xxxx;
-			index4_vector<ScalarType, Size, 0, 0, 0, 1>		xxxy;
-			index4_vector<ScalarType, Size, 0, 0, 1, 0>		xxyx;
-			index4_vector<ScalarType, Size, 0, 0, 1, 1>		xxyy;
-			index4_vector<ScalarType, Size, 0, 1, 0, 0>		xyxx;
-			index4_vector<ScalarType, Size, 0, 1, 0, 1>		xyxy;
-			index4_vector<ScalarType, Size, 0, 1, 1, 0>		xyyx;
-			index4_vector<ScalarType, Size, 0, 1, 1, 1>		xyyy;
-			index4_vector<ScalarType, Size, 1, 0, 0, 0>		yxxx;
-			index4_vector<ScalarType, Size, 1, 0, 0, 1>		yxxy;
-			index4_vector<ScalarType, Size, 1, 0, 1, 0>		yxyx;
-			index4_vector<ScalarType, Size, 1, 0, 1, 1>		yxyy;
-			index4_vector<ScalarType, Size, 1, 1, 0, 0>		yyxx;
-			index4_vector<ScalarType, Size, 1, 1, 0, 1>		yyxy;
-			index4_vector<ScalarType, Size, 1, 1, 1, 0>		yyyx;
-			index4_vector<ScalarType, Size, 1, 1, 1, 1>		yyyy;
+			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
+			index4_vector<T, Size, 0, 0, 0, 1>		xxxy;
+			index4_vector<T, Size, 0, 0, 1, 0>		xxyx;
+			index4_vector<T, Size, 0, 0, 1, 1>		xxyy;
+			index4_vector<T, Size, 0, 1, 0, 0>		xyxx;
+			index4_vector<T, Size, 0, 1, 0, 1>		xyxy;
+			index4_vector<T, Size, 0, 1, 1, 0>		xyyx;
+			index4_vector<T, Size, 0, 1, 1, 1>		xyyy;
+			index4_vector<T, Size, 1, 0, 0, 0>		yxxx;
+			index4_vector<T, Size, 1, 0, 0, 1>		yxxy;
+			index4_vector<T, Size, 1, 0, 1, 0>		yxyx;
+			index4_vector<T, Size, 1, 0, 1, 1>		yxyy;
+			index4_vector<T, Size, 1, 1, 0, 0>		yyxx;
+			index4_vector<T, Size, 1, 1, 0, 1>		yyxy;
+			index4_vector<T, Size, 1, 1, 1, 0>		yyyx;
+			index4_vector<T, Size, 1, 1, 1, 1>		yyyy;
 		};
 
 		//
@@ -1126,41 +1145,41 @@ namespace dsga
 		// constructors
 		//
 
-		template <typename OtherScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType value) noexcept
+		template <typename U>
+		requires std::convertible_to<U, T>
+		explicit constexpr basic_vector(U value) noexcept
 			: store()
 		{
 			init(value, value);
 		}
 
-		template <typename OtherScalarType0, typename OtherScalarType1>
-		requires std::convertible_to<OtherScalarType0, ScalarType> && std::convertible_to <OtherScalarType1, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType0 xvalue, OtherScalarType1 yvalue) noexcept
+		template <typename U1, typename U2>
+		requires std::convertible_to<U1, T> && std::convertible_to <U2, T>
+		explicit constexpr basic_vector(U1 xvalue, U2 yvalue) noexcept
 			: store()
 		{
 			init(xvalue, yvalue);
 		}
 
-		template <typename OtherScalarType0, bool Writable, dimensional_scalar OtherScalarType1, std::size_t Count, typename Derived>
-		requires std::convertible_to<OtherScalarType0, ScalarType> && std::convertible_to<OtherScalarType1, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType0 xvalue, const vector_base<Writable, OtherScalarType1, Count, Derived> &yvalue_source) noexcept
+		template <typename U1, bool W, dimensional_scalar U2, std::size_t C, typename D>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
+		explicit constexpr basic_vector(U1 xvalue, const vector_base<W, U2, C, D> &yvalue_source) noexcept
 			: store()
 		{
 			init(xvalue, yvalue_source[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType> && (Count >= Size)
-		constexpr basic_vector(const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, std::size_t C, typename D>
+		requires implicitly_convertible_to<U, T> && (C >= Count)
+		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store()
 		{
 			init(other[0u], other[1u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
-		requires (!implicitly_convertible_to<OtherScalarType, ScalarType> && std::convertible_to<OtherScalarType, ScalarType> && (Count >= Size))
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, std::size_t C, typename D>
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T> && (C >= Count))
+		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store()
 		{
 			init(other[0u], other[1u]);
@@ -1170,9 +1189,9 @@ namespace dsga
 		// assignment operator
 		//
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector &operator =(const vector_base<Writable, OtherScalarType, Size, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u]);
 			return *this;
@@ -1184,16 +1203,17 @@ namespace dsga
 
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType0, typename OtherScalarType1>
-		constexpr void init(OtherScalarType0 value0, OtherScalarType1 value1) noexcept
+		template <typename U1, typename U2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
+		constexpr void init(U1 value0, U2 value1) noexcept
 		{
-			store.value[0u] = static_cast<ScalarType>(value0);
-			store.value[1u] = static_cast<ScalarType>(value1);
+			store.value[0u] = static_cast<T>(value0);
+			store.value[1u] = static_cast<T>(value1);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
+		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1204,8 +1224,8 @@ namespace dsga
 		constexpr auto cend()	const	noexcept	{ return store.value.cend(); }
 	};
 
-	template <dimensional_scalar ScalarType>
-	struct basic_vector<ScalarType, 3u> : vector_base<true, ScalarType, 3u, basic_vector<ScalarType, 3u>>
+	template <dimensional_scalar T>
+	struct basic_vector<T, 3u> : vector_base<true, T, 3u, basic_vector<T, 3u>>
 	{
 		// number of physical storage elements
 		static constexpr std::size_t Size = 3u;
@@ -1222,138 +1242,138 @@ namespace dsga
 		//
 
 		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Size>;
+		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<ScalarType, Size>				store;
+			storage_wrapper<T, Size>				store;
 
-			index1_vector<ScalarType, Size, 0>				x;				// can modify as lvalue
-			index1_vector<ScalarType, Size, 1>				y;				// can modify as lvalue
-			index1_vector<ScalarType, Size, 2>				z;				// can modify as lvalue
+			index1_vector<T, Size, 0>				x;				// Writable
+			index1_vector<T, Size, 1>				y;				// Writable
+			index1_vector<T, Size, 2>				z;				// Writable
 
-			index2_vector<ScalarType, Size, 0, 0>			xx;
-			index2_vector<ScalarType, Size, 0, 1>			xy;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 0, 2>			xz;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 1, 0>			yx;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 1, 1>			yy;
-			index2_vector<ScalarType, Size, 1, 2>			yz;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 2, 0>			zx;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 2, 1>			zy;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 2, 2>			zz;
+			index2_vector<T, Size, 0, 0>			xx;
+			index2_vector<T, Size, 0, 1>			xy;				// Writable
+			index2_vector<T, Size, 0, 2>			xz;				// Writable
+			index2_vector<T, Size, 1, 0>			yx;				// Writable
+			index2_vector<T, Size, 1, 1>			yy;
+			index2_vector<T, Size, 1, 2>			yz;				// Writable
+			index2_vector<T, Size, 2, 0>			zx;				// Writable
+			index2_vector<T, Size, 2, 1>			zy;				// Writable
+			index2_vector<T, Size, 2, 2>			zz;
 
-			index3_vector<ScalarType, Size, 0, 0, 0>		xxx;
-			index3_vector<ScalarType, Size, 0, 0, 1>		xxy;
-			index3_vector<ScalarType, Size, 0, 0, 2>		xxz;
-			index3_vector<ScalarType, Size, 0, 1, 0>		xyx;
-			index3_vector<ScalarType, Size, 0, 1, 1>		xyy;
-			index3_vector<ScalarType, Size, 0, 1, 2>		xyz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 2, 0>		xzx;
-			index3_vector<ScalarType, Size, 0, 2, 1>		xzy;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 2, 2>		xzz;
-			index3_vector<ScalarType, Size, 1, 0, 0>		yxx;
-			index3_vector<ScalarType, Size, 1, 0, 1>		yxy;
-			index3_vector<ScalarType, Size, 1, 0, 2>		yxz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 1, 0>		yyx;
-			index3_vector<ScalarType, Size, 1, 1, 1>		yyy;
-			index3_vector<ScalarType, Size, 1, 1, 2>		yyz;
-			index3_vector<ScalarType, Size, 1, 2, 0>		yzx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 2, 1>		yzy;
-			index3_vector<ScalarType, Size, 1, 2, 2>		yzz;
-			index3_vector<ScalarType, Size, 2, 0, 0>		zxx;
-			index3_vector<ScalarType, Size, 2, 0, 1>		zxy;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 0, 2>		zxz;
-			index3_vector<ScalarType, Size, 2, 1, 0>		zyx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 1, 1>		zyy;
-			index3_vector<ScalarType, Size, 2, 1, 2>		zyz;
-			index3_vector<ScalarType, Size, 2, 2, 0>		zzx;
-			index3_vector<ScalarType, Size, 2, 2, 1>		zzy;
-			index3_vector<ScalarType, Size, 2, 2, 2>		zzz;
+			index3_vector<T, Size, 0, 0, 0>		xxx;
+			index3_vector<T, Size, 0, 0, 1>		xxy;
+			index3_vector<T, Size, 0, 0, 2>		xxz;
+			index3_vector<T, Size, 0, 1, 0>		xyx;
+			index3_vector<T, Size, 0, 1, 1>		xyy;
+			index3_vector<T, Size, 0, 1, 2>		xyz;			// Writable
+			index3_vector<T, Size, 0, 2, 0>		xzx;
+			index3_vector<T, Size, 0, 2, 1>		xzy;			// Writable
+			index3_vector<T, Size, 0, 2, 2>		xzz;
+			index3_vector<T, Size, 1, 0, 0>		yxx;
+			index3_vector<T, Size, 1, 0, 1>		yxy;
+			index3_vector<T, Size, 1, 0, 2>		yxz;			// Writable
+			index3_vector<T, Size, 1, 1, 0>		yyx;
+			index3_vector<T, Size, 1, 1, 1>		yyy;
+			index3_vector<T, Size, 1, 1, 2>		yyz;
+			index3_vector<T, Size, 1, 2, 0>		yzx;			// Writable
+			index3_vector<T, Size, 1, 2, 1>		yzy;
+			index3_vector<T, Size, 1, 2, 2>		yzz;
+			index3_vector<T, Size, 2, 0, 0>		zxx;
+			index3_vector<T, Size, 2, 0, 1>		zxy;			// Writable
+			index3_vector<T, Size, 2, 0, 2>		zxz;
+			index3_vector<T, Size, 2, 1, 0>		zyx;			// Writable
+			index3_vector<T, Size, 2, 1, 1>		zyy;
+			index3_vector<T, Size, 2, 1, 2>		zyz;
+			index3_vector<T, Size, 2, 2, 0>		zzx;
+			index3_vector<T, Size, 2, 2, 1>		zzy;
+			index3_vector<T, Size, 2, 2, 2>		zzz;
 
-			index4_vector<ScalarType, Size, 0, 0, 0, 0>		xxxx;
-			index4_vector<ScalarType, Size, 0, 0, 0, 1>		xxxy;
-			index4_vector<ScalarType, Size, 0, 0, 0, 2>		xxxz;
-			index4_vector<ScalarType, Size, 0, 0, 1, 0>		xxyx;
-			index4_vector<ScalarType, Size, 0, 0, 1, 1>		xxyy;
-			index4_vector<ScalarType, Size, 0, 0, 1, 2>		xxyz;
-			index4_vector<ScalarType, Size, 0, 0, 2, 0>		xxzx;
-			index4_vector<ScalarType, Size, 0, 0, 2, 1>		xxzy;
-			index4_vector<ScalarType, Size, 0, 0, 2, 2>		xxzz;
-			index4_vector<ScalarType, Size, 0, 1, 0, 0>		xyxx;
-			index4_vector<ScalarType, Size, 0, 1, 0, 1>		xyxy;
-			index4_vector<ScalarType, Size, 0, 1, 0, 2>		xyxz;
-			index4_vector<ScalarType, Size, 0, 1, 1, 0>		xyyx;
-			index4_vector<ScalarType, Size, 0, 1, 1, 1>		xyyy;
-			index4_vector<ScalarType, Size, 0, 1, 1, 2>		xyyz;
-			index4_vector<ScalarType, Size, 0, 1, 2, 0>		xyzx;
-			index4_vector<ScalarType, Size, 0, 1, 2, 1>		xyzy;
-			index4_vector<ScalarType, Size, 0, 1, 2, 2>		xyzz;
-			index4_vector<ScalarType, Size, 0, 2, 0, 0>		xzxx;
-			index4_vector<ScalarType, Size, 0, 2, 0, 1>		xzxy;
-			index4_vector<ScalarType, Size, 0, 2, 0, 2>		xzxz;
-			index4_vector<ScalarType, Size, 0, 2, 1, 0>		xzyx;
-			index4_vector<ScalarType, Size, 0, 2, 1, 1>		xzyy;
-			index4_vector<ScalarType, Size, 0, 2, 1, 2>		xzyz;
-			index4_vector<ScalarType, Size, 0, 2, 2, 0>		xzzx;
-			index4_vector<ScalarType, Size, 0, 2, 2, 1>		xzzy;
-			index4_vector<ScalarType, Size, 0, 2, 2, 2>		xzzz;
-			index4_vector<ScalarType, Size, 1, 0, 0, 0>		yxxx;
-			index4_vector<ScalarType, Size, 1, 0, 0, 1>		yxxy;
-			index4_vector<ScalarType, Size, 1, 0, 0, 2>		yxxz;
-			index4_vector<ScalarType, Size, 1, 0, 1, 0>		yxyx;
-			index4_vector<ScalarType, Size, 1, 0, 1, 1>		yxyy;
-			index4_vector<ScalarType, Size, 1, 0, 1, 2>		yxyz;
-			index4_vector<ScalarType, Size, 1, 0, 2, 0>		yxzx;
-			index4_vector<ScalarType, Size, 1, 0, 2, 1>		yxzy;
-			index4_vector<ScalarType, Size, 1, 0, 2, 2>		yxzz;
-			index4_vector<ScalarType, Size, 1, 1, 0, 0>		yyxx;
-			index4_vector<ScalarType, Size, 1, 1, 0, 1>		yyxy;
-			index4_vector<ScalarType, Size, 1, 1, 0, 2>		yyxz;
-			index4_vector<ScalarType, Size, 1, 1, 1, 0>		yyyx;
-			index4_vector<ScalarType, Size, 1, 1, 1, 1>		yyyy;
-			index4_vector<ScalarType, Size, 1, 1, 1, 2>		yyyz;
-			index4_vector<ScalarType, Size, 1, 1, 2, 0>		yyzx;
-			index4_vector<ScalarType, Size, 1, 1, 2, 1>		yyzy;
-			index4_vector<ScalarType, Size, 1, 1, 2, 2>		yyzz;
-			index4_vector<ScalarType, Size, 1, 2, 0, 0>		yzxx;
-			index4_vector<ScalarType, Size, 1, 2, 0, 1>		yzxy;
-			index4_vector<ScalarType, Size, 1, 2, 0, 2>		yzxz;
-			index4_vector<ScalarType, Size, 1, 2, 1, 0>		yzyx;
-			index4_vector<ScalarType, Size, 1, 2, 1, 1>		yzyy;
-			index4_vector<ScalarType, Size, 1, 2, 1, 2>		yzyz;
-			index4_vector<ScalarType, Size, 1, 2, 2, 0>		yzzx;
-			index4_vector<ScalarType, Size, 1, 2, 2, 1>		yzzy;
-			index4_vector<ScalarType, Size, 1, 2, 2, 2>		yzzz;
-			index4_vector<ScalarType, Size, 2, 0, 0, 0>		zxxx;
-			index4_vector<ScalarType, Size, 2, 0, 0, 1>		zxxy;
-			index4_vector<ScalarType, Size, 2, 0, 0, 2>		zxxz;
-			index4_vector<ScalarType, Size, 2, 0, 1, 0>		zxyx;
-			index4_vector<ScalarType, Size, 2, 0, 1, 1>		zxyy;
-			index4_vector<ScalarType, Size, 2, 0, 1, 2>		zxyz;
-			index4_vector<ScalarType, Size, 2, 0, 2, 0>		zxzx;
-			index4_vector<ScalarType, Size, 2, 0, 2, 1>		zxzy;
-			index4_vector<ScalarType, Size, 2, 0, 2, 2>		zxzz;
-			index4_vector<ScalarType, Size, 2, 1, 0, 0>		zyxx;
-			index4_vector<ScalarType, Size, 2, 1, 0, 1>		zyxy;
-			index4_vector<ScalarType, Size, 2, 1, 0, 2>		zyxz;
-			index4_vector<ScalarType, Size, 2, 1, 1, 0>		zyyx;
-			index4_vector<ScalarType, Size, 2, 1, 1, 1>		zyyy;
-			index4_vector<ScalarType, Size, 2, 1, 1, 2>		zyyz;
-			index4_vector<ScalarType, Size, 2, 1, 2, 0>		zyzx;
-			index4_vector<ScalarType, Size, 2, 1, 2, 1>		zyzy;
-			index4_vector<ScalarType, Size, 2, 1, 2, 2>		zyzz;
-			index4_vector<ScalarType, Size, 2, 2, 0, 0>		zzxx;
-			index4_vector<ScalarType, Size, 2, 2, 0, 1>		zzxy;
-			index4_vector<ScalarType, Size, 2, 2, 0, 2>		zzxz;
-			index4_vector<ScalarType, Size, 2, 2, 1, 0>		zzyx;
-			index4_vector<ScalarType, Size, 2, 2, 1, 1>		zzyy;
-			index4_vector<ScalarType, Size, 2, 2, 1, 2>		zzyz;
-			index4_vector<ScalarType, Size, 2, 2, 2, 0>		zzzx;
-			index4_vector<ScalarType, Size, 2, 2, 2, 1>		zzzy;
-			index4_vector<ScalarType, Size, 2, 2, 2, 2>		zzzz;
+			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
+			index4_vector<T, Size, 0, 0, 0, 1>		xxxy;
+			index4_vector<T, Size, 0, 0, 0, 2>		xxxz;
+			index4_vector<T, Size, 0, 0, 1, 0>		xxyx;
+			index4_vector<T, Size, 0, 0, 1, 1>		xxyy;
+			index4_vector<T, Size, 0, 0, 1, 2>		xxyz;
+			index4_vector<T, Size, 0, 0, 2, 0>		xxzx;
+			index4_vector<T, Size, 0, 0, 2, 1>		xxzy;
+			index4_vector<T, Size, 0, 0, 2, 2>		xxzz;
+			index4_vector<T, Size, 0, 1, 0, 0>		xyxx;
+			index4_vector<T, Size, 0, 1, 0, 1>		xyxy;
+			index4_vector<T, Size, 0, 1, 0, 2>		xyxz;
+			index4_vector<T, Size, 0, 1, 1, 0>		xyyx;
+			index4_vector<T, Size, 0, 1, 1, 1>		xyyy;
+			index4_vector<T, Size, 0, 1, 1, 2>		xyyz;
+			index4_vector<T, Size, 0, 1, 2, 0>		xyzx;
+			index4_vector<T, Size, 0, 1, 2, 1>		xyzy;
+			index4_vector<T, Size, 0, 1, 2, 2>		xyzz;
+			index4_vector<T, Size, 0, 2, 0, 0>		xzxx;
+			index4_vector<T, Size, 0, 2, 0, 1>		xzxy;
+			index4_vector<T, Size, 0, 2, 0, 2>		xzxz;
+			index4_vector<T, Size, 0, 2, 1, 0>		xzyx;
+			index4_vector<T, Size, 0, 2, 1, 1>		xzyy;
+			index4_vector<T, Size, 0, 2, 1, 2>		xzyz;
+			index4_vector<T, Size, 0, 2, 2, 0>		xzzx;
+			index4_vector<T, Size, 0, 2, 2, 1>		xzzy;
+			index4_vector<T, Size, 0, 2, 2, 2>		xzzz;
+			index4_vector<T, Size, 1, 0, 0, 0>		yxxx;
+			index4_vector<T, Size, 1, 0, 0, 1>		yxxy;
+			index4_vector<T, Size, 1, 0, 0, 2>		yxxz;
+			index4_vector<T, Size, 1, 0, 1, 0>		yxyx;
+			index4_vector<T, Size, 1, 0, 1, 1>		yxyy;
+			index4_vector<T, Size, 1, 0, 1, 2>		yxyz;
+			index4_vector<T, Size, 1, 0, 2, 0>		yxzx;
+			index4_vector<T, Size, 1, 0, 2, 1>		yxzy;
+			index4_vector<T, Size, 1, 0, 2, 2>		yxzz;
+			index4_vector<T, Size, 1, 1, 0, 0>		yyxx;
+			index4_vector<T, Size, 1, 1, 0, 1>		yyxy;
+			index4_vector<T, Size, 1, 1, 0, 2>		yyxz;
+			index4_vector<T, Size, 1, 1, 1, 0>		yyyx;
+			index4_vector<T, Size, 1, 1, 1, 1>		yyyy;
+			index4_vector<T, Size, 1, 1, 1, 2>		yyyz;
+			index4_vector<T, Size, 1, 1, 2, 0>		yyzx;
+			index4_vector<T, Size, 1, 1, 2, 1>		yyzy;
+			index4_vector<T, Size, 1, 1, 2, 2>		yyzz;
+			index4_vector<T, Size, 1, 2, 0, 0>		yzxx;
+			index4_vector<T, Size, 1, 2, 0, 1>		yzxy;
+			index4_vector<T, Size, 1, 2, 0, 2>		yzxz;
+			index4_vector<T, Size, 1, 2, 1, 0>		yzyx;
+			index4_vector<T, Size, 1, 2, 1, 1>		yzyy;
+			index4_vector<T, Size, 1, 2, 1, 2>		yzyz;
+			index4_vector<T, Size, 1, 2, 2, 0>		yzzx;
+			index4_vector<T, Size, 1, 2, 2, 1>		yzzy;
+			index4_vector<T, Size, 1, 2, 2, 2>		yzzz;
+			index4_vector<T, Size, 2, 0, 0, 0>		zxxx;
+			index4_vector<T, Size, 2, 0, 0, 1>		zxxy;
+			index4_vector<T, Size, 2, 0, 0, 2>		zxxz;
+			index4_vector<T, Size, 2, 0, 1, 0>		zxyx;
+			index4_vector<T, Size, 2, 0, 1, 1>		zxyy;
+			index4_vector<T, Size, 2, 0, 1, 2>		zxyz;
+			index4_vector<T, Size, 2, 0, 2, 0>		zxzx;
+			index4_vector<T, Size, 2, 0, 2, 1>		zxzy;
+			index4_vector<T, Size, 2, 0, 2, 2>		zxzz;
+			index4_vector<T, Size, 2, 1, 0, 0>		zyxx;
+			index4_vector<T, Size, 2, 1, 0, 1>		zyxy;
+			index4_vector<T, Size, 2, 1, 0, 2>		zyxz;
+			index4_vector<T, Size, 2, 1, 1, 0>		zyyx;
+			index4_vector<T, Size, 2, 1, 1, 1>		zyyy;
+			index4_vector<T, Size, 2, 1, 1, 2>		zyyz;
+			index4_vector<T, Size, 2, 1, 2, 0>		zyzx;
+			index4_vector<T, Size, 2, 1, 2, 1>		zyzy;
+			index4_vector<T, Size, 2, 1, 2, 2>		zyzz;
+			index4_vector<T, Size, 2, 2, 0, 0>		zzxx;
+			index4_vector<T, Size, 2, 2, 0, 1>		zzxy;
+			index4_vector<T, Size, 2, 2, 0, 2>		zzxz;
+			index4_vector<T, Size, 2, 2, 1, 0>		zzyx;
+			index4_vector<T, Size, 2, 2, 1, 1>		zzyy;
+			index4_vector<T, Size, 2, 2, 1, 2>		zzyz;
+			index4_vector<T, Size, 2, 2, 2, 0>		zzzx;
+			index4_vector<T, Size, 2, 2, 2, 1>		zzzy;
+			index4_vector<T, Size, 2, 2, 2, 2>		zzzz;
 		};
 
 		//
@@ -1372,73 +1392,73 @@ namespace dsga
 		// constructors
 		//
 
-		template <typename OtherScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType value) noexcept
+		template <typename U>
+		requires std::convertible_to<U, T>
+		explicit constexpr basic_vector(U value) noexcept
 			: store()
 		{
 			init(value, value, value);
 		}
 
-		template <typename OtherScalarType0, typename OtherScalarType1, typename OtherScalarType2>
-		requires std::convertible_to<OtherScalarType0, ScalarType> && std::convertible_to<OtherScalarType1, ScalarType> && std::convertible_to<OtherScalarType2, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType0 xvalue,
-										OtherScalarType1 yvalue,
-										OtherScalarType2 zvalue) noexcept
+		template <typename U1, typename U2, typename U3>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		explicit constexpr basic_vector(U1 xvalue,
+										U2 yvalue,
+										U3 zvalue) noexcept
 			: store()
 		{
 			init(xvalue, yvalue, zvalue);
 		}
 
-		template <typename OtherScalarType0, typename OtherScalarType1, bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
-		requires std::convertible_to<OtherScalarType0, ScalarType> && std::convertible_to<OtherScalarType1, ScalarType> && std::convertible_to<OtherScalarType, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType0 xvalue,
-										OtherScalarType1 yvalue,
-										const vector_base<Writable, OtherScalarType, Count, Derived> &zvalue_source) noexcept
+		template <typename U1, typename U2, bool W, dimensional_scalar U3, std::size_t C, typename D>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		explicit constexpr basic_vector(U1 xvalue,
+										U2 yvalue,
+										const vector_base<W, U3, C, D> &zvalue_source) noexcept
 			: store()
 		{
 			init(xvalue, yvalue, zvalue_source[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType> && (Count >= Size)
-		constexpr basic_vector(const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, std::size_t C, typename D>
+		requires implicitly_convertible_to<U, T> && (C >= Count)
+		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], other[2u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
-		requires (!implicitly_convertible_to<OtherScalarType, ScalarType> && std::convertible_to<OtherScalarType, ScalarType> && (Count >= Size))
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, std::size_t C, typename D>
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T> && (C >= Count))
+		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], other[2u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived, typename YetAnotherScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<YetAnotherScalarType, ScalarType>
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, 2u, Derived> &other,
-										YetAnotherScalarType yet_another) noexcept
+		template <bool W, dimensional_scalar U1, typename D, typename U2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
+		explicit constexpr basic_vector(const vector_base<W, U1, 2u, D> &other,
+										U2 yet_another) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], yet_another);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived,
-			bool YetAnotherWritable, typename YetAnotherScalarType, std::size_t Count, typename YetAnotherDerived>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<YetAnotherScalarType, ScalarType>
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, 2u, Derived> &other,
-										const vector_base<YetAnotherWritable, YetAnotherScalarType, Count, YetAnotherDerived> &yet_another) noexcept
+		template <bool W1, dimensional_scalar U1, typename D1,
+			bool W2, typename U2, std::size_t C, typename D2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
+		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &other,
+										const vector_base<W2, U2, C, D2> &yet_another) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], yet_another[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived, typename YetAnotherScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<YetAnotherScalarType, ScalarType> && (Count >= 2)
-		explicit constexpr basic_vector(YetAnotherScalarType yet_another,
-										const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 2)
+		explicit constexpr basic_vector(U2 yet_another,
+										const vector_base<W, U1, C, D> &other) noexcept
 			: store()
 		{
 			init(yet_another, other[0u], other[1u]);
@@ -1448,9 +1468,9 @@ namespace dsga
 		// assignment operators
 		//
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector &operator =(const vector_base<Writable, OtherScalarType, Size, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u], other[2u]);
 			return *this;
@@ -1462,17 +1482,18 @@ namespace dsga
 
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType0, typename OtherScalarType1, typename OtherScalarType2>
-		constexpr void init(OtherScalarType0 value0, OtherScalarType1 value1, OtherScalarType2 value2) noexcept
+		template <typename U1, typename U2, typename U3>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		constexpr void init(U1 value0, U2 value1, U3 value2) noexcept
 		{
-			store.value[0u] = static_cast<ScalarType>(value0);
-			store.value[1u] = static_cast<ScalarType>(value1);
-			store.value[2u] = static_cast<ScalarType>(value2);
+			store.value[0u] = static_cast<T>(value0);
+			store.value[1u] = static_cast<T>(value1);
+			store.value[2u] = static_cast<T>(value2);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
+		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1483,8 +1504,8 @@ namespace dsga
 		constexpr auto cend()	const	noexcept	{ return store.value.cend(); }
 	};
 
-	template <dimensional_scalar ScalarType>
-	struct basic_vector<ScalarType, 4u> : vector_base<true, ScalarType, 4u, basic_vector<ScalarType, 4u>>
+	template <dimensional_scalar T>
+	struct basic_vector<T, 4u> : vector_base<true, T, 4u, basic_vector<T, 4u>>
 	{
 		// number of physical storage elements
 		static constexpr std::size_t Size = 4u;
@@ -1501,358 +1522,358 @@ namespace dsga
 		//
 
 		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Size>;
+		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Size> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<ScalarType, Size>				store;
+			storage_wrapper<T, Size>				store;
 
-			index1_vector<ScalarType, Size, 0>				x;				// can modify as lvalue
-			index1_vector<ScalarType, Size, 1>				y;				// can modify as lvalue
-			index1_vector<ScalarType, Size, 2>				z;				// can modify as lvalue
-			index1_vector<ScalarType, Size, 3>				w;				// can modify as lvalue
+			index1_vector<T, Size, 0>				x;				// Writable
+			index1_vector<T, Size, 1>				y;				// Writable
+			index1_vector<T, Size, 2>				z;				// Writable
+			index1_vector<T, Size, 3>				w;				// Writable
 
-			index2_vector<ScalarType, Size, 0, 0>			xx;
-			index2_vector<ScalarType, Size, 0, 1>			xy;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 0, 2>			xz;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 0, 3>			xw;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 1, 0>			yx;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 1, 1>			yy;
-			index2_vector<ScalarType, Size, 1, 2>			yz;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 1, 3>			yw;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 2, 0>			zx;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 2, 1>			zy;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 2, 2>			zz;
-			index2_vector<ScalarType, Size, 2, 3>			zw;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 3, 0>			wx;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 3, 1>			wy;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 3, 2>			wz;				// can modify as lvalue
-			index2_vector<ScalarType, Size, 3, 3>			ww;
+			index2_vector<T, Size, 0, 0>			xx;
+			index2_vector<T, Size, 0, 1>			xy;				// Writable
+			index2_vector<T, Size, 0, 2>			xz;				// Writable
+			index2_vector<T, Size, 0, 3>			xw;				// Writable
+			index2_vector<T, Size, 1, 0>			yx;				// Writable
+			index2_vector<T, Size, 1, 1>			yy;
+			index2_vector<T, Size, 1, 2>			yz;				// Writable
+			index2_vector<T, Size, 1, 3>			yw;				// Writable
+			index2_vector<T, Size, 2, 0>			zx;				// Writable
+			index2_vector<T, Size, 2, 1>			zy;				// Writable
+			index2_vector<T, Size, 2, 2>			zz;
+			index2_vector<T, Size, 2, 3>			zw;				// Writable
+			index2_vector<T, Size, 3, 0>			wx;				// Writable
+			index2_vector<T, Size, 3, 1>			wy;				// Writable
+			index2_vector<T, Size, 3, 2>			wz;				// Writable
+			index2_vector<T, Size, 3, 3>			ww;
 
-			index3_vector<ScalarType, Size, 0, 0, 0>		xxx;
-			index3_vector<ScalarType, Size, 0, 0, 1>		xxy;
-			index3_vector<ScalarType, Size, 0, 0, 2>		xxz;
-			index3_vector<ScalarType, Size, 0, 0, 3>		xxw;
-			index3_vector<ScalarType, Size, 0, 1, 0>		xyx;
-			index3_vector<ScalarType, Size, 0, 1, 1>		xyy;
-			index3_vector<ScalarType, Size, 0, 1, 2>		xyz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 1, 3>		xyw;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 2, 0>		xzx;
-			index3_vector<ScalarType, Size, 0, 2, 1>		xzy;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 2, 2>		xzz;
-			index3_vector<ScalarType, Size, 0, 2, 3>		xzw;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 3, 0>		xwx;
-			index3_vector<ScalarType, Size, 0, 3, 1>		xwy;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 3, 2>		xwz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 0, 3, 3>		xww;
-			index3_vector<ScalarType, Size, 1, 0, 0>		yxx;
-			index3_vector<ScalarType, Size, 1, 0, 1>		yxy;
-			index3_vector<ScalarType, Size, 1, 0, 2>		yxz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 0, 3>		yxw;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 1, 0>		yyx;
-			index3_vector<ScalarType, Size, 1, 1, 1>		yyy;
-			index3_vector<ScalarType, Size, 1, 1, 2>		yyz;
-			index3_vector<ScalarType, Size, 1, 1, 3>		yyw;
-			index3_vector<ScalarType, Size, 1, 2, 0>		yzx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 2, 1>		yzy;
-			index3_vector<ScalarType, Size, 1, 2, 2>		yzz;
-			index3_vector<ScalarType, Size, 1, 2, 3>		yzw;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 3, 0>		ywx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 3, 1>		ywy;
-			index3_vector<ScalarType, Size, 1, 3, 2>		ywz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 1, 3, 3>		yww;
-			index3_vector<ScalarType, Size, 2, 0, 0>		zxx;
-			index3_vector<ScalarType, Size, 2, 0, 1>		zxy;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 0, 2>		zxz;
-			index3_vector<ScalarType, Size, 2, 0, 3>		zxw;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 1, 0>		zyx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 1, 1>		zyy;
-			index3_vector<ScalarType, Size, 2, 1, 2>		zyz;
-			index3_vector<ScalarType, Size, 2, 1, 3>		zyw;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 2, 0>		zzx;
-			index3_vector<ScalarType, Size, 2, 2, 1>		zzy;
-			index3_vector<ScalarType, Size, 2, 2, 2>		zzz;
-			index3_vector<ScalarType, Size, 2, 2, 3>		zzw;
-			index3_vector<ScalarType, Size, 2, 3, 0>		zwx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 3, 1>		zwy;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 2, 3, 2>		zwz;
-			index3_vector<ScalarType, Size, 2, 3, 3>		zww;
-			index3_vector<ScalarType, Size, 3, 0, 0>		wxx;
-			index3_vector<ScalarType, Size, 3, 0, 1>		wxy;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 3, 0, 2>		wxz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 3, 0, 3>		wxw;
-			index3_vector<ScalarType, Size, 3, 1, 0>		wyx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 3, 1, 1>		wyy;
-			index3_vector<ScalarType, Size, 3, 1, 2>		wyz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 3, 1, 3>		wyw;
-			index3_vector<ScalarType, Size, 3, 2, 0>		wzx;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 3, 2, 1>		wzy;
-			index3_vector<ScalarType, Size, 3, 2, 2>		wzz;			// can modify as lvalue
-			index3_vector<ScalarType, Size, 3, 2, 3>		wzw;
-			index3_vector<ScalarType, Size, 3, 3, 0>		wwx;
-			index3_vector<ScalarType, Size, 3, 3, 1>		wwy;
-			index3_vector<ScalarType, Size, 3, 3, 2>		wwz;
-			index3_vector<ScalarType, Size, 3, 3, 3>		www;
+			index3_vector<T, Size, 0, 0, 0>			xxx;
+			index3_vector<T, Size, 0, 0, 1>			xxy;
+			index3_vector<T, Size, 0, 0, 2>			xxz;
+			index3_vector<T, Size, 0, 0, 3>			xxw;
+			index3_vector<T, Size, 0, 1, 0>			xyx;
+			index3_vector<T, Size, 0, 1, 1>			xyy;
+			index3_vector<T, Size, 0, 1, 2>			xyz;			// Writable
+			index3_vector<T, Size, 0, 1, 3>			xyw;			// Writable
+			index3_vector<T, Size, 0, 2, 0>			xzx;
+			index3_vector<T, Size, 0, 2, 1>			xzy;			// Writable
+			index3_vector<T, Size, 0, 2, 2>			xzz;
+			index3_vector<T, Size, 0, 2, 3>			xzw;			// Writable
+			index3_vector<T, Size, 0, 3, 0>			xwx;
+			index3_vector<T, Size, 0, 3, 1>			xwy;			// Writable
+			index3_vector<T, Size, 0, 3, 2>			xwz;			// Writable
+			index3_vector<T, Size, 0, 3, 3>			xww;
+			index3_vector<T, Size, 1, 0, 0>			yxx;
+			index3_vector<T, Size, 1, 0, 1>			yxy;
+			index3_vector<T, Size, 1, 0, 2>			yxz;			// Writable
+			index3_vector<T, Size, 1, 0, 3>			yxw;			// Writable
+			index3_vector<T, Size, 1, 1, 0>			yyx;
+			index3_vector<T, Size, 1, 1, 1>			yyy;
+			index3_vector<T, Size, 1, 1, 2>			yyz;
+			index3_vector<T, Size, 1, 1, 3>			yyw;
+			index3_vector<T, Size, 1, 2, 0>			yzx;			// Writable
+			index3_vector<T, Size, 1, 2, 1>			yzy;
+			index3_vector<T, Size, 1, 2, 2>			yzz;
+			index3_vector<T, Size, 1, 2, 3>			yzw;			// Writable
+			index3_vector<T, Size, 1, 3, 0>			ywx;			// Writable
+			index3_vector<T, Size, 1, 3, 1>			ywy;
+			index3_vector<T, Size, 1, 3, 2>			ywz;			// Writable
+			index3_vector<T, Size, 1, 3, 3>			yww;
+			index3_vector<T, Size, 2, 0, 0>			zxx;
+			index3_vector<T, Size, 2, 0, 1>			zxy;			// Writable
+			index3_vector<T, Size, 2, 0, 2>			zxz;
+			index3_vector<T, Size, 2, 0, 3>			zxw;			// Writable
+			index3_vector<T, Size, 2, 1, 0>			zyx;			// Writable
+			index3_vector<T, Size, 2, 1, 1>			zyy;
+			index3_vector<T, Size, 2, 1, 2>			zyz;
+			index3_vector<T, Size, 2, 1, 3>			zyw;			// Writable
+			index3_vector<T, Size, 2, 2, 0>			zzx;
+			index3_vector<T, Size, 2, 2, 1>			zzy;
+			index3_vector<T, Size, 2, 2, 2>			zzz;
+			index3_vector<T, Size, 2, 2, 3>			zzw;
+			index3_vector<T, Size, 2, 3, 0>			zwx;			// Writable
+			index3_vector<T, Size, 2, 3, 1>			zwy;			// Writable
+			index3_vector<T, Size, 2, 3, 2>			zwz;
+			index3_vector<T, Size, 2, 3, 3>			zww;
+			index3_vector<T, Size, 3, 0, 0>			wxx;
+			index3_vector<T, Size, 3, 0, 1>			wxy;			// Writable
+			index3_vector<T, Size, 3, 0, 2>			wxz;			// Writable
+			index3_vector<T, Size, 3, 0, 3>			wxw;
+			index3_vector<T, Size, 3, 1, 0>			wyx;			// Writable
+			index3_vector<T, Size, 3, 1, 1>			wyy;
+			index3_vector<T, Size, 3, 1, 2>			wyz;			// Writable
+			index3_vector<T, Size, 3, 1, 3>			wyw;
+			index3_vector<T, Size, 3, 2, 0>			wzx;			// Writable
+			index3_vector<T, Size, 3, 2, 1>			wzy;
+			index3_vector<T, Size, 3, 2, 2>			wzz;			// Writable
+			index3_vector<T, Size, 3, 2, 3>			wzw;
+			index3_vector<T, Size, 3, 3, 0>			wwx;
+			index3_vector<T, Size, 3, 3, 1>			wwy;
+			index3_vector<T, Size, 3, 3, 2>			wwz;
+			index3_vector<T, Size, 3, 3, 3>			www;
 
-			index4_vector<ScalarType, Size, 0, 0, 0, 0>		xxxx;
-			index4_vector<ScalarType, Size, 0, 0, 0, 1>		xxxy;
-			index4_vector<ScalarType, Size, 0, 0, 0, 2>		xxxz;
-			index4_vector<ScalarType, Size, 0, 0, 0, 3>		xxxw;
-			index4_vector<ScalarType, Size, 0, 0, 1, 0>		xxyx;
-			index4_vector<ScalarType, Size, 0, 0, 1, 1>		xxyy;
-			index4_vector<ScalarType, Size, 0, 0, 1, 2>		xxyz;
-			index4_vector<ScalarType, Size, 0, 0, 1, 3>		xxyw;
-			index4_vector<ScalarType, Size, 0, 0, 2, 0>		xxzx;
-			index4_vector<ScalarType, Size, 0, 0, 2, 1>		xxzy;
-			index4_vector<ScalarType, Size, 0, 0, 2, 2>		xxzz;
-			index4_vector<ScalarType, Size, 0, 0, 2, 3>		xxzw;
-			index4_vector<ScalarType, Size, 0, 0, 3, 0>		xxwx;
-			index4_vector<ScalarType, Size, 0, 0, 3, 1>		xxwy;
-			index4_vector<ScalarType, Size, 0, 0, 3, 2>		xxwz;
-			index4_vector<ScalarType, Size, 0, 0, 3, 3>		xxww;
-			index4_vector<ScalarType, Size, 0, 1, 0, 0>		xyxx;
-			index4_vector<ScalarType, Size, 0, 1, 0, 1>		xyxy;
-			index4_vector<ScalarType, Size, 0, 1, 0, 2>		xyxz;
-			index4_vector<ScalarType, Size, 0, 1, 0, 3>		xyxw;
-			index4_vector<ScalarType, Size, 0, 1, 1, 0>		xyyx;
-			index4_vector<ScalarType, Size, 0, 1, 1, 1>		xyyy;
-			index4_vector<ScalarType, Size, 0, 1, 1, 2>		xyyz;
-			index4_vector<ScalarType, Size, 0, 1, 1, 3>		xyyw;
-			index4_vector<ScalarType, Size, 0, 1, 2, 0>		xyzx;
-			index4_vector<ScalarType, Size, 0, 1, 2, 1>		xyzy;
-			index4_vector<ScalarType, Size, 0, 1, 2, 2>		xyzz;
-			index4_vector<ScalarType, Size, 0, 1, 2, 3>		xyzw;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 0, 1, 3, 0>		xywx;
-			index4_vector<ScalarType, Size, 0, 1, 3, 1>		xywy;
-			index4_vector<ScalarType, Size, 0, 1, 3, 2>		xywz;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 0, 1, 3, 3>		xyww;
-			index4_vector<ScalarType, Size, 0, 2, 0, 0>		xzxx;
-			index4_vector<ScalarType, Size, 0, 2, 0, 1>		xzxy;
-			index4_vector<ScalarType, Size, 0, 2, 0, 2>		xzxz;
-			index4_vector<ScalarType, Size, 0, 2, 0, 3>		xzxw;
-			index4_vector<ScalarType, Size, 0, 2, 1, 0>		xzyx;
-			index4_vector<ScalarType, Size, 0, 2, 1, 1>		xzyy;
-			index4_vector<ScalarType, Size, 0, 2, 1, 2>		xzyz;
-			index4_vector<ScalarType, Size, 0, 2, 1, 3>		xzyw;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 0, 2, 2, 0>		xzzx;
-			index4_vector<ScalarType, Size, 0, 2, 2, 1>		xzzy;
-			index4_vector<ScalarType, Size, 0, 2, 2, 2>		xzzz;
-			index4_vector<ScalarType, Size, 0, 2, 2, 3>		xzzw;
-			index4_vector<ScalarType, Size, 0, 2, 3, 0>		xzwx;
-			index4_vector<ScalarType, Size, 0, 2, 3, 1>		xzwy;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 0, 2, 3, 2>		xzwz;
-			index4_vector<ScalarType, Size, 0, 2, 3, 3>		xzww;
-			index4_vector<ScalarType, Size, 0, 3, 0, 0>		xwxx;
-			index4_vector<ScalarType, Size, 0, 3, 0, 1>		xwxy;
-			index4_vector<ScalarType, Size, 0, 3, 0, 2>		xwxz;
-			index4_vector<ScalarType, Size, 0, 3, 0, 3>		xwxw;
-			index4_vector<ScalarType, Size, 0, 3, 1, 0>		xwyx;
-			index4_vector<ScalarType, Size, 0, 3, 1, 1>		xwyy;
-			index4_vector<ScalarType, Size, 0, 3, 1, 2>		xwyz;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 0, 3, 1, 3>		xwyw;
-			index4_vector<ScalarType, Size, 0, 3, 2, 0>		xwzx;
-			index4_vector<ScalarType, Size, 0, 3, 2, 1>		xwzy;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 0, 3, 2, 2>		xwzz;
-			index4_vector<ScalarType, Size, 0, 3, 2, 3>		xwzw;
-			index4_vector<ScalarType, Size, 0, 3, 3, 0>		xwwx;
-			index4_vector<ScalarType, Size, 0, 3, 3, 1>		xwwy;
-			index4_vector<ScalarType, Size, 0, 3, 3, 2>		xwwz;
-			index4_vector<ScalarType, Size, 0, 3, 3, 3>		xwww;
-			index4_vector<ScalarType, Size, 1, 0, 0, 0>		yxxx;
-			index4_vector<ScalarType, Size, 1, 0, 0, 1>		yxxy;
-			index4_vector<ScalarType, Size, 1, 0, 0, 2>		yxxz;
-			index4_vector<ScalarType, Size, 1, 0, 0, 3>		yxxw;
-			index4_vector<ScalarType, Size, 1, 0, 1, 0>		yxyx;
-			index4_vector<ScalarType, Size, 1, 0, 1, 1>		yxyy;
-			index4_vector<ScalarType, Size, 1, 0, 1, 2>		yxyz;
-			index4_vector<ScalarType, Size, 1, 0, 1, 3>		yxyw;
-			index4_vector<ScalarType, Size, 1, 0, 2, 0>		yxzx;
-			index4_vector<ScalarType, Size, 1, 0, 2, 1>		yxzy;
-			index4_vector<ScalarType, Size, 1, 0, 2, 2>		yxzz;
-			index4_vector<ScalarType, Size, 1, 0, 2, 3>		yxzw;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 1, 0, 3, 0>		yxwx;
-			index4_vector<ScalarType, Size, 1, 0, 3, 1>		yxwy;
-			index4_vector<ScalarType, Size, 1, 0, 3, 2>		yxwz;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 1, 0, 3, 3>		yxww;
-			index4_vector<ScalarType, Size, 1, 1, 0, 0>		yyxx;
-			index4_vector<ScalarType, Size, 1, 1, 0, 1>		yyxy;
-			index4_vector<ScalarType, Size, 1, 1, 0, 2>		yyxz;
-			index4_vector<ScalarType, Size, 1, 1, 0, 3>		yyxw;
-			index4_vector<ScalarType, Size, 1, 1, 1, 0>		yyyx;
-			index4_vector<ScalarType, Size, 1, 1, 1, 1>		yyyy;
-			index4_vector<ScalarType, Size, 1, 1, 1, 2>		yyyz;
-			index4_vector<ScalarType, Size, 1, 1, 1, 3>		yyyw;
-			index4_vector<ScalarType, Size, 1, 1, 2, 0>		yyzx;
-			index4_vector<ScalarType, Size, 1, 1, 2, 1>		yyzy;
-			index4_vector<ScalarType, Size, 1, 1, 2, 2>		yyzz;
-			index4_vector<ScalarType, Size, 1, 1, 2, 3>		yyzw;
-			index4_vector<ScalarType, Size, 1, 1, 3, 0>		yywx;
-			index4_vector<ScalarType, Size, 1, 1, 3, 1>		yywy;
-			index4_vector<ScalarType, Size, 1, 1, 3, 2>		yywz;
-			index4_vector<ScalarType, Size, 1, 1, 3, 3>		yyww;
-			index4_vector<ScalarType, Size, 1, 2, 0, 0>		yzxx;
-			index4_vector<ScalarType, Size, 1, 2, 0, 1>		yzxy;
-			index4_vector<ScalarType, Size, 1, 2, 0, 2>		yzxz;
-			index4_vector<ScalarType, Size, 1, 2, 0, 3>		yzxw;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 1, 2, 1, 0>		yzyx;
-			index4_vector<ScalarType, Size, 1, 2, 1, 1>		yzyy;
-			index4_vector<ScalarType, Size, 1, 2, 1, 2>		yzyz;
-			index4_vector<ScalarType, Size, 1, 2, 1, 3>		yzyw;
-			index4_vector<ScalarType, Size, 1, 2, 2, 0>		yzzx;
-			index4_vector<ScalarType, Size, 1, 2, 2, 1>		yzzy;
-			index4_vector<ScalarType, Size, 1, 2, 2, 2>		yzzz;
-			index4_vector<ScalarType, Size, 1, 2, 2, 3>		yzzw;
-			index4_vector<ScalarType, Size, 1, 2, 3, 0>		yzwx;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 1, 2, 3, 1>		yzwy;
-			index4_vector<ScalarType, Size, 1, 2, 3, 2>		yzwz;
-			index4_vector<ScalarType, Size, 1, 2, 3, 3>		yzww;
-			index4_vector<ScalarType, Size, 1, 3, 0, 0>		ywxx;
-			index4_vector<ScalarType, Size, 1, 3, 0, 1>		ywxy;
-			index4_vector<ScalarType, Size, 1, 3, 0, 2>		ywxz;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 1, 3, 0, 3>		ywxw;
-			index4_vector<ScalarType, Size, 1, 3, 1, 0>		ywyx;
-			index4_vector<ScalarType, Size, 1, 3, 1, 1>		ywyy;
-			index4_vector<ScalarType, Size, 1, 3, 1, 2>		ywyz;
-			index4_vector<ScalarType, Size, 1, 3, 1, 3>		ywyw;
-			index4_vector<ScalarType, Size, 1, 3, 2, 0>		ywzx;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 1, 3, 2, 1>		ywzy;
-			index4_vector<ScalarType, Size, 1, 3, 2, 2>		ywzz;
-			index4_vector<ScalarType, Size, 1, 3, 2, 3>		ywzw;
-			index4_vector<ScalarType, Size, 1, 3, 3, 0>		ywwx;
-			index4_vector<ScalarType, Size, 1, 3, 3, 1>		ywwy;
-			index4_vector<ScalarType, Size, 1, 3, 3, 2>		ywwz;
-			index4_vector<ScalarType, Size, 1, 3, 3, 3>		ywww;
-			index4_vector<ScalarType, Size, 2, 0, 0, 0>		zxxx;
-			index4_vector<ScalarType, Size, 2, 0, 0, 1>		zxxy;
-			index4_vector<ScalarType, Size, 2, 0, 0, 2>		zxxz;
-			index4_vector<ScalarType, Size, 2, 0, 0, 3>		zxxw;
-			index4_vector<ScalarType, Size, 2, 0, 1, 0>		zxyx;
-			index4_vector<ScalarType, Size, 2, 0, 1, 1>		zxyy;
-			index4_vector<ScalarType, Size, 2, 0, 1, 2>		zxyz;
-			index4_vector<ScalarType, Size, 2, 0, 1, 3>		zxyw;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 2, 0, 2, 0>		zxzx;
-			index4_vector<ScalarType, Size, 2, 0, 2, 1>		zxzy;
-			index4_vector<ScalarType, Size, 2, 0, 2, 2>		zxzz;
-			index4_vector<ScalarType, Size, 2, 0, 2, 3>		zxzw;
-			index4_vector<ScalarType, Size, 2, 0, 3, 0>		zxwx;
-			index4_vector<ScalarType, Size, 2, 0, 3, 1>		zxwy;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 2, 0, 3, 2>		zxwz;
-			index4_vector<ScalarType, Size, 2, 0, 3, 3>		zxww;
-			index4_vector<ScalarType, Size, 2, 1, 0, 0>		zyxx;
-			index4_vector<ScalarType, Size, 2, 1, 0, 1>		zyxy;
-			index4_vector<ScalarType, Size, 2, 1, 0, 2>		zyxz;
-			index4_vector<ScalarType, Size, 2, 1, 0, 3>		zyxw;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 2, 1, 1, 0>		zyyx;
-			index4_vector<ScalarType, Size, 2, 1, 1, 1>		zyyy;
-			index4_vector<ScalarType, Size, 2, 1, 1, 2>		zyyz;
-			index4_vector<ScalarType, Size, 2, 1, 1, 3>		zyyw;
-			index4_vector<ScalarType, Size, 2, 1, 2, 0>		zyzx;
-			index4_vector<ScalarType, Size, 2, 1, 2, 1>		zyzy;
-			index4_vector<ScalarType, Size, 2, 1, 2, 2>		zyzz;
-			index4_vector<ScalarType, Size, 2, 1, 2, 3>		zyzw;
-			index4_vector<ScalarType, Size, 2, 1, 3, 0>		zywx;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 2, 1, 3, 1>		zywy;
-			index4_vector<ScalarType, Size, 2, 1, 3, 2>		zywz;
-			index4_vector<ScalarType, Size, 2, 1, 3, 3>		zyww;
-			index4_vector<ScalarType, Size, 2, 2, 0, 0>		zzxx;
-			index4_vector<ScalarType, Size, 2, 2, 0, 1>		zzxy;
-			index4_vector<ScalarType, Size, 2, 2, 0, 2>		zzxz;
-			index4_vector<ScalarType, Size, 2, 2, 0, 3>		zzxw;
-			index4_vector<ScalarType, Size, 2, 2, 1, 0>		zzyx;
-			index4_vector<ScalarType, Size, 2, 2, 1, 1>		zzyy;
-			index4_vector<ScalarType, Size, 2, 2, 1, 2>		zzyz;
-			index4_vector<ScalarType, Size, 2, 2, 1, 3>		zzyw;
-			index4_vector<ScalarType, Size, 2, 2, 2, 0>		zzzx;
-			index4_vector<ScalarType, Size, 2, 2, 2, 1>		zzzy;
-			index4_vector<ScalarType, Size, 2, 2, 2, 2>		zzzz;
-			index4_vector<ScalarType, Size, 2, 2, 2, 3>		zzzw;
-			index4_vector<ScalarType, Size, 2, 2, 3, 0>		zzwx;
-			index4_vector<ScalarType, Size, 2, 2, 3, 1>		zzwy;
-			index4_vector<ScalarType, Size, 2, 2, 3, 2>		zzwz;
-			index4_vector<ScalarType, Size, 2, 2, 3, 3>		zzww;
-			index4_vector<ScalarType, Size, 2, 3, 0, 0>		zwxx;
-			index4_vector<ScalarType, Size, 2, 3, 0, 1>		zwxy;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 2, 3, 0, 2>		zwxz;
-			index4_vector<ScalarType, Size, 2, 3, 0, 3>		zwxw;
-			index4_vector<ScalarType, Size, 2, 3, 1, 0>		zwyx;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 2, 3, 1, 1>		zwyy;
-			index4_vector<ScalarType, Size, 2, 3, 1, 2>		zwyz;
-			index4_vector<ScalarType, Size, 2, 3, 1, 3>		zwyw;
-			index4_vector<ScalarType, Size, 2, 3, 2, 0>		zwzx;
-			index4_vector<ScalarType, Size, 2, 3, 2, 1>		zwzy;
-			index4_vector<ScalarType, Size, 2, 3, 2, 2>		zwzz;
-			index4_vector<ScalarType, Size, 2, 3, 2, 3>		zwzw;
-			index4_vector<ScalarType, Size, 2, 3, 3, 0>		zwwx;
-			index4_vector<ScalarType, Size, 2, 3, 3, 1>		zwwy;
-			index4_vector<ScalarType, Size, 2, 3, 3, 2>		zwwz;
-			index4_vector<ScalarType, Size, 2, 3, 3, 3>		zwww;
-			index4_vector<ScalarType, Size, 3, 0, 0, 0>		wxxx;
-			index4_vector<ScalarType, Size, 3, 0, 0, 1>		wxxy;
-			index4_vector<ScalarType, Size, 3, 0, 0, 2>		wxxz;
-			index4_vector<ScalarType, Size, 3, 0, 0, 3>		wxxw;
-			index4_vector<ScalarType, Size, 3, 0, 1, 0>		wxyx;
-			index4_vector<ScalarType, Size, 3, 0, 1, 1>		wxyy;
-			index4_vector<ScalarType, Size, 3, 0, 1, 2>		wxyz;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 3, 0, 1, 3>		wxyw;
-			index4_vector<ScalarType, Size, 3, 0, 2, 0>		wxzx;
-			index4_vector<ScalarType, Size, 3, 0, 2, 1>		wxzy;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 3, 0, 2, 2>		wxzz;
-			index4_vector<ScalarType, Size, 3, 0, 2, 3>		wxzw;
-			index4_vector<ScalarType, Size, 3, 0, 3, 0>		wxwx;
-			index4_vector<ScalarType, Size, 3, 0, 3, 1>		wxwy;
-			index4_vector<ScalarType, Size, 3, 0, 3, 2>		wxwz;
-			index4_vector<ScalarType, Size, 3, 0, 3, 3>		wxww;
-			index4_vector<ScalarType, Size, 3, 1, 0, 0>		wyxx;
-			index4_vector<ScalarType, Size, 3, 1, 0, 1>		wyxy;
-			index4_vector<ScalarType, Size, 3, 1, 0, 2>		wyxz;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 3, 1, 0, 3>		wyxw;
-			index4_vector<ScalarType, Size, 3, 1, 1, 0>		wyyx;
-			index4_vector<ScalarType, Size, 3, 1, 1, 1>		wyyy;
-			index4_vector<ScalarType, Size, 3, 1, 1, 2>		wyyz;
-			index4_vector<ScalarType, Size, 3, 1, 1, 3>		wyyw;
-			index4_vector<ScalarType, Size, 3, 1, 2, 0>		wyzx;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 3, 1, 2, 1>		wyzy;
-			index4_vector<ScalarType, Size, 3, 1, 2, 2>		wyzz;
-			index4_vector<ScalarType, Size, 3, 1, 2, 3>		wyzw;
-			index4_vector<ScalarType, Size, 3, 1, 3, 0>		wywx;
-			index4_vector<ScalarType, Size, 3, 1, 3, 1>		wywy;
-			index4_vector<ScalarType, Size, 3, 1, 3, 2>		wywz;
-			index4_vector<ScalarType, Size, 3, 1, 3, 3>		wyww;
-			index4_vector<ScalarType, Size, 3, 2, 0, 0>		wzxx;
-			index4_vector<ScalarType, Size, 3, 2, 0, 1>		wzxy;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 3, 2, 0, 2>		wzxz;
-			index4_vector<ScalarType, Size, 3, 2, 0, 3>		wzxw;
-			index4_vector<ScalarType, Size, 3, 2, 1, 0>		wzyx;			// can modify as lvalue
-			index4_vector<ScalarType, Size, 3, 2, 1, 1>		wzyy;
-			index4_vector<ScalarType, Size, 3, 2, 1, 2>		wzyz;
-			index4_vector<ScalarType, Size, 3, 2, 1, 3>		wzyw;
-			index4_vector<ScalarType, Size, 3, 2, 2, 0>		wzzx;
-			index4_vector<ScalarType, Size, 3, 2, 2, 1>		wzzy;
-			index4_vector<ScalarType, Size, 3, 2, 2, 2>		wzzz;
-			index4_vector<ScalarType, Size, 3, 2, 2, 3>		wzzw;
-			index4_vector<ScalarType, Size, 3, 2, 3, 0>		wzwx;
-			index4_vector<ScalarType, Size, 3, 2, 3, 1>		wzwy;
-			index4_vector<ScalarType, Size, 3, 2, 3, 2>		wzwz;
-			index4_vector<ScalarType, Size, 3, 2, 3, 3>		wzww;
-			index4_vector<ScalarType, Size, 3, 3, 0, 0>		wwxx;
-			index4_vector<ScalarType, Size, 3, 3, 0, 1>		wwxy;
-			index4_vector<ScalarType, Size, 3, 3, 0, 2>		wwxz;
-			index4_vector<ScalarType, Size, 3, 3, 0, 3>		wwxw;
-			index4_vector<ScalarType, Size, 3, 3, 1, 0>		wwyx;
-			index4_vector<ScalarType, Size, 3, 3, 1, 1>		wwyy;
-			index4_vector<ScalarType, Size, 3, 3, 1, 2>		wwyz;
-			index4_vector<ScalarType, Size, 3, 3, 1, 3>		wwyw;
-			index4_vector<ScalarType, Size, 3, 3, 2, 0>		wwzx;
-			index4_vector<ScalarType, Size, 3, 3, 2, 1>		wwzy;
-			index4_vector<ScalarType, Size, 3, 3, 2, 2>		wwzz;
-			index4_vector<ScalarType, Size, 3, 3, 2, 3>		wwzw;
-			index4_vector<ScalarType, Size, 3, 3, 3, 0>		wwwx;
-			index4_vector<ScalarType, Size, 3, 3, 3, 1>		wwwy;
-			index4_vector<ScalarType, Size, 3, 3, 3, 2>		wwwz;
-			index4_vector<ScalarType, Size, 3, 3, 3, 3>		wwww;
+			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
+			index4_vector<T, Size, 0, 0, 0, 1>		xxxy;
+			index4_vector<T, Size, 0, 0, 0, 2>		xxxz;
+			index4_vector<T, Size, 0, 0, 0, 3>		xxxw;
+			index4_vector<T, Size, 0, 0, 1, 0>		xxyx;
+			index4_vector<T, Size, 0, 0, 1, 1>		xxyy;
+			index4_vector<T, Size, 0, 0, 1, 2>		xxyz;
+			index4_vector<T, Size, 0, 0, 1, 3>		xxyw;
+			index4_vector<T, Size, 0, 0, 2, 0>		xxzx;
+			index4_vector<T, Size, 0, 0, 2, 1>		xxzy;
+			index4_vector<T, Size, 0, 0, 2, 2>		xxzz;
+			index4_vector<T, Size, 0, 0, 2, 3>		xxzw;
+			index4_vector<T, Size, 0, 0, 3, 0>		xxwx;
+			index4_vector<T, Size, 0, 0, 3, 1>		xxwy;
+			index4_vector<T, Size, 0, 0, 3, 2>		xxwz;
+			index4_vector<T, Size, 0, 0, 3, 3>		xxww;
+			index4_vector<T, Size, 0, 1, 0, 0>		xyxx;
+			index4_vector<T, Size, 0, 1, 0, 1>		xyxy;
+			index4_vector<T, Size, 0, 1, 0, 2>		xyxz;
+			index4_vector<T, Size, 0, 1, 0, 3>		xyxw;
+			index4_vector<T, Size, 0, 1, 1, 0>		xyyx;
+			index4_vector<T, Size, 0, 1, 1, 1>		xyyy;
+			index4_vector<T, Size, 0, 1, 1, 2>		xyyz;
+			index4_vector<T, Size, 0, 1, 1, 3>		xyyw;
+			index4_vector<T, Size, 0, 1, 2, 0>		xyzx;
+			index4_vector<T, Size, 0, 1, 2, 1>		xyzy;
+			index4_vector<T, Size, 0, 1, 2, 2>		xyzz;
+			index4_vector<T, Size, 0, 1, 2, 3>		xyzw;			// Writable
+			index4_vector<T, Size, 0, 1, 3, 0>		xywx;
+			index4_vector<T, Size, 0, 1, 3, 1>		xywy;
+			index4_vector<T, Size, 0, 1, 3, 2>		xywz;			// Writable
+			index4_vector<T, Size, 0, 1, 3, 3>		xyww;
+			index4_vector<T, Size, 0, 2, 0, 0>		xzxx;
+			index4_vector<T, Size, 0, 2, 0, 1>		xzxy;
+			index4_vector<T, Size, 0, 2, 0, 2>		xzxz;
+			index4_vector<T, Size, 0, 2, 0, 3>		xzxw;
+			index4_vector<T, Size, 0, 2, 1, 0>		xzyx;
+			index4_vector<T, Size, 0, 2, 1, 1>		xzyy;
+			index4_vector<T, Size, 0, 2, 1, 2>		xzyz;
+			index4_vector<T, Size, 0, 2, 1, 3>		xzyw;			// Writable
+			index4_vector<T, Size, 0, 2, 2, 0>		xzzx;
+			index4_vector<T, Size, 0, 2, 2, 1>		xzzy;
+			index4_vector<T, Size, 0, 2, 2, 2>		xzzz;
+			index4_vector<T, Size, 0, 2, 2, 3>		xzzw;
+			index4_vector<T, Size, 0, 2, 3, 0>		xzwx;
+			index4_vector<T, Size, 0, 2, 3, 1>		xzwy;			// Writable
+			index4_vector<T, Size, 0, 2, 3, 2>		xzwz;
+			index4_vector<T, Size, 0, 2, 3, 3>		xzww;
+			index4_vector<T, Size, 0, 3, 0, 0>		xwxx;
+			index4_vector<T, Size, 0, 3, 0, 1>		xwxy;
+			index4_vector<T, Size, 0, 3, 0, 2>		xwxz;
+			index4_vector<T, Size, 0, 3, 0, 3>		xwxw;
+			index4_vector<T, Size, 0, 3, 1, 0>		xwyx;
+			index4_vector<T, Size, 0, 3, 1, 1>		xwyy;
+			index4_vector<T, Size, 0, 3, 1, 2>		xwyz;			// Writable
+			index4_vector<T, Size, 0, 3, 1, 3>		xwyw;
+			index4_vector<T, Size, 0, 3, 2, 0>		xwzx;
+			index4_vector<T, Size, 0, 3, 2, 1>		xwzy;			// Writable
+			index4_vector<T, Size, 0, 3, 2, 2>		xwzz;
+			index4_vector<T, Size, 0, 3, 2, 3>		xwzw;
+			index4_vector<T, Size, 0, 3, 3, 0>		xwwx;
+			index4_vector<T, Size, 0, 3, 3, 1>		xwwy;
+			index4_vector<T, Size, 0, 3, 3, 2>		xwwz;
+			index4_vector<T, Size, 0, 3, 3, 3>		xwww;
+			index4_vector<T, Size, 1, 0, 0, 0>		yxxx;
+			index4_vector<T, Size, 1, 0, 0, 1>		yxxy;
+			index4_vector<T, Size, 1, 0, 0, 2>		yxxz;
+			index4_vector<T, Size, 1, 0, 0, 3>		yxxw;
+			index4_vector<T, Size, 1, 0, 1, 0>		yxyx;
+			index4_vector<T, Size, 1, 0, 1, 1>		yxyy;
+			index4_vector<T, Size, 1, 0, 1, 2>		yxyz;
+			index4_vector<T, Size, 1, 0, 1, 3>		yxyw;
+			index4_vector<T, Size, 1, 0, 2, 0>		yxzx;
+			index4_vector<T, Size, 1, 0, 2, 1>		yxzy;
+			index4_vector<T, Size, 1, 0, 2, 2>		yxzz;
+			index4_vector<T, Size, 1, 0, 2, 3>		yxzw;			// Writable
+			index4_vector<T, Size, 1, 0, 3, 0>		yxwx;
+			index4_vector<T, Size, 1, 0, 3, 1>		yxwy;
+			index4_vector<T, Size, 1, 0, 3, 2>		yxwz;			// Writable
+			index4_vector<T, Size, 1, 0, 3, 3>		yxww;
+			index4_vector<T, Size, 1, 1, 0, 0>		yyxx;
+			index4_vector<T, Size, 1, 1, 0, 1>		yyxy;
+			index4_vector<T, Size, 1, 1, 0, 2>		yyxz;
+			index4_vector<T, Size, 1, 1, 0, 3>		yyxw;
+			index4_vector<T, Size, 1, 1, 1, 0>		yyyx;
+			index4_vector<T, Size, 1, 1, 1, 1>		yyyy;
+			index4_vector<T, Size, 1, 1, 1, 2>		yyyz;
+			index4_vector<T, Size, 1, 1, 1, 3>		yyyw;
+			index4_vector<T, Size, 1, 1, 2, 0>		yyzx;
+			index4_vector<T, Size, 1, 1, 2, 1>		yyzy;
+			index4_vector<T, Size, 1, 1, 2, 2>		yyzz;
+			index4_vector<T, Size, 1, 1, 2, 3>		yyzw;
+			index4_vector<T, Size, 1, 1, 3, 0>		yywx;
+			index4_vector<T, Size, 1, 1, 3, 1>		yywy;
+			index4_vector<T, Size, 1, 1, 3, 2>		yywz;
+			index4_vector<T, Size, 1, 1, 3, 3>		yyww;
+			index4_vector<T, Size, 1, 2, 0, 0>		yzxx;
+			index4_vector<T, Size, 1, 2, 0, 1>		yzxy;
+			index4_vector<T, Size, 1, 2, 0, 2>		yzxz;
+			index4_vector<T, Size, 1, 2, 0, 3>		yzxw;			// Writable
+			index4_vector<T, Size, 1, 2, 1, 0>		yzyx;
+			index4_vector<T, Size, 1, 2, 1, 1>		yzyy;
+			index4_vector<T, Size, 1, 2, 1, 2>		yzyz;
+			index4_vector<T, Size, 1, 2, 1, 3>		yzyw;
+			index4_vector<T, Size, 1, 2, 2, 0>		yzzx;
+			index4_vector<T, Size, 1, 2, 2, 1>		yzzy;
+			index4_vector<T, Size, 1, 2, 2, 2>		yzzz;
+			index4_vector<T, Size, 1, 2, 2, 3>		yzzw;
+			index4_vector<T, Size, 1, 2, 3, 0>		yzwx;			// Writable
+			index4_vector<T, Size, 1, 2, 3, 1>		yzwy;
+			index4_vector<T, Size, 1, 2, 3, 2>		yzwz;
+			index4_vector<T, Size, 1, 2, 3, 3>		yzww;
+			index4_vector<T, Size, 1, 3, 0, 0>		ywxx;
+			index4_vector<T, Size, 1, 3, 0, 1>		ywxy;
+			index4_vector<T, Size, 1, 3, 0, 2>		ywxz;			// Writable
+			index4_vector<T, Size, 1, 3, 0, 3>		ywxw;
+			index4_vector<T, Size, 1, 3, 1, 0>		ywyx;
+			index4_vector<T, Size, 1, 3, 1, 1>		ywyy;
+			index4_vector<T, Size, 1, 3, 1, 2>		ywyz;
+			index4_vector<T, Size, 1, 3, 1, 3>		ywyw;
+			index4_vector<T, Size, 1, 3, 2, 0>		ywzx;			// Writable
+			index4_vector<T, Size, 1, 3, 2, 1>		ywzy;
+			index4_vector<T, Size, 1, 3, 2, 2>		ywzz;
+			index4_vector<T, Size, 1, 3, 2, 3>		ywzw;
+			index4_vector<T, Size, 1, 3, 3, 0>		ywwx;
+			index4_vector<T, Size, 1, 3, 3, 1>		ywwy;
+			index4_vector<T, Size, 1, 3, 3, 2>		ywwz;
+			index4_vector<T, Size, 1, 3, 3, 3>		ywww;
+			index4_vector<T, Size, 2, 0, 0, 0>		zxxx;
+			index4_vector<T, Size, 2, 0, 0, 1>		zxxy;
+			index4_vector<T, Size, 2, 0, 0, 2>		zxxz;
+			index4_vector<T, Size, 2, 0, 0, 3>		zxxw;
+			index4_vector<T, Size, 2, 0, 1, 0>		zxyx;
+			index4_vector<T, Size, 2, 0, 1, 1>		zxyy;
+			index4_vector<T, Size, 2, 0, 1, 2>		zxyz;
+			index4_vector<T, Size, 2, 0, 1, 3>		zxyw;			// Writable
+			index4_vector<T, Size, 2, 0, 2, 0>		zxzx;
+			index4_vector<T, Size, 2, 0, 2, 1>		zxzy;
+			index4_vector<T, Size, 2, 0, 2, 2>		zxzz;
+			index4_vector<T, Size, 2, 0, 2, 3>		zxzw;
+			index4_vector<T, Size, 2, 0, 3, 0>		zxwx;
+			index4_vector<T, Size, 2, 0, 3, 1>		zxwy;			// Writable
+			index4_vector<T, Size, 2, 0, 3, 2>		zxwz;
+			index4_vector<T, Size, 2, 0, 3, 3>		zxww;
+			index4_vector<T, Size, 2, 1, 0, 0>		zyxx;
+			index4_vector<T, Size, 2, 1, 0, 1>		zyxy;
+			index4_vector<T, Size, 2, 1, 0, 2>		zyxz;
+			index4_vector<T, Size, 2, 1, 0, 3>		zyxw;			// Writable
+			index4_vector<T, Size, 2, 1, 1, 0>		zyyx;
+			index4_vector<T, Size, 2, 1, 1, 1>		zyyy;
+			index4_vector<T, Size, 2, 1, 1, 2>		zyyz;
+			index4_vector<T, Size, 2, 1, 1, 3>		zyyw;
+			index4_vector<T, Size, 2, 1, 2, 0>		zyzx;
+			index4_vector<T, Size, 2, 1, 2, 1>		zyzy;
+			index4_vector<T, Size, 2, 1, 2, 2>		zyzz;
+			index4_vector<T, Size, 2, 1, 2, 3>		zyzw;
+			index4_vector<T, Size, 2, 1, 3, 0>		zywx;			// Writable
+			index4_vector<T, Size, 2, 1, 3, 1>		zywy;
+			index4_vector<T, Size, 2, 1, 3, 2>		zywz;
+			index4_vector<T, Size, 2, 1, 3, 3>		zyww;
+			index4_vector<T, Size, 2, 2, 0, 0>		zzxx;
+			index4_vector<T, Size, 2, 2, 0, 1>		zzxy;
+			index4_vector<T, Size, 2, 2, 0, 2>		zzxz;
+			index4_vector<T, Size, 2, 2, 0, 3>		zzxw;
+			index4_vector<T, Size, 2, 2, 1, 0>		zzyx;
+			index4_vector<T, Size, 2, 2, 1, 1>		zzyy;
+			index4_vector<T, Size, 2, 2, 1, 2>		zzyz;
+			index4_vector<T, Size, 2, 2, 1, 3>		zzyw;
+			index4_vector<T, Size, 2, 2, 2, 0>		zzzx;
+			index4_vector<T, Size, 2, 2, 2, 1>		zzzy;
+			index4_vector<T, Size, 2, 2, 2, 2>		zzzz;
+			index4_vector<T, Size, 2, 2, 2, 3>		zzzw;
+			index4_vector<T, Size, 2, 2, 3, 0>		zzwx;
+			index4_vector<T, Size, 2, 2, 3, 1>		zzwy;
+			index4_vector<T, Size, 2, 2, 3, 2>		zzwz;
+			index4_vector<T, Size, 2, 2, 3, 3>		zzww;
+			index4_vector<T, Size, 2, 3, 0, 0>		zwxx;
+			index4_vector<T, Size, 2, 3, 0, 1>		zwxy;			// Writable
+			index4_vector<T, Size, 2, 3, 0, 2>		zwxz;
+			index4_vector<T, Size, 2, 3, 0, 3>		zwxw;
+			index4_vector<T, Size, 2, 3, 1, 0>		zwyx;			// Writable
+			index4_vector<T, Size, 2, 3, 1, 1>		zwyy;
+			index4_vector<T, Size, 2, 3, 1, 2>		zwyz;
+			index4_vector<T, Size, 2, 3, 1, 3>		zwyw;
+			index4_vector<T, Size, 2, 3, 2, 0>		zwzx;
+			index4_vector<T, Size, 2, 3, 2, 1>		zwzy;
+			index4_vector<T, Size, 2, 3, 2, 2>		zwzz;
+			index4_vector<T, Size, 2, 3, 2, 3>		zwzw;
+			index4_vector<T, Size, 2, 3, 3, 0>		zwwx;
+			index4_vector<T, Size, 2, 3, 3, 1>		zwwy;
+			index4_vector<T, Size, 2, 3, 3, 2>		zwwz;
+			index4_vector<T, Size, 2, 3, 3, 3>		zwww;
+			index4_vector<T, Size, 3, 0, 0, 0>		wxxx;
+			index4_vector<T, Size, 3, 0, 0, 1>		wxxy;
+			index4_vector<T, Size, 3, 0, 0, 2>		wxxz;
+			index4_vector<T, Size, 3, 0, 0, 3>		wxxw;
+			index4_vector<T, Size, 3, 0, 1, 0>		wxyx;
+			index4_vector<T, Size, 3, 0, 1, 1>		wxyy;
+			index4_vector<T, Size, 3, 0, 1, 2>		wxyz;			// Writable
+			index4_vector<T, Size, 3, 0, 1, 3>		wxyw;
+			index4_vector<T, Size, 3, 0, 2, 0>		wxzx;
+			index4_vector<T, Size, 3, 0, 2, 1>		wxzy;			// Writable
+			index4_vector<T, Size, 3, 0, 2, 2>		wxzz;
+			index4_vector<T, Size, 3, 0, 2, 3>		wxzw;
+			index4_vector<T, Size, 3, 0, 3, 0>		wxwx;
+			index4_vector<T, Size, 3, 0, 3, 1>		wxwy;
+			index4_vector<T, Size, 3, 0, 3, 2>		wxwz;
+			index4_vector<T, Size, 3, 0, 3, 3>		wxww;
+			index4_vector<T, Size, 3, 1, 0, 0>		wyxx;
+			index4_vector<T, Size, 3, 1, 0, 1>		wyxy;
+			index4_vector<T, Size, 3, 1, 0, 2>		wyxz;			// Writable
+			index4_vector<T, Size, 3, 1, 0, 3>		wyxw;
+			index4_vector<T, Size, 3, 1, 1, 0>		wyyx;
+			index4_vector<T, Size, 3, 1, 1, 1>		wyyy;
+			index4_vector<T, Size, 3, 1, 1, 2>		wyyz;
+			index4_vector<T, Size, 3, 1, 1, 3>		wyyw;
+			index4_vector<T, Size, 3, 1, 2, 0>		wyzx;			// Writable
+			index4_vector<T, Size, 3, 1, 2, 1>		wyzy;
+			index4_vector<T, Size, 3, 1, 2, 2>		wyzz;
+			index4_vector<T, Size, 3, 1, 2, 3>		wyzw;
+			index4_vector<T, Size, 3, 1, 3, 0>		wywx;
+			index4_vector<T, Size, 3, 1, 3, 1>		wywy;
+			index4_vector<T, Size, 3, 1, 3, 2>		wywz;
+			index4_vector<T, Size, 3, 1, 3, 3>		wyww;
+			index4_vector<T, Size, 3, 2, 0, 0>		wzxx;
+			index4_vector<T, Size, 3, 2, 0, 1>		wzxy;			// Writable
+			index4_vector<T, Size, 3, 2, 0, 2>		wzxz;
+			index4_vector<T, Size, 3, 2, 0, 3>		wzxw;
+			index4_vector<T, Size, 3, 2, 1, 0>		wzyx;			// Writable
+			index4_vector<T, Size, 3, 2, 1, 1>		wzyy;
+			index4_vector<T, Size, 3, 2, 1, 2>		wzyz;
+			index4_vector<T, Size, 3, 2, 1, 3>		wzyw;
+			index4_vector<T, Size, 3, 2, 2, 0>		wzzx;
+			index4_vector<T, Size, 3, 2, 2, 1>		wzzy;
+			index4_vector<T, Size, 3, 2, 2, 2>		wzzz;
+			index4_vector<T, Size, 3, 2, 2, 3>		wzzw;
+			index4_vector<T, Size, 3, 2, 3, 0>		wzwx;
+			index4_vector<T, Size, 3, 2, 3, 1>		wzwy;
+			index4_vector<T, Size, 3, 2, 3, 2>		wzwz;
+			index4_vector<T, Size, 3, 2, 3, 3>		wzww;
+			index4_vector<T, Size, 3, 3, 0, 0>		wwxx;
+			index4_vector<T, Size, 3, 3, 0, 1>		wwxy;
+			index4_vector<T, Size, 3, 3, 0, 2>		wwxz;
+			index4_vector<T, Size, 3, 3, 0, 3>		wwxw;
+			index4_vector<T, Size, 3, 3, 1, 0>		wwyx;
+			index4_vector<T, Size, 3, 3, 1, 1>		wwyy;
+			index4_vector<T, Size, 3, 3, 1, 2>		wwyz;
+			index4_vector<T, Size, 3, 3, 1, 3>		wwyw;
+			index4_vector<T, Size, 3, 3, 2, 0>		wwzx;
+			index4_vector<T, Size, 3, 3, 2, 1>		wwzy;
+			index4_vector<T, Size, 3, 3, 2, 2>		wwzz;
+			index4_vector<T, Size, 3, 3, 2, 3>		wwzw;
+			index4_vector<T, Size, 3, 3, 3, 0>		wwwx;
+			index4_vector<T, Size, 3, 3, 3, 1>		wwwy;
+			index4_vector<T, Size, 3, 3, 3, 2>		wwwz;
+			index4_vector<T, Size, 3, 3, 3, 3>		wwww;
 		};
 
 		//
@@ -1871,146 +1892,142 @@ namespace dsga
 		// constructors
 		//
 
-		template <typename OtherScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType value) noexcept
+		template <typename U>
+		requires std::convertible_to<U, T>
+		explicit constexpr basic_vector(U value) noexcept
 			: store()
 		{
 			init(value, value, value, value);
 		}
 
-		template <typename OtherScalarType0, typename OtherScalarType1, typename OtherScalarType2, typename OtherScalarType3>
+		template <typename U1, typename U2, typename U3, typename U4>
 		requires
-			std::convertible_to<OtherScalarType0, ScalarType> && std::convertible_to<OtherScalarType1, ScalarType> &&
-			std::convertible_to<OtherScalarType2, ScalarType> && std::convertible_to<OtherScalarType3, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType0 xvalue,
-										OtherScalarType1 yvalue,
-										OtherScalarType2 zvalue,
-										OtherScalarType3 wvalue) noexcept
+			std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
+			std::convertible_to<U3, T> && std::convertible_to<U4, T>
+		explicit constexpr basic_vector(U1 xvalue,
+										U2 yvalue,
+										U3 zvalue,
+										U4 wvalue) noexcept
 			: store()
 		{
 			init(xvalue, yvalue, zvalue, wvalue);
 		}
 
-		template <typename OtherScalarType0, typename OtherScalarType1, typename OtherScalarType2,
-			bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived>
+		template <typename U1, typename U2, typename U3,
+			bool W, dimensional_scalar U4, std::size_t C, typename D>
 		requires
-			std::convertible_to<OtherScalarType0, ScalarType> && std::convertible_to<OtherScalarType1, ScalarType> &&
-			std::convertible_to<OtherScalarType2, ScalarType> && std::convertible_to<OtherScalarType, ScalarType>
-		explicit constexpr basic_vector(OtherScalarType0 xvalue,
-										OtherScalarType1 yvalue,
-										OtherScalarType2 zvalue,
-										const vector_base<Writable, OtherScalarType, Count, Derived> &wvalue_source) noexcept
+			std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
+			std::convertible_to<U3, T> && std::convertible_to<U4, T>
+		explicit constexpr basic_vector(U1 xvalue,
+										U2 yvalue,
+										U3 zvalue,
+										const vector_base<W, U4, C, D> &wvalue_source) noexcept
 			: store()
 		{
 			init(xvalue, yvalue, zvalue, wvalue_source[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector(const vector_base<Writable, OtherScalarType, Size, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], other[2u], other[3u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived>
-		requires (!implicitly_convertible_to<OtherScalarType, ScalarType> && std::convertible_to<OtherScalarType, ScalarType>)
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, Size, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
+		explicit constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], other[2u], other[3u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived, typename YetAnotherScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<YetAnotherScalarType, ScalarType>
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, 3u, Derived> &other,
-										YetAnotherScalarType yet_another) noexcept
+		template <bool W, dimensional_scalar U1, typename D, typename U2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
+		explicit constexpr basic_vector(const vector_base<W, U1, 3u, D> &other,
+										U2 yet_another) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], other[2u], yet_another);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived,
-			bool YetAnotherWritable, dimensional_scalar YetAnotherScalarType, std::size_t Count, typename YetAnotherDerived>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<YetAnotherScalarType, ScalarType>
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, 3u, Derived> &other,
-										const vector_base<YetAnotherWritable, YetAnotherScalarType, Count, YetAnotherDerived> &wvalue_source) noexcept
+		template <bool W1, dimensional_scalar U1, typename D1,
+			bool W2, dimensional_scalar U2, std::size_t C, typename D2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
+		explicit constexpr basic_vector(const vector_base<W1, U1, 3u, D1> &other,
+										const vector_base<W2, U2, C, D2> &wvalue_source) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], other[2u], wvalue_source[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived, typename YetAnotherScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<YetAnotherScalarType, ScalarType> && (Count >= 3)
-		explicit constexpr basic_vector(YetAnotherScalarType yet_another,
-										const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 3)
+		explicit constexpr basic_vector(U2 yet_another,
+										const vector_base<W, U1, C, D> &other) noexcept
 			: store()
 		{
 			init(yet_another, other[0u], other[1u], other[2u]);
 		}
 
-		template <bool FirstWritable, dimensional_scalar FirstScalarType, typename FirstDerived,
-			bool SecondWritable, dimensional_scalar SecondScalarType, std::size_t SecondCount, typename SecondDerived>
-		requires std::convertible_to<FirstScalarType, ScalarType> && std::convertible_to<SecondScalarType, ScalarType> && (SecondCount >= 2)
-		explicit constexpr basic_vector(const vector_base<FirstWritable, FirstScalarType, 2u, FirstDerived> &first,
-										const vector_base<SecondWritable, SecondScalarType, SecondCount, SecondDerived> &second) noexcept
+		template <bool W1, dimensional_scalar U1, typename D1,
+			bool W2, dimensional_scalar U2, std::size_t C, typename D2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 2)
+		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &first,
+										const vector_base<W2, U2, C, D2> &second) noexcept
 			: store()
 		{
 			init(first[0u], first[1u], second[0u], second[1u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived,  typename FirstScalarType, typename SecondScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<FirstScalarType, ScalarType> && std::convertible_to<SecondScalarType, ScalarType>
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, 2u, Derived> &other,
-										FirstScalarType first,
-										SecondScalarType second) noexcept
+		template <bool W, dimensional_scalar U1, typename D,  typename U2, typename U3>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		explicit constexpr basic_vector(const vector_base<W, U1, 2u, D> &other,
+										U2 first,
+										U3 second) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], first, second);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived, typename FirstScalarType,
-			bool YetAnotherWritable, dimensional_scalar YetAnotherScalarType, std::size_t Count, typename YetAnotherDerived>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<FirstScalarType, ScalarType> && std::convertible_to<YetAnotherScalarType, ScalarType>
-		explicit constexpr basic_vector(const vector_base<Writable, OtherScalarType, 2u, Derived> &other,
-										FirstScalarType first,
-										const vector_base<YetAnotherWritable, YetAnotherScalarType, Count, YetAnotherDerived> &wvalue_source) noexcept
+		template <bool W1, dimensional_scalar U1, typename D1, typename U2,
+			bool W2, dimensional_scalar U3, std::size_t C, typename D2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &other,
+										U2 first,
+										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
 			: store()
 		{
 			init(other[0u], other[1u], first, wvalue_source[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived, typename FirstScalarType, typename SecondScalarType>
-		requires std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<FirstScalarType, ScalarType> && std::convertible_to<SecondScalarType, ScalarType>
-		explicit constexpr basic_vector(FirstScalarType first,
-										const vector_base<Writable, OtherScalarType, 2u, Derived> &other,
-										SecondScalarType second) noexcept
+		template <bool W, dimensional_scalar U1, typename D, typename U2, typename U3>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		explicit constexpr basic_vector(U2 first,
+										const vector_base<W, U1, 2u, D> &other,
+										U3 second) noexcept
 			: store()
 		{
 			init(first, other[0u], other[1u], second);
 		}
 
-		template <	bool Writable, dimensional_scalar OtherScalarType, typename Derived,
-					typename FirstScalarType,
-					bool YetAnotherWritable, dimensional_scalar YetAnotherScalarType, std::size_t Count, typename YetAnotherDerived>
-		requires	std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<FirstScalarType, ScalarType> &&
-					std::convertible_to<YetAnotherScalarType, ScalarType>
-		explicit constexpr basic_vector(FirstScalarType first,
-										const vector_base<Writable, OtherScalarType, 2u, Derived> &other,
-										const vector_base<YetAnotherWritable, YetAnotherScalarType, Count, YetAnotherDerived> &wvalue_source) noexcept
+		template <bool W1, dimensional_scalar U1, typename D1,
+			typename U2, bool W2, dimensional_scalar U3, std::size_t C, typename D2>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
+		explicit constexpr basic_vector(U2 first,
+										const vector_base<W1, U1, 2u, D1> &other,
+										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
 			: store()
 		{
 			init(first, other[0u], other[1u], wvalue_source[0u]);
 		}
 
-		template <bool Writable, dimensional_scalar OtherScalarType, std::size_t Count, typename Derived,
-				  typename FirstScalarType, typename SecondScalarType>
-		requires	std::convertible_to<OtherScalarType, ScalarType> && std::convertible_to<FirstScalarType, ScalarType> &&
-					std::convertible_to<SecondScalarType, ScalarType>  && (Count >= 2)
-		explicit constexpr basic_vector(FirstScalarType first,
-										SecondScalarType second,
-										const vector_base<Writable, OtherScalarType, Count, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2, typename U3>
+		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T> && (C >= 2)
+		explicit constexpr basic_vector(U2 first,
+										U3 second,
+										const vector_base<W, U1, C, D> &other) noexcept
 			: store()
 		{
 			init(first, second, other[0u], other[1u]);
@@ -2020,9 +2037,9 @@ namespace dsga
 		// assignment operators
 		//
 
-		template <bool Writable, dimensional_scalar OtherScalarType, typename Derived>
-		requires implicitly_convertible_to<OtherScalarType, ScalarType>
-		constexpr basic_vector &operator =(const vector_base<Writable, OtherScalarType, Size, Derived> &other) noexcept
+		template <bool W, dimensional_scalar U, typename D>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			init(other[0u], other[1u], other[2u], other[3u]);
 			return *this;
@@ -2034,18 +2051,21 @@ namespace dsga
 
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename OtherScalarType0, typename OtherScalarType1, typename OtherScalarType2, typename OtherScalarType3>
-		constexpr void init(OtherScalarType0 value0, OtherScalarType1 value1, OtherScalarType2 value2, OtherScalarType3 value3) noexcept
+		template <typename U1, typename U2, typename U3, typename U4>
+		requires
+			std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
+			std::convertible_to<U3, T> && std::convertible_to<U4, T>
+		constexpr void init(U1 value0, U2 value1, U3 value2, U4 value3) noexcept
 		{
-			store.value[0u] = static_cast<ScalarType>(value0);
-			store.value[1u] = static_cast<ScalarType>(value1);
-			store.value[2u] = static_cast<ScalarType>(value2);
-			store.value[3u] = static_cast<ScalarType>(value3);
+			store.value[0u] = static_cast<T>(value0);
+			store.value[1u] = static_cast<T>(value1);
+			store.value[2u] = static_cast<T>(value2);
+			store.value[3u] = static_cast<T>(value3);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		ScalarType	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	ScalarType	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
+		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
