@@ -2082,7 +2082,7 @@ namespace dsga
 
 	namespace detail
 	{
-		// convert a parameter pack into a basic_vector vector
+		// convert a parameter pack into a basic_vector
 
 		template <typename ...Ts>
 		requires dimensional_storage<std::common_type_t<Ts...>, sizeof...(Ts)>
@@ -2094,134 +2094,134 @@ namespace dsga
 			return basic_vector<ArgType, Size>{(static_cast<ArgType>(args))...};
 		}
 
-		// convert basic array types to a basic_vector vector
+		// convert basic array types to a basic_vector
 
-		template <typename ScalarType, std::size_t Size, std::size_t ...Indexes>
-		constexpr auto passthru_execute(std::index_sequence<Indexes...> /* dummy */,
-										const std::array<ScalarType, Size> &arg) noexcept
+		template <typename T, std::size_t S, std::size_t ...Is>
+		constexpr auto passthru_execute(std::index_sequence<Is...> /* dummy */,
+										const std::array<T, S> &arg) noexcept
 		{
-			return basic_vector<ScalarType, Size>(arg[Indexes]...);
+			return basic_vector<T, S>(arg[Is]...);
 		}
 
-		template <typename ScalarType, std::size_t Size, std::size_t ...Indexes>
-		constexpr auto passthru_execute(std::index_sequence<Indexes...> /* dummy */,
-										const ScalarType(&arg)[Size]) noexcept
+		template <typename T, std::size_t S, std::size_t ...Is>
+		constexpr auto passthru_execute(std::index_sequence<Is...> /* dummy */,
+										const T(&arg)[S]) noexcept
 		{
-			return basic_vector<ScalarType, Size>(arg[Indexes]...);
+			return basic_vector<T, S>(arg[Is]...);
 		}
 
 		// return types from executing lambdas on arguments of various types
 
-		template <typename UnOp, dsga::dimensional_scalar ScalarType>
-		using unary_op_return_t = decltype(UnOp()(std::declval<ScalarType>()));
+		template <typename UnOp, dsga::dimensional_scalar T>
+		using unary_op_return_t = decltype(UnOp()(std::declval<T>()));
 
-		template <typename BinOp, dsga::dimensional_scalar ScalarType, dsga::dimensional_scalar OtherScalarType>
-		using binary_op_return_t = decltype(BinOp()(std::declval<ScalarType>(), std::declval<OtherScalarType>()));
+		template <typename BinOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U>
+		using binary_op_return_t = decltype(BinOp()(std::declval<T>(), std::declval<U>()));
 
-		// perform the lambda action on components of vector_base arguments, returning a new basic_vector vector
+		// perform the lambda action on components of vector_base arguments, returning a new basic_vector
 
-		template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename UnOp, std::size_t ...Indexes>
-		constexpr auto unary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										const vector_base<Writable, ScalarType, Count, Derived> &arg,
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D, typename UnOp, std::size_t ...Is>
+		constexpr auto unary_op_execute(std::index_sequence<Is...> /* dummy */,
+										const vector_base<W, T, C, D> &arg,
 										UnOp &lambda) noexcept
 		{
-			return basic_vector<unary_op_return_t<UnOp, ScalarType>, Count>(lambda(arg[Indexes])...);
+			return basic_vector<unary_op_return_t<UnOp, T>, C>(lambda(arg[Is])...);
 		}
 
 		// when Count == 1, treat it like a scalar value
-		template <bool Writable, dimensional_scalar ScalarType, typename Derived, typename UnOp, std::size_t ...Indexes>
-		constexpr auto unary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										const vector_base<Writable, ScalarType, 1u, Derived> &arg,
+		template <bool W, dsga::dimensional_scalar T, typename D, typename UnOp, std::size_t ...Is>
+		constexpr auto unary_op_execute(std::index_sequence<Is...> /* dummy */,
+										const vector_base<W, T, 1u, D> &arg,
 										UnOp &lambda) noexcept
 		{
-			return static_cast<unary_op_return_t<UnOp, ScalarType>>(lambda(arg[0u]));
+			return static_cast<unary_op_return_t<UnOp, T>>(lambda(arg[0u]));
 		}
 
-		template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-			bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived, typename BinOp, std::size_t ...Indexes>
-		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-										 const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs,
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 const vector_base<W1, T1, C, D1> &lhs,
+										 const vector_base<W2, T2, C, D2> &rhs,
 										 BinOp &lambda) noexcept
 		{
-			return basic_vector<binary_op_return_t<BinOp, ScalarType, OtherScalarType>, Count>(lambda(lhs[Indexes], rhs[Indexes])...);
+			return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
 		}
 
-		template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-			dimensional_scalar OtherScalarType, typename BinOp, std::size_t ...Indexes>
-		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-										 OtherScalarType rhs,
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 const vector_base<W, T, C, D> &lhs,
+										 U rhs,
 										 BinOp &lambda) noexcept
 		{
-			return basic_vector<binary_op_return_t<BinOp, ScalarType, OtherScalarType>, Count>(lambda(lhs[Indexes], rhs)...);
+			return basic_vector<binary_op_return_t<BinOp, T, U>, C>(lambda(lhs[Is], rhs)...);
 		}
 
-		template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-			dimensional_scalar OtherScalarType, typename BinOp, std::size_t ...Indexes>
-		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 OtherScalarType lhs,
-										 const vector_base<Writable, ScalarType, Count, Derived> &rhs,
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 U lhs,
+										 const vector_base<W, T, C, D> &rhs,
 										 BinOp &lambda) noexcept
 		{
-			return basic_vector<binary_op_return_t<BinOp, OtherScalarType, ScalarType>, Count>(lambda(lhs, rhs[Indexes])...);
-		}
-
-		// when Count == 1, treat it like a scalar value
-		template <bool Writable, dimensional_scalar ScalarType, typename Derived,
-			bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived, typename BinOp, std::size_t ...Indexes>
-		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-										 const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs,
-										 BinOp &lambda) noexcept
-		{
-			return static_cast<binary_op_return_t<BinOp, ScalarType, OtherScalarType>>(lambda(lhs[0u], rhs[0u]));
+			return basic_vector<binary_op_return_t<BinOp, U, T>, C>(lambda(lhs, rhs[Is])...);
 		}
 
 		// when Count == 1, treat it like a scalar value
-		template <bool Writable, dimensional_scalar ScalarType, typename Derived,
-			dimensional_scalar OtherScalarType, typename BinOp, std::size_t ...Indexes>
-		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-										 OtherScalarType rhs,
+		template <bool W1, dsga::dimensional_scalar T1, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 const vector_base<W1, T1, 1u, D1> &lhs,
+										 const vector_base<W2, T2, 1u, D2> &rhs,
 										 BinOp &lambda) noexcept
 		{
-			return static_cast<binary_op_return_t<BinOp, ScalarType, OtherScalarType>>(lambda(lhs[0u], rhs));
+			return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[0u], rhs[0u]));
 		}
 
 		// when Count == 1, treat it like a scalar value
-		template <bool Writable, dimensional_scalar ScalarType, typename Derived,
-			dimensional_scalar OtherScalarType, typename BinOp, std::size_t ...Indexes>
-		constexpr auto binary_op_execute(std::index_sequence<Indexes...> /* dummy */,
-										 OtherScalarType lhs,
-										 const vector_base<Writable, ScalarType, 1u, Derived> &rhs,
+		template <bool W, dsga::dimensional_scalar T, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 const vector_base<W, T, 1u, D> &lhs,
+										 U rhs,
 										 BinOp &lambda) noexcept
 		{
-			return static_cast<binary_op_return_t<BinOp, OtherScalarType, ScalarType>>(lambda(lhs, rhs[0u]));
+			return static_cast<binary_op_return_t<BinOp, T, U>>(lambda(lhs[0u], rhs));
+		}
+
+		// when Count == 1, treat it like a scalar value
+		template <bool W, dsga::dimensional_scalar T1, typename D,
+			dsga::dimensional_scalar T2, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 T2 lhs,
+										 const vector_base<W, T1, 1u, D> &rhs,
+										 BinOp &lambda) noexcept
+		{
+			return static_cast<binary_op_return_t<BinOp, T2, T1>>(lambda(lhs, rhs[0u]));
 		}
 
 		// perform the lambda action, setting the lhs vector_base to new values
 
-		template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-			bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived, typename BinOp, std::size_t ...Indexes>
-		requires Writable
-		constexpr void binary_op_set(std::index_sequence<Indexes...> /* dummy */,
-									 vector_base<Writable, ScalarType, Count, Derived> &lhs,
-									 const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs,
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		requires W1
+		constexpr void binary_op_set(std::index_sequence<Is...> /* dummy */,
+									 vector_base<W1, T1, C, D1> &lhs,
+									 const vector_base<W2, T2, C, D2> &rhs,
 									 BinOp &lambda) noexcept
 		{
-			lhs.set(lambda(lhs[Indexes], rhs[Indexes])...);
+			lhs.set(lambda(lhs[Is], rhs[Is])...);
 		}
 
-		template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-			dimensional_scalar OtherScalarType, typename BinOp, std::size_t ...Indexes>
-		requires Writable
-		constexpr void binary_op_set(std::index_sequence<Indexes...> /* dummy */,
-									 vector_base<Writable, ScalarType, Count, Derived> &lhs,
-									 OtherScalarType rhs,
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		requires W
+		constexpr void binary_op_set(std::index_sequence<Is...> /* dummy */,
+									 vector_base<W, T, C, D> &lhs,
+									 U rhs,
 									 BinOp &lambda) noexcept
 		{
-			lhs.set(lambda(lhs[Indexes], rhs)...);
+			lhs.set(lambda(lhs[Is], rhs)...);
 		}
 
 	}
