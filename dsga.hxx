@@ -3004,24 +3004,24 @@ namespace dsga
 	// equality comparisons
 	//
 
-	template <bool FirstWritable, dimensional_scalar FirstScalarType, std::size_t Count, typename FirstDerived,
-		bool SecondWritable, dimensional_scalar SecondScalarType, typename SecondDerived>
-	requires implicitly_convertible_to<SecondScalarType, FirstScalarType>
-	constexpr bool operator ==(const vector_base<FirstWritable, FirstScalarType, Count, FirstDerived> &first,
-							   const vector_base<SecondWritable, SecondScalarType, Count, SecondDerived> &second) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1>
+	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
+							   const vector_base<W2, T2, C, D2> &second) noexcept
 	{
-		for (std::size_t i = 0; i < Count; ++i)
-			if (first[i] != static_cast<FirstScalarType>(second[i]))
+		for (std::size_t i = 0; i < C; ++i)
+			if (first[i] != static_cast<T1>(second[i]))
 				return false;
 
 		return true;
 	}
 
-	template <bool FirstWritable, dimensional_scalar ScalarType, std::size_t Count, typename FirstDerived, bool SecondWritable, typename SecondDerived>
-	constexpr bool operator ==(const vector_base<FirstWritable, ScalarType, Count, FirstDerived> &first,
-							   const vector_base<SecondWritable, ScalarType, Count, SecondDerived> &second) noexcept
+	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
+							   const vector_base<W2, T, C, D2> &second) noexcept
 	{
-		for (std::size_t i = 0; i < Count; ++i)
+		for (std::size_t i = 0; i < C; ++i)
 			if (first[i] != second[i])
 				return false;
 
@@ -3029,12 +3029,12 @@ namespace dsga
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived, dimensional_scalar OtherScalarType>
-	requires (std::same_as<ScalarType, bool> == std::same_as<OtherScalarType, bool>)
-	constexpr bool operator ==(const vector_base<Writable, ScalarType, 1u, Derived> &first,
-							   OtherScalarType second) noexcept
+	template <bool W, dimensional_scalar T, typename D, dimensional_scalar U>
+	requires (std::same_as<T, bool> == std::same_as<U, bool>)
+	constexpr bool operator ==(const vector_base<W, T, 1u, D> &first,
+							   U second) noexcept
 	{
-		using CommonType = std::common_type_t<ScalarType, OtherScalarType>;
+		using CommonType = std::common_type_t<T, U>;
 		return static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second);
 	}
 
@@ -3042,30 +3042,30 @@ namespace dsga
 	// get<> part of tuple interface -- needed for structured bindings
 	//
 
-	template <int N, bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires (N >= 0) && (N < Count)
-	constexpr auto && get(dsga::vector_base<Writable, ScalarType, Count, Derived> & arg) noexcept
+	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(dsga::vector_base<W, T, C, D> & arg) noexcept
 	{
 		return arg[N];
 	}
 
-	template <int N, bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires (N >= 0) && (N < Count)
-	constexpr auto && get(const dsga::vector_base<Writable, ScalarType, Count, Derived> & arg) noexcept
+	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(const dsga::vector_base<W, T, C, D> & arg) noexcept
 	{
 		return arg[N];
 	}
 
-	template <int N, bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires (N >= 0) && (N < Count)
-	constexpr auto && get(dsga::vector_base<Writable, ScalarType, Count, Derived> && arg) noexcept
+	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(dsga::vector_base<W, T, C, D> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
 
-	template <int N, bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires (N >= 0) && (N < Count)
-	constexpr auto && get(const dsga::vector_base<Writable, ScalarType, Count, Derived> && arg) noexcept
+	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(const dsga::vector_base<W, T, C, D> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -3076,101 +3076,101 @@ namespace dsga
 // tuple inteface for basic_vector and indexed_vector and vec_base -- supports structured bindings
 //
 
-template<dsga::dimensional_scalar ScalarType, std::size_t Size>
-struct std::tuple_size<dsga::basic_vector<ScalarType, Size>> : std::integral_constant<std::size_t, Size>
+template<dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_size<dsga::basic_vector<T, S>> : std::integral_constant<std::size_t, S>
 {
 };
 
-template <std::size_t element_index, dsga::dimensional_scalar ScalarType, std::size_t Size>
-struct std::tuple_element<element_index, dsga::basic_vector<ScalarType, Size>>
+template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_element<I, dsga::basic_vector<T, S>>
 {
-	using type = ScalarType;
+	using type = T;
 };
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-struct std::tuple_size<dsga::indexed_vector<ScalarType, Size, IndexCount, Indexes...>> : std::integral_constant<std::size_t, IndexCount>
-{
-};
-
-template <std::size_t element_index, dsga::dimensional_scalar ScalarType, std::size_t Size, std::size_t IndexCount, std::size_t ...Indexes>
-struct std::tuple_element<element_index, dsga::indexed_vector<ScalarType, Size, IndexCount, Indexes...>>
-{
-	using type = ScalarType;
-};
-
-template <bool Writable, dsga::dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-struct std::tuple_size<dsga::vector_base<Writable, ScalarType, Count, Derived>> : std::integral_constant<std::size_t, Count>
+template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+struct std::tuple_size<dsga::indexed_vector<T, S, C, Is...>> : std::integral_constant<std::size_t, C>
 {
 };
 
-template <std::size_t element_index, bool Writable, dsga::dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-struct std::tuple_element<element_index, dsga::vector_base<Writable, ScalarType, Count, Derived>>
+template <std::size_t I, dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+struct std::tuple_element<I, dsga::indexed_vector<T, S, C, Is...>>
 {
-	using type = ScalarType;
+	using type = T;
+};
+
+template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D>
+struct std::tuple_size<dsga::vector_base<W, T, C, D>> : std::integral_constant<std::size_t, C>
+{
+};
+
+template <std::size_t I, bool W, dsga::dimensional_scalar T, std::size_t C, typename D>
+struct std::tuple_element<I, dsga::vector_base<W, T, C, D>>
+{
+	using type = T;
 };
 
 // converting from external vector type or data to internal vector type
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size>
-requires dsga::dimensional_storage<ScalarType, Size>
-constexpr auto to_vec(const std::array<ScalarType, Size> &arg) noexcept
+template <dsga::dimensional_scalar T, std::size_t S>
+requires dsga::dimensional_storage<T, S>
+constexpr auto to_vec(const std::array<T, S> &arg) noexcept
 {
-	return dsga::detail::passthru_execute(std::make_index_sequence<Size>{}, arg);
+	return dsga::detail::passthru_execute(std::make_index_sequence<S>{}, arg);
 }
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size>
-requires dsga::dimensional_storage<ScalarType, Size>
-constexpr auto to_vec(const ScalarType (&arg)[Size]) noexcept
+template <dsga::dimensional_scalar T, std::size_t S>
+requires dsga::dimensional_storage<T, S>
+constexpr auto to_vec(const T (&arg)[S]) noexcept
 {
-	return dsga::detail::passthru_execute(std::make_index_sequence<Size>{}, arg);
+	return dsga::detail::passthru_execute(std::make_index_sequence<S>{}, arg);
 }
 
 // converting from internal vector type to std::array
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size>
-constexpr std::array<ScalarType, Size> from_vec(const dsga::basic_vector<ScalarType, Size> &arg)
+template <dsga::dimensional_scalar T, std::size_t S>
+constexpr std::array<T, S> from_vec(const dsga::basic_vector<T, S> &arg)
 {
 	return arg.store.value;
 }
 
 // fill vectors from spans
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent != 0) && (Extent != std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<OtherScalarType, ScalarType>
-constexpr void copy_to_vec(dsga::basic_vector<ScalarType, Size> &lhs, std::span<OtherScalarType, Extent> rhs)
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
+constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
-	constexpr std::size_t count = std::min(Size, Extent);
+	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<ScalarType>(rhs[i]);
+		lhs[i] = static_cast<T>(rhs[i]);
 }
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent == 0) || (Extent == std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<OtherScalarType, ScalarType>
-constexpr void copy_to_vec(dsga::basic_vector<ScalarType, Size> &lhs, std::span<OtherScalarType, Extent> rhs)
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
+constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
-	std::size_t count = std::min(Size, rhs.size());
+	std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<ScalarType>(rhs[i]);
+		lhs[i] = static_cast<T>(rhs[i]);
 }
 
 // fill spans from vectors
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent != 0) && (Extent != std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>
-constexpr void copy_from_vec(std::span<OtherScalarType, Extent> lhs, const dsga::basic_vector<ScalarType, Size> &rhs)
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
+constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
 {
-	constexpr std::size_t count = std::min(Size, Extent);
+	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<OtherScalarType>(rhs[i]);
+		lhs[i] = static_cast<U>(rhs[i]);
 }
 
-template <dsga::dimensional_scalar ScalarType, std::size_t Size, typename OtherScalarType, std::size_t Extent>
-requires ((Extent == 0) || (Extent == std::dynamic_extent)) && dsga::non_bool_arithmetic<OtherScalarType> && std::convertible_to<ScalarType, OtherScalarType>
-constexpr void copy_from_vec(std::span<OtherScalarType, Extent> lhs, const dsga::basic_vector<ScalarType, Size> &rhs)
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
+constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
 {
-	std::size_t count = std::min(Size, lhs.size());
+	std::size_t count = std::min(S, lhs.size());
 	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<OtherScalarType>(rhs[i]);
+		lhs[i] = static_cast<U>(rhs[i]);
 }
 
 //
@@ -3178,20 +3178,20 @@ constexpr void copy_from_vec(std::span<OtherScalarType, Extent> lhs, const dsga:
 //
 
 // this 1D vector is a swizzlable scalar -- rough glsl analog to this with primitive types
-template <dsga::dimensional_scalar ScalarType>
-using vectype1 = dsga::basic_vector<ScalarType, 1u>;
+template <dsga::dimensional_scalar T>
+using vectype1 = dsga::basic_vector<T, 1u>;
 
 // 2D vector
-template <dsga::dimensional_scalar ScalarType>
-using vectype2 = dsga::basic_vector<ScalarType, 2u>;
+template <dsga::dimensional_scalar T>
+using vectype2 = dsga::basic_vector<T, 2u>;
 
 // 3D vector
-template <dsga::dimensional_scalar ScalarType>
-using vectype3 = dsga::basic_vector<ScalarType, 3u>;
+template <dsga::dimensional_scalar T>
+using vectype3 = dsga::basic_vector<T, 3u>;
 
 // 4D vector
-template <dsga::dimensional_scalar ScalarType>
-using vectype4 = dsga::basic_vector<ScalarType, 4u>;
+template <dsga::dimensional_scalar T>
+using vectype4 = dsga::basic_vector<T, 4u>;
 
 // boolean vectors
 using bscal = vectype1<bool>;
