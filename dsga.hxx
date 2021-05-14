@@ -236,7 +236,15 @@ namespace dsga
 		stpq						// texture coordinates
 	};
 
-	// this is a CRTP struct that will help us with operators, compound assignment operators, and functions.
+	// This is a CRTP base struct for the vector structs, primarily for data access.
+	// It will help with arithmetic operators, compound assignment operators, and functions.
+	// 
+	// template parameters:
+	// 
+	//		Writable - bool value about whether struct can be modified (e.g., "foo.set(3, 4, 5);", "foo[0] = 3;")
+	//		ScalarType - the type stored
+	//		Count - the number of indexes available to access ScalarType data
+	//		Derived - the CRTP struct/class that is derived from this struct
 	//
 	// It provides:
 	// 
@@ -244,8 +252,8 @@ namespace dsga
 	// 		operator[] - relies on at() in Derived
 	// 		size() - relies on Count template parameter
 	//
-	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
-	requires dimensional_storage<T, Count>
+	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
+	requires dimensional_storage<ScalarType, Count>
 	struct vector_base
 	{
 		// CRTP access to Derived class
@@ -254,12 +262,12 @@ namespace dsga
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
-		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, ScalarType> &&...)
 		constexpr		void		set(Args ...args)						noexcept						{ this->as_derived().init(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
-		constexpr		T			&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
-		constexpr const	T			&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
+		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
+		constexpr const	ScalarType	&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
 
 		// number of accessible T elements
 		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
@@ -270,8 +278,15 @@ namespace dsga
 	// T is the type of the elements stored in the vector/storage
 	// Size is number of elements referencable in vector/storage
 
-	template <dimensional_scalar T, std::size_t Size>
-	requires dimensional_storage<T, Size>
+	// the foundational vector type for dsga
+	// 
+	// template parameters:
+	//
+	//		ScalarType - the type stored
+	//		Size - the number of actual elements in storage
+	//
+	template <dimensional_scalar ScalarType, std::size_t Size>
+	requires dimensional_storage<ScalarType, Size>
 	struct basic_vector;
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
@@ -288,8 +303,17 @@ namespace dsga
 	template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 	concept indexable = dimensional_storage<T, Size> && valid_index_count<Count, Is...> && valid_range_indexes<Size, Is...>;
 
-	template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-	requires indexable<T, Size, Count, Is...>
+	// the type of a basic_vector swizzle
+	// 
+	// template parameters:
+	//
+	//		ScalarType - the type stored
+	//		Size - the number of actual elements in storage
+	//		Count - the number of indexes available to access ScalarType data
+	//		Is - an ordered variable set of indexes into the storage -- there will be Count of them
+	//
+	template <typename ScalarType, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	requires indexable<ScalarType, Size, Count, Is...>
 	struct indexed_vector;
 
 	//
@@ -2234,695 +2258,705 @@ namespace dsga
 
 	constexpr inline auto plus_op = [](auto lhs, auto rhs) { return lhs + rhs; };
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator +=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator +=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator +=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator +(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator +(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator +(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator +(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, plus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, plus_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator +(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator +(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], plus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], plus_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator +(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator +(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator +(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator +(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, plus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 	}
 
 	// binary operators -=, -
 
 	constexpr inline auto minus_op = [](auto lhs, auto rhs) { return lhs - rhs; };
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator -=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator -=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator -=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator -(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator -(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator -(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator -(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, minus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, minus_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator -(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator -(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], minus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], minus_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator -(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator -(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator -(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator -(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, minus_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
 	}
 
 	// binary operators *=, *
 
 	constexpr inline auto times_op = [](auto lhs, auto rhs) { return lhs * rhs; };
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator *=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, times_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator *=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator *=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, times_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator *(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator *(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, times_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator *(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator *(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, times_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, times_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator *(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator *(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], times_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], times_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator *(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator *(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, times_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator *(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator *(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, times_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, times_op);
 	}
 
 	// binary operators /=, /
 
 	constexpr inline auto div_op = [](auto lhs, auto rhs) { return lhs / rhs; };
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator /=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, div_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, dimensional_scalar OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator /=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator /=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, div_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator /(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator /(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, div_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator /(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator /(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, div_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, div_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator /(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator /(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], div_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], div_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator /(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator /(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, div_op);
 	}
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived, typename OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator /(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator /(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, div_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, div_op);
 	}
 
 	// binary operators %=, %
 
 	constexpr inline auto mod_op = [](auto lhs, auto rhs) { return lhs % rhs; };
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator %=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator %=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator %=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator %(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator %(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator %(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator %(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, mod_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, mod_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator %(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator %(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], mod_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], mod_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator %(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator %(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator %(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator %(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, mod_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
 	}
 
 	// unary operator ~
 
 	constexpr inline auto bit_not_op = [](auto arg) { return ~arg; };
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	constexpr auto operator ~(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D>
+	constexpr auto operator ~(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return detail::unary_op_execute(std::make_index_sequence<Count>{}, arg, bit_not_op);
+		return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, bit_not_op);
 	}
 
 	// binary operators <<=, <<
 
 	constexpr inline auto lshift_op = [](auto lhs, auto rhs) { return lhs << rhs; };
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator <<=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								 const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
+								 const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator <<=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator <<=(vector_base<W, T, C, D> &lhs,
+								 U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator <<(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							   const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator <<(const vector_base<W1, T1, C, D1> &lhs,
+							   const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator <<(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							   const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator <<(const vector_base<W1, T1, 1u, D1> &lhs,
+							   const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, lshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, lshift_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator <<(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							   const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator <<(const vector_base<W1, T1, C, D1> &lhs,
+							   const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], lshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], lshift_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator <<(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							   OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator <<(const vector_base<W, T, C, D> &lhs,
+							   U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator <<(OtherScalarType lhs,
-							   const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator <<(U lhs,
+							   const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, lshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 	}
 
 	// binary operators >>=, >>
 
 	constexpr inline auto rshift_op = [](auto lhs, auto rhs) { return lhs >> rhs; };
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator >>=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								 const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
+								 const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator >>=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator >>=(vector_base<W, T, C, D> &lhs,
+								 U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator >>(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							   const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator >>(const vector_base<W1, T1, C, D1> &lhs,
+							   const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator >>(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							   const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator >>(const vector_base<W1, T1, 1u, D1> &lhs,
+							   const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, rshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, rshift_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator >>(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							   const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator >>(const vector_base<W1, T1, C, D1> &lhs,
+							   const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], rshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], rshift_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator >>(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							   OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator >>(const vector_base<W, T, C, D> &lhs,
+							   U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator >>(OtherScalarType lhs,
-							   const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator >>(U lhs,
+							   const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, rshift_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 	}
 
 	// binary operators &=, &
 
 	constexpr inline auto and_op = [](auto lhs, auto rhs) { return lhs & rhs; };
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator &=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, and_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator &=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator &=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, and_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator &(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator &(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, and_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator &(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator &(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, and_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, and_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator &(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator &(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], and_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], and_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator &(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator &(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, and_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator &(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator &(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, and_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, and_op);
 	}
 
 	// binary operators |=, |
 
 	constexpr inline auto or_op = [](auto lhs, auto rhs) { return lhs | rhs; };
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator |=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, or_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator |=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator |=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, or_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator |(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator |(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, or_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator |(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator |(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, or_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, or_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator |(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator |(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], or_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], or_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator |(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator |(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, or_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator |(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator |(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, or_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, or_op);
 	}
 
 	// binary operators ^=, ^
 
 	constexpr inline auto xor_op = [](auto lhs, auto rhs) { return lhs ^ rhs; };
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator ^=(vector_base<Writable, ScalarType, Count, Derived> &lhs,
-								const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1>
+	constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires Writable && implicitly_convertible_to<OtherScalarType, ScalarType>
-	constexpr auto &operator ^=(vector_base<Writable, ScalarType, Count, Derived> &lhs, OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires W && implicitly_convertible_to<U, T>
+	constexpr auto &operator ^=(vector_base<W, T, C, D> &lhs,
+								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
 		return lhs.as_derived();
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator ^(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator ^(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, std::size_t Count, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator ^(const vector_base<Writable, ScalarType, 1u, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, Count, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator ^(const vector_base<W1, T1, 1u, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs[0u], rhs, xor_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, xor_op);
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived,
-		bool OtherWritable, integral_dimensional_scalar OtherScalarType, typename OtherDerived>
-	requires (implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>) && (Count > 1u)
-	constexpr auto operator ^(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  const vector_base<OtherWritable, OtherScalarType, 1u, OtherDerived> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
+	constexpr auto operator ^(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs[0u], xor_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], xor_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator ^(const vector_base<Writable, ScalarType, Count, Derived> &lhs,
-							  OtherScalarType rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator ^(const vector_base<W, T, C, D> &lhs,
+							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
 	}
 
-	template <bool Writable, integral_dimensional_scalar ScalarType, std::size_t Count, typename Derived, std::integral OtherScalarType>
-	requires implicitly_convertible_to<OtherScalarType, ScalarType> || implicitly_convertible_to<ScalarType, OtherScalarType>
-	constexpr auto operator ^(OtherScalarType lhs,
-							  const vector_base<Writable, ScalarType, Count, Derived> &rhs) noexcept
+	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	constexpr auto operator ^(U lhs,
+							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<Count>{}, lhs, rhs, xor_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
 	}
 
 	// unary operator +
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires non_bool_arithmetic<ScalarType>
-	constexpr basic_vector<ScalarType, Count> operator +(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires non_bool_arithmetic<T>
+	constexpr basic_vector<T, C> operator +(const vector_base<W, T, C, D> &arg) noexcept
 	{
 		return basic_vector(arg);						// no-op copy
 	}
 
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
-	requires non_bool_arithmetic<ScalarType>
-	constexpr ScalarType operator +(const vector_base<Writable, ScalarType, 1u, Derived> &arg) noexcept
+	template <bool W, dimensional_scalar T, typename D>
+	requires non_bool_arithmetic<T>
+	constexpr T operator +(const vector_base<W, T, 1u, D> &arg) noexcept
 	{
 		return arg[0u];									// no-op scalar copy
 	}
@@ -2931,72 +2965,74 @@ namespace dsga
 
 	constexpr inline auto neg_op = [](auto arg) { return -arg; };
 
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires non_bool_arithmetic<ScalarType>
-	constexpr auto operator -(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires non_bool_arithmetic<T>
+	constexpr auto operator -(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return detail::unary_op_execute(std::make_index_sequence<Count>{}, arg, neg_op);
+		return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, neg_op);
 	}
 
 	// unary operators ++
 
 	// pre-increment
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && non_bool_arithmetic<ScalarType>
-	constexpr auto &operator ++(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires W && non_bool_arithmetic<T>
+	constexpr auto &operator ++(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		arg += ScalarType(1);
+		arg += T(1);
 		return arg.as_derived();
 	}
 
 	// post-increment
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && non_bool_arithmetic<ScalarType>
-	constexpr basic_vector<ScalarType, Count> operator ++(vector_base<Writable, ScalarType, Count, Derived> &arg, int) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires W && non_bool_arithmetic<T>
+	constexpr basic_vector<T, C> operator ++(vector_base<W, T, C, D> &arg, int) noexcept
 	{
-		basic_vector<ScalarType, Count> value(arg);
-		arg += ScalarType(1);
+		basic_vector<T, C> value(arg);
+		arg += T(1);
 		return value;
 	}
 
+	// post-increment
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
-	requires Writable && non_bool_arithmetic<ScalarType>
-	constexpr ScalarType operator ++(vector_base<Writable, ScalarType, 1u, Derived> &arg, int) noexcept
+	template <bool W, dimensional_scalar T, typename C>
+	requires W && non_bool_arithmetic<T>
+	constexpr T operator ++(vector_base<W, T, 1u, C> &arg, int) noexcept
 	{
-		ScalarType value = arg[0u];
-		arg += ScalarType(1);
+		T value = arg[0u];
+		arg += T(1);
 		return value;
 	}
 
 	// unary operators --
 
 	// pre-decrement
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && non_bool_arithmetic<ScalarType>
-	constexpr auto &operator --(const vector_base<Writable, ScalarType, Count, Derived> &arg) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires W && non_bool_arithmetic<T>
+	constexpr auto &operator --(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		arg -= ScalarType(1);
+		arg -= T(1);
 		return arg.as_derived();
 	}
 
 	// post-decrement
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires Writable && non_bool_arithmetic<ScalarType>
-	constexpr basic_vector<ScalarType, Count> operator --(vector_base<Writable, ScalarType, Count, Derived> &arg, int) noexcept
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	requires W && non_bool_arithmetic<T>
+	constexpr basic_vector<T, C> operator --(vector_base<W, T, C, D> &arg, int) noexcept
 	{
-		basic_vector<ScalarType, Count> value(arg);
-		arg -= ScalarType(1);
+		basic_vector<T, C> value(arg);
+		arg -= T(1);
 		return value;
 	}
 
+	// post-decrement
 	// when Count == 1, treat it like a scalar value
-	template <bool Writable, dimensional_scalar ScalarType, typename Derived>
-	requires Writable && non_bool_arithmetic<ScalarType>
-	constexpr ScalarType operator --(vector_base<Writable, ScalarType, 1u, Derived> &arg, int) noexcept
+	template <bool W, dimensional_scalar T, typename D>
+	requires W && non_bool_arithmetic<T>
+	constexpr T operator --(vector_base<W, T, 1u, D> &arg, int) noexcept
 	{
-		ScalarType value = arg[0u];
-		arg -= ScalarType(1);
+		T value = arg[0u];
+		arg -= T(1);
 		return value;
 	}
 
