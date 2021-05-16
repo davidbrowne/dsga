@@ -446,6 +446,101 @@ namespace dsga
 		}
 	};
 
+	// for swizzling 2D-4D parts of basic_vector
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	struct indexed_vector<T, Size, Count, Is...>
+		: vector_base<writable_swizzle<Size, Count, Is...>, T, Count, indexed_vector<T, Size, Count, Is...>>
+	{
+		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
+		static constexpr bool Writable = writable_swizzle<Size, Count, Is...>;
+
+		//
+		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
+		// currently unused because at() does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::index_sequence<Is...>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+
+		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
+		dimensional_storage_t<T, Size> value;
+
+		// default/deleted boilerplate
+		indexed_vector() noexcept = default;
+		~indexed_vector() noexcept = default;
+
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
+		template <typename ... Args>
+		requires Writable && (std::convertible_to<Args, T> && ...)
+		constexpr void init(Args ...args) noexcept
+		{
+			((value[Is] = static_cast<T>(args)),...);
+		}
+
+		// copy assignment
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
+		{
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */)
+			{
+				init( other[Js]... );
+			}(std::make_index_sequence<Count>{});
+
+			return *this;
+		}
+
+		template <bool W, typename D>
+		requires Writable
+		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
+		{
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */)
+			{
+				init( other[Js]... );
+			}(std::make_index_sequence<Count>{});
+
+			return *this;
+		}
+
+		// logically contiguous - used by operator [] for read/write access to data
+		constexpr T &at(std::size_t index) noexcept requires Writable
+		{
+			return value[sequence_array[index]];
+		}
+
+		// logically contiguous - used by operator [] for read access to data
+		constexpr const T &at(std::size_t index) const noexcept
+		{
+			return value[sequence_array[index]];
+		}
+
+		// basic_vector conversion operator
+		// this is extremely important.
+		constexpr operator basic_vector<T, Count>() const noexcept
+		{
+			return basic_vector<T, Count>(value[Is]...);
+		}
+
+		template <dimensional_scalar U>
+		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
+		explicit constexpr operator basic_vector<U, Count>() const noexcept
+		{
+			return basic_vector<U, Count>(static_cast<U>(value[Is])...);
+		}
+
+		// support for range-for loop
+		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
+		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
+		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
+		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
+	};
+
 	// for swizzling 1D parts of basic_vector - like a scalar accessor
 	template <dimensional_scalar T, std::size_t Size, std::size_t I>
 	struct indexed_vector<T, Size, 1u, I>
@@ -479,9 +574,9 @@ namespace dsga
 		// allows for self-assignment that works properly
 		template <typename U>
 		requires Writable && std::convertible_to<U, T>
-		constexpr void init(U value0) noexcept
+		constexpr void init(U other) noexcept
 		{
-			value[I] = static_cast<T>(value0);
+			value[I] = static_cast<T>(other);
 		}
 
 		// copy assignment
@@ -489,7 +584,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			init(other[0u]);
+			init( other[0u] );
 
 			return *this;
 		}
@@ -498,7 +593,7 @@ namespace dsga
 		requires Writable
 		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
 		{
-			init(other[0u]);
+			init( other[0u] );
 
 			return *this;
 		}
@@ -529,27 +624,15 @@ namespace dsga
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
-		constexpr T &at(std::size_t index) requires Writable
+		constexpr T &at(std::size_t index) noexcept requires Writable
 		{
-			switch (index)
-			{
-				case 0u:
-					return value[I];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
+			return value[sequence_array[index]];
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		constexpr const T &at(std::size_t index) const
+		constexpr const T &at(std::size_t index) const noexcept
 		{
-			switch (index)
-			{
-				case 0u:
-					return value[I];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
+			return value[sequence_array[index]];
 		}
 
 		// basic_vector conversion operator
@@ -567,362 +650,12 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
-		constexpr auto begin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
-		constexpr auto cbegin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
-		constexpr auto end()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
-		constexpr auto end()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
-		constexpr auto cend()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
-	};
-
-	// for swizzling 2D parts of basic_vector
-	template <dimensional_scalar T, std::size_t Size, std::size_t I0, std::size_t I1>
-	struct indexed_vector<T, Size, 2u, I0, I1>
-		: vector_base<writable_swizzle<Size, 2u, I0, I1>, T, 2u, indexed_vector<T, Size, 2u, I0, I1>>
-	{
-		// we have partial specialization, so can't use template parameter for Count number of logical storage elements
-		static constexpr std::size_t Count = 2u;
-
-		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
-		static constexpr bool Writable = writable_swizzle<Size, Count, I0, I1>;
-
-		//
-		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
-		// currently unused because at() does this logically for us.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::index_sequence<I0, I1>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
-
-		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
-		dimensional_storage_t<T, Size> value;
-
-		// default/deleted boilerplate
-		indexed_vector() noexcept = default;
-		~indexed_vector() noexcept = default;
-
-		// logically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
-		template <typename U1, typename U2>
-		requires Writable && std::convertible_to<U1, T> && std::convertible_to<U2, T>
-		constexpr void init(U1 value0, U2 value1) noexcept
-		{
-			value[I0] = static_cast<T>(value0);
-			value[I1] = static_cast<T>(value1);
-		}
-
-		// copy assignment
-		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
-		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
-		{
-			init(other[0u], other[1u]);
-
-			return *this;
-		}
-
-		template <bool W, typename D>
-		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
-		{
-			init(other[0u], other[1u]);
-
-			return *this;
-		}
-
-		// logically contiguous - used by operator [] for read/write access to data
-		constexpr T &at(std::size_t index) requires Writable
-		{
-			switch (index)
-			{
-				case 0u:
-					return value[I0];
-				case 1u:
-					return value[I1];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
-		}
-
-		// logically contiguous - used by operator [] for read access to data
-		constexpr const T &at(std::size_t index) const
-		{
-			switch (index)
-			{
-				case 0u:
-					return value[I0];
-				case 1u:
-					return value[I1];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
-		}
-
-		// basic_vector conversion operator
-		// this is extremely important.
-		constexpr operator basic_vector<T, Count>() const noexcept
-		{
-			return basic_vector<T, Count>(value[I0], value[I1]);
-		}
-
-		template <dimensional_scalar U>
-		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
-		explicit constexpr operator basic_vector<U, Count>() const noexcept
-		{
-			return basic_vector<U, Count>(static_cast<U>(value[I0]),
-										  static_cast<U>(value[I1]));
-		}
-
-		// support for range-for loop
-		constexpr auto begin()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1>(*this, 0u); }
-		constexpr auto begin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, 0u); }
-		constexpr auto cbegin()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, 0u); }
-		constexpr auto end()				noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1>(*this, Count); }
-		constexpr auto end()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, Count); }
-		constexpr auto cend()		const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1>(*this, Count); }
-	};
-
-	// for swizzling 3D parts of basic_vector
-	template <dimensional_scalar T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2>
-	struct indexed_vector<T, Size, 3u, I0, I1, I2>
-		: vector_base<writable_swizzle<Size, 3u, I0, I1, I2>, T, 3u, indexed_vector<T, Size, 3u, I0, I1, I2>>
-	{
-		// we have partial specialization, so can't use template parameter for Count number of logical storage elements
-		static constexpr std::size_t Count = 3u;
-
-		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
-		static constexpr bool Writable = writable_swizzle<Size, Count, I0, I1, I2>;
-
-		//
-		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
-		// currently unused because at() does this logically for us.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::index_sequence<I0, I1, I2>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
-
-		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
-		dimensional_storage_t<T, Size> value;
-
-		// default/deleted boilerplate
-		indexed_vector() noexcept = default;
-		~indexed_vector() noexcept = default;
-
-		// logically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
-		template <typename U1, typename U2, typename U3>
-		requires Writable && std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
-		constexpr void init(U1 value0, U2 value1, U3 value2) noexcept
-		{
-			value[I0] = static_cast<T>(value0);
-			value[I1] = static_cast<T>(value1);
-			value[I2] = static_cast<T>(value2);
-		}
-
-		// copy assignment
-		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
-		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
-		{
-			init(other[0u], other[1u], other[2u]);
-
-			return *this;
-		}
-
-		template <bool W, typename D>
-		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
-		{
-			init(other[0u], other[1u], other[2u]);
-
-			return *this;
-		}
-
-		// logically contiguous - used by operator [] for read/write access to data
-		constexpr T &at(std::size_t index) requires Writable
-		{
-			switch (index)
-			{
-				case 0u:
-					return value[I0];
-				case 1u:
-					return value[I1];
-				case 2u:
-					return value[I2];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
-		}
-
-		// logically contiguous - used by operator [] for read access to data
-		constexpr const T &at(std::size_t index) const
-		{
-			switch (index)
-			{
-				case 0u:
-					return value[I0];
-				case 1u:
-					return value[I1];
-				case 2u:
-					return value[I2];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
-		}
-
-		// basic_vector conversion operator
-		// this is extremely important.
-		constexpr operator basic_vector<T, Count>() const noexcept
-		{
-			return basic_vector<T, Count>(value[I0], value[I1], value[I2]);
-		}
-
-		template <dimensional_scalar U>
-		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
-		explicit constexpr operator basic_vector<U, Count>() const noexcept
-		{
-			return basic_vector<U, Count>(static_cast<U>(value[I0]),
-										  static_cast<U>(value[I1]),
-										  static_cast<U>(value[I2]));
-		}
-
-		// support for range-for loop
-		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2>(*this, 0u); }
-		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, 0u); }
-		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, 0u); }
-		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2>(*this, Count); }
-		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, Count); }
-		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2>(*this, Count); }
-	};
-
-	// for swizzling 4D parts of basic_vector
-	template <dimensional_scalar T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2, std::size_t I3>
-	struct indexed_vector<T, Size, 4u, I0, I1, I2, I3>
-		: vector_base<writable_swizzle<Size, 4u, I0, I1, I2, I3>, T, 4u, indexed_vector<T, Size, 4u, I0, I1, I2, I3>>
-	{
-		// we have partial specialization, so can't use template parameter for Count number of logical storage elements
-		static constexpr std::size_t Count = 4u;
-
-		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
-		static constexpr bool Writable = writable_swizzle<Size, Count, I0, I1, I2, I3>;
-
-		//
-		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
-		// currently unused because at() does this logically for us.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::index_sequence<I0, I1, I2, I3>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
-
-		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
-		dimensional_storage_t<T, Size> value;
-
-		// default/deleted boilerplate
-		indexed_vector() noexcept = default;
-		~indexed_vector() noexcept = default;
-
-		// logically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
-		template <typename U1, typename U2, typename U3, typename U4>
-		requires Writable &&
-			std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
-			std::convertible_to<U3, T> && std::convertible_to<U4, T>
-		constexpr void init(U1 value0, U2 value1, U3 value2, U4 value3) noexcept
-		{
-			value[I0] = static_cast<T>(value0);
-			value[I1] = static_cast<T>(value1);
-			value[I2] = static_cast<T>(value2);
-			value[I3] = static_cast<T>(value3);
-		}
-
-		// copy assignment
-		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
-		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
-		{
-			init(other[0u], other[1u], other[2u], other[3u]);
-
-			return *this;
-		}
-
-		template <bool W, typename D>
-		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
-		{
-			init(other[0u], other[1u], other[2u], other[3u]);
-
-			return *this;
-		}
-
-		// logically contiguous - used by operator [] for read/write access to data
-		constexpr T &at(std::size_t index) requires Writable
-		{
-			switch (index)
-			{
-				case 0u:
-					return value[I0];
-				case 1u:
-					return value[I1];
-				case 2u:
-					return value[I2];
-				case 3u:
-					return value[I3];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
-		}
-
-		// logically contiguous - used by operator [] for read access to data
-		constexpr const T &at(std::size_t index) const
-		{
-			switch (index)
-			{
-				case 0u:
-					return value[I0];
-				case 1u:
-					return value[I1];
-				case 2u:
-					return value[I2];
-				case 3u:
-					return value[I3];
-			}
-
-			throw std::out_of_range("invalid indexed_vector subscript");
-		}
-
-		// basic_vector conversion operator
-		// this is extremely important.
-		constexpr operator basic_vector<T, Count>() const noexcept
-		{
-			return basic_vector<T, Count>(value[I0], value[I1], value[I2], value[I3]);
-		}
-
-		template <dimensional_scalar U>
-		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
-		explicit constexpr operator basic_vector<U, Count>() const noexcept
-		{
-			return basic_vector<U, Count>(static_cast<U>(value[I0]),
-										  static_cast<U>(value[I1]),
-										  static_cast<U>(value[I2]),
-										  static_cast<U>(value[I3]));
-		}
-
-		// support for range-for loop
-		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2, I3>(*this, 0u); }
-		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, 0u); }
-		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, 0u); }
-		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I0, I1, I2, I3>(*this, Count); }
-		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, Count); }
-		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I0, I1, I2, I3>(*this, Count); }
+		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
+		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
+		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
 	};
 
 
@@ -931,14 +664,14 @@ namespace dsga
 	template <typename T, std::size_t Size, std::size_t I>
 	using index1_vector = indexed_vector<std::remove_cvref_t<T>, Size, 1u, I>;
 
-	template <typename T, std::size_t Size, std::size_t I0, std::size_t I1>
-	using index2_vector = indexed_vector<std::remove_cvref_t<T>, Size, 2u, I0, I1>;
+	template <typename T, std::size_t Size, std::size_t ...Is>
+	using index2_vector = indexed_vector<std::remove_cvref_t<T>, Size, 2u, Is...>;
 
-	template <typename T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2>
-	using index3_vector = indexed_vector<std::remove_cvref_t<T>, Size, 3u, I0, I1, I2>;
+	template <typename T, std::size_t Size, std::size_t ...Is>
+	using index3_vector = indexed_vector<std::remove_cvref_t<T>, Size, 3u, Is...>;
 
-	template <typename T, std::size_t Size, std::size_t I0, std::size_t I1, std::size_t I2, std::size_t I3>
-	using index4_vector = indexed_vector<std::remove_cvref_t<T>, Size, 4u, I0, I1, I2, I3>;
+	template <typename T, std::size_t Size, std::size_t ...Is>
+	using index4_vector = indexed_vector<std::remove_cvref_t<T>, Size, 4u, Is...>;
 
 
 	template <dimensional_scalar T>
@@ -3167,6 +2900,16 @@ template <dsga::dimensional_scalar T, std::size_t S>
 constexpr std::array<T, S> from_vec(const dsga::basic_vector<T, S> &arg)
 {
 	return arg.store.value;
+}
+
+// not constexpr --  we can't use indexed_vector in constexpr expressions because it is from a swizzle which isn't the active union member at compile time
+template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+std::array<T, C> from_vec(const dsga::indexed_vector<T, S, C, Is...> &arg)
+{
+	return [&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) -> std::array<T, C>
+	{
+		return { arg[Js]... };
+	}(std::make_index_sequence<C>{});
 }
 
 // fill vectors from spans

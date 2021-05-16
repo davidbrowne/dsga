@@ -126,6 +126,7 @@ fvec4 sometest()
 	constexpr auto some_sum = arr_vec + stdarr_vec;
 
 	constexpr auto some_stdarr_sum = from_vec(some_sum);
+	auto some_stdarr_sum_swizzle = from_vec(some_sum.yzwx);
 
 	auto op_assign = stdarr_vec;
 	op_assign += arr_vec;
