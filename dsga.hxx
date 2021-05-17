@@ -313,7 +313,6 @@ namespace dsga
 	//		Is - an ordered variable set of indexes into the storage -- there will be Count of them
 	//
 	template <typename ScalarType, std::size_t Size, std::size_t Count, std::size_t ...Is>
-	requires indexable<ScalarType, Size, Count, Is...>
 	struct indexed_vector;
 
 	//
@@ -448,6 +447,7 @@ namespace dsga
 
 	// for swizzling 2D-4D parts of basic_vector
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	requires indexable<T, Size, Count, Is...>
 	struct indexed_vector<T, Size, Count, Is...>
 		: vector_base<writable_swizzle<Size, Count, Is...>, T, Count, indexed_vector<T, Size, Count, Is...>>
 	{
@@ -475,7 +475,7 @@ namespace dsga
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
 		template <typename ... Args>
-		requires Writable && (std::convertible_to<Args, T> && ...)
+		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
 		constexpr void init(Args ...args) noexcept
 		{
 			((value[Is] = static_cast<T>(args)),...);
@@ -543,6 +543,7 @@ namespace dsga
 
 	// for swizzling 1D parts of basic_vector - like a scalar accessor
 	template <dimensional_scalar T, std::size_t Size, std::size_t I>
+	requires indexable<T, Size, 1u, I>
 	struct indexed_vector<T, Size, 1u, I>
 		: vector_base<writable_swizzle<Size, 1u, I>, T, 1u, indexed_vector<T, Size, 1u, I>>
 	{

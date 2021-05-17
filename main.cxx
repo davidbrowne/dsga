@@ -43,7 +43,7 @@ fvec4 sometest()
 	fvec4 bar(0);
 	fvec2 pair(5, 6);
 
-	fvec2 asdf(fscal(33), 55);
+	[[ maybe_unused ]] fvec2 asdf(fscal(33), 55);
 	fvec4 quux(3, pair, foo.z);
 
 	if (foo.zy == somethingoranother.zw)
@@ -67,17 +67,17 @@ fvec4 sometest()
 	bar.zw = foo.xz;
 	pair.y = 8;
 
-	auto added = pair + fvec2(foo.xz);
-	auto added2 = fvec2(foo.xz) + pair;
-	auto added3 = fvec2(foo.xz) + fvec2(bar.zw);
-	auto added4 = 4.f + fvec2(foo.xz);
-	auto added5 = fvec2(foo.xz) + 4.f;
+	[[ maybe_unused ]] auto added = pair + fvec2(foo.xz);
+	[[ maybe_unused ]] auto added2 = fvec2(foo.xz) + pair;
+	[[ maybe_unused ]] auto added3 = fvec2(foo.xz) + fvec2(bar.zw);
+	[[ maybe_unused ]] auto added4 = 4.f + fvec2(foo.xz);
+	[[ maybe_unused ]] auto added5 = fvec2(foo.xz) + 4.f;
 
 
 // the following is illegal because you can't do a structure binding to an anonymous union,
 // but becomes legal when you have a tuple interface
-	auto &[a, b, c, d] = bar;
-	const auto &[e, f, g, h] = somethingoranother.zzwy;
+	[[ maybe_unused ]] auto &[a, b, c, d] = bar;
+	[[ maybe_unused ]] const auto &[e, f, g, h] = somethingoranother.zzwy;
 
 	[[ maybe_unused ]] auto ieils = playing();
 
@@ -92,7 +92,7 @@ fvec4 sometest()
 	[[ maybe_unused ]] auto is_eq4 = (bool_vec == bvec2(true, true));
 	fscal some_fscal = foo;
 	fvec2 blahblah(77, quux);
-	fvec2 newtrick = (fvec4)quux.yzwx;
+	[[ maybe_unused ]] fvec2 newtrick = (fvec4)quux.yzwx;
 	fvec3 sametrick = (fvec4)quux.yxwz;
 	fvec3 blah3(77, quux);
 	fvec3 blah3_take2(11, fscal(373), quux);
@@ -115,7 +115,7 @@ fvec4 sometest()
 
 	// bool vectors from non-bool components is ok since it is explicit.
 	// bool vectors are NOT implicitly convertible to.
-	bvec4 booooools{ 0, 3, 6.0f, 0.0f };
+	[[ maybe_unused ]] bvec4 booooools{ 0, 3, 6.0f, 0.0f };
 
 	constexpr double arr[] = { 64., 63., 62., 61. };
 	constexpr auto arr_vec = to_vec(arr);
@@ -125,8 +125,8 @@ fvec4 sometest()
 
 	constexpr auto some_sum = arr_vec + stdarr_vec;
 
-	constexpr auto some_stdarr_sum = from_vec(some_sum);
-	auto some_stdarr_sum_swizzle = from_vec(some_sum.yzwx);
+	[[ maybe_unused ]] constexpr auto some_stdarr_sum = from_vec(some_sum);
+	[[ maybe_unused ]] auto some_stdarr_sum_swizzle = from_vec(some_sum.yzwx);
 
 	auto op_assign = stdarr_vec;
 	op_assign += arr_vec;
@@ -179,7 +179,7 @@ fvec4 sometest()
 		++shuff_dest_indx;
 	}
 
-	ivec4 next_src{ 0, 0, 0, 0 };
+	[[ maybe_unused ]] ivec4 next_src{ 0, 0, 0, 0 };
 //	ivec4 next_dest;
 
 	fvec2 lastpair(7, 10);
