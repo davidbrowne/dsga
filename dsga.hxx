@@ -131,8 +131,14 @@ namespace dsga
 		constexpr const T			&operator [](std::size_t index)	const	noexcept	{ return value[index]; }
 
 		template <typename ...Args>
-		requires (sizeof...(Args) == Size) && (std::convertible_to<Args, T> &&...)
-		constexpr		void		set(Args ...args)						noexcept	{ set_impl(sequence_pack{}, args...); }
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		constexpr		void		set(Args ...args)						noexcept
+		{
+			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
+			{
+				((value[Js] = static_cast<T>(same_args)),...);
+			}(std::make_index_sequence<Count>{}, args...);
+		}
 
 		// support for range-for loop
 		constexpr		auto		begin()									noexcept	{ return value.begin(); }
@@ -141,13 +147,6 @@ namespace dsga
 		constexpr		auto		end()									noexcept	{ return value.end(); }
 		constexpr		auto		end()							const	noexcept	{ return value.cend(); }
 		constexpr		auto		cend()							const	noexcept	{ return value.cend(); }
-
-		// details
-		private:
-			template <typename ...Args, std::size_t ...Is>
-			requires (sizeof...(Args) == Size) && (sizeof...(Is) == Size) && (std::convertible_to<Args, T> &&...)
-			constexpr void set_impl(std::index_sequence<Is...> /* dummy */,
-									Args ...args) noexcept { ((value[Is] = static_cast<T>(args)),...); }
 
 	};
 
