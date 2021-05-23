@@ -1711,6 +1711,7 @@ TEST_SUITE("test swizzling applications")
 
 		SUBCASE("type traits for indexed_vector")
 		{
+			using dswizzle1 = dsga::indexed_vector<double, 1u, 1u, 0u>;
 			using dswizzle4 = dsga::indexed_vector<double, 4u, 4u, 0u, 1u, 2u, 3u>;
 
 			CHECK_UNARY(std::is_standard_layout_v<dswizzle4>);
@@ -1726,7 +1727,8 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_trivially_move_assignable_v<dswizzle4>);
 			CHECK_UNARY(std::is_trivially_destructible_v<dswizzle4>);
 
-			CHECK_UNARY_FALSE(std::is_aggregate_v<dswizzle4>);
+			CHECK_UNARY(std::is_aggregate_v<dswizzle1>);
+			CHECK_UNARY(std::is_aggregate_v<dswizzle4>);
 		}
 	}
 

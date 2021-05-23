@@ -467,10 +467,6 @@ namespace dsga
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
 		dimensional_storage_t<T, Size> value;
 
-		// default/deleted boilerplate
-		indexed_vector() noexcept = default;
-		~indexed_vector() noexcept = default;
-
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
 		template <typename ... Args>
@@ -566,10 +562,6 @@ namespace dsga
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
 		dimensional_storage_t<T, Size> value;
 
-		// default/deleted boilerplate
-		indexed_vector() noexcept = default;
-		~indexed_vector() noexcept = default;
-
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
 		template <typename U>
@@ -662,16 +654,16 @@ namespace dsga
 	// convenience using types for indexed_vector as members of basic_vector
 
 	template <typename T, std::size_t Size, std::size_t I>
-	using index1_vector = indexed_vector<std::remove_cvref_t<T>, Size, 1u, I>;
+	using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1u, I>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
-	using index2_vector = indexed_vector<std::remove_cvref_t<T>, Size, 2u, Is...>;
+	using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2u, Is...>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
-	using index3_vector = indexed_vector<std::remove_cvref_t<T>, Size, 3u, Is...>;
+	using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3u, Is...>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
-	using index4_vector = indexed_vector<std::remove_cvref_t<T>, Size, 4u, Is...>;
+	using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4u, Is...>;
 
 
 	template <dimensional_scalar T>
@@ -699,15 +691,15 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>				store;
+			storage_wrapper<T, Size>			store;
 
-			index1_vector<T, Size, 0>				x;				// Writable
+			dexvec1<T, Size, 0>					x;				// Writable
 
-			index2_vector<T, Size, 0, 0>			xx;
+			dexvec2<T, Size, 0, 0>				xx;
 
-			index3_vector<T, Size, 0, 0, 0>			xxx;
+			dexvec3<T, Size, 0, 0, 0>			xxx;
 
-			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
+			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
 		};
 
 		//
@@ -811,6 +803,18 @@ namespace dsga
 			store.value[0u] = static_cast<T>(value);
 		}
 
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment that works properly
+		//template <typename ...Args>
+		//requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		//constexpr void init(Args ...args) noexcept
+		//{
+		//	[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
+		//	{
+		//		((store.value[Js] = static_cast<T>(same_args)),...);
+		//	}(std::make_index_sequence<Count>{}, args...);
+		//}
+
 		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
@@ -849,41 +853,41 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>				store;
+			storage_wrapper<T, Size>			store;
 
-			index1_vector<T, Size, 0>				x;				// Writable
-			index1_vector<T, Size, 1>				y;				// Writable
+			dexvec1<T, Size, 0>					x;				// Writable
+			dexvec1<T, Size, 1>					y;				// Writable
 
-			index2_vector<T, Size, 0, 0>			xx;
-			index2_vector<T, Size, 0, 1>			xy;				// Writable
-			index2_vector<T, Size, 1, 0>			yx;				// Writable
-			index2_vector<T, Size, 1, 1>			yy;
+			dexvec2<T, Size, 0, 0>				xx;
+			dexvec2<T, Size, 0, 1>				xy;				// Writable
+			dexvec2<T, Size, 1, 0>				yx;				// Writable
+			dexvec2<T, Size, 1, 1>				yy;
 
-			index3_vector<T, Size, 0, 0, 0>			xxx;
-			index3_vector<T, Size, 0, 0, 1>			xxy;
-			index3_vector<T, Size, 0, 1, 0>			xyx;
-			index3_vector<T, Size, 0, 1, 1>			xyy;
-			index3_vector<T, Size, 1, 0, 0>			yxx;
-			index3_vector<T, Size, 1, 0, 1>			yxy;
-			index3_vector<T, Size, 1, 1, 0>			yyx;
-			index3_vector<T, Size, 1, 1, 1>			yyy;
+			dexvec3<T, Size, 0, 0, 0>			xxx;
+			dexvec3<T, Size, 0, 0, 1>			xxy;
+			dexvec3<T, Size, 0, 1, 0>			xyx;
+			dexvec3<T, Size, 0, 1, 1>			xyy;
+			dexvec3<T, Size, 1, 0, 0>			yxx;
+			dexvec3<T, Size, 1, 0, 1>			yxy;
+			dexvec3<T, Size, 1, 1, 0>			yyx;
+			dexvec3<T, Size, 1, 1, 1>			yyy;
 
-			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
-			index4_vector<T, Size, 0, 0, 0, 1>		xxxy;
-			index4_vector<T, Size, 0, 0, 1, 0>		xxyx;
-			index4_vector<T, Size, 0, 0, 1, 1>		xxyy;
-			index4_vector<T, Size, 0, 1, 0, 0>		xyxx;
-			index4_vector<T, Size, 0, 1, 0, 1>		xyxy;
-			index4_vector<T, Size, 0, 1, 1, 0>		xyyx;
-			index4_vector<T, Size, 0, 1, 1, 1>		xyyy;
-			index4_vector<T, Size, 1, 0, 0, 0>		yxxx;
-			index4_vector<T, Size, 1, 0, 0, 1>		yxxy;
-			index4_vector<T, Size, 1, 0, 1, 0>		yxyx;
-			index4_vector<T, Size, 1, 0, 1, 1>		yxyy;
-			index4_vector<T, Size, 1, 1, 0, 0>		yyxx;
-			index4_vector<T, Size, 1, 1, 0, 1>		yyxy;
-			index4_vector<T, Size, 1, 1, 1, 0>		yyyx;
-			index4_vector<T, Size, 1, 1, 1, 1>		yyyy;
+			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
+			dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
+			dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
+			dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
+			dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
+			dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
+			dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
+			dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
+			dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
+			dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
+			dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
+			dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
+			dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
+			dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
+			dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
+			dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
 		};
 
 		//
@@ -960,12 +964,14 @@ namespace dsga
 
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename U1, typename U2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
-		constexpr void init(U1 value0, U2 value1) noexcept
+		template <typename ...Args>
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		constexpr void init(Args ...args) noexcept
 		{
-			store.value[0u] = static_cast<T>(value0);
-			store.value[1u] = static_cast<T>(value1);
+			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
+			{
+				((store.value[Js] = static_cast<T>(same_args)),...);
+			}(std::make_index_sequence<Count>{}, args...);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
@@ -1006,131 +1012,131 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>				store;
+			storage_wrapper<T, Size>			store;
 
-			index1_vector<T, Size, 0>				x;				// Writable
-			index1_vector<T, Size, 1>				y;				// Writable
-			index1_vector<T, Size, 2>				z;				// Writable
+			dexvec1<T, Size, 0>					x;				// Writable
+			dexvec1<T, Size, 1>					y;				// Writable
+			dexvec1<T, Size, 2>					z;				// Writable
 
-			index2_vector<T, Size, 0, 0>			xx;
-			index2_vector<T, Size, 0, 1>			xy;				// Writable
-			index2_vector<T, Size, 0, 2>			xz;				// Writable
-			index2_vector<T, Size, 1, 0>			yx;				// Writable
-			index2_vector<T, Size, 1, 1>			yy;
-			index2_vector<T, Size, 1, 2>			yz;				// Writable
-			index2_vector<T, Size, 2, 0>			zx;				// Writable
-			index2_vector<T, Size, 2, 1>			zy;				// Writable
-			index2_vector<T, Size, 2, 2>			zz;
+			dexvec2<T, Size, 0, 0>				xx;
+			dexvec2<T, Size, 0, 1>				xy;				// Writable
+			dexvec2<T, Size, 0, 2>				xz;				// Writable
+			dexvec2<T, Size, 1, 0>				yx;				// Writable
+			dexvec2<T, Size, 1, 1>				yy;
+			dexvec2<T, Size, 1, 2>				yz;				// Writable
+			dexvec2<T, Size, 2, 0>				zx;				// Writable
+			dexvec2<T, Size, 2, 1>				zy;				// Writable
+			dexvec2<T, Size, 2, 2>				zz;
 
-			index3_vector<T, Size, 0, 0, 0>		xxx;
-			index3_vector<T, Size, 0, 0, 1>		xxy;
-			index3_vector<T, Size, 0, 0, 2>		xxz;
-			index3_vector<T, Size, 0, 1, 0>		xyx;
-			index3_vector<T, Size, 0, 1, 1>		xyy;
-			index3_vector<T, Size, 0, 1, 2>		xyz;			// Writable
-			index3_vector<T, Size, 0, 2, 0>		xzx;
-			index3_vector<T, Size, 0, 2, 1>		xzy;			// Writable
-			index3_vector<T, Size, 0, 2, 2>		xzz;
-			index3_vector<T, Size, 1, 0, 0>		yxx;
-			index3_vector<T, Size, 1, 0, 1>		yxy;
-			index3_vector<T, Size, 1, 0, 2>		yxz;			// Writable
-			index3_vector<T, Size, 1, 1, 0>		yyx;
-			index3_vector<T, Size, 1, 1, 1>		yyy;
-			index3_vector<T, Size, 1, 1, 2>		yyz;
-			index3_vector<T, Size, 1, 2, 0>		yzx;			// Writable
-			index3_vector<T, Size, 1, 2, 1>		yzy;
-			index3_vector<T, Size, 1, 2, 2>		yzz;
-			index3_vector<T, Size, 2, 0, 0>		zxx;
-			index3_vector<T, Size, 2, 0, 1>		zxy;			// Writable
-			index3_vector<T, Size, 2, 0, 2>		zxz;
-			index3_vector<T, Size, 2, 1, 0>		zyx;			// Writable
-			index3_vector<T, Size, 2, 1, 1>		zyy;
-			index3_vector<T, Size, 2, 1, 2>		zyz;
-			index3_vector<T, Size, 2, 2, 0>		zzx;
-			index3_vector<T, Size, 2, 2, 1>		zzy;
-			index3_vector<T, Size, 2, 2, 2>		zzz;
+			dexvec3<T, Size, 0, 0, 0>			xxx;
+			dexvec3<T, Size, 0, 0, 1>			xxy;
+			dexvec3<T, Size, 0, 0, 2>			xxz;
+			dexvec3<T, Size, 0, 1, 0>			xyx;
+			dexvec3<T, Size, 0, 1, 1>			xyy;
+			dexvec3<T, Size, 0, 1, 2>			xyz;			// Writable
+			dexvec3<T, Size, 0, 2, 0>			xzx;
+			dexvec3<T, Size, 0, 2, 1>			xzy;			// Writable
+			dexvec3<T, Size, 0, 2, 2>			xzz;
+			dexvec3<T, Size, 1, 0, 0>			yxx;
+			dexvec3<T, Size, 1, 0, 1>			yxy;
+			dexvec3<T, Size, 1, 0, 2>			yxz;			// Writable
+			dexvec3<T, Size, 1, 1, 0>			yyx;
+			dexvec3<T, Size, 1, 1, 1>			yyy;
+			dexvec3<T, Size, 1, 1, 2>			yyz;
+			dexvec3<T, Size, 1, 2, 0>			yzx;			// Writable
+			dexvec3<T, Size, 1, 2, 1>			yzy;
+			dexvec3<T, Size, 1, 2, 2>			yzz;
+			dexvec3<T, Size, 2, 0, 0>			zxx;
+			dexvec3<T, Size, 2, 0, 1>			zxy;			// Writable
+			dexvec3<T, Size, 2, 0, 2>			zxz;
+			dexvec3<T, Size, 2, 1, 0>			zyx;			// Writable
+			dexvec3<T, Size, 2, 1, 1>			zyy;
+			dexvec3<T, Size, 2, 1, 2>			zyz;
+			dexvec3<T, Size, 2, 2, 0>			zzx;
+			dexvec3<T, Size, 2, 2, 1>			zzy;
+			dexvec3<T, Size, 2, 2, 2>			zzz;
 
-			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
-			index4_vector<T, Size, 0, 0, 0, 1>		xxxy;
-			index4_vector<T, Size, 0, 0, 0, 2>		xxxz;
-			index4_vector<T, Size, 0, 0, 1, 0>		xxyx;
-			index4_vector<T, Size, 0, 0, 1, 1>		xxyy;
-			index4_vector<T, Size, 0, 0, 1, 2>		xxyz;
-			index4_vector<T, Size, 0, 0, 2, 0>		xxzx;
-			index4_vector<T, Size, 0, 0, 2, 1>		xxzy;
-			index4_vector<T, Size, 0, 0, 2, 2>		xxzz;
-			index4_vector<T, Size, 0, 1, 0, 0>		xyxx;
-			index4_vector<T, Size, 0, 1, 0, 1>		xyxy;
-			index4_vector<T, Size, 0, 1, 0, 2>		xyxz;
-			index4_vector<T, Size, 0, 1, 1, 0>		xyyx;
-			index4_vector<T, Size, 0, 1, 1, 1>		xyyy;
-			index4_vector<T, Size, 0, 1, 1, 2>		xyyz;
-			index4_vector<T, Size, 0, 1, 2, 0>		xyzx;
-			index4_vector<T, Size, 0, 1, 2, 1>		xyzy;
-			index4_vector<T, Size, 0, 1, 2, 2>		xyzz;
-			index4_vector<T, Size, 0, 2, 0, 0>		xzxx;
-			index4_vector<T, Size, 0, 2, 0, 1>		xzxy;
-			index4_vector<T, Size, 0, 2, 0, 2>		xzxz;
-			index4_vector<T, Size, 0, 2, 1, 0>		xzyx;
-			index4_vector<T, Size, 0, 2, 1, 1>		xzyy;
-			index4_vector<T, Size, 0, 2, 1, 2>		xzyz;
-			index4_vector<T, Size, 0, 2, 2, 0>		xzzx;
-			index4_vector<T, Size, 0, 2, 2, 1>		xzzy;
-			index4_vector<T, Size, 0, 2, 2, 2>		xzzz;
-			index4_vector<T, Size, 1, 0, 0, 0>		yxxx;
-			index4_vector<T, Size, 1, 0, 0, 1>		yxxy;
-			index4_vector<T, Size, 1, 0, 0, 2>		yxxz;
-			index4_vector<T, Size, 1, 0, 1, 0>		yxyx;
-			index4_vector<T, Size, 1, 0, 1, 1>		yxyy;
-			index4_vector<T, Size, 1, 0, 1, 2>		yxyz;
-			index4_vector<T, Size, 1, 0, 2, 0>		yxzx;
-			index4_vector<T, Size, 1, 0, 2, 1>		yxzy;
-			index4_vector<T, Size, 1, 0, 2, 2>		yxzz;
-			index4_vector<T, Size, 1, 1, 0, 0>		yyxx;
-			index4_vector<T, Size, 1, 1, 0, 1>		yyxy;
-			index4_vector<T, Size, 1, 1, 0, 2>		yyxz;
-			index4_vector<T, Size, 1, 1, 1, 0>		yyyx;
-			index4_vector<T, Size, 1, 1, 1, 1>		yyyy;
-			index4_vector<T, Size, 1, 1, 1, 2>		yyyz;
-			index4_vector<T, Size, 1, 1, 2, 0>		yyzx;
-			index4_vector<T, Size, 1, 1, 2, 1>		yyzy;
-			index4_vector<T, Size, 1, 1, 2, 2>		yyzz;
-			index4_vector<T, Size, 1, 2, 0, 0>		yzxx;
-			index4_vector<T, Size, 1, 2, 0, 1>		yzxy;
-			index4_vector<T, Size, 1, 2, 0, 2>		yzxz;
-			index4_vector<T, Size, 1, 2, 1, 0>		yzyx;
-			index4_vector<T, Size, 1, 2, 1, 1>		yzyy;
-			index4_vector<T, Size, 1, 2, 1, 2>		yzyz;
-			index4_vector<T, Size, 1, 2, 2, 0>		yzzx;
-			index4_vector<T, Size, 1, 2, 2, 1>		yzzy;
-			index4_vector<T, Size, 1, 2, 2, 2>		yzzz;
-			index4_vector<T, Size, 2, 0, 0, 0>		zxxx;
-			index4_vector<T, Size, 2, 0, 0, 1>		zxxy;
-			index4_vector<T, Size, 2, 0, 0, 2>		zxxz;
-			index4_vector<T, Size, 2, 0, 1, 0>		zxyx;
-			index4_vector<T, Size, 2, 0, 1, 1>		zxyy;
-			index4_vector<T, Size, 2, 0, 1, 2>		zxyz;
-			index4_vector<T, Size, 2, 0, 2, 0>		zxzx;
-			index4_vector<T, Size, 2, 0, 2, 1>		zxzy;
-			index4_vector<T, Size, 2, 0, 2, 2>		zxzz;
-			index4_vector<T, Size, 2, 1, 0, 0>		zyxx;
-			index4_vector<T, Size, 2, 1, 0, 1>		zyxy;
-			index4_vector<T, Size, 2, 1, 0, 2>		zyxz;
-			index4_vector<T, Size, 2, 1, 1, 0>		zyyx;
-			index4_vector<T, Size, 2, 1, 1, 1>		zyyy;
-			index4_vector<T, Size, 2, 1, 1, 2>		zyyz;
-			index4_vector<T, Size, 2, 1, 2, 0>		zyzx;
-			index4_vector<T, Size, 2, 1, 2, 1>		zyzy;
-			index4_vector<T, Size, 2, 1, 2, 2>		zyzz;
-			index4_vector<T, Size, 2, 2, 0, 0>		zzxx;
-			index4_vector<T, Size, 2, 2, 0, 1>		zzxy;
-			index4_vector<T, Size, 2, 2, 0, 2>		zzxz;
-			index4_vector<T, Size, 2, 2, 1, 0>		zzyx;
-			index4_vector<T, Size, 2, 2, 1, 1>		zzyy;
-			index4_vector<T, Size, 2, 2, 1, 2>		zzyz;
-			index4_vector<T, Size, 2, 2, 2, 0>		zzzx;
-			index4_vector<T, Size, 2, 2, 2, 1>		zzzy;
-			index4_vector<T, Size, 2, 2, 2, 2>		zzzz;
+			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
+			dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
+			dexvec4<T, Size, 0, 0, 0, 2>		xxxz;
+			dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
+			dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
+			dexvec4<T, Size, 0, 0, 1, 2>		xxyz;
+			dexvec4<T, Size, 0, 0, 2, 0>		xxzx;
+			dexvec4<T, Size, 0, 0, 2, 1>		xxzy;
+			dexvec4<T, Size, 0, 0, 2, 2>		xxzz;
+			dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
+			dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
+			dexvec4<T, Size, 0, 1, 0, 2>		xyxz;
+			dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
+			dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
+			dexvec4<T, Size, 0, 1, 1, 2>		xyyz;
+			dexvec4<T, Size, 0, 1, 2, 0>		xyzx;
+			dexvec4<T, Size, 0, 1, 2, 1>		xyzy;
+			dexvec4<T, Size, 0, 1, 2, 2>		xyzz;
+			dexvec4<T, Size, 0, 2, 0, 0>		xzxx;
+			dexvec4<T, Size, 0, 2, 0, 1>		xzxy;
+			dexvec4<T, Size, 0, 2, 0, 2>		xzxz;
+			dexvec4<T, Size, 0, 2, 1, 0>		xzyx;
+			dexvec4<T, Size, 0, 2, 1, 1>		xzyy;
+			dexvec4<T, Size, 0, 2, 1, 2>		xzyz;
+			dexvec4<T, Size, 0, 2, 2, 0>		xzzx;
+			dexvec4<T, Size, 0, 2, 2, 1>		xzzy;
+			dexvec4<T, Size, 0, 2, 2, 2>		xzzz;
+			dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
+			dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
+			dexvec4<T, Size, 1, 0, 0, 2>		yxxz;
+			dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
+			dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
+			dexvec4<T, Size, 1, 0, 1, 2>		yxyz;
+			dexvec4<T, Size, 1, 0, 2, 0>		yxzx;
+			dexvec4<T, Size, 1, 0, 2, 1>		yxzy;
+			dexvec4<T, Size, 1, 0, 2, 2>		yxzz;
+			dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
+			dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
+			dexvec4<T, Size, 1, 1, 0, 2>		yyxz;
+			dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
+			dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
+			dexvec4<T, Size, 1, 1, 1, 2>		yyyz;
+			dexvec4<T, Size, 1, 1, 2, 0>		yyzx;
+			dexvec4<T, Size, 1, 1, 2, 1>		yyzy;
+			dexvec4<T, Size, 1, 1, 2, 2>		yyzz;
+			dexvec4<T, Size, 1, 2, 0, 0>		yzxx;
+			dexvec4<T, Size, 1, 2, 0, 1>		yzxy;
+			dexvec4<T, Size, 1, 2, 0, 2>		yzxz;
+			dexvec4<T, Size, 1, 2, 1, 0>		yzyx;
+			dexvec4<T, Size, 1, 2, 1, 1>		yzyy;
+			dexvec4<T, Size, 1, 2, 1, 2>		yzyz;
+			dexvec4<T, Size, 1, 2, 2, 0>		yzzx;
+			dexvec4<T, Size, 1, 2, 2, 1>		yzzy;
+			dexvec4<T, Size, 1, 2, 2, 2>		yzzz;
+			dexvec4<T, Size, 2, 0, 0, 0>		zxxx;
+			dexvec4<T, Size, 2, 0, 0, 1>		zxxy;
+			dexvec4<T, Size, 2, 0, 0, 2>		zxxz;
+			dexvec4<T, Size, 2, 0, 1, 0>		zxyx;
+			dexvec4<T, Size, 2, 0, 1, 1>		zxyy;
+			dexvec4<T, Size, 2, 0, 1, 2>		zxyz;
+			dexvec4<T, Size, 2, 0, 2, 0>		zxzx;
+			dexvec4<T, Size, 2, 0, 2, 1>		zxzy;
+			dexvec4<T, Size, 2, 0, 2, 2>		zxzz;
+			dexvec4<T, Size, 2, 1, 0, 0>		zyxx;
+			dexvec4<T, Size, 2, 1, 0, 1>		zyxy;
+			dexvec4<T, Size, 2, 1, 0, 2>		zyxz;
+			dexvec4<T, Size, 2, 1, 1, 0>		zyyx;
+			dexvec4<T, Size, 2, 1, 1, 1>		zyyy;
+			dexvec4<T, Size, 2, 1, 1, 2>		zyyz;
+			dexvec4<T, Size, 2, 1, 2, 0>		zyzx;
+			dexvec4<T, Size, 2, 1, 2, 1>		zyzy;
+			dexvec4<T, Size, 2, 1, 2, 2>		zyzz;
+			dexvec4<T, Size, 2, 2, 0, 0>		zzxx;
+			dexvec4<T, Size, 2, 2, 0, 1>		zzxy;
+			dexvec4<T, Size, 2, 2, 0, 2>		zzxz;
+			dexvec4<T, Size, 2, 2, 1, 0>		zzyx;
+			dexvec4<T, Size, 2, 2, 1, 1>		zzyy;
+			dexvec4<T, Size, 2, 2, 1, 2>		zzyz;
+			dexvec4<T, Size, 2, 2, 2, 0>		zzzx;
+			dexvec4<T, Size, 2, 2, 2, 1>		zzzy;
+			dexvec4<T, Size, 2, 2, 2, 2>		zzzz;
 		};
 
 		//
@@ -1239,13 +1245,14 @@ namespace dsga
 
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename U1, typename U2, typename U3>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
-		constexpr void init(U1 value0, U2 value1, U3 value2) noexcept
+		template <typename ...Args>
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		constexpr void init(Args ...args) noexcept
 		{
-			store.value[0u] = static_cast<T>(value0);
-			store.value[1u] = static_cast<T>(value1);
-			store.value[2u] = static_cast<T>(value2);
+			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
+			{
+				((store.value[Js] = static_cast<T>(same_args)),...);
+			}(std::make_index_sequence<Count>{}, args...);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
@@ -1286,351 +1293,351 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>				store;
+			storage_wrapper<T, Size>			store;
 
-			index1_vector<T, Size, 0>				x;				// Writable
-			index1_vector<T, Size, 1>				y;				// Writable
-			index1_vector<T, Size, 2>				z;				// Writable
-			index1_vector<T, Size, 3>				w;				// Writable
+			dexvec1<T, Size, 0>					x;				// Writable
+			dexvec1<T, Size, 1>					y;				// Writable
+			dexvec1<T, Size, 2>					z;				// Writable
+			dexvec1<T, Size, 3>					w;				// Writable
 
-			index2_vector<T, Size, 0, 0>			xx;
-			index2_vector<T, Size, 0, 1>			xy;				// Writable
-			index2_vector<T, Size, 0, 2>			xz;				// Writable
-			index2_vector<T, Size, 0, 3>			xw;				// Writable
-			index2_vector<T, Size, 1, 0>			yx;				// Writable
-			index2_vector<T, Size, 1, 1>			yy;
-			index2_vector<T, Size, 1, 2>			yz;				// Writable
-			index2_vector<T, Size, 1, 3>			yw;				// Writable
-			index2_vector<T, Size, 2, 0>			zx;				// Writable
-			index2_vector<T, Size, 2, 1>			zy;				// Writable
-			index2_vector<T, Size, 2, 2>			zz;
-			index2_vector<T, Size, 2, 3>			zw;				// Writable
-			index2_vector<T, Size, 3, 0>			wx;				// Writable
-			index2_vector<T, Size, 3, 1>			wy;				// Writable
-			index2_vector<T, Size, 3, 2>			wz;				// Writable
-			index2_vector<T, Size, 3, 3>			ww;
+			dexvec2<T, Size, 0, 0>				xx;
+			dexvec2<T, Size, 0, 1>				xy;				// Writable
+			dexvec2<T, Size, 0, 2>				xz;				// Writable
+			dexvec2<T, Size, 0, 3>				xw;				// Writable
+			dexvec2<T, Size, 1, 0>				yx;				// Writable
+			dexvec2<T, Size, 1, 1>				yy;
+			dexvec2<T, Size, 1, 2>				yz;				// Writable
+			dexvec2<T, Size, 1, 3>				yw;				// Writable
+			dexvec2<T, Size, 2, 0>				zx;				// Writable
+			dexvec2<T, Size, 2, 1>				zy;				// Writable
+			dexvec2<T, Size, 2, 2>				zz;
+			dexvec2<T, Size, 2, 3>				zw;				// Writable
+			dexvec2<T, Size, 3, 0>				wx;				// Writable
+			dexvec2<T, Size, 3, 1>				wy;				// Writable
+			dexvec2<T, Size, 3, 2>				wz;				// Writable
+			dexvec2<T, Size, 3, 3>				ww;
 
-			index3_vector<T, Size, 0, 0, 0>			xxx;
-			index3_vector<T, Size, 0, 0, 1>			xxy;
-			index3_vector<T, Size, 0, 0, 2>			xxz;
-			index3_vector<T, Size, 0, 0, 3>			xxw;
-			index3_vector<T, Size, 0, 1, 0>			xyx;
-			index3_vector<T, Size, 0, 1, 1>			xyy;
-			index3_vector<T, Size, 0, 1, 2>			xyz;			// Writable
-			index3_vector<T, Size, 0, 1, 3>			xyw;			// Writable
-			index3_vector<T, Size, 0, 2, 0>			xzx;
-			index3_vector<T, Size, 0, 2, 1>			xzy;			// Writable
-			index3_vector<T, Size, 0, 2, 2>			xzz;
-			index3_vector<T, Size, 0, 2, 3>			xzw;			// Writable
-			index3_vector<T, Size, 0, 3, 0>			xwx;
-			index3_vector<T, Size, 0, 3, 1>			xwy;			// Writable
-			index3_vector<T, Size, 0, 3, 2>			xwz;			// Writable
-			index3_vector<T, Size, 0, 3, 3>			xww;
-			index3_vector<T, Size, 1, 0, 0>			yxx;
-			index3_vector<T, Size, 1, 0, 1>			yxy;
-			index3_vector<T, Size, 1, 0, 2>			yxz;			// Writable
-			index3_vector<T, Size, 1, 0, 3>			yxw;			// Writable
-			index3_vector<T, Size, 1, 1, 0>			yyx;
-			index3_vector<T, Size, 1, 1, 1>			yyy;
-			index3_vector<T, Size, 1, 1, 2>			yyz;
-			index3_vector<T, Size, 1, 1, 3>			yyw;
-			index3_vector<T, Size, 1, 2, 0>			yzx;			// Writable
-			index3_vector<T, Size, 1, 2, 1>			yzy;
-			index3_vector<T, Size, 1, 2, 2>			yzz;
-			index3_vector<T, Size, 1, 2, 3>			yzw;			// Writable
-			index3_vector<T, Size, 1, 3, 0>			ywx;			// Writable
-			index3_vector<T, Size, 1, 3, 1>			ywy;
-			index3_vector<T, Size, 1, 3, 2>			ywz;			// Writable
-			index3_vector<T, Size, 1, 3, 3>			yww;
-			index3_vector<T, Size, 2, 0, 0>			zxx;
-			index3_vector<T, Size, 2, 0, 1>			zxy;			// Writable
-			index3_vector<T, Size, 2, 0, 2>			zxz;
-			index3_vector<T, Size, 2, 0, 3>			zxw;			// Writable
-			index3_vector<T, Size, 2, 1, 0>			zyx;			// Writable
-			index3_vector<T, Size, 2, 1, 1>			zyy;
-			index3_vector<T, Size, 2, 1, 2>			zyz;
-			index3_vector<T, Size, 2, 1, 3>			zyw;			// Writable
-			index3_vector<T, Size, 2, 2, 0>			zzx;
-			index3_vector<T, Size, 2, 2, 1>			zzy;
-			index3_vector<T, Size, 2, 2, 2>			zzz;
-			index3_vector<T, Size, 2, 2, 3>			zzw;
-			index3_vector<T, Size, 2, 3, 0>			zwx;			// Writable
-			index3_vector<T, Size, 2, 3, 1>			zwy;			// Writable
-			index3_vector<T, Size, 2, 3, 2>			zwz;
-			index3_vector<T, Size, 2, 3, 3>			zww;
-			index3_vector<T, Size, 3, 0, 0>			wxx;
-			index3_vector<T, Size, 3, 0, 1>			wxy;			// Writable
-			index3_vector<T, Size, 3, 0, 2>			wxz;			// Writable
-			index3_vector<T, Size, 3, 0, 3>			wxw;
-			index3_vector<T, Size, 3, 1, 0>			wyx;			// Writable
-			index3_vector<T, Size, 3, 1, 1>			wyy;
-			index3_vector<T, Size, 3, 1, 2>			wyz;			// Writable
-			index3_vector<T, Size, 3, 1, 3>			wyw;
-			index3_vector<T, Size, 3, 2, 0>			wzx;			// Writable
-			index3_vector<T, Size, 3, 2, 1>			wzy;
-			index3_vector<T, Size, 3, 2, 2>			wzz;			// Writable
-			index3_vector<T, Size, 3, 2, 3>			wzw;
-			index3_vector<T, Size, 3, 3, 0>			wwx;
-			index3_vector<T, Size, 3, 3, 1>			wwy;
-			index3_vector<T, Size, 3, 3, 2>			wwz;
-			index3_vector<T, Size, 3, 3, 3>			www;
+			dexvec3<T, Size, 0, 0, 0>			xxx;
+			dexvec3<T, Size, 0, 0, 1>			xxy;
+			dexvec3<T, Size, 0, 0, 2>			xxz;
+			dexvec3<T, Size, 0, 0, 3>			xxw;
+			dexvec3<T, Size, 0, 1, 0>			xyx;
+			dexvec3<T, Size, 0, 1, 1>			xyy;
+			dexvec3<T, Size, 0, 1, 2>			xyz;			// Writable
+			dexvec3<T, Size, 0, 1, 3>			xyw;			// Writable
+			dexvec3<T, Size, 0, 2, 0>			xzx;
+			dexvec3<T, Size, 0, 2, 1>			xzy;			// Writable
+			dexvec3<T, Size, 0, 2, 2>			xzz;
+			dexvec3<T, Size, 0, 2, 3>			xzw;			// Writable
+			dexvec3<T, Size, 0, 3, 0>			xwx;
+			dexvec3<T, Size, 0, 3, 1>			xwy;			// Writable
+			dexvec3<T, Size, 0, 3, 2>			xwz;			// Writable
+			dexvec3<T, Size, 0, 3, 3>			xww;
+			dexvec3<T, Size, 1, 0, 0>			yxx;
+			dexvec3<T, Size, 1, 0, 1>			yxy;
+			dexvec3<T, Size, 1, 0, 2>			yxz;			// Writable
+			dexvec3<T, Size, 1, 0, 3>			yxw;			// Writable
+			dexvec3<T, Size, 1, 1, 0>			yyx;
+			dexvec3<T, Size, 1, 1, 1>			yyy;
+			dexvec3<T, Size, 1, 1, 2>			yyz;
+			dexvec3<T, Size, 1, 1, 3>			yyw;
+			dexvec3<T, Size, 1, 2, 0>			yzx;			// Writable
+			dexvec3<T, Size, 1, 2, 1>			yzy;
+			dexvec3<T, Size, 1, 2, 2>			yzz;
+			dexvec3<T, Size, 1, 2, 3>			yzw;			// Writable
+			dexvec3<T, Size, 1, 3, 0>			ywx;			// Writable
+			dexvec3<T, Size, 1, 3, 1>			ywy;
+			dexvec3<T, Size, 1, 3, 2>			ywz;			// Writable
+			dexvec3<T, Size, 1, 3, 3>			yww;
+			dexvec3<T, Size, 2, 0, 0>			zxx;
+			dexvec3<T, Size, 2, 0, 1>			zxy;			// Writable
+			dexvec3<T, Size, 2, 0, 2>			zxz;
+			dexvec3<T, Size, 2, 0, 3>			zxw;			// Writable
+			dexvec3<T, Size, 2, 1, 0>			zyx;			// Writable
+			dexvec3<T, Size, 2, 1, 1>			zyy;
+			dexvec3<T, Size, 2, 1, 2>			zyz;
+			dexvec3<T, Size, 2, 1, 3>			zyw;			// Writable
+			dexvec3<T, Size, 2, 2, 0>			zzx;
+			dexvec3<T, Size, 2, 2, 1>			zzy;
+			dexvec3<T, Size, 2, 2, 2>			zzz;
+			dexvec3<T, Size, 2, 2, 3>			zzw;
+			dexvec3<T, Size, 2, 3, 0>			zwx;			// Writable
+			dexvec3<T, Size, 2, 3, 1>			zwy;			// Writable
+			dexvec3<T, Size, 2, 3, 2>			zwz;
+			dexvec3<T, Size, 2, 3, 3>			zww;
+			dexvec3<T, Size, 3, 0, 0>			wxx;
+			dexvec3<T, Size, 3, 0, 1>			wxy;			// Writable
+			dexvec3<T, Size, 3, 0, 2>			wxz;			// Writable
+			dexvec3<T, Size, 3, 0, 3>			wxw;
+			dexvec3<T, Size, 3, 1, 0>			wyx;			// Writable
+			dexvec3<T, Size, 3, 1, 1>			wyy;
+			dexvec3<T, Size, 3, 1, 2>			wyz;			// Writable
+			dexvec3<T, Size, 3, 1, 3>			wyw;
+			dexvec3<T, Size, 3, 2, 0>			wzx;			// Writable
+			dexvec3<T, Size, 3, 2, 1>			wzy;
+			dexvec3<T, Size, 3, 2, 2>			wzz;			// Writable
+			dexvec3<T, Size, 3, 2, 3>			wzw;
+			dexvec3<T, Size, 3, 3, 0>			wwx;
+			dexvec3<T, Size, 3, 3, 1>			wwy;
+			dexvec3<T, Size, 3, 3, 2>			wwz;
+			dexvec3<T, Size, 3, 3, 3>			www;
 
-			index4_vector<T, Size, 0, 0, 0, 0>		xxxx;
-			index4_vector<T, Size, 0, 0, 0, 1>		xxxy;
-			index4_vector<T, Size, 0, 0, 0, 2>		xxxz;
-			index4_vector<T, Size, 0, 0, 0, 3>		xxxw;
-			index4_vector<T, Size, 0, 0, 1, 0>		xxyx;
-			index4_vector<T, Size, 0, 0, 1, 1>		xxyy;
-			index4_vector<T, Size, 0, 0, 1, 2>		xxyz;
-			index4_vector<T, Size, 0, 0, 1, 3>		xxyw;
-			index4_vector<T, Size, 0, 0, 2, 0>		xxzx;
-			index4_vector<T, Size, 0, 0, 2, 1>		xxzy;
-			index4_vector<T, Size, 0, 0, 2, 2>		xxzz;
-			index4_vector<T, Size, 0, 0, 2, 3>		xxzw;
-			index4_vector<T, Size, 0, 0, 3, 0>		xxwx;
-			index4_vector<T, Size, 0, 0, 3, 1>		xxwy;
-			index4_vector<T, Size, 0, 0, 3, 2>		xxwz;
-			index4_vector<T, Size, 0, 0, 3, 3>		xxww;
-			index4_vector<T, Size, 0, 1, 0, 0>		xyxx;
-			index4_vector<T, Size, 0, 1, 0, 1>		xyxy;
-			index4_vector<T, Size, 0, 1, 0, 2>		xyxz;
-			index4_vector<T, Size, 0, 1, 0, 3>		xyxw;
-			index4_vector<T, Size, 0, 1, 1, 0>		xyyx;
-			index4_vector<T, Size, 0, 1, 1, 1>		xyyy;
-			index4_vector<T, Size, 0, 1, 1, 2>		xyyz;
-			index4_vector<T, Size, 0, 1, 1, 3>		xyyw;
-			index4_vector<T, Size, 0, 1, 2, 0>		xyzx;
-			index4_vector<T, Size, 0, 1, 2, 1>		xyzy;
-			index4_vector<T, Size, 0, 1, 2, 2>		xyzz;
-			index4_vector<T, Size, 0, 1, 2, 3>		xyzw;			// Writable
-			index4_vector<T, Size, 0, 1, 3, 0>		xywx;
-			index4_vector<T, Size, 0, 1, 3, 1>		xywy;
-			index4_vector<T, Size, 0, 1, 3, 2>		xywz;			// Writable
-			index4_vector<T, Size, 0, 1, 3, 3>		xyww;
-			index4_vector<T, Size, 0, 2, 0, 0>		xzxx;
-			index4_vector<T, Size, 0, 2, 0, 1>		xzxy;
-			index4_vector<T, Size, 0, 2, 0, 2>		xzxz;
-			index4_vector<T, Size, 0, 2, 0, 3>		xzxw;
-			index4_vector<T, Size, 0, 2, 1, 0>		xzyx;
-			index4_vector<T, Size, 0, 2, 1, 1>		xzyy;
-			index4_vector<T, Size, 0, 2, 1, 2>		xzyz;
-			index4_vector<T, Size, 0, 2, 1, 3>		xzyw;			// Writable
-			index4_vector<T, Size, 0, 2, 2, 0>		xzzx;
-			index4_vector<T, Size, 0, 2, 2, 1>		xzzy;
-			index4_vector<T, Size, 0, 2, 2, 2>		xzzz;
-			index4_vector<T, Size, 0, 2, 2, 3>		xzzw;
-			index4_vector<T, Size, 0, 2, 3, 0>		xzwx;
-			index4_vector<T, Size, 0, 2, 3, 1>		xzwy;			// Writable
-			index4_vector<T, Size, 0, 2, 3, 2>		xzwz;
-			index4_vector<T, Size, 0, 2, 3, 3>		xzww;
-			index4_vector<T, Size, 0, 3, 0, 0>		xwxx;
-			index4_vector<T, Size, 0, 3, 0, 1>		xwxy;
-			index4_vector<T, Size, 0, 3, 0, 2>		xwxz;
-			index4_vector<T, Size, 0, 3, 0, 3>		xwxw;
-			index4_vector<T, Size, 0, 3, 1, 0>		xwyx;
-			index4_vector<T, Size, 0, 3, 1, 1>		xwyy;
-			index4_vector<T, Size, 0, 3, 1, 2>		xwyz;			// Writable
-			index4_vector<T, Size, 0, 3, 1, 3>		xwyw;
-			index4_vector<T, Size, 0, 3, 2, 0>		xwzx;
-			index4_vector<T, Size, 0, 3, 2, 1>		xwzy;			// Writable
-			index4_vector<T, Size, 0, 3, 2, 2>		xwzz;
-			index4_vector<T, Size, 0, 3, 2, 3>		xwzw;
-			index4_vector<T, Size, 0, 3, 3, 0>		xwwx;
-			index4_vector<T, Size, 0, 3, 3, 1>		xwwy;
-			index4_vector<T, Size, 0, 3, 3, 2>		xwwz;
-			index4_vector<T, Size, 0, 3, 3, 3>		xwww;
-			index4_vector<T, Size, 1, 0, 0, 0>		yxxx;
-			index4_vector<T, Size, 1, 0, 0, 1>		yxxy;
-			index4_vector<T, Size, 1, 0, 0, 2>		yxxz;
-			index4_vector<T, Size, 1, 0, 0, 3>		yxxw;
-			index4_vector<T, Size, 1, 0, 1, 0>		yxyx;
-			index4_vector<T, Size, 1, 0, 1, 1>		yxyy;
-			index4_vector<T, Size, 1, 0, 1, 2>		yxyz;
-			index4_vector<T, Size, 1, 0, 1, 3>		yxyw;
-			index4_vector<T, Size, 1, 0, 2, 0>		yxzx;
-			index4_vector<T, Size, 1, 0, 2, 1>		yxzy;
-			index4_vector<T, Size, 1, 0, 2, 2>		yxzz;
-			index4_vector<T, Size, 1, 0, 2, 3>		yxzw;			// Writable
-			index4_vector<T, Size, 1, 0, 3, 0>		yxwx;
-			index4_vector<T, Size, 1, 0, 3, 1>		yxwy;
-			index4_vector<T, Size, 1, 0, 3, 2>		yxwz;			// Writable
-			index4_vector<T, Size, 1, 0, 3, 3>		yxww;
-			index4_vector<T, Size, 1, 1, 0, 0>		yyxx;
-			index4_vector<T, Size, 1, 1, 0, 1>		yyxy;
-			index4_vector<T, Size, 1, 1, 0, 2>		yyxz;
-			index4_vector<T, Size, 1, 1, 0, 3>		yyxw;
-			index4_vector<T, Size, 1, 1, 1, 0>		yyyx;
-			index4_vector<T, Size, 1, 1, 1, 1>		yyyy;
-			index4_vector<T, Size, 1, 1, 1, 2>		yyyz;
-			index4_vector<T, Size, 1, 1, 1, 3>		yyyw;
-			index4_vector<T, Size, 1, 1, 2, 0>		yyzx;
-			index4_vector<T, Size, 1, 1, 2, 1>		yyzy;
-			index4_vector<T, Size, 1, 1, 2, 2>		yyzz;
-			index4_vector<T, Size, 1, 1, 2, 3>		yyzw;
-			index4_vector<T, Size, 1, 1, 3, 0>		yywx;
-			index4_vector<T, Size, 1, 1, 3, 1>		yywy;
-			index4_vector<T, Size, 1, 1, 3, 2>		yywz;
-			index4_vector<T, Size, 1, 1, 3, 3>		yyww;
-			index4_vector<T, Size, 1, 2, 0, 0>		yzxx;
-			index4_vector<T, Size, 1, 2, 0, 1>		yzxy;
-			index4_vector<T, Size, 1, 2, 0, 2>		yzxz;
-			index4_vector<T, Size, 1, 2, 0, 3>		yzxw;			// Writable
-			index4_vector<T, Size, 1, 2, 1, 0>		yzyx;
-			index4_vector<T, Size, 1, 2, 1, 1>		yzyy;
-			index4_vector<T, Size, 1, 2, 1, 2>		yzyz;
-			index4_vector<T, Size, 1, 2, 1, 3>		yzyw;
-			index4_vector<T, Size, 1, 2, 2, 0>		yzzx;
-			index4_vector<T, Size, 1, 2, 2, 1>		yzzy;
-			index4_vector<T, Size, 1, 2, 2, 2>		yzzz;
-			index4_vector<T, Size, 1, 2, 2, 3>		yzzw;
-			index4_vector<T, Size, 1, 2, 3, 0>		yzwx;			// Writable
-			index4_vector<T, Size, 1, 2, 3, 1>		yzwy;
-			index4_vector<T, Size, 1, 2, 3, 2>		yzwz;
-			index4_vector<T, Size, 1, 2, 3, 3>		yzww;
-			index4_vector<T, Size, 1, 3, 0, 0>		ywxx;
-			index4_vector<T, Size, 1, 3, 0, 1>		ywxy;
-			index4_vector<T, Size, 1, 3, 0, 2>		ywxz;			// Writable
-			index4_vector<T, Size, 1, 3, 0, 3>		ywxw;
-			index4_vector<T, Size, 1, 3, 1, 0>		ywyx;
-			index4_vector<T, Size, 1, 3, 1, 1>		ywyy;
-			index4_vector<T, Size, 1, 3, 1, 2>		ywyz;
-			index4_vector<T, Size, 1, 3, 1, 3>		ywyw;
-			index4_vector<T, Size, 1, 3, 2, 0>		ywzx;			// Writable
-			index4_vector<T, Size, 1, 3, 2, 1>		ywzy;
-			index4_vector<T, Size, 1, 3, 2, 2>		ywzz;
-			index4_vector<T, Size, 1, 3, 2, 3>		ywzw;
-			index4_vector<T, Size, 1, 3, 3, 0>		ywwx;
-			index4_vector<T, Size, 1, 3, 3, 1>		ywwy;
-			index4_vector<T, Size, 1, 3, 3, 2>		ywwz;
-			index4_vector<T, Size, 1, 3, 3, 3>		ywww;
-			index4_vector<T, Size, 2, 0, 0, 0>		zxxx;
-			index4_vector<T, Size, 2, 0, 0, 1>		zxxy;
-			index4_vector<T, Size, 2, 0, 0, 2>		zxxz;
-			index4_vector<T, Size, 2, 0, 0, 3>		zxxw;
-			index4_vector<T, Size, 2, 0, 1, 0>		zxyx;
-			index4_vector<T, Size, 2, 0, 1, 1>		zxyy;
-			index4_vector<T, Size, 2, 0, 1, 2>		zxyz;
-			index4_vector<T, Size, 2, 0, 1, 3>		zxyw;			// Writable
-			index4_vector<T, Size, 2, 0, 2, 0>		zxzx;
-			index4_vector<T, Size, 2, 0, 2, 1>		zxzy;
-			index4_vector<T, Size, 2, 0, 2, 2>		zxzz;
-			index4_vector<T, Size, 2, 0, 2, 3>		zxzw;
-			index4_vector<T, Size, 2, 0, 3, 0>		zxwx;
-			index4_vector<T, Size, 2, 0, 3, 1>		zxwy;			// Writable
-			index4_vector<T, Size, 2, 0, 3, 2>		zxwz;
-			index4_vector<T, Size, 2, 0, 3, 3>		zxww;
-			index4_vector<T, Size, 2, 1, 0, 0>		zyxx;
-			index4_vector<T, Size, 2, 1, 0, 1>		zyxy;
-			index4_vector<T, Size, 2, 1, 0, 2>		zyxz;
-			index4_vector<T, Size, 2, 1, 0, 3>		zyxw;			// Writable
-			index4_vector<T, Size, 2, 1, 1, 0>		zyyx;
-			index4_vector<T, Size, 2, 1, 1, 1>		zyyy;
-			index4_vector<T, Size, 2, 1, 1, 2>		zyyz;
-			index4_vector<T, Size, 2, 1, 1, 3>		zyyw;
-			index4_vector<T, Size, 2, 1, 2, 0>		zyzx;
-			index4_vector<T, Size, 2, 1, 2, 1>		zyzy;
-			index4_vector<T, Size, 2, 1, 2, 2>		zyzz;
-			index4_vector<T, Size, 2, 1, 2, 3>		zyzw;
-			index4_vector<T, Size, 2, 1, 3, 0>		zywx;			// Writable
-			index4_vector<T, Size, 2, 1, 3, 1>		zywy;
-			index4_vector<T, Size, 2, 1, 3, 2>		zywz;
-			index4_vector<T, Size, 2, 1, 3, 3>		zyww;
-			index4_vector<T, Size, 2, 2, 0, 0>		zzxx;
-			index4_vector<T, Size, 2, 2, 0, 1>		zzxy;
-			index4_vector<T, Size, 2, 2, 0, 2>		zzxz;
-			index4_vector<T, Size, 2, 2, 0, 3>		zzxw;
-			index4_vector<T, Size, 2, 2, 1, 0>		zzyx;
-			index4_vector<T, Size, 2, 2, 1, 1>		zzyy;
-			index4_vector<T, Size, 2, 2, 1, 2>		zzyz;
-			index4_vector<T, Size, 2, 2, 1, 3>		zzyw;
-			index4_vector<T, Size, 2, 2, 2, 0>		zzzx;
-			index4_vector<T, Size, 2, 2, 2, 1>		zzzy;
-			index4_vector<T, Size, 2, 2, 2, 2>		zzzz;
-			index4_vector<T, Size, 2, 2, 2, 3>		zzzw;
-			index4_vector<T, Size, 2, 2, 3, 0>		zzwx;
-			index4_vector<T, Size, 2, 2, 3, 1>		zzwy;
-			index4_vector<T, Size, 2, 2, 3, 2>		zzwz;
-			index4_vector<T, Size, 2, 2, 3, 3>		zzww;
-			index4_vector<T, Size, 2, 3, 0, 0>		zwxx;
-			index4_vector<T, Size, 2, 3, 0, 1>		zwxy;			// Writable
-			index4_vector<T, Size, 2, 3, 0, 2>		zwxz;
-			index4_vector<T, Size, 2, 3, 0, 3>		zwxw;
-			index4_vector<T, Size, 2, 3, 1, 0>		zwyx;			// Writable
-			index4_vector<T, Size, 2, 3, 1, 1>		zwyy;
-			index4_vector<T, Size, 2, 3, 1, 2>		zwyz;
-			index4_vector<T, Size, 2, 3, 1, 3>		zwyw;
-			index4_vector<T, Size, 2, 3, 2, 0>		zwzx;
-			index4_vector<T, Size, 2, 3, 2, 1>		zwzy;
-			index4_vector<T, Size, 2, 3, 2, 2>		zwzz;
-			index4_vector<T, Size, 2, 3, 2, 3>		zwzw;
-			index4_vector<T, Size, 2, 3, 3, 0>		zwwx;
-			index4_vector<T, Size, 2, 3, 3, 1>		zwwy;
-			index4_vector<T, Size, 2, 3, 3, 2>		zwwz;
-			index4_vector<T, Size, 2, 3, 3, 3>		zwww;
-			index4_vector<T, Size, 3, 0, 0, 0>		wxxx;
-			index4_vector<T, Size, 3, 0, 0, 1>		wxxy;
-			index4_vector<T, Size, 3, 0, 0, 2>		wxxz;
-			index4_vector<T, Size, 3, 0, 0, 3>		wxxw;
-			index4_vector<T, Size, 3, 0, 1, 0>		wxyx;
-			index4_vector<T, Size, 3, 0, 1, 1>		wxyy;
-			index4_vector<T, Size, 3, 0, 1, 2>		wxyz;			// Writable
-			index4_vector<T, Size, 3, 0, 1, 3>		wxyw;
-			index4_vector<T, Size, 3, 0, 2, 0>		wxzx;
-			index4_vector<T, Size, 3, 0, 2, 1>		wxzy;			// Writable
-			index4_vector<T, Size, 3, 0, 2, 2>		wxzz;
-			index4_vector<T, Size, 3, 0, 2, 3>		wxzw;
-			index4_vector<T, Size, 3, 0, 3, 0>		wxwx;
-			index4_vector<T, Size, 3, 0, 3, 1>		wxwy;
-			index4_vector<T, Size, 3, 0, 3, 2>		wxwz;
-			index4_vector<T, Size, 3, 0, 3, 3>		wxww;
-			index4_vector<T, Size, 3, 1, 0, 0>		wyxx;
-			index4_vector<T, Size, 3, 1, 0, 1>		wyxy;
-			index4_vector<T, Size, 3, 1, 0, 2>		wyxz;			// Writable
-			index4_vector<T, Size, 3, 1, 0, 3>		wyxw;
-			index4_vector<T, Size, 3, 1, 1, 0>		wyyx;
-			index4_vector<T, Size, 3, 1, 1, 1>		wyyy;
-			index4_vector<T, Size, 3, 1, 1, 2>		wyyz;
-			index4_vector<T, Size, 3, 1, 1, 3>		wyyw;
-			index4_vector<T, Size, 3, 1, 2, 0>		wyzx;			// Writable
-			index4_vector<T, Size, 3, 1, 2, 1>		wyzy;
-			index4_vector<T, Size, 3, 1, 2, 2>		wyzz;
-			index4_vector<T, Size, 3, 1, 2, 3>		wyzw;
-			index4_vector<T, Size, 3, 1, 3, 0>		wywx;
-			index4_vector<T, Size, 3, 1, 3, 1>		wywy;
-			index4_vector<T, Size, 3, 1, 3, 2>		wywz;
-			index4_vector<T, Size, 3, 1, 3, 3>		wyww;
-			index4_vector<T, Size, 3, 2, 0, 0>		wzxx;
-			index4_vector<T, Size, 3, 2, 0, 1>		wzxy;			// Writable
-			index4_vector<T, Size, 3, 2, 0, 2>		wzxz;
-			index4_vector<T, Size, 3, 2, 0, 3>		wzxw;
-			index4_vector<T, Size, 3, 2, 1, 0>		wzyx;			// Writable
-			index4_vector<T, Size, 3, 2, 1, 1>		wzyy;
-			index4_vector<T, Size, 3, 2, 1, 2>		wzyz;
-			index4_vector<T, Size, 3, 2, 1, 3>		wzyw;
-			index4_vector<T, Size, 3, 2, 2, 0>		wzzx;
-			index4_vector<T, Size, 3, 2, 2, 1>		wzzy;
-			index4_vector<T, Size, 3, 2, 2, 2>		wzzz;
-			index4_vector<T, Size, 3, 2, 2, 3>		wzzw;
-			index4_vector<T, Size, 3, 2, 3, 0>		wzwx;
-			index4_vector<T, Size, 3, 2, 3, 1>		wzwy;
-			index4_vector<T, Size, 3, 2, 3, 2>		wzwz;
-			index4_vector<T, Size, 3, 2, 3, 3>		wzww;
-			index4_vector<T, Size, 3, 3, 0, 0>		wwxx;
-			index4_vector<T, Size, 3, 3, 0, 1>		wwxy;
-			index4_vector<T, Size, 3, 3, 0, 2>		wwxz;
-			index4_vector<T, Size, 3, 3, 0, 3>		wwxw;
-			index4_vector<T, Size, 3, 3, 1, 0>		wwyx;
-			index4_vector<T, Size, 3, 3, 1, 1>		wwyy;
-			index4_vector<T, Size, 3, 3, 1, 2>		wwyz;
-			index4_vector<T, Size, 3, 3, 1, 3>		wwyw;
-			index4_vector<T, Size, 3, 3, 2, 0>		wwzx;
-			index4_vector<T, Size, 3, 3, 2, 1>		wwzy;
-			index4_vector<T, Size, 3, 3, 2, 2>		wwzz;
-			index4_vector<T, Size, 3, 3, 2, 3>		wwzw;
-			index4_vector<T, Size, 3, 3, 3, 0>		wwwx;
-			index4_vector<T, Size, 3, 3, 3, 1>		wwwy;
-			index4_vector<T, Size, 3, 3, 3, 2>		wwwz;
-			index4_vector<T, Size, 3, 3, 3, 3>		wwww;
+			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
+			dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
+			dexvec4<T, Size, 0, 0, 0, 2>		xxxz;
+			dexvec4<T, Size, 0, 0, 0, 3>		xxxw;
+			dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
+			dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
+			dexvec4<T, Size, 0, 0, 1, 2>		xxyz;
+			dexvec4<T, Size, 0, 0, 1, 3>		xxyw;
+			dexvec4<T, Size, 0, 0, 2, 0>		xxzx;
+			dexvec4<T, Size, 0, 0, 2, 1>		xxzy;
+			dexvec4<T, Size, 0, 0, 2, 2>		xxzz;
+			dexvec4<T, Size, 0, 0, 2, 3>		xxzw;
+			dexvec4<T, Size, 0, 0, 3, 0>		xxwx;
+			dexvec4<T, Size, 0, 0, 3, 1>		xxwy;
+			dexvec4<T, Size, 0, 0, 3, 2>		xxwz;
+			dexvec4<T, Size, 0, 0, 3, 3>		xxww;
+			dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
+			dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
+			dexvec4<T, Size, 0, 1, 0, 2>		xyxz;
+			dexvec4<T, Size, 0, 1, 0, 3>		xyxw;
+			dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
+			dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
+			dexvec4<T, Size, 0, 1, 1, 2>		xyyz;
+			dexvec4<T, Size, 0, 1, 1, 3>		xyyw;
+			dexvec4<T, Size, 0, 1, 2, 0>		xyzx;
+			dexvec4<T, Size, 0, 1, 2, 1>		xyzy;
+			dexvec4<T, Size, 0, 1, 2, 2>		xyzz;
+			dexvec4<T, Size, 0, 1, 2, 3>		xyzw;			// Writable
+			dexvec4<T, Size, 0, 1, 3, 0>		xywx;
+			dexvec4<T, Size, 0, 1, 3, 1>		xywy;
+			dexvec4<T, Size, 0, 1, 3, 2>		xywz;			// Writable
+			dexvec4<T, Size, 0, 1, 3, 3>		xyww;
+			dexvec4<T, Size, 0, 2, 0, 0>		xzxx;
+			dexvec4<T, Size, 0, 2, 0, 1>		xzxy;
+			dexvec4<T, Size, 0, 2, 0, 2>		xzxz;
+			dexvec4<T, Size, 0, 2, 0, 3>		xzxw;
+			dexvec4<T, Size, 0, 2, 1, 0>		xzyx;
+			dexvec4<T, Size, 0, 2, 1, 1>		xzyy;
+			dexvec4<T, Size, 0, 2, 1, 2>		xzyz;
+			dexvec4<T, Size, 0, 2, 1, 3>		xzyw;			// Writable
+			dexvec4<T, Size, 0, 2, 2, 0>		xzzx;
+			dexvec4<T, Size, 0, 2, 2, 1>		xzzy;
+			dexvec4<T, Size, 0, 2, 2, 2>		xzzz;
+			dexvec4<T, Size, 0, 2, 2, 3>		xzzw;
+			dexvec4<T, Size, 0, 2, 3, 0>		xzwx;
+			dexvec4<T, Size, 0, 2, 3, 1>		xzwy;			// Writable
+			dexvec4<T, Size, 0, 2, 3, 2>		xzwz;
+			dexvec4<T, Size, 0, 2, 3, 3>		xzww;
+			dexvec4<T, Size, 0, 3, 0, 0>		xwxx;
+			dexvec4<T, Size, 0, 3, 0, 1>		xwxy;
+			dexvec4<T, Size, 0, 3, 0, 2>		xwxz;
+			dexvec4<T, Size, 0, 3, 0, 3>		xwxw;
+			dexvec4<T, Size, 0, 3, 1, 0>		xwyx;
+			dexvec4<T, Size, 0, 3, 1, 1>		xwyy;
+			dexvec4<T, Size, 0, 3, 1, 2>		xwyz;			// Writable
+			dexvec4<T, Size, 0, 3, 1, 3>		xwyw;
+			dexvec4<T, Size, 0, 3, 2, 0>		xwzx;
+			dexvec4<T, Size, 0, 3, 2, 1>		xwzy;			// Writable
+			dexvec4<T, Size, 0, 3, 2, 2>		xwzz;
+			dexvec4<T, Size, 0, 3, 2, 3>		xwzw;
+			dexvec4<T, Size, 0, 3, 3, 0>		xwwx;
+			dexvec4<T, Size, 0, 3, 3, 1>		xwwy;
+			dexvec4<T, Size, 0, 3, 3, 2>		xwwz;
+			dexvec4<T, Size, 0, 3, 3, 3>		xwww;
+			dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
+			dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
+			dexvec4<T, Size, 1, 0, 0, 2>		yxxz;
+			dexvec4<T, Size, 1, 0, 0, 3>		yxxw;
+			dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
+			dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
+			dexvec4<T, Size, 1, 0, 1, 2>		yxyz;
+			dexvec4<T, Size, 1, 0, 1, 3>		yxyw;
+			dexvec4<T, Size, 1, 0, 2, 0>		yxzx;
+			dexvec4<T, Size, 1, 0, 2, 1>		yxzy;
+			dexvec4<T, Size, 1, 0, 2, 2>		yxzz;
+			dexvec4<T, Size, 1, 0, 2, 3>		yxzw;			// Writable
+			dexvec4<T, Size, 1, 0, 3, 0>		yxwx;
+			dexvec4<T, Size, 1, 0, 3, 1>		yxwy;
+			dexvec4<T, Size, 1, 0, 3, 2>		yxwz;			// Writable
+			dexvec4<T, Size, 1, 0, 3, 3>		yxww;
+			dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
+			dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
+			dexvec4<T, Size, 1, 1, 0, 2>		yyxz;
+			dexvec4<T, Size, 1, 1, 0, 3>		yyxw;
+			dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
+			dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
+			dexvec4<T, Size, 1, 1, 1, 2>		yyyz;
+			dexvec4<T, Size, 1, 1, 1, 3>		yyyw;
+			dexvec4<T, Size, 1, 1, 2, 0>		yyzx;
+			dexvec4<T, Size, 1, 1, 2, 1>		yyzy;
+			dexvec4<T, Size, 1, 1, 2, 2>		yyzz;
+			dexvec4<T, Size, 1, 1, 2, 3>		yyzw;
+			dexvec4<T, Size, 1, 1, 3, 0>		yywx;
+			dexvec4<T, Size, 1, 1, 3, 1>		yywy;
+			dexvec4<T, Size, 1, 1, 3, 2>		yywz;
+			dexvec4<T, Size, 1, 1, 3, 3>		yyww;
+			dexvec4<T, Size, 1, 2, 0, 0>		yzxx;
+			dexvec4<T, Size, 1, 2, 0, 1>		yzxy;
+			dexvec4<T, Size, 1, 2, 0, 2>		yzxz;
+			dexvec4<T, Size, 1, 2, 0, 3>		yzxw;			// Writable
+			dexvec4<T, Size, 1, 2, 1, 0>		yzyx;
+			dexvec4<T, Size, 1, 2, 1, 1>		yzyy;
+			dexvec4<T, Size, 1, 2, 1, 2>		yzyz;
+			dexvec4<T, Size, 1, 2, 1, 3>		yzyw;
+			dexvec4<T, Size, 1, 2, 2, 0>		yzzx;
+			dexvec4<T, Size, 1, 2, 2, 1>		yzzy;
+			dexvec4<T, Size, 1, 2, 2, 2>		yzzz;
+			dexvec4<T, Size, 1, 2, 2, 3>		yzzw;
+			dexvec4<T, Size, 1, 2, 3, 0>		yzwx;			// Writable
+			dexvec4<T, Size, 1, 2, 3, 1>		yzwy;
+			dexvec4<T, Size, 1, 2, 3, 2>		yzwz;
+			dexvec4<T, Size, 1, 2, 3, 3>		yzww;
+			dexvec4<T, Size, 1, 3, 0, 0>		ywxx;
+			dexvec4<T, Size, 1, 3, 0, 1>		ywxy;
+			dexvec4<T, Size, 1, 3, 0, 2>		ywxz;			// Writable
+			dexvec4<T, Size, 1, 3, 0, 3>		ywxw;
+			dexvec4<T, Size, 1, 3, 1, 0>		ywyx;
+			dexvec4<T, Size, 1, 3, 1, 1>		ywyy;
+			dexvec4<T, Size, 1, 3, 1, 2>		ywyz;
+			dexvec4<T, Size, 1, 3, 1, 3>		ywyw;
+			dexvec4<T, Size, 1, 3, 2, 0>		ywzx;			// Writable
+			dexvec4<T, Size, 1, 3, 2, 1>		ywzy;
+			dexvec4<T, Size, 1, 3, 2, 2>		ywzz;
+			dexvec4<T, Size, 1, 3, 2, 3>		ywzw;
+			dexvec4<T, Size, 1, 3, 3, 0>		ywwx;
+			dexvec4<T, Size, 1, 3, 3, 1>		ywwy;
+			dexvec4<T, Size, 1, 3, 3, 2>		ywwz;
+			dexvec4<T, Size, 1, 3, 3, 3>		ywww;
+			dexvec4<T, Size, 2, 0, 0, 0>		zxxx;
+			dexvec4<T, Size, 2, 0, 0, 1>		zxxy;
+			dexvec4<T, Size, 2, 0, 0, 2>		zxxz;
+			dexvec4<T, Size, 2, 0, 0, 3>		zxxw;
+			dexvec4<T, Size, 2, 0, 1, 0>		zxyx;
+			dexvec4<T, Size, 2, 0, 1, 1>		zxyy;
+			dexvec4<T, Size, 2, 0, 1, 2>		zxyz;
+			dexvec4<T, Size, 2, 0, 1, 3>		zxyw;			// Writable
+			dexvec4<T, Size, 2, 0, 2, 0>		zxzx;
+			dexvec4<T, Size, 2, 0, 2, 1>		zxzy;
+			dexvec4<T, Size, 2, 0, 2, 2>		zxzz;
+			dexvec4<T, Size, 2, 0, 2, 3>		zxzw;
+			dexvec4<T, Size, 2, 0, 3, 0>		zxwx;
+			dexvec4<T, Size, 2, 0, 3, 1>		zxwy;			// Writable
+			dexvec4<T, Size, 2, 0, 3, 2>		zxwz;
+			dexvec4<T, Size, 2, 0, 3, 3>		zxww;
+			dexvec4<T, Size, 2, 1, 0, 0>		zyxx;
+			dexvec4<T, Size, 2, 1, 0, 1>		zyxy;
+			dexvec4<T, Size, 2, 1, 0, 2>		zyxz;
+			dexvec4<T, Size, 2, 1, 0, 3>		zyxw;			// Writable
+			dexvec4<T, Size, 2, 1, 1, 0>		zyyx;
+			dexvec4<T, Size, 2, 1, 1, 1>		zyyy;
+			dexvec4<T, Size, 2, 1, 1, 2>		zyyz;
+			dexvec4<T, Size, 2, 1, 1, 3>		zyyw;
+			dexvec4<T, Size, 2, 1, 2, 0>		zyzx;
+			dexvec4<T, Size, 2, 1, 2, 1>		zyzy;
+			dexvec4<T, Size, 2, 1, 2, 2>		zyzz;
+			dexvec4<T, Size, 2, 1, 2, 3>		zyzw;
+			dexvec4<T, Size, 2, 1, 3, 0>		zywx;			// Writable
+			dexvec4<T, Size, 2, 1, 3, 1>		zywy;
+			dexvec4<T, Size, 2, 1, 3, 2>		zywz;
+			dexvec4<T, Size, 2, 1, 3, 3>		zyww;
+			dexvec4<T, Size, 2, 2, 0, 0>		zzxx;
+			dexvec4<T, Size, 2, 2, 0, 1>		zzxy;
+			dexvec4<T, Size, 2, 2, 0, 2>		zzxz;
+			dexvec4<T, Size, 2, 2, 0, 3>		zzxw;
+			dexvec4<T, Size, 2, 2, 1, 0>		zzyx;
+			dexvec4<T, Size, 2, 2, 1, 1>		zzyy;
+			dexvec4<T, Size, 2, 2, 1, 2>		zzyz;
+			dexvec4<T, Size, 2, 2, 1, 3>		zzyw;
+			dexvec4<T, Size, 2, 2, 2, 0>		zzzx;
+			dexvec4<T, Size, 2, 2, 2, 1>		zzzy;
+			dexvec4<T, Size, 2, 2, 2, 2>		zzzz;
+			dexvec4<T, Size, 2, 2, 2, 3>		zzzw;
+			dexvec4<T, Size, 2, 2, 3, 0>		zzwx;
+			dexvec4<T, Size, 2, 2, 3, 1>		zzwy;
+			dexvec4<T, Size, 2, 2, 3, 2>		zzwz;
+			dexvec4<T, Size, 2, 2, 3, 3>		zzww;
+			dexvec4<T, Size, 2, 3, 0, 0>		zwxx;
+			dexvec4<T, Size, 2, 3, 0, 1>		zwxy;			// Writable
+			dexvec4<T, Size, 2, 3, 0, 2>		zwxz;
+			dexvec4<T, Size, 2, 3, 0, 3>		zwxw;
+			dexvec4<T, Size, 2, 3, 1, 0>		zwyx;			// Writable
+			dexvec4<T, Size, 2, 3, 1, 1>		zwyy;
+			dexvec4<T, Size, 2, 3, 1, 2>		zwyz;
+			dexvec4<T, Size, 2, 3, 1, 3>		zwyw;
+			dexvec4<T, Size, 2, 3, 2, 0>		zwzx;
+			dexvec4<T, Size, 2, 3, 2, 1>		zwzy;
+			dexvec4<T, Size, 2, 3, 2, 2>		zwzz;
+			dexvec4<T, Size, 2, 3, 2, 3>		zwzw;
+			dexvec4<T, Size, 2, 3, 3, 0>		zwwx;
+			dexvec4<T, Size, 2, 3, 3, 1>		zwwy;
+			dexvec4<T, Size, 2, 3, 3, 2>		zwwz;
+			dexvec4<T, Size, 2, 3, 3, 3>		zwww;
+			dexvec4<T, Size, 3, 0, 0, 0>		wxxx;
+			dexvec4<T, Size, 3, 0, 0, 1>		wxxy;
+			dexvec4<T, Size, 3, 0, 0, 2>		wxxz;
+			dexvec4<T, Size, 3, 0, 0, 3>		wxxw;
+			dexvec4<T, Size, 3, 0, 1, 0>		wxyx;
+			dexvec4<T, Size, 3, 0, 1, 1>		wxyy;
+			dexvec4<T, Size, 3, 0, 1, 2>		wxyz;			// Writable
+			dexvec4<T, Size, 3, 0, 1, 3>		wxyw;
+			dexvec4<T, Size, 3, 0, 2, 0>		wxzx;
+			dexvec4<T, Size, 3, 0, 2, 1>		wxzy;			// Writable
+			dexvec4<T, Size, 3, 0, 2, 2>		wxzz;
+			dexvec4<T, Size, 3, 0, 2, 3>		wxzw;
+			dexvec4<T, Size, 3, 0, 3, 0>		wxwx;
+			dexvec4<T, Size, 3, 0, 3, 1>		wxwy;
+			dexvec4<T, Size, 3, 0, 3, 2>		wxwz;
+			dexvec4<T, Size, 3, 0, 3, 3>		wxww;
+			dexvec4<T, Size, 3, 1, 0, 0>		wyxx;
+			dexvec4<T, Size, 3, 1, 0, 1>		wyxy;
+			dexvec4<T, Size, 3, 1, 0, 2>		wyxz;			// Writable
+			dexvec4<T, Size, 3, 1, 0, 3>		wyxw;
+			dexvec4<T, Size, 3, 1, 1, 0>		wyyx;
+			dexvec4<T, Size, 3, 1, 1, 1>		wyyy;
+			dexvec4<T, Size, 3, 1, 1, 2>		wyyz;
+			dexvec4<T, Size, 3, 1, 1, 3>		wyyw;
+			dexvec4<T, Size, 3, 1, 2, 0>		wyzx;			// Writable
+			dexvec4<T, Size, 3, 1, 2, 1>		wyzy;
+			dexvec4<T, Size, 3, 1, 2, 2>		wyzz;
+			dexvec4<T, Size, 3, 1, 2, 3>		wyzw;
+			dexvec4<T, Size, 3, 1, 3, 0>		wywx;
+			dexvec4<T, Size, 3, 1, 3, 1>		wywy;
+			dexvec4<T, Size, 3, 1, 3, 2>		wywz;
+			dexvec4<T, Size, 3, 1, 3, 3>		wyww;
+			dexvec4<T, Size, 3, 2, 0, 0>		wzxx;
+			dexvec4<T, Size, 3, 2, 0, 1>		wzxy;			// Writable
+			dexvec4<T, Size, 3, 2, 0, 2>		wzxz;
+			dexvec4<T, Size, 3, 2, 0, 3>		wzxw;
+			dexvec4<T, Size, 3, 2, 1, 0>		wzyx;			// Writable
+			dexvec4<T, Size, 3, 2, 1, 1>		wzyy;
+			dexvec4<T, Size, 3, 2, 1, 2>		wzyz;
+			dexvec4<T, Size, 3, 2, 1, 3>		wzyw;
+			dexvec4<T, Size, 3, 2, 2, 0>		wzzx;
+			dexvec4<T, Size, 3, 2, 2, 1>		wzzy;
+			dexvec4<T, Size, 3, 2, 2, 2>		wzzz;
+			dexvec4<T, Size, 3, 2, 2, 3>		wzzw;
+			dexvec4<T, Size, 3, 2, 3, 0>		wzwx;
+			dexvec4<T, Size, 3, 2, 3, 1>		wzwy;
+			dexvec4<T, Size, 3, 2, 3, 2>		wzwz;
+			dexvec4<T, Size, 3, 2, 3, 3>		wzww;
+			dexvec4<T, Size, 3, 3, 0, 0>		wwxx;
+			dexvec4<T, Size, 3, 3, 0, 1>		wwxy;
+			dexvec4<T, Size, 3, 3, 0, 2>		wwxz;
+			dexvec4<T, Size, 3, 3, 0, 3>		wwxw;
+			dexvec4<T, Size, 3, 3, 1, 0>		wwyx;
+			dexvec4<T, Size, 3, 3, 1, 1>		wwyy;
+			dexvec4<T, Size, 3, 3, 1, 2>		wwyz;
+			dexvec4<T, Size, 3, 3, 1, 3>		wwyw;
+			dexvec4<T, Size, 3, 3, 2, 0>		wwzx;
+			dexvec4<T, Size, 3, 3, 2, 1>		wwzy;
+			dexvec4<T, Size, 3, 3, 2, 2>		wwzz;
+			dexvec4<T, Size, 3, 3, 2, 3>		wwzw;
+			dexvec4<T, Size, 3, 3, 3, 0>		wwwx;
+			dexvec4<T, Size, 3, 3, 3, 1>		wwwy;
+			dexvec4<T, Size, 3, 3, 3, 2>		wwwz;
+			dexvec4<T, Size, 3, 3, 3, 3>		wwww;
 		};
 
 		//
@@ -1808,16 +1815,14 @@ namespace dsga
 
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
-		template <typename U1, typename U2, typename U3, typename U4>
-		requires
-			std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
-			std::convertible_to<U3, T> && std::convertible_to<U4, T>
-		constexpr void init(U1 value0, U2 value1, U3 value2, U4 value3) noexcept
+		template <typename ...Args>
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		constexpr void init(Args ...args) noexcept
 		{
-			store.value[0u] = static_cast<T>(value0);
-			store.value[1u] = static_cast<T>(value1);
-			store.value[2u] = static_cast<T>(value2);
-			store.value[3u] = static_cast<T>(value3);
+			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
+			{
+				((store.value[Js] = static_cast<T>(same_args)),...);
+			}(std::make_index_sequence<Count>{}, args...);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
