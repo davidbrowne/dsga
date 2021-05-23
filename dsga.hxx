@@ -101,7 +101,8 @@ namespace dsga
 	// https://stackoverflow.com/questions/48209179/do-scalar-members-in-a-union-count-towards-the-common-initial-sequence
 	// https://stackoverflow.com/questions/48058545/are-there-any-guarantees-for-unions-that-contain-a-wrapped-type-and-the-type-its
 
-	// common initial sequence wrapper with basic storage access -- forwards function calls to wrapped storage
+	// common initial sequence wrapper with basic storage access -- forwards function calls to wrapped storage.
+	// this struct is an aggregate
 	template <dimensional_scalar T, std::size_t Size>
 	requires dimensional_storage<T, Size>
 	struct storage_wrapper
@@ -129,6 +130,9 @@ namespace dsga
 		// physically contiguous access to data
 		constexpr		T			&operator [](std::size_t index)			noexcept	{ return value[index]; }
 		constexpr const T			&operator [](std::size_t index)	const	noexcept	{ return value[index]; }
+
+		constexpr		T *			raw_data()								noexcept	{ return value.data(); }
+		constexpr		T * const	raw_data()						const	noexcept	{ return value.data(); }
 
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -249,6 +253,7 @@ namespace dsga
 	// 
 	// 		set() - relies on init() in Derived
 	// 		operator[] - relies on at() in Derived
+	//		raw_data() - relies on data() in Derived
 	// 		size() - relies on Count template parameter
 	//
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
@@ -267,6 +272,9 @@ namespace dsga
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
 		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
 		constexpr const	ScalarType	&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
+
+		constexpr		ScalarType *		raw_data()						noexcept	requires Writable	{ return this->as_derived().data(); }
+		constexpr		ScalarType * const	raw_data()				const	noexcept						{ return this->as_derived().data(); }
 
 		// number of accessible T elements
 		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
@@ -513,6 +521,18 @@ namespace dsga
 			return value[sequence_array[index]];
 		}
 
+		// physically contiguous -- used by raw_data() for read/write access to data
+		constexpr T *data() noexcept
+		{
+			return value.data();
+		}
+
+		// physically contiguous -- used by raw_data() for read access to data
+		constexpr T * const data() const noexcept
+		{
+			return value.data();
+		}
+
 		// basic_vector conversion operator
 		// this is extremely important.
 		constexpr operator basic_vector<T, Count>() const noexcept
@@ -625,6 +645,18 @@ namespace dsga
 		constexpr const T &at(std::size_t index) const noexcept
 		{
 			return value[sequence_array[index]];
+		}
+
+		// physically contiguous -- used by raw_data() for read/write access to data
+		constexpr T *data() noexcept
+		{
+			return value.data();
+		}
+
+		// physically contiguous -- used by raw_data() for read access to data
+		constexpr T * const data() const noexcept
+		{
+			return value.data();
 		}
 
 		// basic_vector conversion operator
@@ -819,6 +851,10 @@ namespace dsga
 		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
+		// physically contiguous -- used by raw_data() for access to data
+		constexpr		T *			data()							noexcept	{ return store.value.data(); }
+		constexpr		T * const	data()					const	noexcept	{ return store.value.data(); }
+
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
 		constexpr auto begin()	const	noexcept	{ return store.value.cbegin(); }
@@ -977,6 +1013,10 @@ namespace dsga
 		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+
+		// physically contiguous -- used by raw_data() for access to data
+		constexpr		T *			data()							noexcept	{ return store.value.data(); }
+		constexpr		T * const	data()					const	noexcept	{ return store.value.data(); }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1258,6 +1298,10 @@ namespace dsga
 		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+
+		// physically contiguous -- used by raw_data() for access to data
+		constexpr		T *			data()							noexcept	{ return store.value.data(); }
+		constexpr		T * const	data()					const	noexcept	{ return store.value.data(); }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1828,6 +1872,10 @@ namespace dsga
 		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+
+		// physically contiguous -- used by raw_data() for access to data
+		constexpr		T *			data()							noexcept	{ return store.value.data(); }
+		constexpr		T * const	data()					const	noexcept	{ return store.value.data(); }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
