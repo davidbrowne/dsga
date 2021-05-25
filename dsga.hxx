@@ -131,12 +131,11 @@ namespace dsga
 		constexpr		T			&operator [](std::size_t index)			noexcept	{ return value[index]; }
 		constexpr const T			&operator [](std::size_t index)	const	noexcept	{ return value[index]; }
 
-		constexpr		T *			data()									noexcept	{ return value.data(); }
-		constexpr		T * const	data()							const	noexcept	{ return value.data(); }
+		constexpr			T *		data()									noexcept	{ return value.data(); }
+		constexpr	const	T * 	data()							const	noexcept	{ return value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ... Is>
-		constexpr		std::index_sequence<Is...>	get_sequence_pack()		noexcept	{ return sequence_pack(); }
+		constexpr		auto		get_sequence_pack()						noexcept	{ return sequence_pack{}; }
 
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -281,12 +280,11 @@ namespace dsga
 		constexpr const	ScalarType	&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
 
 		// physically contiguous access via pointer
-		constexpr		ScalarType *		data()							noexcept	requires Writable	{ return this->as_derived().raw_data(); }
-		constexpr		ScalarType * const	data()					const	noexcept						{ return this->as_derived().raw_data(); }
+		constexpr			ScalarType *		data()						noexcept	requires Writable	{ return this->as_derived().raw_data(); }
+		constexpr	const	ScalarType *		data()				const	noexcept						{ return this->as_derived().raw_data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ... Is>
-		constexpr		std::index_sequence<Is...>	get_sequence_pack()		noexcept						{ return this->as_derived().make_sequence_pack(); }
+		constexpr		auto				get_sequence_pack()		const	noexcept						{ return this->as_derived().make_sequence_pack(); }
 
 		// number of accessible T elements
 		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
@@ -487,6 +485,7 @@ namespace dsga
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
 		dimensional_storage_t<T, Size> value;
 
+#if 1
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
 		template <typename ... Args>
@@ -495,6 +494,17 @@ namespace dsga
 		{
 			((value[Is] = static_cast<T>(args)),...);
 		}
+#else
+		template <typename ... Args>
+		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
+		constexpr void init(Args ...args) noexcept
+		{
+			[&] (T *ptr)
+			{
+				((ptr[Is] = static_cast<T>(args)),...);
+			}(raw_data());
+		}
+#endif
 
 		// copy assignment
 		template <bool W, dimensional_scalar U, typename D>
@@ -540,16 +550,15 @@ namespace dsga
 		}
 
 		// physically contiguous -- used by data() for read access to data
-		constexpr T * const raw_data() const noexcept
+		constexpr const T * raw_data() const noexcept
 		{
 			return value.data();
 		}
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ...Is>
-		constexpr std::index_sequence<Is...> make_sequence_pack() noexcept
+		constexpr auto make_sequence_pack() const noexcept
 		{
-			return sequence_pack();
+			return sequence_pack{};
 		}
 
 		// basic_vector conversion operator
@@ -673,16 +682,15 @@ namespace dsga
 		}
 
 		// physically contiguous -- used by data() for read access to data
-		constexpr T * const raw_data() const noexcept
+		constexpr const T * raw_data() const noexcept
 		{
 			return value.data();
 		}
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ...Is>
-		constexpr std::index_sequence<Is...> make_sequence_pack() noexcept
+		constexpr auto make_sequence_pack() const noexcept
 		{
-			return sequence_pack();
+			return sequence_pack{};
 		}
 
 		// basic_vector conversion operator
@@ -870,7 +878,7 @@ namespace dsga
 		//	[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
 		//	{
 		//		((store.value[Js] = static_cast<T>(same_args)),...);
-		//	}(std::make_index_sequence<Count>{}, args...);
+		//	}(make_sequence_pack(), args...);
 		//}
 
 		// logically and physically contiguous - used by operator [] for access to data
@@ -878,12 +886,11 @@ namespace dsga
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr		T *			raw_data()						noexcept	{ return store.value.data(); }
-		constexpr		T * const	raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
+		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ...Is>
-		constexpr		std::index_sequence<Is...>	make_sequence_pack()	noexcept	{ return sequence_pack(); }
+		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -912,7 +919,7 @@ namespace dsga
 		//
 
 		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Count>;
+		using sequence_pack = std::make_index_sequence<Size>;
 
 		// as an array
 		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
@@ -1037,7 +1044,7 @@ namespace dsga
 			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
 			{
 				((store.value[Js] = static_cast<T>(same_args)),...);
-			}(std::make_index_sequence<Count>{}, args...);
+			}(make_sequence_pack(), args...);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
@@ -1045,12 +1052,11 @@ namespace dsga
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr		T *			raw_data()						noexcept	{ return store.value.data(); }
-		constexpr		T * const	raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
+		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ...Is>
-		constexpr		std::index_sequence<Is...>	make_sequence_pack()	noexcept	{ return sequence_pack(); }
+		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1334,12 +1340,12 @@ namespace dsga
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr		T *			raw_data()						noexcept	{ return store.value.data(); }
-		constexpr		T * const	raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
+		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ...Is>
-		constexpr		std::index_sequence<Is...>	make_sequence_pack()	noexcept	{ return sequence_pack(); }
+		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1912,12 +1918,11 @@ namespace dsga
 		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr		T *			raw_data()						noexcept	{ return store.value.data(); }
-		constexpr		T * const	raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
+		constexpr	const	T * 	raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		template <std::size_t ...Is>
-		constexpr		std::index_sequence<Is...>	make_sequence_pack()	noexcept	{ return sequence_pack(); }
+		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -2105,6 +2110,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
+#if 1
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
 		bool W2, dimensional_scalar T2, typename D2>
 	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
@@ -2113,6 +2119,21 @@ namespace dsga
 	{
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 	}
+#else
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator +(const vector_base<W1, T1, C, D1> &lhs,
+							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	{
+		return
+		[&] <std::size_t ...Is, std::size_t ...Js, typename BinOp>(std::index_sequence<Is ...> /* dummy */, const T1 *lhs_ptr,
+																   std::index_sequence<Js ...> /* dummy */, const T2 *rhs_ptr, BinOp lambda)
+		{
+			return basic_vector<detail::binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs_ptr[Is], rhs_ptr[Js])...);
+		}(lhs.get_sequence_pack(), lhs.data(), rhs.get_sequence_pack(), rhs.data(), plus_op);
+	}
+#endif
 
 	// when Count == 1, treat it like a scalar value
 	template <bool W1, dimensional_scalar T1, typename D1,
