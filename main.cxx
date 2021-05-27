@@ -4,7 +4,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 
-//#include "dev_3rd/nanobench.h"
+#include "dev_3rd/nanobench.h"
 #include "dsga.hxx"
 
 
@@ -386,11 +386,99 @@ void test_bin_op()
 //};
 
 
+template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+	bool W2, dsga::dimensional_scalar T2, typename D2>
+requires dsga::implicitly_convertible_to<T2, T1> || dsga::implicitly_convertible_to<T1, T2>
+constexpr auto sum1(const dsga::vector_base<W1, T1, C, D1> &lhs,
+					const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
+{
+	return dsga::detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, dsga::plus_op);
+}
+
+template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+	bool W2, dsga::dimensional_scalar T2, typename D2>
+requires dsga::implicitly_convertible_to<T2, T1> || dsga::implicitly_convertible_to<T1, T2>
+constexpr auto sum2(const dsga::vector_base<W1, T1, C, D1> &lhs,
+					const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
+{
+	return
+	[&] <std::size_t ...Is, std::size_t ...Js, typename BinOp>(std::index_sequence<Is ...> /* dummy */, const T1 *lhs_ptr,
+															   std::index_sequence<Js ...> /* dummy */, const T2 *rhs_ptr, BinOp lambda)
+	{
+		return dsga::basic_vector<dsga::detail::binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs_ptr[Is], rhs_ptr[Js])...);
+	}(lhs.get_sequence_pack(), lhs.data(), rhs.get_sequence_pack(), rhs.data(), dsga::plus_op);
+}
+
+template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+	bool W2, dsga::dimensional_scalar T2, typename D2>
+requires dsga::implicitly_convertible_to<T2, T1> || dsga::implicitly_convertible_to<T1, T2>
+constexpr auto sum3(const dsga::vector_base<W1, T1, C, D1> &lhs,
+					const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
+{
+	return
+	[&]<typename BinOp>(BinOp lambda)
+	{
+		dsga::basic_vector<dsga::detail::binary_op_return_t<BinOp, T1, T2>, C> v(0);
+
+		for (int i = 0; i < C; ++i)
+			v[i] = lambda(lhs[i], rhs[i]);
+
+		return v;
+	}(dsga::plus_op);
+}
+
+
+void bench()
+{
+	dvec4 v1(1, 2, 3, 4);
+	dvec4 v2(10, 20, 30, 40);
+
+	ankerl::nanobench::Bench().run("sum1 basic basic",
+								   [&] { auto v = sum1(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum2 basic basic",
+								   [&] { auto v = sum2(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum3 basic basic",
+								   [&] { auto v = sum3(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum1 basic basic",
+								   [&] { auto v = sum1(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum2 basic basic",
+								   [&] { auto v = sum2(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum3 basic basic",
+								   [&] { auto v = sum3(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum1 basic basic",
+								   [&] { auto v = sum1(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum2 basic basic",
+								   [&] { auto v = sum2(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum3 basic basic3",
+								   [&] { auto v = sum3(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum1 indexed indexed",
+								   [&] { auto v = sum1(v1.wzyx, v2.xxxx); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum2 indexed indexed",
+								   [&] { auto v = sum2(v1.wzyx, v2.xxxx); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum3 indexed indexed",
+								   [&] { auto v = sum3(v1.wzyx, v2.xxxx); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum1 indexed basic",
+								   [&] { auto v = sum1(v1.wzyx, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum2 indexed basic",
+								   [&] { auto v = sum2(v1.wzyx, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum3 indexed basic",
+								   [&] { auto v = sum3(v1.wzyx, v2); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum1 basic indexed",
+								   [&] { auto v = sum1(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum2 basic indexed",
+								   [&] { auto v = sum2(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
+	ankerl::nanobench::Bench().run("sum3 basic indexed",
+								   [&] { auto v = sum3(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
+}
+
+
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"
 
 int main(int argc, char *argv[])
 {
+//	bench();
+
 //	inv_sqrt_all_floats_test();
 //	inv_sqrt_doubles_test();
 	

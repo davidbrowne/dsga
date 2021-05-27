@@ -2111,6 +2111,7 @@ namespace dsga
 	}
 
 #if 1
+
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
 		bool W2, dimensional_scalar T2, typename D2>
 	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
@@ -2119,7 +2120,20 @@ namespace dsga
 	{
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 	}
+
 #else
+
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator +(const dsga::vector_base<W1, T1, 1u, D1> &lhs,
+							  const dsga::vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		return plus_op(lhs[0u], rhs[0u]);
+	}
+
+#if 1
+
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
 		bool W2, dimensional_scalar T2, typename D2>
 	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
@@ -2133,6 +2147,37 @@ namespace dsga
 			return basic_vector<detail::binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs_ptr[Is], rhs_ptr[Js])...);
 		}(lhs.get_sequence_pack(), lhs.data(), rhs.get_sequence_pack(), rhs.data(), plus_op);
 	}
+
+#else
+
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator +(const dsga::vector_base<W1, T1, 1u, D1> &lhs,
+							  const dsga::vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		return plus_op(lhs[0u], rhs[0u]);
+	}
+
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
+	constexpr auto operator +(const dsga::vector_base<W1, T1, C, D1> &lhs,
+							  const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
+	{
+		return
+		[&]<typename BinOp>(BinOp lambda)
+		{
+			basic_vector<detail::binary_op_return_t<BinOp, T1, T2>, C> v(0);
+
+			for (int i = 0; i < C; ++i)
+				v[i] = lambda(lhs[i], rhs[i]);
+
+			return v;
+		}(plus_op);
+}
+#endif
+
 #endif
 
 	// when Count == 1, treat it like a scalar value
