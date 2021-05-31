@@ -1975,6 +1975,10 @@ namespace dsga
 		template <typename BinOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U>
 		using binary_op_return_t = decltype(BinOp()(std::declval<T>(), std::declval<U>()));
 
+		//
+		// these rely on vector_base::operator[] to have dealt with indirection, if any, of derived vector types
+		//
+
 		// perform the lambda action on components of vector_base arguments, returning a new basic_vector
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D, typename UnOp, std::size_t ...Is>
@@ -2079,6 +2083,126 @@ namespace dsga
 									 BinOp &lambda) noexcept
 		{
 			lhs.set(lambda(lhs[Is], rhs)...);
+		}
+
+		//
+		// these rely on vector_base::data() and vector_base::get_sequence_pack() to deal directly with indexing at a low level, 
+		// where indirection is implicitly accounted for, of derived vector types
+		//
+
+		// perform the lambda action on components of vector_base arguments, returning a new basic_vector
+
+		// when Count == 1, treat it like a scalar value
+		template <dsga::dimensional_scalar T, typename UnOp, std::size_t ...Is>
+		requires (sizeof...(Is) == 1u)
+		constexpr auto unary_op_execute(UnOp &lambda,
+										const T *arg,
+										std::index_sequence<Is...> /* dummy */
+										) noexcept
+		{
+			return static_cast<unary_op_return_t<UnOp, T>>(lambda(arg[Is]...));
+		}
+
+		template <dsga::dimensional_scalar T, typename UnOp, std::size_t ...Is>
+		constexpr auto unary_op_execute(UnOp &lambda,
+										const T *arg,
+										std::index_sequence<Is...> /* dummy */
+										) noexcept
+		{
+			return basic_vector<unary_op_return_t<UnOp, T>, sizeof ...(Is)>(lambda(arg[Is])...);
+		}
+
+		template <dsga::dimensional_scalar T1, dsga::dimensional_scalar T2, typename BinOp, std::size_t ...Is, std::size_t ...Js>
+		requires (sizeof...(Is) == sizeof ...(Js))
+		constexpr auto binary_op_execute(BinOp &lambda,
+										 const T1 *lhs,
+										 std::index_sequence<Is...> /* dummy */,
+										 const T2 *rhs,
+										 std::index_sequence<Js...> /* dummy */
+										 ) noexcept
+		{
+			return basic_vector<binary_op_return_t<BinOp, T1, T2>, sizeof...(Is)>(lambda(lhs[Is], rhs[Js])...);
+		}
+
+		template <dsga::dimensional_scalar T, dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(BinOp &lambda,
+										 const T *lhs,
+										 std::index_sequence<Is...> /* dummy */,
+										 U rhs
+										 ) noexcept
+		{
+			return basic_vector<binary_op_return_t<BinOp, T, U>, sizeof ...(Is)>(lambda(lhs[Is], rhs)...);
+		}
+
+		template <dsga::dimensional_scalar T, dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute(BinOp &lambda,
+										 U lhs,
+										 const T *rhs,
+										 std::index_sequence<Is...> /* dummy */
+										 ) noexcept
+		{
+			return basic_vector<binary_op_return_t<BinOp, U, T>, sizeof ...(Is)>(lambda(lhs, rhs[Is])...);
+		}
+
+		// when Count == 1, treat it like a scalar value
+		template <dsga::dimensional_scalar T1, dsga::dimensional_scalar T2, typename BinOp, std::size_t ...Is, std::size_t ...Js>
+		requires (sizeof ...(Is) == 1u) && (sizeof ...(Js) == 1u)
+		constexpr auto binary_op_execute(BinOp &lambda,
+										 const T1 *lhs,
+										 std::index_sequence<Is...> /* dummy */,
+										 const T2 *rhs,
+										 std::index_sequence<Js...> /* dummy */
+										 ) noexcept
+		{
+			return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[Is]..., rhs[Js]...));
+		}
+
+		// when Count == 1, treat it like a scalar value
+		template <dsga::dimensional_scalar T, dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		requires (sizeof ...(Is) == 1u)
+		constexpr auto binary_op_execute(BinOp &lambda,
+										 const T *lhs,
+										 std::index_sequence<Is...> /* dummy */,
+										 U rhs
+										 ) noexcept
+		{
+			return static_cast<binary_op_return_t<BinOp, T, U>>(lambda(lhs[Is]..., rhs));
+		}
+
+		// when Count == 1, treat it like a scalar value
+		template <dsga::dimensional_scalar T, dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		requires (sizeof ...(Is) == 1u)
+		constexpr auto binary_op_execute(BinOp &lambda,
+										 U lhs,
+										 const T *rhs,
+										 std::index_sequence<Is...> /* dummy */
+										 ) noexcept
+		{
+			return static_cast<binary_op_return_t<BinOp, U, T>>(lambda(lhs, rhs[Is]...));
+		}
+
+		// perform the lambda action, setting the lhs vector_base to new values
+
+		template <dsga::dimensional_scalar T1, dsga::dimensional_scalar T2, typename BinOp, std::size_t ...Is, std::size_t ...Js>
+		requires (sizeof ...(Is) == sizeof ...(Js))
+		constexpr void binary_op_set(BinOp &lambda,
+									 T1 *lhs,
+									 std::index_sequence<Is...> /* dummy */,
+									 const T2 *rhs,
+									 std::index_sequence<Js...> /* dummy */
+									 ) noexcept
+		{
+			((lhs[Is] = lambda(lhs[Is], rhs[Js])),...);
+		}
+
+		template <dsga::dimensional_scalar T, dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr void binary_op_set(BinOp &lambda,
+									 T *lhs,
+									 std::index_sequence<Is...> /* dummy */,
+									 U rhs
+									 ) noexcept
+		{
+			((lhs[Is] = lambda(lhs[Is], rhs)),...);
 		}
 
 	}
