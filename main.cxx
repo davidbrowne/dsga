@@ -406,7 +406,7 @@ constexpr auto sum2(const dsga::vector_base<W1, T1, C, D1> &lhs,
 															   std::index_sequence<Js ...> /* dummy */, const T2 *rhs_ptr, BinOp lambda)
 	{
 		return dsga::basic_vector<dsga::detail::binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs_ptr[Is], rhs_ptr[Js])...);
-	}(lhs.get_sequence_pack(), lhs.data(), rhs.get_sequence_pack(), rhs.data(), dsga::plus_op);
+	}(lhs.sequence(), lhs.data(), rhs.sequence(), rhs.data(), dsga::plus_op);
 }
 
 template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
@@ -415,7 +415,7 @@ requires dsga::implicitly_convertible_to<T2, T1> || dsga::implicitly_convertible
 constexpr auto sum2a(const dsga::vector_base<W1, T1, C, D1> &lhs,
 					 const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
 {
-	return dsga::detail::binary_op_execute(dsga::plus_op, lhs.data(), lhs.get_sequence_pack(), rhs.data(), rhs.get_sequence_pack());
+	return dsga::detail::binary_op_execute(dsga::plus_op, lhs.data(), lhs.sequence(), rhs.data(), rhs.sequence());
 }
 
 template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,

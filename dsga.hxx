@@ -135,7 +135,7 @@ namespace dsga
 		constexpr	const	T * 	data()							const	noexcept	{ return value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto		get_sequence_pack()						noexcept	{ return sequence_pack{}; }
+		constexpr		auto		sequence()								noexcept	{ return sequence_pack{}; }
 
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -258,7 +258,7 @@ namespace dsga
 	// 		operator[] - relies on at() in Derived - access in logical order
 	//		data() - relies on raw_data() in Derived - access in physical order
 	// 		size() - relies on Count template parameter
-	// 		get_sequence_pack() - relies on make_sequence_pack() in Derived - shows physical to logical conversion info
+	// 		sequence() - relies on make_sequence_pack() in Derived - shows physical to logical conversion info
 	//
 	// we also need to rely on the fact that Derived::sequence_pack is a valid typename.
 	//
@@ -277,14 +277,14 @@ namespace dsga
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
 		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
-		constexpr const	ScalarType	&operator [](std::size_t index) const	noexcept						{ return this->as_derived().at(index); }
+		constexpr const	ScalarType	&operator [](std::size_t index)	const	noexcept						{ return this->as_derived().at(index); }
 
 		// physically contiguous access via pointer
 		constexpr			ScalarType *		data()						noexcept	requires Writable	{ return this->as_derived().raw_data(); }
 		constexpr	const	ScalarType *		data()				const	noexcept						{ return this->as_derived().raw_data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto				get_sequence_pack()		const	noexcept						{ return this->as_derived().make_sequence_pack(); }
+		constexpr		auto					sequence()			const	noexcept						{ return this->as_derived().make_sequence_pack(); }
 
 		// number of accessible T elements
 		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
@@ -1976,7 +1976,7 @@ namespace dsga
 		using binary_op_return_t = decltype(BinOp()(std::declval<T>(), std::declval<U>()));
 
 		//
-		// these rely on vector_base::operator[] to have dealt with indirection, if any, of derived vector types
+		// these rely on vector_base::operator[] to have dealt with indirection, if any, of derived vector types.
 		//
 
 		// perform the lambda action on components of vector_base arguments, returning a new basic_vector
@@ -2061,7 +2061,11 @@ namespace dsga
 			return static_cast<binary_op_return_t<BinOp, T2, T1>>(lambda(lhs, rhs[0u]));
 		}
 
-		// perform the lambda action, setting the lhs vector_base to new values
+		// perform the lambda action, setting the lhs vector_base to new values.
+		// we need all the new values upfront before we set them. it is possible that
+		// we are indexing into the same vector, which could give unexpected results if
+		// we set values as we iterate. we need to set them all only after the new values
+		// have all been gathered.
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
@@ -2086,8 +2090,8 @@ namespace dsga
 		}
 
 		//
-		// these rely on vector_base::data() and vector_base::get_sequence_pack() to deal directly with indexing at a low level, 
-		// where indirection is implicitly accounted for, of derived vector types
+		// these rely on vector_base::data() and vector_base::sequence() to deal directly with indexing of
+		// derived vector types at a low level, where indirection is implicitly accounted for.
 		//
 
 		// perform the lambda action on components of vector_base arguments, returning a new basic_vector
@@ -2097,8 +2101,7 @@ namespace dsga
 		requires (sizeof...(Is) == 1u)
 		constexpr auto unary_op_execute(UnOp &lambda,
 										const T *arg,
-										std::index_sequence<Is...> /* dummy */
-										) noexcept
+										std::index_sequence<Is...> /* dummy */) noexcept
 		{
 			return static_cast<unary_op_return_t<UnOp, T>>(lambda(arg[Is]...));
 		}
@@ -2106,8 +2109,7 @@ namespace dsga
 		template <dsga::dimensional_scalar T, typename UnOp, std::size_t ...Is>
 		constexpr auto unary_op_execute(UnOp &lambda,
 										const T *arg,
-										std::index_sequence<Is...> /* dummy */
-										) noexcept
+										std::index_sequence<Is...> /* dummy */) noexcept
 		{
 			return basic_vector<unary_op_return_t<UnOp, T>, sizeof ...(Is)>(lambda(arg[Is])...);
 		}
@@ -2118,8 +2120,7 @@ namespace dsga
 										 const T1 *lhs,
 										 std::index_sequence<Is...> /* dummy */,
 										 const T2 *rhs,
-										 std::index_sequence<Js...> /* dummy */
-										 ) noexcept
+										 std::index_sequence<Js...> /* dummy */) noexcept
 		{
 			return basic_vector<binary_op_return_t<BinOp, T1, T2>, sizeof...(Is)>(lambda(lhs[Is], rhs[Js])...);
 		}
@@ -2128,8 +2129,7 @@ namespace dsga
 		constexpr auto binary_op_execute(BinOp &lambda,
 										 const T *lhs,
 										 std::index_sequence<Is...> /* dummy */,
-										 U rhs
-										 ) noexcept
+										 U rhs) noexcept
 		{
 			return basic_vector<binary_op_return_t<BinOp, T, U>, sizeof ...(Is)>(lambda(lhs[Is], rhs)...);
 		}
@@ -2138,8 +2138,7 @@ namespace dsga
 		constexpr auto binary_op_execute(BinOp &lambda,
 										 U lhs,
 										 const T *rhs,
-										 std::index_sequence<Is...> /* dummy */
-										 ) noexcept
+										 std::index_sequence<Is...> /* dummy */) noexcept
 		{
 			return basic_vector<binary_op_return_t<BinOp, U, T>, sizeof ...(Is)>(lambda(lhs, rhs[Is])...);
 		}
@@ -2151,8 +2150,7 @@ namespace dsga
 										 const T1 *lhs,
 										 std::index_sequence<Is...> /* dummy */,
 										 const T2 *rhs,
-										 std::index_sequence<Js...> /* dummy */
-										 ) noexcept
+										 std::index_sequence<Js...> /* dummy */) noexcept
 		{
 			return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[Is]..., rhs[Js]...));
 		}
@@ -2163,8 +2161,7 @@ namespace dsga
 		constexpr auto binary_op_execute(BinOp &lambda,
 										 const T *lhs,
 										 std::index_sequence<Is...> /* dummy */,
-										 U rhs
-										 ) noexcept
+										 U rhs) noexcept
 		{
 			return static_cast<binary_op_return_t<BinOp, T, U>>(lambda(lhs[Is]..., rhs));
 		}
@@ -2175,34 +2172,41 @@ namespace dsga
 		constexpr auto binary_op_execute(BinOp &lambda,
 										 U lhs,
 										 const T *rhs,
-										 std::index_sequence<Is...> /* dummy */
-										 ) noexcept
+										 std::index_sequence<Is...> /* dummy */) noexcept
 		{
 			return static_cast<binary_op_return_t<BinOp, U, T>>(lambda(lhs, rhs[Is]...));
 		}
 
-		// perform the lambda action, setting the lhs vector_base to new values
+		// perform the lambda action, setting new values on the vector_base struct that
+		// corresponds to the lhs pointer.
+		// we need all the new values upfront before we set them. it is possible that
+		// we are indexing into the same vector, which could give unexpected results if
+		// we set values as we iterate. we need to set them all only after the new values
+		// have all been gathered.
 
-		template <dsga::dimensional_scalar T1, dsga::dimensional_scalar T2, typename BinOp, std::size_t ...Is, std::size_t ...Js>
-		requires (sizeof ...(Is) == sizeof ...(Js))
+		template <bool W, dsga::dimensional_scalar T1, std::size_t C, typename D,
+			dsga::dimensional_scalar T2, typename BinOp, std::size_t ...Is, std::size_t ...Js>
+		requires W && (sizeof ...(Is) == sizeof ...(Js))
 		constexpr void binary_op_set(BinOp &lambda,
+									 vector_base<W, T1, C, D> &val,
 									 T1 *lhs,
 									 std::index_sequence<Is...> /* dummy */,
 									 const T2 *rhs,
-									 std::index_sequence<Js...> /* dummy */
-									 ) noexcept
+									 std::index_sequence<Js...> /* dummy */) noexcept
 		{
-			((lhs[Is] = lambda(lhs[Is], rhs[Js])),...);
+			val.set(lambda(lhs[Is], rhs[Js])...);
 		}
 
-		template <dsga::dimensional_scalar T, dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		requires W
 		constexpr void binary_op_set(BinOp &lambda,
+									 vector_base<W, T, C, D> &val,
 									 T *lhs,
 									 std::index_sequence<Is...> /* dummy */,
-									 U rhs
-									 ) noexcept
+									 U rhs) noexcept
 		{
-			((lhs[Is] = lambda(lhs[Is], rhs)),...);
+			val.set(lambda(lhs[Is], rhs)...);
 		}
 
 	}
@@ -2269,7 +2273,7 @@ namespace dsga
 																   std::index_sequence<Js ...> /* dummy */, const T2 *rhs_ptr, BinOp lambda)
 		{
 			return basic_vector<detail::binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs_ptr[Is], rhs_ptr[Js])...);
-		}(lhs.get_sequence_pack(), lhs.data(), rhs.get_sequence_pack(), rhs.data(), plus_op);
+		}(lhs.sequence(), lhs.data(), rhs.sequence(), rhs.data(), plus_op);
 	}
 
 #else
