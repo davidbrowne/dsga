@@ -35,7 +35,7 @@ fvec4 sometest()
 	// vector declarations
 	ivec4 somethingoranother{ 0, 1, 2, 3 };
 
-	bool val = false;
+	[[ maybe_unused ]] bool val = false;
 	if (ivec3{1, 3, 0} == somethingoranother.ywx)
 		val = true;
 
@@ -415,7 +415,7 @@ requires dsga::implicitly_convertible_to<T2, T1> || dsga::implicitly_convertible
 constexpr auto sum2a(const dsga::vector_base<W1, T1, C, D1> &lhs,
 					 const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
 {
-	return dsga::detail::binary_op_execute(dsga::plus_op, lhs.data(), lhs.sequence(), rhs.data(), rhs.sequence());
+	return dsga::detail::lower_level_impl::binary_op_execute(dsga::plus_op, lhs.data(), lhs.sequence(), rhs.data(), rhs.sequence());
 }
 
 template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
