@@ -256,11 +256,9 @@ namespace dsga
 	// 
 	// 		set() - relies on init() in Derived - access in logical order
 	// 		operator[] - relies on at() in Derived - access in logical order
-	//		data() - relies on raw_data() in Derived - access in physical order
 	// 		size() - relies on Count template parameter
-	// 		sequence() - relies on make_sequence_pack() in Derived - shows physical to logical conversion info
-	//
-	// we also need to rely on the fact that Derived::sequence_pack is a valid typename.
+	//		data() - relies on raw_data() in Derived - access in physical order
+	// 		sequence() - relies on make_sequence_pack() in Derived - the physical order to logical order mapping
 	//
 	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
 	requires dimensional_storage<ScalarType, Count>
@@ -485,7 +483,6 @@ namespace dsga
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
 		dimensional_storage_t<T, Size> value;
 
-#if 1
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment that works properly
 		template <typename ... Args>
@@ -494,17 +491,6 @@ namespace dsga
 		{
 			((value[Is] = static_cast<T>(args)),...);
 		}
-#else
-		template <typename ... Args>
-		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
-		constexpr void init(Args ...args) noexcept
-		{
-			[&] (T *ptr)
-			{
-				((ptr[Is] = static_cast<T>(args)),...);
-			}(raw_data());
-		}
-#endif
 
 		// copy assignment
 		template <bool W, dimensional_scalar U, typename D>
@@ -789,7 +775,6 @@ namespace dsga
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]) }
 		{
-//			init(other[0u]);
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
@@ -797,7 +782,6 @@ namespace dsga
 		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]) }
 		{
-//			init(other[0u]);
 		}
 
 		template <typename U>
@@ -805,7 +789,6 @@ namespace dsga
 		constexpr basic_vector(U value) noexcept
 			: store{ static_cast<T>(value) }
 		{
-//			init(value);
 		}
 
 		template <typename U>
@@ -813,7 +796,6 @@ namespace dsga
 		explicit constexpr basic_vector(U value) noexcept
 			: store{ static_cast<T>(value) }
 		{
-//			init(value);
 		}
 
 		//
@@ -868,18 +850,6 @@ namespace dsga
 		{
 			store.value[0u] = static_cast<T>(value);
 		}
-
-		// logically and physically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
-		//template <typename ...Args>
-		//requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-		//constexpr void init(Args ...args) noexcept
-		//{
-		//	[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args)
-		//	{
-		//		((store.value[Js] = static_cast<T>(same_args)),...);
-		//	}(make_sequence_pack(), args...);
-		//}
 
 		// logically and physically contiguous - used by operator [] for access to data
 		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
@@ -984,7 +954,6 @@ namespace dsga
 		explicit constexpr basic_vector(U value) noexcept
 			: store{ static_cast<T>(value), static_cast<T>(value) }
 		{
-//			init(value, value);
 		}
 
 		template <typename U1, typename U2>
@@ -992,7 +961,6 @@ namespace dsga
 		explicit constexpr basic_vector(U1 xvalue, U2 yvalue) noexcept
 			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue) }
 		{
-//			init(xvalue, yvalue);
 		}
 
 		template <typename U1, bool W, dimensional_scalar U2, std::size_t C, typename D>
@@ -1000,7 +968,6 @@ namespace dsga
 		explicit constexpr basic_vector(U1 xvalue, const vector_base<W, U2, C, D> &yvalue_source) noexcept
 			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue_source[0u]) }
 		{
-//			init(xvalue, yvalue_source[0u]);
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
@@ -1008,7 +975,6 @@ namespace dsga
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
-//			init(other[0u], other[1u]);
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
@@ -1016,7 +982,6 @@ namespace dsga
 		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
-//			init(other[0u], other[1u]);
 		}
 
 		//
@@ -1240,7 +1205,6 @@ namespace dsga
 		explicit constexpr basic_vector(U value) noexcept
 			: store{ static_cast<T>(value), static_cast<T>(value), static_cast<T>(value) }
 		{
-//			init(value, value, value);
 		}
 
 		template <typename U1, typename U2, typename U3>
@@ -1250,7 +1214,6 @@ namespace dsga
 										U3 zvalue) noexcept
 			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue) }
 		{
-//			init(xvalue, yvalue, zvalue);
 		}
 
 		template <typename U1, typename U2, bool W, dimensional_scalar U3, std::size_t C, typename D>
@@ -1260,7 +1223,6 @@ namespace dsga
 										const vector_base<W, U3, C, D> &zvalue_source) noexcept
 			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue_source[0u]) }
 		{
-//			init(xvalue, yvalue, zvalue_source[0u]);
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
@@ -1268,7 +1230,6 @@ namespace dsga
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
 		{
-//			init(other[0u], other[1u], other[2u]);
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
@@ -1276,7 +1237,6 @@ namespace dsga
 		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
 		{
-//			init(other[0u], other[1u], other[2u]);
 		}
 
 		template <bool W, dimensional_scalar U1, typename D, typename U2>
@@ -1285,7 +1245,6 @@ namespace dsga
 										U2 yet_another) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another) }
 		{
-//			init(other[0u], other[1u], yet_another);
 		}
 
 		template <bool W1, dimensional_scalar U1, typename D1,
@@ -1295,7 +1254,6 @@ namespace dsga
 										const vector_base<W2, U2, C, D2> &yet_another) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another[0u]) }
 		{
-//			init(other[0u], other[1u], yet_another[0u]);
 		}
 
 		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2>
@@ -1304,7 +1262,6 @@ namespace dsga
 										const vector_base<W, U1, C, D> &other) noexcept
 			: store{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
-//			init(yet_another, other[0u], other[1u]);
 		}
 
 		//
@@ -1749,7 +1706,6 @@ namespace dsga
 		explicit constexpr basic_vector(U value) noexcept
 			: store{ static_cast<T>(value), static_cast<T>(value), static_cast<T>(value), static_cast<T>(value) }
 		{
-//			init(value, value, value, value);
 		}
 
 		template <typename U1, typename U2, typename U3, typename U4>
@@ -1762,7 +1718,6 @@ namespace dsga
 										U4 wvalue) noexcept
 			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue), static_cast<T>(wvalue) }
 		{
-//			init(xvalue, yvalue, zvalue, wvalue);
 		}
 
 		template <typename U1, typename U2, typename U3,
@@ -1776,7 +1731,6 @@ namespace dsga
 										const vector_base<W, U4, C, D> &wvalue_source) noexcept
 			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue), static_cast<T>(wvalue_source[0u]) }
 		{
-//			init(xvalue, yvalue, zvalue, wvalue_source[0u]);
 		}
 
 		template <bool W, dimensional_scalar U, typename D>
@@ -1784,7 +1738,6 @@ namespace dsga
 		constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
 		{
-//			init(other[0u], other[1u], other[2u], other[3u]);
 		}
 
 		template <bool W, dimensional_scalar U, typename D>
@@ -1792,7 +1745,6 @@ namespace dsga
 		explicit constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
 		{
-//			init(other[0u], other[1u], other[2u], other[3u]);
 		}
 
 		template <bool W, dimensional_scalar U1, typename D, typename U2>
@@ -1801,7 +1753,6 @@ namespace dsga
 										U2 yet_another) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(yet_another) }
 		{
-//			init(other[0u], other[1u], other[2u], yet_another);
 		}
 
 		template <bool W1, dimensional_scalar U1, typename D1,
@@ -1811,7 +1762,6 @@ namespace dsga
 										const vector_base<W2, U2, C, D2> &wvalue_source) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(wvalue_source[0u]) }
 		{
-//			init(other[0u], other[1u], other[2u], wvalue_source[0u]);
 		}
 
 		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2>
@@ -1820,7 +1770,6 @@ namespace dsga
 										const vector_base<W, U1, C, D> &other) noexcept
 			: store{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
 		{
-//			init(yet_another, other[0u], other[1u], other[2u]);
 		}
 
 		template <bool W1, dimensional_scalar U1, typename D1,
@@ -1830,7 +1779,6 @@ namespace dsga
 										const vector_base<W2, U2, C, D2> &second) noexcept
 			: store{ static_cast<T>(first[0u]), static_cast<T>(first[1u]), static_cast<T>(second[0u]), static_cast<T>(second[1u]) }
 		{
-//			init(first[0u], first[1u], second[0u], second[1u]);
 		}
 
 		template <bool W, dimensional_scalar U1, typename D,  typename U2, typename U3>
@@ -1840,7 +1788,6 @@ namespace dsga
 										U3 second) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(second) }
 		{
-//			init(other[0u], other[1u], first, second);
 		}
 
 		template <bool W1, dimensional_scalar U1, typename D1, typename U2,
@@ -1851,7 +1798,6 @@ namespace dsga
 										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
 			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(wvalue_source[0u]) }
 		{
-//			init(other[0u], other[1u], first, wvalue_source[0u]);
 		}
 
 		template <bool W, dimensional_scalar U1, typename D, typename U2, typename U3>
@@ -1861,7 +1807,6 @@ namespace dsga
 										U3 second) noexcept
 			: store{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(second) }
 		{
-//			init(first, other[0u], other[1u], second);
 		}
 
 		template <bool W1, dimensional_scalar U1, typename D1,
@@ -1872,7 +1817,6 @@ namespace dsga
 										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
 			: store{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(wvalue_source[0u]) }
 		{
-//			init(first, other[0u], other[1u], wvalue_source[0u]);
 		}
 
 		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2, typename U3>
@@ -1882,7 +1826,6 @@ namespace dsga
 										const vector_base<W, U1, C, D> &other) noexcept
 			: store{ static_cast<T>(first), static_cast<T>(second), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
-//			init(first, second, other[0u], other[1u]);
 		}
 
 		//
