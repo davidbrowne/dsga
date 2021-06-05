@@ -2098,33 +2098,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator +(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator +(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, typename D1,
-		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator +(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, plus_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator +(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], plus_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, plus_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, plus_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], plus_op);
 	}
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
@@ -2166,33 +2151,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator -(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator -(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, typename D1,
-		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator -(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, minus_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator -(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], minus_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, minus_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, minus_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], minus_op);
 	}
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
@@ -2234,33 +2204,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator *(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator *(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, times_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, typename D1,
-		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator *(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, times_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator *(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], times_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, times_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, times_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], times_op);
 	}
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
@@ -2302,33 +2257,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator /(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator /(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, div_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, typename D1,
-		bool W2, dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator /(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, div_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator /(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], div_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, div_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, div_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], div_op);
 	}
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
@@ -2370,33 +2310,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator %(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator %(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, typename D1,
-		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator %(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, mod_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator %(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], mod_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, mod_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, mod_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], mod_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2448,33 +2373,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator <<(const vector_base<W1, T1, C, D1> &lhs,
-							   const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator <<(const vector_base<W1, T1, C1, D1> &lhs,
+							   const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, typename D1,
-		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator <<(const vector_base<W1, T1, 1u, D1> &lhs,
-							   const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, lshift_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator <<(const vector_base<W1, T1, C, D1> &lhs,
-							   const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], lshift_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, lshift_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, lshift_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], lshift_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2516,33 +2426,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator >>(const vector_base<W1, T1, C, D1> &lhs,
-							   const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator >>(const vector_base<W1, T1, C1, D1> &lhs,
+							   const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, typename D1,
-		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator >>(const vector_base<W1, T1, 1u, D1> &lhs,
-							   const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, rshift_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator >>(const vector_base<W1, T1, C, D1> &lhs,
-							   const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], rshift_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, rshift_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, rshift_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], rshift_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2584,33 +2479,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator &(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator &(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, and_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, typename D1,
-		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator &(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, and_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator &(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], and_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, and_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, and_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], and_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2652,33 +2532,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator |(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator |(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, or_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, typename D1,
-		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator |(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, or_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator |(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], or_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, or_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, or_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], or_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2720,33 +2585,18 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>
-	constexpr auto operator ^(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C1, typename D1,
+		bool W2, integral_dimensional_scalar T2, std::size_t C2, typename D2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	constexpr auto operator ^(const vector_base<W1, T1, C1, D1> &lhs,
+							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, typename D1,
-		bool W2, integral_dimensional_scalar T2, std::size_t C, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator ^(const vector_base<W1, T1, 1u, D1> &lhs,
-							  const vector_base<W2, T2, C, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs[0u], rhs, xor_op);
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
-		bool W2, integral_dimensional_scalar T2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C > 1u)
-	constexpr auto operator ^(const vector_base<W1, T1, C, D1> &lhs,
-							  const vector_base<W2, T2, 1u, D2> &rhs) noexcept
-	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs[0u], xor_op);
+		if constexpr (C1 == C2)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, xor_op);
+		else if constexpr (C1 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, xor_op);
+		else if constexpr (C2 == 1u)
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], xor_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2769,17 +2619,12 @@ namespace dsga
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires non_bool_arithmetic<T>
-	constexpr basic_vector<T, C> operator +(const vector_base<W, T, C, D> &arg) noexcept
+	constexpr auto operator +(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return basic_vector(arg);						// no-op copy
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W, dimensional_scalar T, typename D>
-	requires non_bool_arithmetic<T>
-	constexpr T operator +(const vector_base<W, T, 1u, D> &arg) noexcept
-	{
-		return arg[0u];									// no-op scalar copy
+		if constexpr (C > 1u)
+			return basic_vector(arg);						// no-op copy
+		else
+			return arg[0u];									// no-op scalar copy
 	}
 
 	// unary operator -
@@ -2807,22 +2652,20 @@ namespace dsga
 	// post-increment
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires W && non_bool_arithmetic<T>
-	constexpr basic_vector<T, C> operator ++(vector_base<W, T, C, D> &arg, int) noexcept
+	constexpr auto operator ++(vector_base<W, T, C, D> &arg, int) noexcept
 	{
-		basic_vector<T, C> value(arg);
-		arg += T(1);
-		return value;
-	}
-
-	// post-increment
-	// when Count == 1, treat it like a scalar value
-	template <bool W, dimensional_scalar T, typename C>
-	requires W && non_bool_arithmetic<T>
-	constexpr T operator ++(vector_base<W, T, 1u, C> &arg, int) noexcept
-	{
-		T value = arg[0u];
-		arg += T(1);
-		return value;
+		if constexpr (C > 1u)
+		{
+			basic_vector<T, C> value(arg);
+			arg += T(1);
+			return value;
+		}
+		else
+		{
+			T value = arg[0u];
+			arg += T(1);
+			return value;
+		}
 	}
 
 	// unary operators --
@@ -2839,22 +2682,20 @@ namespace dsga
 	// post-decrement
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires W && non_bool_arithmetic<T>
-	constexpr basic_vector<T, C> operator --(vector_base<W, T, C, D> &arg, int) noexcept
+	constexpr auto operator --(vector_base<W, T, C, D> &arg, int) noexcept
 	{
-		basic_vector<T, C> value(arg);
-		arg -= T(1);
-		return value;
-	}
-
-	// post-decrement
-	// when Count == 1, treat it like a scalar value
-	template <bool W, dimensional_scalar T, typename D>
-	requires W && non_bool_arithmetic<T>
-	constexpr T operator --(vector_base<W, T, 1u, D> &arg, int) noexcept
-	{
-		T value = arg[0u];
-		arg -= T(1);
-		return value;
+		if constexpr (C > 1u)
+		{
+			basic_vector<T, C> value(arg);
+			arg -= T(1);
+			return value;
+		}
+		else
+		{
+			T value = arg[0u];
+			arg -= T(1);
+			return value;
+		}
 	}
 
 	//
