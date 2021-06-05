@@ -300,16 +300,16 @@ void test_bin_op()
 	constexpr dvec3 dv(41.5, 42.5, 43.5);
 	ivec3 iv(40, 50, 60);
 
-	auto vec_vec1 = dv + iv;
-	auto vec_vec2 = iv + dv;
+	[[ maybe_unused ]] auto vec_vec1 = dv + iv;
+	[[ maybe_unused ]] auto vec_vec2 = iv + dv;
 
-	auto not_vec = ~iv;
-	auto neg_vec = -dv;
+	[[ maybe_unused ]] auto not_vec = ~iv;
+	[[ maybe_unused ]] auto neg_vec = -dv;
 
-	constexpr int some_int = static_cast<int>(98.6);
+	[[ maybe_unused ]] constexpr int some_int = static_cast<int>(98.6);
 
 	auto vec_scal = dv + 300;
-	auto scal_vec = -400 + iv;
+	[[ maybe_unused ]] auto scal_vec = -400 + iv;
 
 	const volatile int nine_k = 9000;
 	const volatile int &nine_k_ref = nine_k;
@@ -429,7 +429,7 @@ constexpr auto sum3(const dsga::vector_base<W1, T1, C, D1> &lhs,
 	{
 		dsga::basic_vector<dsga::detail::binary_op_return_t<BinOp, T1, T2>, C> v(0);
 
-		for (int i = 0; i < C; ++i)
+		for (std::size_t i = 0; i < C; ++i)
 			v[i] = lambda(lhs[i], rhs[i]);
 
 		return v;
@@ -492,6 +492,11 @@ void bench()
 								   [&] { auto v = sum3(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
 }
 
+
+#if defined(__clang__)
+// clang 10.0 does not like colors on windows (link problems with isatty and fileno)
+#define DOCTEST_CONFIG_COLORS_NONE
+#endif
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"

@@ -114,7 +114,7 @@ TEST_SUITE("test conversions")
 
 	TEST_CASE("use primitives to convert")
 	{
-		constexpr std::array<double, 16> const_float_data = { 0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15. };
+		[[ maybe_unused ]] constexpr std::array<double, 16> const_float_data = { 0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15. };
 		std::array<int, 16> non_const_int_data { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 
 		SUBCASE("1D basic_vector primitive conversions")
@@ -123,7 +123,7 @@ TEST_SUITE("test conversions")
 			iscal simple_dest;
 
 			constexpr iscal all_elevens(11);
-			constexpr iscal all_sixty_sixes(66);
+			[[ maybe_unused ]] constexpr iscal all_sixty_sixes(66);
 
 			// non-const begin()/end()
 			std::copy(simple_data.begin(), simple_data.end(), simple_dest.begin());
@@ -181,7 +181,7 @@ TEST_SUITE("test conversions")
 			ivec2 simple_dest;
 
 			constexpr ivec2 all_elevens(11);
-			constexpr ivec2 all_sixty_sixes(66);
+			[[ maybe_unused ]] constexpr ivec2 all_sixty_sixes(66);
 
 			// non-const begin()/end()
 			std::copy(simple_data.begin(), simple_data.end(), simple_dest.begin());
@@ -241,7 +241,7 @@ TEST_SUITE("test conversions")
 			ivec3 simple_dest;
 
 			constexpr ivec3 all_elevens(11);
-			constexpr ivec3 all_sixty_sixes(66);
+			[[ maybe_unused ]] constexpr ivec3 all_sixty_sixes(66);
 
 			// non-const begin()/end()
 			std::copy(simple_data.begin(), simple_data.end(), simple_dest.begin());
@@ -303,7 +303,7 @@ TEST_SUITE("test conversions")
 			ivec4 simple_dest;
 
 			constexpr ivec4 all_elevens(11);
-			constexpr ivec4 all_sixty_sixes(66);
+			[[ maybe_unused ]] constexpr ivec4 all_sixty_sixes(66);
 
 			// non-const begin()/end()
 			std::copy(simple_data.begin(), simple_data.end(), simple_dest.begin());

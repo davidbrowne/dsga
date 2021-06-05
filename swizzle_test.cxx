@@ -1800,9 +1800,9 @@ TEST_SUITE("test swizzling applications")
 	TEST_CASE("range-for loop (which requires) begin/end/deref(*)/prefix ++ interface")
 	{
 		ivec4	four(0, 1, 2, 3);
-		ivec3	three(4, 5, 6);
-		ivec2	two(7, 8);
-		iscal	one(9);
+		[[ maybe_unused ]] ivec3	three(4, 5, 6);
+		[[ maybe_unused ]] ivec2	two(7, 8);
+		[[ maybe_unused ]] iscal	one(9);
 
 		SUBCASE("range-for non-const dimension_data")
 		{
@@ -1926,7 +1926,7 @@ TEST_SUITE("test swizzling applications")
 			fvec4 bar(0);
 
 			// testing rvalue converted with its Scalar operator
-			fvec2 asdf(fscal(33), 55);
+			[[ maybe_unused ]] fvec2 asdf(fscal(33), 55);
 
 			// testing 1, 2, 1 constructor for 4 element vector type
 			fvec4 quux(3, pair, foo.z);
