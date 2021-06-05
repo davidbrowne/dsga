@@ -547,20 +547,6 @@ namespace dsga
 			return sequence_pack{};
 		}
 
-		// basic_vector conversion operator
-		// this is extremely important.
-		constexpr operator basic_vector<T, Count>() const noexcept
-		{
-			return basic_vector<T, Count>(value[Is]...);
-		}
-
-		template <dimensional_scalar U>
-		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
-		explicit constexpr operator basic_vector<U, Count>() const noexcept
-		{
-			return basic_vector<U, Count>(static_cast<U>(value[Is])...);
-		}
-
 		// support for range-for loop
 		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
 		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
@@ -677,20 +663,6 @@ namespace dsga
 		constexpr auto make_sequence_pack() const noexcept
 		{
 			return sequence_pack{};
-		}
-
-		// basic_vector conversion operator
-		// this is extremely important.
-		constexpr operator basic_vector<T, Count>() const noexcept
-		{
-			return basic_vector<T, Count>(value[I]);
-		}
-
-		template <dimensional_scalar U>
-		requires (!std::same_as<T, U> && std::convertible_to<T, U>)
-		explicit constexpr operator basic_vector<U, Count>() const noexcept
-		{
-			return basic_vector<U, Count>(static_cast<U>(value[I]));
 		}
 
 		// support for range-for loop
