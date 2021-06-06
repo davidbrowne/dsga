@@ -18,11 +18,6 @@
 // operators are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test operators")
 {
-	constexpr ivec4	cx_four		(0, 1, 2, 3);
-	constexpr ivec3	cx_three	(4, 5, 6);
-	constexpr ivec2	cx_two		(7, 8);
-	constexpr iscal	cx_one		(9);
-
 	TEST_CASE("unary operator +")
 	{
 		iscal i1(2);
@@ -334,19 +329,19 @@ TEST_SUITE("test operators")
 		CHECK_EQ(i2 & ivec2(0xd4026639, 0x32417869), ivec2(0x50020410, 0x20015061));
 		CHECK_EQ(i2 & iscal(0x324a77e1), ivec2(0x300a0500, 0x200255e1));
 		CHECK_EQ(i1 & i3, ivec3(0x20088c00, 0x61019803, 0x40850606));
-		CHECK_EQ(0x9696a5a5 & i2, ivec2(0x10820504, 0x000285a1));
-		CHECK_EQ(i3 & 0x3c3c1248, ivec3(0x24280040, 0x34301048, 0x08340200));
+		CHECK_EQ(static_cast<int>(0x9696a5a5) & i2, ivec2(0x10820504, 0x000285a1));
+		CHECK_EQ(i3 & static_cast<int>(0x3c3c1248), ivec3(0x24280040, 0x34301048, 0x08340200));
 
 		CHECK_EQ(i2.xy & ivec2(0xd4026639, 0x32417869), ivec2(0x50020410, 0x20015061));
 		CHECK_EQ(i2.xy & iscal(0x324a77e1), ivec2(0x300a0500, 0x200255e1));
 		CHECK_EQ(i1 & i3.xyz, ivec3(0x20088c00, 0x61019803, 0x40850606));
-		CHECK_EQ(0x9696a5a5 & i2.xy, ivec2(0x10820504, 0x000285a1));
-		CHECK_EQ(i3.xyz & 0x3c3c1248, ivec3(0x24280040, 0x34301048, 0x08340200));
+		CHECK_EQ(static_cast<int>(0x9696a5a5) & i2.xy, ivec2(0x10820504, 0x000285a1));
+		CHECK_EQ(i3.xyz & static_cast<int>(0x3c3c1248), ivec3(0x24280040, 0x34301048, 0x08340200));
 
 		CHECK_EQ(i2.yx & iscal(0x324a77e1), ivec2(0x200255e1, 0x300a0500));
 		CHECK_EQ(i2.y & iscal(0x324a77e1), 0x200255e1);
-		CHECK_EQ(i2.y & 0x324a77e1, 0x200255e1);
-		CHECK_EQ(0x324a77e1 & i2.y, 0x200255e1);
+		CHECK_EQ(i2.y & static_cast<int>(0x324a77e1), 0x200255e1);
+		CHECK_EQ(static_cast<int>(0x324a77e1) & i2.y, 0x200255e1);
 	}
 
 	TEST_CASE("binary operator |")
@@ -359,19 +354,19 @@ TEST_SUITE("test operators")
 		CHECK_EQ(i2 | ivec2(0xd4026639, 0x32417869), ivec2(0xfcab6f3f, 0x3343fdfb));
 		CHECK_EQ(i2 | iscal(0x324a77e1), ivec2(0x7aeb7ff7, 0x334bf7f3));
 		CHECK_EQ(i1 | i3, ivec3(0x67edbee7, 0x77bdffdf, 0xebfddf17));
-		CHECK_EQ(0x9696a5a5 | i2, ivec2(0xfebfadb7, 0xb797f5f7));
-		CHECK_EQ(i3 | 0x3c3c1248, ivec3(0x3c7cbee8, 0x7d3dfbdb, 0xfcfd575e));
+		CHECK_EQ(static_cast<int>(0x9696a5a5) | i2, ivec2(0xfebfadb7, 0xb797f5f7));
+		CHECK_EQ(i3 | static_cast<int>(0x3c3c1248), ivec3(0x3c7cbee8, 0x7d3dfbdb, 0xfcfd575e));
 
 		CHECK_EQ(i2.xy | ivec2(0xd4026639, 0x32417869), ivec2(0xfcab6f3f, 0x3343fdfb));
 		CHECK_EQ(i2.xy | iscal(0x324a77e1), ivec2(0x7aeb7ff7, 0x334bf7f3));
 		CHECK_EQ(i1 | i3.xyz, ivec3(0x67edbee7, 0x77bdffdf, 0xebfddf17));
-		CHECK_EQ(0x9696a5a5 | i2.xy, ivec2(0xfebfadb7, 0xb797f5f7));
-		CHECK_EQ(i3.xyz | 0x3c3c1248, ivec3(0x3c7cbee8, 0x7d3dfbdb, 0xfcfd575e));
+		CHECK_EQ(static_cast<int>(0x9696a5a5) | i2.xy, ivec2(0xfebfadb7, 0xb797f5f7));
+		CHECK_EQ(i3.xyz | static_cast<int>(0x3c3c1248), ivec3(0x3c7cbee8, 0x7d3dfbdb, 0xfcfd575e));
 
 		CHECK_EQ(i2.yx | iscal(0x324a77e1), ivec2(0x334bf7f3, 0x7aeb7ff7));
 		CHECK_EQ(i2.y | iscal(0x324a77e1), 0x334bf7f3);
-		CHECK_EQ(i2.y | 0x324a77e1, 0x334bf7f3);
-		CHECK_EQ(0x324a77e1 | i2.y, 0x334bf7f3);
+		CHECK_EQ(i2.y | static_cast<int>(0x324a77e1), 0x334bf7f3);
+		CHECK_EQ(static_cast<int>(0x324a77e1) | i2.y, 0x334bf7f3);
 	}
 
 	TEST_CASE("binary operator ^")
@@ -384,18 +379,18 @@ TEST_SUITE("test operators")
 		CHECK_EQ(i2 ^ ivec2(0xd4026639, 0x32417869), ivec2(0xaca96b2f, 0x1342ad9a));
 		CHECK_EQ(i2 ^ iscal(0x324a77e1), ivec2(0x4ae17af7, 0x1349a212));
 		CHECK_EQ(i1 ^ i3, ivec3(0x47e532e7, 0x16bc67dc, 0xab78d911));
-		CHECK_EQ(0x9696a5a5 ^ i2, ivec2(0xee3da8b3, 0xb7957056));
-		CHECK_EQ(i3 ^ 0x3c3c1248, ivec3(0x1854bea8, 0x490deb93, 0xf4c9555e));
+		CHECK_EQ(static_cast<int>(0x9696a5a5) ^ i2, ivec2(0xee3da8b3, 0xb7957056));
+		CHECK_EQ(i3 ^ static_cast<int>(0x3c3c1248), ivec3(0x1854bea8, 0x490deb93, 0xf4c9555e));
 
 		CHECK_EQ(i2.xy ^ ivec2(0xd4026639, 0x32417869), ivec2(0xaca96b2f, 0x1342ad9a));
 		CHECK_EQ(i2.xy ^ iscal(0x324a77e1), ivec2(0x4ae17af7, 0x1349a212));
 		CHECK_EQ(i1 ^ i3.xyz, ivec3(0x47e532e7, 0x16bc67dc, 0xab78d911));
-		CHECK_EQ(0x9696a5a5 ^ i2.xy, ivec2(0xee3da8b3, 0xb7957056));
-		CHECK_EQ(i3.xyz ^ 0x3c3c1248, ivec3(0x1854bea8, 0x490deb93, 0xf4c9555e));
+		CHECK_EQ(static_cast<int>(0x9696a5a5) ^ i2.xy, ivec2(0xee3da8b3, 0xb7957056));
+		CHECK_EQ(i3.xyz ^ static_cast<int>(0x3c3c1248), ivec3(0x1854bea8, 0x490deb93, 0xf4c9555e));
 
 		CHECK_EQ(i2.yx ^ iscal(0x324a77e1), ivec2(0x1349a212, 0x4ae17af7));
 		CHECK_EQ(i2.y ^ iscal(0x324a77e1), 0x1349a212);
-		CHECK_EQ(i2.y ^ 0x324a77e1, 0x1349a212);
-		CHECK_EQ(0x324a77e1 ^ i2.y, 0x1349a212);
+		CHECK_EQ(i2.y ^ static_cast<int>(0x324a77e1), 0x1349a212);
+		CHECK_EQ(static_cast<int>(0x324a77e1) ^ i2.y, 0x1349a212);
 	}
 }
