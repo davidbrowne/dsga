@@ -2622,7 +2622,7 @@ namespace dsga
 	constexpr auto operator +(const vector_base<W, T, C, D> &arg) noexcept
 	{
 		if constexpr (C > 1u)
-			return basic_vector(arg);						// no-op copy
+			return basic_vector<T, C>(arg);					// no-op copy
 		else
 			return arg[0u];									// no-op scalar copy
 	}
@@ -2643,7 +2643,7 @@ namespace dsga
 	// pre-increment
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires W && non_bool_arithmetic<T>
-	constexpr auto &operator ++(const vector_base<W, T, C, D> &arg) noexcept
+	constexpr auto &operator ++(vector_base<W, T, C, D> &arg) noexcept
 	{
 		arg += T(1);
 		return arg.as_derived();
@@ -2673,7 +2673,7 @@ namespace dsga
 	// pre-decrement
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires W && non_bool_arithmetic<T>
-	constexpr auto &operator --(const vector_base<W, T, C, D> &arg) noexcept
+	constexpr auto &operator --(vector_base<W, T, C, D> &arg) noexcept
 	{
 		arg -= T(1);
 		return arg.as_derived();
