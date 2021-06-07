@@ -2089,6 +2089,16 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], plus_op);
+		return lhs.as_derived();
+	}
+
 	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator +=(vector_base<W, T, C, D> &lhs,
@@ -2139,6 +2149,16 @@ namespace dsga
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
+		return lhs.as_derived();
+	}
+
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], minus_op);
 		return lhs.as_derived();
 	}
 
@@ -2195,6 +2215,16 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], times_op);
+		return lhs.as_derived();
+	}
+
 	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator *=(vector_base<W, T, C, D> &lhs,
@@ -2248,6 +2278,16 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], div_op);
+		return lhs.as_derived();
+	}
+
 	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator /=(vector_base<W, T, C, D> &lhs,
@@ -2298,6 +2338,16 @@ namespace dsga
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
+		return lhs.as_derived();
+	}
+
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], mod_op);
 		return lhs.as_derived();
 	}
 
@@ -2364,6 +2414,16 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
+								 const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], lshift_op);
+		return lhs.as_derived();
+	}
+
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator <<=(vector_base<W, T, C, D> &lhs,
@@ -2414,6 +2474,16 @@ namespace dsga
 								 const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
+		return lhs.as_derived();
+	}
+
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
+								 const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -2470,6 +2540,16 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], and_op);
+		return lhs.as_derived();
+	}
+
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator &=(vector_base<W, T, C, D> &lhs,
@@ -2523,6 +2603,16 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], or_op);
+		return lhs.as_derived();
+	}
+
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator |=(vector_base<W, T, C, D> &lhs,
@@ -2573,6 +2663,16 @@ namespace dsga
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
 		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
+		return lhs.as_derived();
+	}
+
+	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
+		bool W2, integral_dimensional_scalar T2, typename D2>
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
+								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+	{
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], xor_op);
 		return lhs.as_derived();
 	}
 
