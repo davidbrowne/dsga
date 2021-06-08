@@ -334,7 +334,7 @@ TEST_SUITE("test assignment")
 		SUBCASE("basic_vector operator &=")
 		{
 			uscal v1(0x276a9d76);
-			v1 &= 0x3810fc6a;
+			v1 &= 0x3810fc6au;
 			CHECK_EQ(v1, 0x20009c62);
 			v1 &= uscal(0x4609cee8);
 			CHECK_EQ(v1, 0x00008c60);
@@ -342,7 +342,7 @@ TEST_SUITE("test assignment")
 			uvec3 v3(0x6047ac15, 0x235bee1b, 0x6711e1df);
 			v3 &= uvec3(0x0a067d16, 0xcb433621, 0x74886c4c);
 			CHECK_EQ(v3, uvec3(0x00062c14, 0x03432601, 0x6400604c));
-			v3 &= 0x22e838c0;
+			v3 &= 0x22e838c0u;
 			CHECK_EQ(v3, uvec3(0x00002800, 0x02402000, 0x20002040));
 			v3 &= uthree.xxx;
 			CHECK_EQ(v3, uvec3(0x00000000, 0x02400000, 0x20000040));
@@ -353,7 +353,7 @@ TEST_SUITE("test assignment")
 		SUBCASE("indexed_vector operator &=")
 		{
 			uvec3 v3(0x328ad958, 0x817f512d, 0x961d14e0);
-			v3.zx &= 0x6de37037;
+			v3.zx &= 0x6de37037u;
 			CHECK_EQ(v3, uvec3(0x20825010, 0x817f512d, 0x04011020));
 			v3.xy &= utwo.yx;
 			CHECK_EQ(v3, uvec3(0x20004010, 0x007e500d, 0x04011020));
@@ -369,7 +369,7 @@ TEST_SUITE("test assignment")
 		SUBCASE("basic_vector operator |=")
 		{
 			uscal v1(0x276a9d76);
-			v1 |= 0x3810fc6a;
+			v1 |= 0x3810fc6au;
 			CHECK_EQ(v1, 0x3f7afd7e);
 			v1 |= uscal(0x4609cee8);
 			CHECK_EQ(v1, 0x7f7bfffe);
@@ -377,7 +377,7 @@ TEST_SUITE("test assignment")
 			uvec3 v3(0x6047ac15, 0x235bee1b, 0x6711e1df);
 			v3 |= uvec3(0x0a067d16, 0xcb433621, 0x74886c4c);
 			CHECK_EQ(v3, uvec3(0x6a47fd17, 0xeb5bfe3b, 0x7799eddf));
-			v3 |= 0x22e838c0;
+			v3 |= 0x22e838c0u;
 			CHECK_EQ(v3, uvec3(0x6aeffdd7, 0xebfbfefb, 0x77f9fddf));
 			v3 |= uthree.xxx;
 			CHECK_EQ(v3, uvec3(0xeefffdff, 0xeffbfefb, 0xfff9fdff));
@@ -388,7 +388,7 @@ TEST_SUITE("test assignment")
 		SUBCASE("indexed_vector operator |=")
 		{
 			uvec3 v3(0x328ad958, 0x817f512d, 0x961d14e0);
-			v3.zx |= 0x6de37037;
+			v3.zx |= 0x6de37037u;
 			CHECK_EQ(v3, uvec3(0x7febf97f, 0x817f512d, 0xffff74f7));
 			v3.xy |= utwo.yx;
 			CHECK_EQ(v3, uvec3(0xfffbfd7f, 0xa17ff57f, 0xffff74f7));
@@ -404,7 +404,7 @@ TEST_SUITE("test assignment")
 		SUBCASE("basic_vector operator ^=")
 		{
 			uscal v1(0x276a9d76);
-			v1 ^= 0x3810fc6a;
+			v1 ^= 0x3810fc6au;
 			CHECK_EQ(v1, 0x1f7a611c);
 			v1 ^= uscal(0x4609cee8);
 			CHECK_EQ(v1, 0x5973aff4);
@@ -412,7 +412,7 @@ TEST_SUITE("test assignment")
 			uvec3 v3(0x6047ac15, 0x235bee1b, 0x6711e1df);
 			v3 ^= uvec3(0x0a067d16, 0xcb433621, 0x74886c4c);
 			CHECK_EQ(v3, uvec3(0x6a41d103, 0xe818d83a, 0x13998d93));
-			v3 ^= 0x22e838c0;
+			v3 ^= 0x22e838c0u;
 			CHECK_EQ(v3, uvec3(0x48a9e9c3, 0xcaf0e0fa, 0x3171b553));
 			v3 ^= uthree.xxx;
 			CHECK_EQ(v3, uvec3(0xe6f93da8, 0x64a03491, 0x9f216138));
@@ -423,7 +423,7 @@ TEST_SUITE("test assignment")
 		SUBCASE("indexed_vector operator ^=")
 		{
 			uvec3 v3(0x328ad958, 0x817f512d, 0x961d14e0);
-			v3.zx ^= 0x6de37037;
+			v3.zx ^= 0x6de37037u;
 			CHECK_EQ(v3, uvec3(0x5f69a96f, 0x817f512d, 0xfbfe64d7));
 			v3.xy ^= utwo.yx;
 			CHECK_EQ(v3, uvec3(0xba716d72, 0xa101a572, 0xfbfe64d7));
