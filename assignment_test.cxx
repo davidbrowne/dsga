@@ -338,11 +338,11 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v1, 0x20009c62);
 			v1 &= uscal(0x4609cee8);
 			CHECK_EQ(v1, 0x00008c60);
-			// 450c1f3a145623765a4403ceec142e7b
+
 			uvec3 v3(0x6047ac15, 0x817f512d, 0x6711e1df);
 			v3 &= uvec3(0xe37f3941, 0xcb433621, 0x74886c4c);
 			CHECK_EQ(v3, uvec3(0x60472801, 0x81431021, 0x6400604c));
-			v3 &= 0xceec142e;
+			v3 &= 0xceec142eu;
 			CHECK_EQ(v3, uvec3(0x40440000, 0x80401020, 0x4400000c));
 			v3 &= uthree.xxx;
 			CHECK_EQ(v3, uvec3(0x00400000, 0x80401020, 0x04000008));

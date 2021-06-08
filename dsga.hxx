@@ -1902,10 +1902,11 @@ namespace dsga
 										const vector_base<W, T, C, D> &arg,
 										UnOp &lambda) noexcept
 		{
+			using ReturnType = unary_op_return_t<UnOp, T>;
 			if constexpr (C > 1u)
-				return basic_vector<unary_op_return_t<UnOp, T>, C>(lambda(arg[Is])...);
+				return basic_vector<ReturnType, C>(lambda(arg[Is])...);
 			else
-				return static_cast<unary_op_return_t<UnOp, T>>(lambda(arg[0u]));
+				return static_cast<ReturnType>(lambda(arg[0u]));
 		}
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
@@ -1915,10 +1916,12 @@ namespace dsga
 										 const vector_base<W2, T2, C, D2> &rhs,
 										 BinOp &lambda) noexcept
 		{
+			using ArgType = std::common_type_t<T1, T2>;
+			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
 			if constexpr (C > 1u)
-				return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
+				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
 			else
-				return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[0u], rhs[0u]));
+				return static_cast<ReturnType>(lambda(static_cast<ArgType>(lhs[0u]), static_cast<ArgType>(rhs[0u])));
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -1928,10 +1931,12 @@ namespace dsga
 										 U rhs,
 										 BinOp &lambda) noexcept
 		{
+			using ArgType = std::common_type_t<T, U>;
+			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
 			if constexpr (C > 1u)
-				return basic_vector<binary_op_return_t<BinOp, T, U>, C>(lambda(lhs[Is], rhs)...);
+				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
 			else
-				return static_cast<binary_op_return_t<BinOp, T, U>>(lambda(lhs[0u], rhs));
+				return static_cast<ReturnType>(lambda(static_cast<ArgType>(lhs[0u]), static_cast<ArgType>(rhs)));
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -1940,6 +1945,47 @@ namespace dsga
 										 U lhs,
 										 const vector_base<W, T, C, D> &rhs,
 										 BinOp &lambda) noexcept
+		{
+			using ArgType = std::common_type_t<T, U>;
+			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
+			if constexpr (C > 1u)
+				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs), static_cast<ArgType>(rhs[Is]))...);
+			else
+				return static_cast<ReturnType>(lambda(static_cast<ArgType>(lhs), static_cast<ArgType>(rhs[0u])));
+		}
+
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute_plain(std::index_sequence<Is...> /* dummy */,
+											   const vector_base<W1, T1, C, D1> &lhs,
+											   const vector_base<W2, T2, C, D2> &rhs,
+											   BinOp &lambda) noexcept
+		{
+			if constexpr (C > 1u)
+				return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
+			else
+				return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[0u], rhs[0u]));
+		}
+
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute_plain(std::index_sequence<Is...> /* dummy */,
+											   const vector_base<W, T, C, D> &lhs,
+											   U rhs,
+											   BinOp &lambda) noexcept
+		{
+			if constexpr (C > 1u)
+				return basic_vector<binary_op_return_t<BinOp, T, U>, C>(lambda(lhs[Is], rhs)...);
+			else
+				return static_cast<binary_op_return_t<BinOp, T, U>>(lambda(lhs[0u], rhs));
+		}
+
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute_plain(std::index_sequence<Is...> /* dummy */,
+											   U lhs,
+											   const vector_base<W, T, C, D> &rhs,
+											   BinOp &lambda) noexcept
 		{
 			if constexpr (C > 1u)
 				return basic_vector<binary_op_return_t<BinOp, U, T>, C>(lambda(lhs, rhs[Is])...);
@@ -1961,7 +2007,8 @@ namespace dsga
 									 const vector_base<W2, T2, C, D2> &rhs,
 									 BinOp &lambda) noexcept
 		{
-			lhs.set(lambda(lhs[Is], rhs[Is])...);
+			using ArgType = std::common_type_t<T1, T2>;
+			lhs.set(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -1971,6 +2018,29 @@ namespace dsga
 									 vector_base<W, T, C, D> &lhs,
 									 U rhs,
 									 BinOp &lambda) noexcept
+		{
+			using ArgType = std::common_type_t<T, U>;
+			lhs.set(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
+		}
+
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		requires W1
+		constexpr void binary_op_set_plain(std::index_sequence<Is...> /* dummy */,
+										   vector_base<W1, T1, C, D1> &lhs,
+										   const vector_base<W2, T2, C, D2> &rhs,
+										   BinOp &lambda) noexcept
+		{
+			lhs.set(lambda(lhs[Is], rhs[Is])...);
+		}
+
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		requires W
+		constexpr void binary_op_set_plain(std::index_sequence<Is...> /* dummy */,
+										   vector_base<W, T, C, D> &lhs,
+										   U rhs,
+										   BinOp &lambda) noexcept
 		{
 			lhs.set(lambda(lhs[Is], rhs)...);
 		}
@@ -2410,7 +2480,7 @@ namespace dsga
 	constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
+		detail::binary_op_set_plain(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -2420,7 +2490,7 @@ namespace dsga
 	constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], lshift_op);
+		detail::binary_op_set_plain(std::make_index_sequence<C>{}, lhs, rhs[0u], lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -2429,7 +2499,7 @@ namespace dsga
 	constexpr auto &operator <<=(vector_base<W, T, C, D> &lhs,
 								 U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
+		detail::binary_op_set_plain(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -2440,11 +2510,11 @@ namespace dsga
 							   const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, lshift_op);
+			return detail::binary_op_execute_plain(std::make_index_sequence<C1>{}, lhs, rhs, lshift_op);
 		else if constexpr (C1 == 1u)
-			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, lshift_op);
+			return detail::binary_op_execute_plain(std::make_index_sequence<C2>{}, lhs[0u], rhs, lshift_op);
 		else if constexpr (C2 == 1u)
-			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], lshift_op);
+			return detail::binary_op_execute_plain(std::make_index_sequence<C1>{}, lhs, rhs[0u], lshift_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2452,7 +2522,7 @@ namespace dsga
 	constexpr auto operator <<(const vector_base<W, T, C, D> &lhs,
 							   U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
+		return detail::binary_op_execute_plain(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2460,7 +2530,7 @@ namespace dsga
 	constexpr auto operator <<(U lhs,
 							   const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
+		return detail::binary_op_execute_plain(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 	}
 
 	// binary operators >>=, >>
@@ -2473,7 +2543,7 @@ namespace dsga
 	constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
+		detail::binary_op_set_plain(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -2483,7 +2553,7 @@ namespace dsga
 	constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], rshift_op);
+		detail::binary_op_set_plain(std::make_index_sequence<C>{}, lhs, rhs[0u], rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -2492,7 +2562,7 @@ namespace dsga
 	constexpr auto &operator >>=(vector_base<W, T, C, D> &lhs,
 								 U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
+		detail::binary_op_set_plain(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -2503,11 +2573,11 @@ namespace dsga
 							   const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, rshift_op);
+			return detail::binary_op_execute_plain(std::make_index_sequence<C1>{}, lhs, rhs, rshift_op);
 		else if constexpr (C1 == 1u)
-			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, rshift_op);
+			return detail::binary_op_execute_plain(std::make_index_sequence<C2>{}, lhs[0u], rhs, rshift_op);
 		else if constexpr (C2 == 1u)
-			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], rshift_op);
+			return detail::binary_op_execute_plain(std::make_index_sequence<C1>{}, lhs, rhs[0u], rshift_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2515,7 +2585,7 @@ namespace dsga
 	constexpr auto operator >>(const vector_base<W, T, C, D> &lhs,
 							   U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
+		return detail::binary_op_execute_plain(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2523,7 +2593,7 @@ namespace dsga
 	constexpr auto operator >>(U lhs,
 							   const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
+		return detail::binary_op_execute_plain(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 	}
 
 	// binary operators &=, &

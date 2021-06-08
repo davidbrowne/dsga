@@ -4,7 +4,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 
-#include "dev_3rd/nanobench.h"
+//#include "dev_3rd/nanobench.h"
 #include "dsga.hxx"
 
 
@@ -450,7 +450,7 @@ constexpr auto sum4(const dsga::vector_base<W1, T1, C, D1> &lhs,
 	return v;
 }
 
-
+#if 0
 void bench()
 {
 	dvec4 v1(1, 2, 3, 4);
@@ -517,7 +517,7 @@ void bench()
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum4 basic indexed",
 	//							   [&] { auto v = sum4(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
 }
-
+#endif
 
 #if defined(__clang__)
 // clang 10.0 does not like colors on windows (link problems with isatty and fileno)
