@@ -1,9 +1,11 @@
-#pragma once
-
 //          Copyright David Browne 2020-2021.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
+
+// opening include guard
+#if !defined(CXCM_CXCM_HXX)
+#define CXCM_CXCM_HXX
 
 #include <limits>
 #include <type_traits>
@@ -18,7 +20,7 @@
 
 constexpr inline int CXCM_MAJOR_VERSION = 0;
 constexpr inline int CXCM_MINOR_VERSION = 1;
-constexpr inline int CXCM_PATCH_VERSION = 3;
+constexpr inline int CXCM_PATCH_VERSION = 4;
 
 namespace cxcm
 {
@@ -687,7 +689,9 @@ namespace cxcm
 		// sqrt()
 		//
 
-#if !defined(CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
+#if CXCM_APPROXIMATIONS_ALLOWED
+
+	#if !defined(CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
 
 		template <std::floating_point T>
 		constexpr T sqrt(T value) noexcept
@@ -702,7 +706,7 @@ namespace cxcm
 			}
 		}
 
-#else
+	#else
 
 		template <std::floating_point T>
 		constexpr T sqrt(T value) noexcept
@@ -710,13 +714,25 @@ namespace cxcm
 			return detail::constexpr_sqrt(value);
 		}
 
+	#endif
+
+#else
+
+	template <std::floating_point T>
+	T sqrt(T value) noexcept
+	{
+		return std::sqrt(value);
+	}
+
 #endif
 
 		//
 		// rsqrt() - inverse square root
 		//
 
-#if !defined(CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
+#if CONSTEXPR_APPROXIMATIONS_ALLOWED
+
+	#if !defined(CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
 
 		template <std::floating_point T>
 		constexpr T rsqrt(T value) noexcept
@@ -731,7 +747,7 @@ namespace cxcm
 			}
 		}
 
-#else
+	#else
 
 		template <std::floating_point T>
 		constexpr T rsqrt(T value) noexcept
@@ -739,8 +755,21 @@ namespace cxcm
 			return detail::constexpr_rsqrt(value);
 		}
 
+	#endif
+
+#else
+
+	template <std::floating_point T>
+	T rsqrt(T value) noexcept
+	{
+		return T(1.0) / std::sqrt(value);
+	}
+
 #endif
 
 	} // namespace strict
 
 } // namespace cxcm
+
+// closing include guard
+#endif
