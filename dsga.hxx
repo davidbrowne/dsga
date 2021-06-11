@@ -3084,19 +3084,69 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, atanh_op);
 		}
 
-#if 0
 		//
 		// 8.2 - exponential
 		//
 
-		pow();
-		exp();
-		log();
-		exp2();
-		log2();
-		sqrt();
-		inversesqrt();
+		constexpr inline auto pow_op = []<floating_point_dimensional_scalar U>(U base, U exp) { return std::pow(base, exp); };
 
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1,
+		bool W2, typename D2>
+		auto pow(const vector_base<W1, T, C, D1> &base,
+				 const vector_base<W2, T, C, D2> &exp)
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, base, exp, pow_op);
+		}
+
+		constexpr inline auto exp_op = [](floating_point_dimensional_scalar auto arg) { return std::exp(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto exp(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, exp_op);
+		}
+
+		constexpr inline auto log_op = [](floating_point_dimensional_scalar auto arg) { return std::log(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto log(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, log_op);
+		}
+
+		constexpr inline auto exp2_op = [](floating_point_dimensional_scalar auto arg) { return std::exp2(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto exp2(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, exp2_op);
+		}
+
+		constexpr inline auto log2_op = [](floating_point_dimensional_scalar auto arg) { return std::log2(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto log2(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, log2_op);
+		}
+
+		constexpr inline auto sqrt_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::sqrt(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto sqrt(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sqrt_op);
+		}
+
+		constexpr inline auto rsqrt_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::rsqrt(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto inversesqrt(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, rsqrt_op);
+		}
+
+#if 0
 		//
 		// 8.3 - common
 		//
