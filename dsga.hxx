@@ -14,7 +14,9 @@
 #include <algorithm>				// min()
 #include <span>						// external types to/from vectors
 #include <stdexcept>
+#include <numbers>
 #include <bit>						// bit_cast
+#include "cxcm.hxx"
 
 //
 // Data Structures for Geometric Algebra (dsga)
@@ -46,6 +48,14 @@ namespace dsga
 	// plain undecorated integral types
 	template <typename T>
 	concept integral_dimensional_scalar = std::integral<T> && dimensional_scalar<T>;
+
+	// plain undecorated floating point types
+	template <typename T>
+	concept floating_point_dimensional_scalar = std::floating_point<T> && dimensional_scalar<T>;
+
+	// plain undecorated boolean type
+	template <typename T>
+	concept boolean_dimensional_scalar = std::same_as<bool, T> && dimensional_scalar<T>;
 
 	// want the size to be between 1 and 4, inclusive
 	template <std::size_t Size>
@@ -2938,6 +2948,228 @@ namespace dsga
 		return std::move(arg[N]);
 	}
 
+	//
+	//
+	// vector functions
+	//
+	//
+
+	namespace functions
+	{
+		//
+		// 8.1 - angle and trigonometry
+		//
+
+		template <std::floating_point T>
+		inline constexpr T degrees_per_radian_v = std::numbers::inv_pi_v<T> * T(180);
+
+		template <std::floating_point T>
+		inline constexpr T radians_per_degree_v = std::numbers::pi_v<T> / T(180);
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto radians(const vector_base<W, T, C, D> &deg)
+		{
+			return deg * radians_per_degree_v<T>;
+		}
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto degrees(const vector_base<W, T, C, D> &rad)
+		{
+			return rad * degrees_per_radian_v<T>;
+		}
+
+		constexpr inline auto sin_op = [](floating_point_dimensional_scalar auto arg) { return std::sin(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto sin(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sin_op);
+		}
+
+		constexpr inline auto cos_op = [](floating_point_dimensional_scalar auto arg) { return std::cos(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto cos(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, cos_op);
+		}
+
+		constexpr inline auto tan_op = [](floating_point_dimensional_scalar auto arg) { return std::tan(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto tan(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, tan_op);
+		}
+
+		constexpr inline auto asin_op = [](floating_point_dimensional_scalar auto arg) { return std::asin(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto asin(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, asin_op);
+		}
+
+		constexpr inline auto acos_op = [](floating_point_dimensional_scalar auto arg) { return std::acos(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto acos(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, acos_op);
+		}
+
+		constexpr inline auto atan_op = [](floating_point_dimensional_scalar auto arg) { return std::atan(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto atan(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, atan_op);
+		}
+
+		constexpr inline auto atan2_op = []<floating_point_dimensional_scalar U>(U arg_y, U arg_x) { return std::atan2(arg_y, arg_x); };
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1,
+		bool W2, typename D2>
+		auto atan(const vector_base<W1, T, C, D1> &y,
+				  const vector_base<W2, T, C, D2> &x)
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, y, x, atan2_op);
+		}
+
+		constexpr inline auto sinh_op = [](floating_point_dimensional_scalar auto arg) { return std::atan(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto sinh(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, atan_op);
+		}
+
+		constexpr inline auto cosh_op = [](floating_point_dimensional_scalar auto arg) { return std::cosh(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto cosh(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, cosh_op);
+		}
+
+		constexpr inline auto tanh_op = [](floating_point_dimensional_scalar auto arg) { return std::tanh(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto tanh(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, tanh_op);
+		}
+
+		constexpr inline auto asinh_op = [](floating_point_dimensional_scalar auto arg) { return std::asinh(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto asinh(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, asinh_op);
+		}
+
+		constexpr inline auto acosh_op = [](floating_point_dimensional_scalar auto arg) { return std::acosh(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto acosh(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, acosh_op);
+		}
+
+		constexpr inline auto atanh_op = [](floating_point_dimensional_scalar auto arg) { return std::atanh(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		auto atanh(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, atanh_op);
+		}
+
+#if 0
+		//
+		// 8.2 - exponential
+		//
+
+		pow();
+		exp();
+		log();
+		exp2();
+		log2();
+		sqrt();
+		inversesqrt();
+
+		//
+		// 8.3 - common
+		//
+
+		abs();
+		sign();
+		floor();
+		trunc();
+		round();
+		roundEven();
+		ceil();
+		fract();
+		mod();
+		modf();
+		min();
+		max();
+		clamp();
+		mix();
+		step();
+		smoothstep();
+		isnan();
+		isinf();
+		floatBitsToInt();
+		floatBitsToUint();
+		intBitsToFloat();
+		uintBitsToFloat();
+		fma();
+		frexp();
+		ldexp();
+
+		//
+		// 8.4 is omitted
+		//
+
+		//
+		// 8.5 - geometric
+		//
+
+		length();
+		distance();
+		dot();
+		cross();
+		normalize();
+		// no ftransform()
+		faceforward();		// ??
+		reflect();			// ??
+		refract();			// ??
+
+		//
+		// 8.6 is matrix functions which will happen when we have matrices
+		//
+
+		//
+		// 8.7 - vector relational
+		//
+
+		lessThan();
+		lessThanEqual();
+		greaterThan();
+		greaterThanEqual();
+		equal();
+		notEqual();
+		any();
+		all();
+		not();
+
+		//
+		// 8.8 - 8.19 are omitted
+		//
+
+#endif
+	}
+
 }	// namespace dsga
 
 //
@@ -3118,6 +3350,11 @@ using dscal = vectype1<double>;
 using dvec2 = vectype2<double>;
 using dvec3 = vectype3<double>;
 using dvec4 = vectype4<double>;
+
+//
+// bring the vector functions into the global namespace
+//
+using namespace dsga::functions;
 
 // closing include guard
 #endif

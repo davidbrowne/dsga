@@ -179,6 +179,11 @@ fvec4 sometest()
 		++shuff_dest_indx;
 	}
 
+	auto ttt = dsga::functions::radians(fvec3(123, 55, 40));
+	[[maybe_unused]] auto uuu = degrees(ttt);
+	[[maybe_unused]] auto vvv = sin(ttt);
+
+
 	[[ maybe_unused ]] ivec4 next_src{ 0, 0, 0, 0 };
 //	ivec4 next_dest;
 
