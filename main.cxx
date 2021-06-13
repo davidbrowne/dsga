@@ -417,15 +417,6 @@ constexpr auto sum2(const dsga::vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 	bool W2, dsga::dimensional_scalar T2, typename D2>
 requires dsga::implicitly_convertible_to<T2, T1> || dsga::implicitly_convertible_to<T1, T2>
-constexpr auto sum2a(const dsga::vector_base<W1, T1, C, D1> &lhs,
-					 const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
-{
-	return dsga::detail::lower_level_impl::binary_op_execute(dsga::plus_op, lhs.data(), lhs.sequence(), rhs.data(), rhs.sequence());
-}
-
-template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-	bool W2, dsga::dimensional_scalar T2, typename D2>
-requires dsga::implicitly_convertible_to<T2, T1> || dsga::implicitly_convertible_to<T1, T2>
 constexpr auto sum3(const dsga::vector_base<W1, T1, C, D1> &lhs,
 					const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
 {
@@ -465,8 +456,6 @@ void bench()
 								   [&] { auto v = sum1(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2 basic basic",
 								   [&] { auto v = sum2(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
-	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2a basic basic",
-								   [&] { auto v = sum2a(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum3 basic basic",
 	//							   [&] { auto v = sum3(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum4 basic basic",
@@ -475,8 +464,6 @@ void bench()
 								   [&] { auto v = sum1(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2 basic basic",
 								   [&] { auto v = sum2(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
-	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2a basic basic",
-								   [&] { auto v = sum2a(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum3 basic basic",
 	//							   [&] { auto v = sum3(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum4 basic basic",
@@ -485,8 +472,6 @@ void bench()
 								   [&] { auto v = sum1(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2 basic basic",
 								   [&] { auto v = sum2(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
-	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2a basic basic",
-								   [&] { auto v = sum2a(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum3 basic basic",
 	//							   [&] { auto v = sum3(v1, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum4 basic basic",
@@ -495,8 +480,6 @@ void bench()
 								   [&] { auto v = sum1(v1.wzyx, v2.xxxx); ankerl::nanobench::doNotOptimizeAway(v); });
 	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2 indexed indexed",
 								   [&] { auto v = sum2(v1.wzyx, v2.xxxx); ankerl::nanobench::doNotOptimizeAway(v); });
-	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2a indexed indexed",
-								   [&] { auto v = sum2a(v1.wzyx, v2.xxxx); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum3 indexed indexed",
 	//							   [&] { auto v = sum3(v1.wzyx, v2.xxxx); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum4 indexed indexed",
@@ -505,8 +488,6 @@ void bench()
 								   [&] { auto v = sum1(v1.wzyx, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2 indexed basic",
 								   [&] { auto v = sum2(v1.wzyx, v2); ankerl::nanobench::doNotOptimizeAway(v); });
-	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2a indexed basic",
-								   [&] { auto v = sum2a(v1.wzyx, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum3 indexed basic",
 	//							   [&] { auto v = sum3(v1.wzyx, v2); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum4 indexed basic",
@@ -515,8 +496,6 @@ void bench()
 								   [&] { auto v = sum1(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
 	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2 basic indexed",
 								   [&] { auto v = sum2(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
-	ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum2a basic indexed",
-								   [&] { auto v = sum2a(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum3 basic indexed",
 	//							   [&] { auto v = sum3(v1, v2.wzyx); ankerl::nanobench::doNotOptimizeAway(v); });
 	//ankerl::nanobench::Bench().minEpochIterations(1000000).run("sum4 basic indexed",
