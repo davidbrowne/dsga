@@ -2883,7 +2883,7 @@ namespace dsga
 	}
 
 	//
-	// equality comparisons
+	// equality comparisons - these make unit tests easier, otherwise use vector relational functions (section 8.7)
 	//
 
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
@@ -2892,22 +2892,20 @@ namespace dsga
 	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
 							   const vector_base<W2, T2, C, D2> &second) noexcept
 	{
-		for (std::size_t i = 0; i < C; ++i)
-			if (first[i] != static_cast<T1>(second[i]))
-				return false;
-
-		return true;
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		{
+			return ((first[Is] == static_cast<T1>(second[Is])) && ...);
+		}(std::make_index_sequence<C>{});
 	}
 
 	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
 							   const vector_base<W2, T, C, D2> &second) noexcept
 	{
-		for (std::size_t i = 0; i < C; ++i)
-			if (first[i] != second[i])
-				return false;
-
-		return true;
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		{
+			return ((first[Is] == second[Is]) && ...);
+		}(std::make_index_sequence<C>{});
 	}
 
 	// when Count == 1, treat it like a scalar value
@@ -3496,6 +3494,10 @@ namespace dsga
 			return x / length(x);
 		}
 
+		//
+		// vec4 ftransform() omitted
+		//
+		
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1,
 			bool W2, typename D2, bool W3, typename D3>
 		constexpr auto faceforward(const vector_base<W1, T, C, D1> &n,
@@ -3531,27 +3533,95 @@ namespace dsga
 		// 8.6 is matrix functions which will happen when we have matrices
 		//
 
-#if 0
-
 		//
 		// 8.7 - vector relational
 		//
 
-		lessThan();
-		lessThanEqual();
-		greaterThan();
-		greaterThanEqual();
-		equal();
-		notEqual();
-		any();
-		all();
-		not();
+		constexpr inline auto less_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x < y; };
+
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
+								const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, less_op);
+		}
+
+		constexpr inline auto less_equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x <= y; };
+
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
+									 const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, less_equal_op);
+		}
+
+		constexpr inline auto greater_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x > y; };
+
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
+								   const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, greater_op);
+		}
+
+		constexpr inline auto greater_equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x >= y; };
+
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
+								   const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, greater_equal_op);
+		}
+
+		constexpr inline auto equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x == y; };
+
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto equal(const vector_base<W1, T, C, D1> &x,
+							 const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, equal_op);
+		}
+
+		constexpr inline auto not_equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x != y; };
+
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
+								const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, not_equal_op);
+		}
+
+		template <bool W, std::size_t C, typename D>
+		constexpr bool any(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return (x[Is] || ...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <bool W, std::size_t C, typename D>
+		constexpr bool all(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return (x[Is] && ...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		constexpr inline auto not_op = [](bool x) -> bool { return !x; };
+
+		// c++ is not allowing a function named not()
+		template <bool W, std::size_t C, typename D>
+		constexpr auto Not(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, x, not_op);
+		}
 
 		//
 		// 8.8 - 8.19 are omitted
 		//
 
-#endif
 	}
 
 }	// namespace dsga
