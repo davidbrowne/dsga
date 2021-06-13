@@ -20,7 +20,7 @@
 
 constexpr inline int CXCM_MAJOR_VERSION = 0;
 constexpr inline int CXCM_MINOR_VERSION = 1;
-constexpr inline int CXCM_PATCH_VERSION = 4;
+constexpr inline int CXCM_PATCH_VERSION = 5;
 
 namespace cxcm
 {
@@ -172,6 +172,57 @@ namespace cxcm
 		template <std::floating_point T>
 		constexpr T round(T value) noexcept
 		{
+			// zero could be handled either place, but here it is with the negative values.
+
+			// positive value, taking care of halfway case.
+			if (value > T(0))
+				return trunc(value + T(0.5f));
+
+			// negative or zero value, taking care of halfway case.
+			return trunc(value - T(0.5f));
+		}
+
+		//
+		// fract() - not in standard library
+		//
+
+		// the fractional part of a floating point number - always non-negative.
+
+		template <std::floating_point T>
+		constexpr T fract(T value) noexcept
+		{
+			return value - floor(value);
+		}
+
+		//
+		// fmod()
+		//
+
+		// the floating point remainder of division
+
+		template <std::floating_point T>
+		constexpr T fmod(T x, T y) noexcept
+		{
+			return x - trunc(x / y) * y;
+		}
+
+		//
+		// round_even() - not in standard library
+		//
+
+		// rounds to nearest integral position, halfway cases towards even
+
+		template <std::floating_point T>
+		constexpr T round_even(T value) noexcept
+		{
+			T trunc_value = trunc(value);
+			bool is_even = (fmod(trunc_value, T(2)) == T(0));
+			bool is_halfway = (fract(value) == T(0.5));
+
+			if (is_halfway)
+				if (is_even)
+					value = trunc_value;
+
 			// zero could be handled either place, but here it is with the negative values.
 
 			// positive value, taking care of halfway case.
@@ -463,6 +514,68 @@ namespace cxcm
 			}
 
 			//
+			// constexpr_fract()
+			//
+
+			template <std::floating_point T>
+			constexpr T constexpr_fract(T value) noexcept
+			{
+				// screen out unnecessary input
+				if (fails_fractional_input_constraints(value))
+					return value;
+
+				return relaxed::fract(value);
+			}
+
+			//
+			// constexpr_fmod()
+			//
+
+			template <std::floating_point T>
+			constexpr T constexpr_fmod(T x, T y) noexcept
+			{
+				// screen out unnecessary input
+
+				if (isnan(x) || isnan(y) || !isfinite(x))
+					return std::numeric_limits<T>::quiet_NaN();
+
+				if (isinf(y))
+					return x;
+
+				if (x == T(0) && y != T(0))
+					return 0;
+
+				if (y == 0)
+					return std::numeric_limits<T>::quiet_NaN();
+
+				return relaxed::fmod(x, y);
+			}
+
+			//
+			// constexpr_round_even()
+			//
+
+			// rounds to nearest integral position, halfway cases away from zero
+
+			template <std::floating_point T>
+			constexpr T constexpr_round_even(T value) noexcept
+			{
+				// screen out unnecessary input
+				if (fails_fractional_input_constraints(value))
+					return value;
+
+				// halfway rounding can bump into max long long value for truncation
+				// (for extended precision), so be more gentle at the end points.
+				// this works because the largest_fractional_value remainder is T(0.5f).
+				if (value == limits::largest_fractional_value<T>)
+					return value + T(0.5f);
+				else if (value == -limits::largest_fractional_value<T>)			// we technically don't have to do this for negative case (one more number in negative range)
+					return value - T(0.5f);
+
+				return relaxed::round_even(value);
+			}
+
+			//
 			// constexpr_sqrt()
 			//
 
@@ -684,6 +797,67 @@ namespace cxcm
 		}
 
 #endif
+
+		//
+		// fract()
+		//
+
+		// there is no standard c++ version of this, so always call constexpr version
+
+		// the fractional part of a floating point number - always non-negative.
+
+		template <std::floating_point T>
+		constexpr T fract(T value) noexcept
+		{
+			return detail::constexpr_fract(value);
+		}
+
+		//
+		// fmod()
+		//
+
+#if !defined(CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
+
+		// the floating point remainder of division
+
+		template <std::floating_point T>
+		constexpr T fmod(T x, T y) noexcept
+		{
+			if (std::is_constant_evaluated())
+			{
+				return detail::constexpr_fmod(x, y);
+			}
+			else
+			{
+				return std::fmod(x, y);
+			}
+		}
+
+#else
+
+		// the floating point remainder of division
+
+		template <std::floating_point T>
+		constexpr T fmod(T value) noexcept
+		{
+			return detail::constexpr_fmod(x, y);
+		}
+
+#endif
+
+		//
+		// round_even()
+		//
+
+		// there is no standard c++ version of this, so always call constexpr version
+
+		// rounds to nearest integral position, halfway cases towards even
+
+		template <std::floating_point T>
+		constexpr T round_even(T value) noexcept
+		{
+			return detail::constexpr_round_even(value);
+		}
 
 		//
 		// sqrt()
