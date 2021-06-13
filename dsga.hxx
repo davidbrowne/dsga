@@ -1900,6 +1900,9 @@ namespace dsga
 		template <typename BinOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U>
 		using binary_op_return_t = decltype(BinOp()(std::declval<T>(), std::declval<U>()));
 
+		template <typename TernOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U, dsga::dimensional_scalar V>
+		using ternary_op_return_t = decltype(TernOp()(std::declval<T>(), std::declval<U>(), std::declval<V>()));
+
 		//
 		// these rely on vector_base::operator[] to have dealt with indirection, if any, of derived vector types.
 		//
@@ -1969,6 +1972,20 @@ namespace dsga
 		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
 													const vector_base<W1, T1, C, D1> &lhs,
 													const vector_base<W2, T2, C, D2> &rhs,
+													BinOp &lambda) noexcept
+		{
+			if constexpr (C > 1u)
+				return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
+			else
+				return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[0u], rhs[0u]));
+		}
+
+		// second argument is non-const
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
+													const vector_base<W1, T1, C, D1> &lhs,
+													vector_base<W2, T2, C, D2> &rhs,
 													BinOp &lambda) noexcept
 		{
 			if constexpr (C > 1u)
@@ -2053,6 +2070,87 @@ namespace dsga
 												BinOp &lambda) noexcept
 		{
 			lhs.set(lambda(lhs[Is], rhs)...);
+		}
+
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, bool W3, dsga::dimensional_scalar T3, typename D3,
+			typename TernOp, std::size_t ...Is>
+		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 const vector_base<W1, T1, C, D1> &x,
+										 const vector_base<W2, T2, C, D2> &y,
+										 const vector_base<W3, T3, C, D3> &z,
+										 TernOp &lambda) noexcept
+		{
+			using ArgType = std::common_type_t<T1, T2, T3>;
+			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			if constexpr (C > 1u)
+				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z[Is]))...);
+			else
+				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x[0u]), static_cast<ArgType>(y[0u]), static_cast<ArgType>(z[0u])));
+		}
+
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2, dsga::dimensional_scalar U, typename TernOp, std::size_t ...Is>
+		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 const vector_base<W1, T1, C, D1> &x,
+										 const vector_base<W2, T2, C, D2> &y,
+										 U z,
+										 TernOp &lambda) noexcept
+		{
+			using ArgType = std::common_type_t<T1, T2, U>;
+			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			if constexpr (C > 1u)
+				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z))...);
+			else
+				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x[0u]), static_cast<ArgType>(y[0u]), static_cast<ArgType>(z)));
+		}
+
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, dsga::dimensional_scalar V, typename TernOp, std::size_t ...Is>
+		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 const vector_base<W, T, C, D> &x,
+										 U y,
+										 V z,
+										 TernOp &lambda) noexcept
+		{
+			using ArgType = std::common_type_t<T, U, V>;
+			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			if constexpr (C > 1u)
+				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y), static_cast<ArgType>(z))...);
+			else
+				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x[0u]), static_cast<ArgType>(y), static_cast<ArgType>(z)));
+		}
+
+		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
+			dsga::dimensional_scalar U, dsga::dimensional_scalar V, typename TernOp, std::size_t ...Is>
+		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+										 U x,
+										 V y,
+										 const vector_base<W, T, C, D> &z,
+										 TernOp &lambda) noexcept
+		{
+			using ArgType = std::common_type_t<T, U, V>;
+			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			if constexpr (C > 1u)
+				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x), static_cast<ArgType>(y), static_cast<ArgType>(z[Is]))...);
+			else
+				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x), static_cast<ArgType>(y), static_cast<ArgType>(z[0u])));
+		}
+
+		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dsga::dimensional_scalar T2, typename D2,
+			bool W3, dsga::dimensional_scalar T3, typename D3,
+			typename TernOp, std::size_t ...Is>
+		constexpr auto ternary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
+													 const vector_base<W1, T1, C, D1> &x,
+													 const vector_base<W2, T2, C, D2> &y,
+													 const vector_base<W3, T3, C, D3> &z,
+													 TernOp &lambda) noexcept
+		{
+			if constexpr (C > 1u)
+				return basic_vector<ternary_op_return_t<TernOp, T1, T2, T3>, C>(lambda(x[Is], y[Is], z[Is])...);
+			else
+				return static_cast<ternary_op_return_t<TernOp, T1, T2, T3>>(lambda(x[0u], y[0u], z[0u]));
 		}
 
 
@@ -2409,7 +2507,7 @@ namespace dsga
 
 	// binary operators %=, %
 
-	constexpr inline auto mod_op = [](auto lhs, auto rhs) { return lhs % rhs; };
+	constexpr inline auto modulus_op = [](auto lhs, auto rhs) { return lhs % rhs; };
 
 	template <bool W1, integral_dimensional_scalar T1, std::size_t C, typename D1,
 		bool W2, integral_dimensional_scalar T2, typename D2>
@@ -2417,7 +2515,7 @@ namespace dsga
 	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -2427,7 +2525,7 @@ namespace dsga
 	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], mod_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs[0u], modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -2436,7 +2534,7 @@ namespace dsga
 	constexpr auto &operator %=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
+		detail::binary_op_set(std::make_index_sequence<C>{}, lhs, rhs, modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -2447,11 +2545,11 @@ namespace dsga
 							  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, mod_op);
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs, modulus_op);
 		else if constexpr (C1 == 1u)
-			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, mod_op);
+			return detail::binary_op_execute(std::make_index_sequence<C2>{}, lhs[0u], rhs, modulus_op);
 		else if constexpr (C2 == 1u)
-			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], mod_op);
+			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], modulus_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2459,7 +2557,7 @@ namespace dsga
 	constexpr auto operator %(const vector_base<W, T, C, D> &lhs,
 							  U rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, modulus_op);
 	}
 
 	template <bool W, integral_dimensional_scalar T, std::size_t C, typename D, std::integral U>
@@ -2467,7 +2565,7 @@ namespace dsga
 	constexpr auto operator %(U lhs,
 							  const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, mod_op);
+		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, modulus_op);
 	}
 
 	// unary operator ~
@@ -3090,8 +3188,7 @@ namespace dsga
 
 		constexpr inline auto pow_op = []<floating_point_dimensional_scalar U>(U base, U exp) { return std::pow(base, exp); };
 
-		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1,
-		bool W2, typename D2>
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		auto pow(const vector_base<W1, T, C, D1> &base,
 				 const vector_base<W2, T, C, D2> &exp)
 		{
@@ -3146,41 +3243,309 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, rsqrt_op);
 		}
 
-#if 0
 		//
 		// 8.3 - common
 		//
 
-		abs();
-		sign();
-		floor();
-		trunc();
-		round();
-		roundEven();
-		ceil();
-		fract();
-		mod();
-		modf();
-		min();
-		max();
-		clamp();
-		mix();
-		step();
-		smoothstep();
-		isnan();
-		isinf();
-		floatBitsToInt();
-		floatBitsToUint();
-		intBitsToFloat();
-		uintBitsToFloat();
-		fma();
-		frexp();
-		ldexp();
+		constexpr inline auto abs_op = [](dimensional_scalar auto arg) { return cxcm::abs(arg); };
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto abs(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, abs_op);
+		}
+
+		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) { return (arg > T(0)) ? T(1) : ((arg < T(0)) ? T(-1) : T(0)); };
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto sign(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sign_op);
+		}
+
+		constexpr inline auto floor_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::floor(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto floor(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, floor_op);
+		}
+
+		constexpr inline auto trunc_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::trunc(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto trunc(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, trunc_op);
+		}
+
+		constexpr inline auto round_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::round(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto round(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, round_op);
+		}
+
+		constexpr inline auto round_even_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::round_even(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto roundEven(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, round_even_op);
+		}
+
+		constexpr inline auto ceil_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::ceil(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto ceil(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, ceil_op);
+		}
+
+		constexpr inline auto fract_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::fract(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto fract(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, fract_op);
+		}
+
+		constexpr inline auto mod_op = []<floating_point_dimensional_scalar T>(T x, T y) { return x - y * cxcm::floor(x / y); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto mod(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, mod_op);
+		}
+
+		constexpr inline auto fmod_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::fmod(arg); };
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires W2
+		constexpr auto modf(const vector_base<W1, T, C, D1> &arg,
+							vector_base<W2, T, C, D2> &i)
+		{
+			i = trunc(arg);
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, fmod_op);
+		}
+
+		constexpr inline auto min_op = []<floating_point_dimensional_scalar T>(T x, T y) { return x <= y ? x : y; };
+
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto min(const vector_base<W1, T, C, D1> &x,
+						   const vector_base<W2, T, C, D2> &y)
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, min_op);
+		}
+
+		constexpr inline auto max_op = []<floating_point_dimensional_scalar T>(T x, T y) { return y <= x ? x : y; };
+
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto max(const vector_base<W1, T, C, D1> &x, const vector_base<W2, T, C, D2> &y)
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, max_op);
+		}
+
+		constexpr inline auto clamp_op = []<dimensional_scalar T>(T x, T min_val, T max_val) { return min(max(x, min_val), max_val); };
+
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		constexpr auto clamp(const vector_base<W1, T, C, D1> &x,
+							 const vector_base<W2, T, C, D2> &min_val,
+							 const vector_base<W3, T, C, D3> &max_val)
+		{
+			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, min_val, max_val, clamp_op);
+		}
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto clamp(const vector_base<W, T, C, D> &x,
+							 T min_val,
+							 T max_val)
+		{
+			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, min_val, max_val, clamp_op);
+		}
+
+		constexpr inline auto mix1_op = []<floating_point_dimensional_scalar T>(T x, T y, T a) { return (x * (T(1.) - a)) + (y * a); };
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		constexpr auto mix(const vector_base<W1, T, C, D1> &x,
+						   const vector_base<W2, T, C, D2> &y,
+						   const vector_base<W3, T, C, D3> &a)
+		{
+			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, y, a, mix1_op);
+		}
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto mix(const vector_base<W1, T, C, D1> &x,
+						   const vector_base<W2, T, C, D2> &y,
+						   T a)
+		{
+			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, y, a, mix1_op);
+		}
+
+		constexpr inline auto mix2_op = []<dimensional_scalar T, boolean_dimensional_scalar B>(T x, T y, B a) -> T { return a ? y : x; };
+
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1,
+			bool W2, typename D2, bool W3, boolean_dimensional_scalar B, typename D3>
+		constexpr auto mix(const vector_base<W1, T, C, D1> &x,
+						   const vector_base<W2, T, C, D2> &y,
+						   const vector_base<W3, B, C, D3> &a)
+		{
+			return detail::ternary_op_execute_no_convert(std::make_index_sequence<C>{}, x, y, a, mix2_op);
+		}
+
+		constexpr inline auto step_op = []<floating_point_dimensional_scalar T>(T edge, T x) { return ((x < edge) ? T(0) : T(1)); };
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto step(const vector_base<W1, T, C, D1> &edge,
+							const vector_base<W2, T, C, D2> &x)
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, edge, x, step_op);
+		}
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto step(T edge,
+							const vector_base<W, T, C, D> &x)
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, edge, x, step_op);
+		}
+
+		constexpr inline auto smoothstep_op = []<floating_point_dimensional_scalar T>(T edge0, T edge1, T x)
+		{
+			T t = clamp((x - edge0) / (edge1 - edge0), T(0), T(1));
+			return t * t * (T(3) - T(2) * t);
+		};
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		constexpr auto smoothstep(const vector_base<W1, T, C, D1> &edge0,
+								  const vector_base<W2, T, C, D2> &edge1,
+								  const vector_base<W3, T, C, D3> &x)
+		{
+			return detail::ternary_op_execute(std::make_index_sequence<C>{}, edge0, edge1, x, smoothstep_op);
+		}
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto smoothstep(T edge0,
+								  T edge1,
+								  const vector_base<W, T, C, D> &x)
+		{
+			return detail::ternary_op_execute(std::make_index_sequence<C>{}, edge0, edge1, x, smoothstep_op);
+		}
+
+		constexpr inline auto isnan_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::isnan(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto isnan(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isnan_op);
+		}
+
+		constexpr inline auto isinf_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::isinf(arg); };
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto isinf(const vector_base<W, T, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isinf_op);
+		}
+
+		constexpr inline auto float_bits_to_int_op = [](float arg) { return std::bit_cast<int>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto floatBitsToInt(const vector_base<W, float, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, float_bits_to_int_op);
+		}
+
+		constexpr inline auto float_bits_to_uint_op = [](float arg) { return std::bit_cast<unsigned int>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto floatBitsToUint(const vector_base<W, float, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, float_bits_to_uint_op);
+		}
+
+		constexpr inline auto double_bits_to_long_long_op = [](double arg) { return std::bit_cast<long long>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto doubleBitsToLongLong(const vector_base<W, double, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, double_bits_to_long_long_op);
+		}
+
+		constexpr inline auto double_bits_to_ulong_long_op = [](double arg) { return std::bit_cast<unsigned long long>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto doubleBitsToUlongLong(const vector_base<W, double, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, double_bits_to_ulong_long_op);
+		}
+
+		constexpr inline auto int_bits_to_float_op = [](int arg) { return std::bit_cast<float>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto intBitsToFloat(const vector_base<W, int, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, int_bits_to_float_op);
+		}
+
+		constexpr inline auto uint_bits_to_float_op = [](unsigned int arg) { return std::bit_cast<float>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto uintBitsToFloat(const vector_base<W, unsigned int, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, uint_bits_to_float_op);
+		}
+
+		constexpr inline auto long_long_bits_to_double_op = [](long long arg) { return std::bit_cast<double>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto longLongBitsToDouble(const vector_base<W, long long, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, long_long_bits_to_double_op);
+		}
+
+		constexpr inline auto ulong_long_bits_to_double_op = [](unsigned long long arg) { return std::bit_cast<double>(arg); };
+
+		template <bool W, std::size_t C, typename D>
+		constexpr auto ulongLongBitsToDouble(const vector_base<W, unsigned long long, C, D> &arg)
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, ulong_long_bits_to_double_op);
+		}
+
+		constexpr inline auto fma_op = []<floating_point_dimensional_scalar T>(T a, T b, T c) { return std::fma(a, b, c); };
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		auto fma(const vector_base<W1, T, C, D1> &a,
+				 const vector_base<W2, T, C, D2> &b,
+				 const vector_base<W3, T, C, D3> &c)
+		{
+			return detail::ternary_op_execute(std::make_index_sequence<C>{}, a, b, c, fma_op);
+		}
+
+		constexpr inline auto frexp_op = []<floating_point_dimensional_scalar T>(T x, int &exp) { return std::frexp(x, &exp); };
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires W2
+		auto frexp(const vector_base<W1, T, C, D1> &x,
+				   vector_base<W2, int, C, D2> &exp)
+		{
+			return detail::binary_op_execute_no_convert(std::make_index_sequence<C>{}, x, exp, frexp_op);
+		}
+
+		constexpr inline auto ldexp_op = []<floating_point_dimensional_scalar T>(T x, int exp) { return std::ldexp(x, exp); };
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		auto ldexp(const vector_base<W1, T, C, D1> &x,
+				   const vector_base<W2, int, C, D2> &exp)
+		{
+			return detail::binary_op_execute_no_convert(std::make_index_sequence<C>{}, x, exp, ldexp_op);
+		}
 
 		//
 		// 8.4 is omitted
 		//
 
+#if 0
 		//
 		// 8.5 - geometric
 		//
@@ -3339,67 +3704,67 @@ constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S>
 
 // this 1D vector is a swizzlable scalar -- rough glsl analog to this with primitive types
 template <dsga::dimensional_scalar T>
-using vectype1 = dsga::basic_vector<T, 1u>;
+using regvec1 = dsga::basic_vector<T, 1u>;
 
 // 2D vector
 template <dsga::dimensional_scalar T>
-using vectype2 = dsga::basic_vector<T, 2u>;
+using regvec2 = dsga::basic_vector<T, 2u>;
 
 // 3D vector
 template <dsga::dimensional_scalar T>
-using vectype3 = dsga::basic_vector<T, 3u>;
+using regvec3 = dsga::basic_vector<T, 3u>;
 
 // 4D vector
 template <dsga::dimensional_scalar T>
-using vectype4 = dsga::basic_vector<T, 4u>;
+using regvec4 = dsga::basic_vector<T, 4u>;
 
 // boolean vectors
-using bscal = vectype1<bool>;
-using bvec2 = vectype2<bool>;
-using bvec3 = vectype3<bool>;
-using bvec4 = vectype4<bool>;
+using bscal = regvec1<bool>;
+using bvec2 = regvec2<bool>;
+using bvec3 = regvec3<bool>;
+using bvec4 = regvec4<bool>;
 
 // int vectors
-using iscal = vectype1<int>;
-using ivec2 = vectype2<int>;
-using ivec3 = vectype3<int>;
-using ivec4 = vectype4<int>;
+using iscal = regvec1<int>;
+using ivec2 = regvec2<int>;
+using ivec3 = regvec3<int>;
+using ivec4 = regvec4<int>;
 
 // unsigned int vectors
-using uscal = vectype1<unsigned>;
-using uvec2 = vectype2<unsigned>;
-using uvec3 = vectype3<unsigned>;
-using uvec4 = vectype4<unsigned>;
+using uscal = regvec1<unsigned>;
+using uvec2 = regvec2<unsigned>;
+using uvec3 = regvec3<unsigned>;
+using uvec4 = regvec4<unsigned>;
 
 // long long vectors (not in glsl)
-using llscal = vectype1<long long>;
-using llvec2 = vectype2<long long>;
-using llvec3 = vectype3<long long>;
-using llvec4 = vectype4<long long>;
+using llscal = regvec1<long long>;
+using llvec2 = regvec2<long long>;
+using llvec3 = regvec3<long long>;
+using llvec4 = regvec4<long long>;
 
 // unsigned long long vectors (not in glsl)
-using ullscal = vectype1<unsigned long long>;
-using ullvec2 = vectype2<unsigned long long>;
-using ullvec3 = vectype3<unsigned long long>;
-using ullvec4 = vectype4<unsigned long long>;
+using ullscal = regvec1<unsigned long long>;
+using ullvec2 = regvec2<unsigned long long>;
+using ullvec3 = regvec3<unsigned long long>;
+using ullvec4 = regvec4<unsigned long long>;
 
 // float vectors with out an 'f' prefix -- this is from glsl
-using scal = vectype1<float>;
-using vec2 = vectype2<float>;
-using vec3 = vectype3<float>;
-using vec4 = vectype4<float>;
+using scal = regvec1<float>;
+using vec2 = regvec2<float>;
+using vec3 = regvec3<float>;
+using vec4 = regvec4<float>;
 
 // also float vectors, but using the same naming convention as the other vectors do (not in glsl)
-using fscal = vectype1<float>;
-using fvec2 = vectype2<float>;
-using fvec3 = vectype3<float>;
-using fvec4 = vectype4<float>;
+using fscal = regvec1<float>;
+using fvec2 = regvec2<float>;
+using fvec3 = regvec3<float>;
+using fvec4 = regvec4<float>;
 
 // double vectors
-using dscal = vectype1<double>;
-using dvec2 = vectype2<double>;
-using dvec3 = vectype3<double>;
-using dvec4 = vectype4<double>;
+using dscal = regvec1<double>;
+using dvec2 = regvec2<double>;
+using dvec3 = regvec3<double>;
+using dvec4 = regvec4<double>;
 
 //
 // bring the vector functions into the global namespace

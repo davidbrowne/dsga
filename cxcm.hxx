@@ -219,9 +219,10 @@ namespace cxcm
 			bool is_even = (fmod(trunc_value, T(2)) == T(0));
 			bool is_halfway = (fract(value) == T(0.5));
 
+			// the special case
 			if (is_halfway)
 				if (is_even)
-					value = trunc_value;
+					return trunc_value;
 
 			// zero could be handled either place, but here it is with the negative values.
 
@@ -838,7 +839,7 @@ namespace cxcm
 		// the floating point remainder of division
 
 		template <std::floating_point T>
-		constexpr T fmod(T value) noexcept
+		constexpr T fmod(T x, T y) noexcept
 		{
 			return detail::constexpr_fmod(x, y);
 		}
