@@ -1689,6 +1689,26 @@ TEST_SUITE("test swizzling applications")
 {
 	TEST_CASE("type traits tests")
 	{
+		SUBCASE("type traits for storage_wrapper")
+		{
+			using dwrap4 = dsga::storage_wrapper<double, 4u>;
+
+			CHECK_UNARY(std::is_standard_layout_v<dwrap4>);
+			CHECK_UNARY(std::is_default_constructible_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_constructible_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_default_constructible_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_copy_constructible_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_move_constructible_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_copyable_v<dwrap4>);
+			CHECK_UNARY(std::is_trivial_v<dwrap4>);
+			CHECK_UNARY(std::is_copy_assignable_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_copy_assignable_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_move_assignable_v<dwrap4>);
+			CHECK_UNARY(std::is_trivially_destructible_v<dwrap4>);
+
+			CHECK_UNARY(std::is_aggregate_v<dwrap4>);
+		}
+
 		SUBCASE("type traits for basic_vector")
 		{
 			using dvec4 = dsga::basic_vector<double, 4u>;
