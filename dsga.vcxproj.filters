@@ -62,5 +62,8 @@
     <ClCompile Include="nanobench.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="function_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

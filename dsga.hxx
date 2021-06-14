@@ -3236,7 +3236,7 @@ namespace dsga
 
 		constexpr inline auto min_op = []<floating_point_dimensional_scalar T>(T x, T y) { return x <= y ? x : y; };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto min(const vector_base<W1, T, C, D1> &x,
 						   const vector_base<W2, T, C, D2> &y) noexcept
 		{
@@ -3245,7 +3245,7 @@ namespace dsga
 
 		constexpr inline auto max_op = []<floating_point_dimensional_scalar T>(T x, T y) { return y <= x ? x : y; };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto max(const vector_base<W1, T, C, D1> &x, const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, max_op);
@@ -3253,7 +3253,7 @@ namespace dsga
 
 		constexpr inline auto clamp_op = []<dimensional_scalar T>(T x, T min_val, T max_val) { return min(max(x, min_val), max_val); };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		constexpr auto clamp(const vector_base<W1, T, C, D1> &x,
 							 const vector_base<W2, T, C, D2> &min_val,
 							 const vector_base<W3, T, C, D3> &max_val) noexcept
@@ -3261,7 +3261,7 @@ namespace dsga
 			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, min_val, max_val, clamp_op);
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		template <bool W, non_bool_arithmetic T, std::size_t C, typename D>
 		constexpr auto clamp(const vector_base<W, T, C, D> &x,
 							 T min_val,
 							 T max_val) noexcept
