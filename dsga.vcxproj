@@ -187,6 +187,9 @@
     <ClCompile Include="operator_test.cxx" />
     <ClCompile Include="swizzle_test.cxx" />
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="dsga.natvis" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
+		<DisplayString >{{ {value} }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value</ExpandedItem>
+		</Expand>
+	</Type>
+	
+	<Type Name="dsga::basic_vector&lt;*,*&gt;">
+		<DisplayString >{{ {store.value} }}</DisplayString>
+		<Expand>
+			<ExpandedItem>store.value</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;">
+		<DisplayString >{{ {{ count={$T3} }} ({value[$T4])} }}</DisplayString>
+		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+		</Expand>
+	</Type>
+	
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;">
+		<DisplayString >{{ {{ count={$T3} }} ({value[$T4]}, {value[$T5]}) }}</DisplayString>
+		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]">value[$T5]</Item>
+		</Expand>
+	</Type>
+	
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;">
+		<DisplayString >{{ {{ count={$T3} }} ({value[$T4]}, {value[$T5]}, {value[$T6]}) }}</DisplayString>
+		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]">value[$T5]</Item>
+			<Item Name="[2]">value[$T6]</Item>
+		</Expand>
+	</Type>
+	
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;">
+		<DisplayString >{{ {{ count={$T3} }} ({value[$T4]}, {value[$T5]}, {value[$T6]}, {value[$T7]}) }}</DisplayString>
+		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]">value[$T5]</Item>
+			<Item Name="[2]">value[$T6]</Item>
+			<Item Name="[3]">value[$T7]</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::vector_base&lt;*,*,*,*&gt;">
+		<DisplayString Condition="$T1 == 0">{{ Read-only {*($T4 *)this} }}</DisplayString>
+		<DisplayString>{{ Writable {*($T4 *)this} }}</DisplayString>
+		<Expand>
+			<ExpandedItem>*($T4 *)this</ExpandedItem>
+		</Expand>
+	</Type>
+	
+</AutoVisualizer>
