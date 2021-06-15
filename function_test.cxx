@@ -20,27 +20,46 @@ TEST_SUITE("test operators")
 {
 	TEST_CASE("angle and trigonometry functions")
 	{
+		const float my_pi = std::numbers::pi_v<float>;
+		fvec3 degs(30, 45, 60);
+		fvec3 rads(my_pi / 6, my_pi / 4, my_pi / 3);
+
 		SUBCASE("radians and degrees")
 		{
 			// radians()
+			
+			auto my_rads = radians(degs);
+			CHECK_EQ(my_rads, rads);
 
 			// degrees()
 
+			auto my_degs = degrees(rads);
+			CHECK_EQ(my_degs, degs);
 		}
 
 		SUBCASE("basic trig")
 		{
 			// sin()
 
+			CHECK_EQ(sin(radians(fvec2(30, 90))), fvec2(0.5f, 1));
+
 			// cos()
 
+			CHECK_EQ(cos(radians(fvec2(0, 180))), fvec2(1, -1));
+
 			// tan()
+			CHECK_EQ(tan(radians(fvec2(45, 0))), fvec2(1, 0));
 
 			// asin()
+			CHECK_EQ(asin(fvec2(0.5f, 1)), radians(fvec2(30, 90))) ;
 
 			// acos()
+			CHECK_EQ(acos(fvec2(1, -1)), radians(fvec2(0, 180)));
 
 			// atan() (both 1 arg and 2 arg)
+			CHECK_EQ(atan(fvec2(1, 0)), radians(fvec2(45, 0)));
+
+			CHECK_EQ(atan(fvec2(1, -1), fvec2(-1, -1)), radians(fvec2(135, -135)));
 
 		}
 

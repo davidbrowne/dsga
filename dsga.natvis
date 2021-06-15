@@ -16,14 +16,14 @@
 	</Type>
 
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} ({value[$T4])} }}</DisplayString>
+		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]} }} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} ({value[$T4]}, {value[$T5]}) }}</DisplayString>
+		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]}, {value[$T5]} }} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
@@ -31,7 +31,7 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} ({value[$T4]}, {value[$T5]}, {value[$T6]}) }}</DisplayString>
+		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]}, {value[$T5]}, {value[$T6]} }} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
@@ -40,7 +40,7 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} ({value[$T4]}, {value[$T5]}, {value[$T6]}, {value[$T7]}) }}</DisplayString>
+		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]}, {value[$T5]}, {value[$T6]}, {value[$T7]} }} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
