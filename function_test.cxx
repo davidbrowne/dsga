@@ -65,17 +65,28 @@ TEST_SUITE("test operators")
 
 		SUBCASE("hyperbolic trig")
 		{
+			dvec3 vals(-1, 0, 1);
+
 			// sinh()
+			auto sinhs = sinh(vals);
 
 			// cosh()
+			auto coshs = cosh(vals);
 
 			// tanh()
+			auto tanhs = tanh(vals);
 
 			// asinh()
+			auto asinhs = asinh(sinhs);
+			CHECK_EQ(vals, asinhs);
 
 			// acosh()
+			auto acoshs = acosh(coshs);
+			CHECK_EQ(dvec3(1, 0, 1), acoshs);
 
 			// atanh()
+			auto atanhs = atanh(tanhs);
+			CHECK_EQ(atanh(sinhs / coshs), atanhs);
 		}
 	}
 
@@ -97,6 +108,10 @@ TEST_SUITE("test operators")
 
 		SUBCASE("sqrt related")
 		{
+			//
+			// constexpr versions of these may be off by an ulp from std library
+			//
+
 			// sqrt()
 
 			// inversesqrt()
