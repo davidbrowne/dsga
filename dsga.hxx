@@ -3038,12 +3038,12 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, y, x, atan2_op);
 		}
 
-		constexpr inline auto sinh_op = [](floating_point_dimensional_scalar auto arg) { return std::atan(arg); };
+		constexpr inline auto sinh_op = [](floating_point_dimensional_scalar auto arg) { return std::sinh(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto sinh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, atan_op);
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sinh_op);
 		}
 
 		constexpr inline auto cosh_op = [](floating_point_dimensional_scalar auto arg) { return std::cosh(arg); };
