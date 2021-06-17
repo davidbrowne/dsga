@@ -3453,22 +3453,6 @@ namespace dsga
 		// 8.5 - geometric
 		//
 
-		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
-		constexpr auto length(const vector_base<W, T, C, D> &x) noexcept
-		{
-			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
-			{
-				return cxcm::sqrt(x[Is] ++ ...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		constexpr auto distance(const vector_base<W1, T, C, D1> &p0,
-								const vector_base<W2, T, C, D2> &p1) noexcept
-		{
-			return length(p1 - p0);
-		}
-
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto dot(const vector_base<W1, T, C, D1> &x,
 						   const vector_base<W2, T, C, D2> &y) noexcept
@@ -3486,6 +3470,19 @@ namespace dsga
 			return basic_vector<T, 3u>((x[1] * y[2]) - (y[1] * x[2]),
 									   (x[2] * y[0]) - (y[2] * x[0]),
 									   (x[0] * y[1]) - (y[0] * x[1]));
+		}
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto length(const vector_base<W, T, C, D> &x) noexcept
+		{
+			return cxcm::sqrt(dot(x, x));
+		}
+
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto distance(const vector_base<W1, T, C, D1> &p0,
+								const vector_base<W2, T, C, D2> &p1) noexcept
+		{
+			return length(p1 - p0);
 		}
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
@@ -3537,36 +3534,40 @@ namespace dsga
 		// 8.7 - vector relational
 		//
 
-		constexpr inline auto less_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x < y; };
+		constexpr inline auto less_op = []<dimensional_scalar T>(T x, T y) -> bool { return x < y; };
 
-		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
 								const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, less_op);
 		}
 
-		constexpr inline auto less_equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x <= y; };
+		constexpr inline auto less_equal_op = []<dimensional_scalar T>(T x, T y) -> bool { return x <= y; };
 
-		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
 									 const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, less_equal_op);
 		}
 
-		constexpr inline auto greater_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x > y; };
+		constexpr inline auto greater_op = []<dimensional_scalar T>(T x, T y) -> bool { return x > y; };
 
-		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
 								   const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, greater_op);
 		}
 
-		constexpr inline auto greater_equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x >= y; };
+		constexpr inline auto greater_equal_op = []<dimensional_scalar T>(T x, T y) -> bool { return x >= y; };
 
-		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
 								   const vector_base<W2, T, C, D2> &y) noexcept
 		{
@@ -3575,7 +3576,7 @@ namespace dsga
 
 		constexpr inline auto equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x == y; };
 
-		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto equal(const vector_base<W1, T, C, D1> &x,
 							 const vector_base<W2, T, C, D2> &y) noexcept
 		{
@@ -3584,7 +3585,7 @@ namespace dsga
 
 		constexpr inline auto not_equal_op = []<non_bool_arithmetic T>(T x, T y) -> bool { return x != y; };
 
-		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
 								const vector_base<W2, T, C, D2> &y) noexcept
 		{
