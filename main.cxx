@@ -24,9 +24,12 @@ fvec4 sometest()
 	iscal first2 = 100;
 	ivec2 second{ 20, 30 };
 
-[[ maybe_unused]] auto third = first + second;
-[[ maybe_unused]] auto third2 = second + first;
-[[ maybe_unused]] auto third3 = first + first2;
+	[[ maybe_unused]] auto third = first + second;
+	[[ maybe_unused]] auto third2 = second + first;
+	[[ maybe_unused]] auto third3 = first + first2;
+
+
+	[[ maybe_unused]] bool b1 = within_box(ivec2(3, 5), ivec2(4, 4), (int)iscal(2));
 
 
 	dsga::storage_wrapper<int, 4> sw{ 999, 9999, 99999, 999999 };

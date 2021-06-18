@@ -3623,6 +3623,67 @@ namespace dsga
 		// 8.8 - 8.19 are omitted
 		//
 
+
+		//
+		// basic tolerance comparisons
+		//
+
+		// Euclidean distance check - strictly less than comparison, boundary is false
+
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, dimensional_scalar U>
+		requires implicitly_convertible_to<T1, T2> || implicitly_convertible_to<T2, T1>
+		constexpr bool within_distance(const vector_base<W1, T1, C, D1> &x,
+									   const vector_base<W2, T2, C, D2> &y,
+									   U tolerance) noexcept
+		{
+//			return abs(distance(x - y)) < abs(tolerance);
+
+			auto direction_vector = x - y;
+			return dot(direction_vector, direction_vector) < (tolerance * tolerance);
+		}
+
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, bool W3, dimensional_scalar U, typename D3>
+		requires implicitly_convertible_to<T1, T2> || implicitly_convertible_to<T2, T1>
+		constexpr bool within_distance(const vector_base<W1, T1, C, D1> &x,
+									   const vector_base<W2, T2, C, D2> &y,
+									   const vector_base<W3, U, 1u, D3> &tolerance) noexcept
+		{
+			return within_distance(x, y, tolerance[0u]);
+		}
+
+		// bounding-box component check - strictly less than comparison, boundary is false
+
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, dimensional_scalar U>
+		requires (implicitly_convertible_to<T1, T2> || implicitly_convertible_to<T2, T1>) && implicitly_convertible_to<U, std::common_type_t<T1, T2>>
+		constexpr bool within_box(const vector_base<W1, T1, C, D1> &x,
+								  const vector_base<W2, T2, C, D2> &y,
+								  U tolerance) noexcept
+		{
+			auto deltas = abs(x - y);
+			auto comparison_vector = lessThan(deltas, decltype(deltas)(tolerance));
+			return all(comparison_vector);
+		}
+
+		template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, bool W3, dimensional_scalar U, std::size_t C2, typename D3>
+		requires (implicitly_convertible_to<T1, T2> || implicitly_convertible_to<T2, T1>) && implicitly_convertible_to<U, std::common_type_t<T1, T2>> && ((C1 == C2) || (C2 == 1u))
+		constexpr bool within_box(const vector_base<W1, T1, C1, D1> &x,
+								  const vector_base<W2, T2, C1, D2> &y,
+								  const vector_base<W3, U, C2, D3> &tolerance) noexcept
+		{
+			if constexpr (C1 == C2)
+			{
+				auto deltas = abs(x - y);
+				auto comparison_vector = lessThan(deltas, tolerance);
+				return all(comparison_vector);
+			}
+			else
+			{
+				return within_box(x, y, tolerance[0u]);
+			}
+		}
+
 	}
 
 }	// namespace dsga

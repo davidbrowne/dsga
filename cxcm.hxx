@@ -20,7 +20,7 @@
 
 constexpr inline int CXCM_MAJOR_VERSION = 0;
 constexpr inline int CXCM_MINOR_VERSION = 1;
-constexpr inline int CXCM_PATCH_VERSION = 5;
+constexpr inline int CXCM_PATCH_VERSION = 6;
 
 namespace cxcm
 {
@@ -87,6 +87,18 @@ namespace cxcm
 		constexpr T abs(T value) noexcept
 		{
 			return (value < T(0)) ? -value : value;
+		}
+
+		template <std::signed_integral T>
+		constexpr T abs(T value) noexcept
+		{
+			return (value < T(0)) ? -value : value;
+		}
+
+		template <std::unsigned_integral T>
+		constexpr T abs(T value) noexcept
+		{
+			return value;
 		}
 
 		template <std::floating_point T>
@@ -631,7 +643,6 @@ namespace cxcm
 		// abs(), fabs()
 		//
 
-#if 1
 
 		// absolute value
 
@@ -644,21 +655,13 @@ namespace cxcm
 			return relaxed::abs(value);
 		}
 
-#else
-
-		// absolute value
-		// better optimized, but rejects philosophy of leaving the details to relaxed namespace
-
-		template <std::floating_point T>
+		// don't know what to do if someone tries to negate the most negative number.
+		// standard says behavior is undefined if you can't represent the result by return type.
+		template <std::integral T>
 		constexpr T abs(T value) noexcept
 		{
-			if (!detail::isnormal_or_subnormal(value) || (value > T(0)))
-				return value;
-
-			return -value;
+			return relaxed::abs(value);
 		}
-
-#endif
 
 		template <std::floating_point T>
 		constexpr T fabs(T value) noexcept
