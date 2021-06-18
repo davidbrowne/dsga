@@ -13,7 +13,6 @@
 #include <tuple>					// tuple interface for structured bindings
 #include <algorithm>				// min()
 #include <span>						// external types to/from vectors
-#include <stdexcept>
 #include <numbers>
 #include <bit>						// bit_cast
 #include "cxcm.hxx"
@@ -258,7 +257,7 @@ namespace dsga
 	// template parameters:
 	// 
 	//		Writable - bool value about whether struct can be modified (e.g., "foo.set(3, 4, 5);", "foo[0] = 3;")
-	//		ScalarType - the type stored
+	//		T - the scalar type stored
 	//		Count - the number of indexes available to access ScalarType data
 	//		Derived - the CRTP struct/class that is derived from this struct
 	//
@@ -270,8 +269,8 @@ namespace dsga
 	//		data() - relies on raw_data() in Derived - access in physical order
 	// 		sequence() - relies on make_sequence_pack() in Derived - the physical order to logical order mapping
 	//
-	template <bool Writable, dimensional_scalar ScalarType, std::size_t Count, typename Derived>
-	requires dimensional_storage<ScalarType, Count>
+	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
+	requires dimensional_storage<T, Count>
 	struct vector_base
 	{
 		// CRTP access to Derived class
@@ -280,16 +279,16 @@ namespace dsga
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
-		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, ScalarType> &&...)
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr		void		set(Args ...args)						noexcept						{ this->as_derived().init(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
-		constexpr		ScalarType	&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
-		constexpr const	ScalarType	&operator [](std::size_t index)	const	noexcept						{ return this->as_derived().at(index); }
+		constexpr		T			&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
+		constexpr const	T			&operator [](std::size_t index)	const	noexcept						{ return this->as_derived().at(index); }
 
 		// physically contiguous access via pointer
-		constexpr			ScalarType *		data()						noexcept	requires Writable	{ return this->as_derived().raw_data(); }
-		constexpr	const	ScalarType *		data()				const	noexcept						{ return this->as_derived().raw_data(); }
+		constexpr		T *			data()									noexcept	requires Writable	{ return this->as_derived().raw_data(); }
+		constexpr const	T *			data()							const	noexcept						{ return this->as_derived().raw_data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		constexpr		auto					sequence()			const	noexcept						{ return this->as_derived().make_sequence_pack(); }
@@ -307,11 +306,11 @@ namespace dsga
 	// 
 	// template parameters:
 	//
-	//		ScalarType - the type stored
+	//		T - the scalar type stored
 	//		Size - the number of actual elements in storage
 	//
-	template <dimensional_scalar ScalarType, std::size_t Size>
-	requires dimensional_storage<ScalarType, Size>
+	template <dimensional_scalar T, std::size_t Size>
+	requires dimensional_storage<T, Size>
 	struct basic_vector;
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
@@ -332,12 +331,12 @@ namespace dsga
 	// 
 	// template parameters:
 	//
-	//		ScalarType - the type stored
+	//		T - the scalar type stored
 	//		Size - the number of actual elements in storage
 	//		Count - the number of indexes available to access ScalarType data
 	//		Is - an ordered variable set of indexes into the storage -- there will be Count of them
 	//
-	template <typename ScalarType, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 	struct indexed_vector;
 
 	//
@@ -640,9 +639,20 @@ namespace dsga
 
 		// scalar conversion operator
 		// this is extremely important and is only for indexed_vector of [Count == 1]
-		constexpr operator T() const noexcept
+		template <typename U>
+		requires implicitly_convertible_to<T, U>
+		constexpr operator U() const noexcept
 		{
-			return value[I];
+			return static_cast<U>(value[I]);
+		}
+
+		// scalar conversion operator
+		// this is extremely important and is only for indexed_vector of [Count == 1]
+		template <typename U>
+		requires (!implicitly_convertible_to<T, U>) && std::convertible_to<T, U>
+		explicit constexpr operator U() const noexcept
+		{
+			return static_cast<U>(value[I]);
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
@@ -3635,7 +3645,7 @@ namespace dsga
 									   const vector_base<W2, T, C, D2> &y,
 									   T tolerance) noexcept
 		{
-//			return abs(distance(x - y)) < abs(tolerance);
+//			return distance(x - y) < tolerance;
 
 			auto direction_vector = x - y;
 			return dot(direction_vector, direction_vector) < (tolerance * tolerance);
@@ -3649,7 +3659,7 @@ namespace dsga
 			return within_distance(x, y, tolerance[0u]);
 		}
 
-		// bounding-box component check - strictly less than comparison, boundary is false
+		// tolerance-box component check - strictly less than comparison, boundary is false
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
@@ -3674,7 +3684,7 @@ namespace dsga
 				auto comparison_vector = lessThan(deltas, tolerance);
 				return all(comparison_vector);
 			}
-			else
+			else		// (C2 == 1u)
 			{
 				return within_box(x, y, tolerance[0u]);
 			}
