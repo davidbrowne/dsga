@@ -2960,6 +2960,99 @@ namespace dsga
 		return std::move(arg[N]);
 	}
 
+	// how many components can the item supply
+
+	template <typename T>
+	struct component_size;
+
+	template <dimensional_scalar T, std::size_t C>
+	struct component_size<basic_vector<T, C>>
+	{
+		static constexpr std::size_t value = C;
+	};
+
+	template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+	struct component_size<indexed_vector<T, S, C, Is...>>
+	{
+		static constexpr std::size_t value = C;
+	};
+
+	template <dimensional_scalar T>
+	struct component_size<T>
+	{
+		static constexpr std::size_t value = 1u;
+	};
+
+	// the make sure Size and Args... are valid together w.r.t. component count.
+	// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
+	template <std::size_t Size, typename ...Args>
+	struct component_match;
+
+	// can't have 0 Args unless Size is 0
+	template <std::size_t Size, typename ...Args>
+	requires (sizeof...(Args) == 0u)
+	struct component_match<Size, Args...>
+	{
+		static constexpr bool valid = (Size == 0u);
+	};
+
+	// check Size components needed with the info from variadic template Args and their component counts.
+	// make sure the component count from the Args is sufficient for Size, and that we use all the Args.
+	// if the last Arg isn't necessary to get to Size components, then the Args are invalid.
+	//
+	// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
+	//
+	// "...there must be enough components provided in the arguments to provide an initializer for
+	// every component in the constructed value. It is a compile-time error to provide extra
+	// arguments beyond this last used argument." section 5.4.2 of the spec for constructors (use case for this).
+	template <std::size_t Size, typename ...Args>
+	requires (sizeof...(Args) > 0u) && (Size > 0u)
+	struct component_match<Size, Args...>
+	{
+		// total number components in Args...
+		static constexpr std::size_t value = (component_size<Args>::value + ...+ 0);
+		using tuple_rep = std::tuple<Args...>;
+
+		// get the last Arg type in the pack
+		using last_type = typename std::tuple_element<std::tuple_size_v<tuple_rep> - 1u, tuple_rep>::type;
+
+		// see what the component count is if we didn't use the last Arg type in pack
+		static constexpr std::size_t previous_size = value - component_size<last_type>::value;
+
+		// check the conditions that we need exactly all those Args and that they give us enough components.
+		static constexpr bool valid = (previous_size < Size) && (value >= Size);
+	};
+
+	// do Args... supply the correct number of components for Size without having leftover Args
+	template <std::size_t Size, typename ...Args>
+	concept met_component_count = component_match<Size, Args...>::valid;
+
+	// create a tuple from a scalar
+
+	auto to_tuple(dimensional_scalar auto arg) noexcept
+	{
+		return std::make_tuple(arg);
+	}
+
+	// create a tuple from a vector
+
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	constexpr auto to_tuple(const vector_base<W, T, C, D> &arg)
+	{
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		{
+			return std::make_tuple(arg[Is]...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
+	// and dimensional_scalars.
+	template <typename ...Args>
+	auto flatten_args_to_tuple(Args ...args) noexcept
+	{
+		return std::tuple_cat(to_tuple(args)...);
+	}
+
 	//
 	//
 	// vector functions

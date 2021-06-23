@@ -7,87 +7,6 @@
 //#include "dev_3rd/nanobench.h"
 #include "dsga.hxx"
 
-// how many elements is the item going to supply to the constructor
-
-template <typename T>
-struct element_size;
-
-template <dsga::dimensional_scalar T, std::size_t C>
-struct element_size<dsga::basic_vector<T, C>>
-{
-	static constexpr std::size_t value = C;
-};
-
-template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct element_size<dsga::indexed_vector<T, S, C, Is...>>
-{
-	static constexpr std::size_t value = C;
-};
-
-template <dsga::dimensional_scalar T>
-struct element_size<T>
-{
-	static constexpr std::size_t value = 1u;
-};
-
-// the variadic validator
-
-template <std::size_t Size, typename ...Args>
-struct variadic_count;
-
-// can't have 0 Args unless Size is 0
-template <std::size_t Size, typename ...Args>
-requires (sizeof...(Args) == 0u)
-struct variadic_count<Size, Args...>
-{
-	static constexpr bool valid = (Size == 0u);
-};
-
-// check the rules for constructor with variadic args
-template <std::size_t Size, typename ...Args>
-requires (sizeof...(Args) > 0u) && (Size > 0u)
-struct variadic_count<Size, Args...>
-{
-	static constexpr std::size_t value = (element_size<Args>::value + ...+ 0);
-	using tuple_rep = std::tuple<Args...>;
-	using last_type = typename std::tuple_element<std::tuple_size_v<tuple_rep> - 1u, tuple_rep>::type;
-	static constexpr std::size_t previous_size = value - element_size<last_type>::value;
-
-	// "...there must be enough components provided in the arguments to provide an initializer for
-	// every component in the constructed value. It is a compile-time error to provide extra
-	// arguments beyond this last used argument." section 5.4.2 of the spec
-	static constexpr bool valid = (previous_size < Size) && (value >= Size);
-};
-
-// make a concept out of third paragraph of section 5.4.2 -- if the concept is false,
-// then the compiler won't be able to find a constructor for the arguments.
-template <std::size_t Size, typename ...Args>
-concept valid_variadic_count = variadic_count<Size, Args...>::valid;
-
-
-// create a tuple from a scalar
-auto to_tuple(dsga::dimensional_scalar auto arg) noexcept
-{
-	return std::make_tuple(arg);
-}
-
-// create a tuple from a vector
-template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D>
-constexpr auto to_tuple(const dsga::vector_base<W, T, C, D> &arg) noexcept
-{
-	return [&]<std::size_t ...Js>(std::index_sequence<Js...>)
-	{
-		return std::make_tuple(arg[Js]...);
-	}(std::make_index_sequence<C>{});
-}
-
-// flatten the Args out in a big tuple
-template <typename ...Args>
-auto get_arg_tuple(Args ...args) noexcept
-{
-	return std::tuple_cat(to_tuple(args)...);
-}
-
 // something that looks like a 4x4 matrix class, in column order
 template <std::size_t C, std::size_t R, std::floating_point T>
 struct m4;
@@ -105,13 +24,13 @@ struct m4<4u, 4u, double>
 
 	// variadic constructor!
 	template <typename ... Args>
-	requires valid_variadic_count<Size, Args...>
+	requires dsga::met_component_count<Size, Args...>
 	m4(Args ... args)
 	{
-		auto arg_tuple = get_arg_tuple(args...);
+		auto arg_tuple = dsga::flatten_args_to_tuple(args...);
 		[&]<std::size_t ...Is>(std::index_sequence <Is...>)
 		{
-			((value[Is / R][Is % R] = std::get<Is>(arg_tuple)), ...);
+			((value[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 		}(std::make_index_sequence<Size>{});
 	}
 
