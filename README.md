@@ -1,6 +1,6 @@
 # dsga: Data Structures for Geometric Algorithms
 
-dsga is a c\+\+20 library that implements/will implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). This library was not intended to be used for rendering. My requirements in general are for things like 3D CAD/CAM applications.
+dsga is a c\+\+20 library that implements/will implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). This library was not intended to be used for rendering. My requirements in general are for things like 3D CAD/CAM applications and other geometric things.
 
 ## Quick Peek
 
@@ -31,12 +31,12 @@ auto project_point_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_
 
 Currently this is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
 
-It will eventually depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. This dependency will occur once the vector and matrix functions are implemented.
+It does now depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. A copy of this file is in this repository.
 
 
 ## Motivation
 
-I wanted to expand the point/vector class that we use at work. We have x, y, and z data members, but that is the only way to get at the data. I wanted something more flexible that would use contiguous memory like an array, but still be useful with x, y, z data member access. I specifically did *NOT* want accessor functions as the way to get x, y, and z, using those names.
+I wanted to expand the point/vector class that we use at work. We have x, y, and z data members, but that is the only way to get at the data. I wanted something more flexible that would use contiguous memory like an array, but still be useful with x, y, z data member access. I specifically did *NOT* want accessor functions as the way to get x, y, and z data. I wanted data member access.
 
 After reading a [blog](https://t0rakka.silvrback.com/simd-scalar-accessor) about this very type of issue, I started thinking more about this, and how to deal with unions and their common initial sequence. I saw some confusion about the common initial sequence, and I based my implementation on what I read in these discussions:
 * [Language lawyers: unions and "common initial sequence"](https://www.reddit.com/r/cpp_questions/comments/7ktrrj/language_lawyers_unions_and_common_initial/)
@@ -50,17 +50,15 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 ## Status
 
-Current version: `v0.1.0`
+Current version: `v0.3.0`
 
 Implemented:
 
-Almost all of the vector class support is implemented. Still missing:
+The vector class is implemented. Still missing:
 
-* Tests for operators, assignments, and compound assignments
-* Some constructor test cases
-* The vector functions implementation and their tests
+* Most tests for vector functions (from section 8 of the spec)
 
-Implementation not yet started:
+Implementation just getting started:
 
 * The matrix classes, their interactions with vectors, and their tests.
 
@@ -77,67 +75,67 @@ The following types are pretty much what you expect, but there is a 1D version o
 
 // this 1D vector is a swizzlable scalar -- analog to glsl primitive types
 template <dsga::dimensional_scalar ScalarType>
-using vectype1 = dsga::basic_vector<ScalarType, 1u>;
+using regvec1 = dsga::basic_vector<ScalarType, 1u>;
 
 // 2D vector
 template <dsga::dimensional_scalar ScalarType>
-using vectype2 = dsga::basic_vector<ScalarType, 2u>;
+using regvec2 = dsga::basic_vector<ScalarType, 2u>;
 
 // 3D vector
 template <dsga::dimensional_scalar ScalarType>
-using vectype3 = dsga::basic_vector<ScalarType, 3u>;
+using regvec3 = dsga::basic_vector<ScalarType, 3u>;
 
 // 4D vector
 template <dsga::dimensional_scalar ScalarType>
-using vectype4 = dsga::basic_vector<ScalarType, 4u>;
+using regvec4 = dsga::basic_vector<ScalarType, 4u>;
 
 // boolean vectors
-using bscal = vectype1<bool>;
-using bvec2 = vectype2<bool>;
-using bvec3 = vectype3<bool>;
-using bvec4 = vectype4<bool>;
+using bscal = regvec1<bool>;
+using bvec2 = regvec2<bool>;
+using bvec3 = regvec3<bool>;
+using bvec4 = regvec4<bool>;
 
 // int vectors
-using iscal = vectype1<int>;
-using ivec2 = vectype2<int>;
-using ivec3 = vectype3<int>;
-using ivec4 = vectype4<int>;
+using iscal = regvec1<int>;
+using ivec2 = regvec2<int>;
+using ivec3 = regvec3<int>;
+using ivec4 = regvec4<int>;
 
 // unsigned int vectors
-using uscal = vectype1<unsigned>;
-using uvec2 = vectype2<unsigned>;
-using uvec3 = vectype3<unsigned>;
-using uvec4 = vectype4<unsigned>;
+using uscal = regvec1<unsigned>;
+using uvec2 = regvec2<unsigned>;
+using uvec3 = regvec3<unsigned>;
+using uvec4 = regvec4<unsigned>;
 
 // long long vectors (not in glsl)
-using llscal = vectype1<long long>;
-using llvec2 = vectype2<long long>;
-using llvec3 = vectype3<long long>;
-using llvec4 = vectype4<long long>;
+using llscal = regvec1<long long>;
+using llvec2 = regvec2<long long>;
+using llvec3 = regvec3<long long>;
+using llvec4 = regvec4<long long>;
 
 // unsigned long long vectors (not in glsl)
-using ullscal = vectype1<unsigned long long>;
-using ullvec2 = vectype2<unsigned long long>;
-using ullvec3 = vectype3<unsigned long long>;
-using ullvec4 = vectype4<unsigned long long>;
+using ullscal = regvec1<unsigned long long>;
+using ullvec2 = regvec2<unsigned long long>;
+using ullvec3 = regvec3<unsigned long long>;
+using ullvec4 = regvec4<unsigned long long>;
 
 // float vectors with out an 'f' prefix -- this is from glsl
-using scal = vectype1<float>;
-using vec2 = vectype2<float>;
-using vec3 = vectype3<float>;
-using vec4 = vectype4<float>;
+using scal = regvec1<float>;
+using vec2 = regvec2<float>;
+using vec3 = regvec3<float>;
+using vec4 = regvec4<float>;
 
 // also float vectors, but using the common naming convention (not in glsl)
-using fscal = vectype1<float>;
-using fvec2 = vectype2<float>;
-using fvec3 = vectype3<float>;
-using fvec4 = vectype4<float>;
+using fscal = regvec1<float>;
+using fvec2 = regvec2<float>;
+using fvec3 = regvec3<float>;
+using fvec4 = regvec4<float>;
 
 // double vectors
-using dscal = vectype1<double>;
-using dvec2 = vectype2<double>;
-using dvec3 = vectype3<double>;
-using dvec4 = vectype4<double>;
+using dscal = regvec1<double>;
+using dvec2 = regvec2<double>;
+using dvec3 = regvec3<double>;
+using dvec4 = regvec4<double>;
 ```
 
 ## How It Works
@@ -146,40 +144,42 @@ There are really two vector classes: ```basic_vector``` and ```indexed_vector```
 
 A ```basic_vector``` has data members that provide "swizzling". These data members are of type ```indexed_vector```, and this is where they are a view on the owning ```basic_vector```. Only the ```indexed_vector```s that do not have duplicate indexes in the swizzle are modifiable, e.g., ```foo.xzy``` is modifiable, while ```foo.zzy``` is not modifiable. Either way, an ```indexed_vector``` from a swizzle has a lifetime tied to the lifetime of the ```basic_vector``` it came from.
 
-We want to use both types of vectors in the same way, for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc. Instead of duplicating this effort, ```basic_vector``` and ```indexed_vector``` derive from a [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class called ```vec_base```, and this is now the foundation for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc:
+We want to use both types of vectors in the same way, for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc. Instead of duplicating this effort, ```basic_vector``` and ```indexed_vector``` derive from a [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class called ```vector_base```, and this is now the foundation for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc:
 ![vec_base](./vec_base_uml.svg)
 
-```vec_base``` carries the following information:
+```vector_base``` carries the following information:
 * Whether it can be used as an lvalue, i.e., is it writable
 * The type of the data in the vector (some arithmetic type)
-* How many elements are in the vector (1-4)
+* How many elements are in the vector (1-4), i.e., the Count
 * The type of the derived class
 
-It provides 3 functions that can be used to build up the constructors, equality comparisons, assignment operators, binary and unary operators, compound assignment operators, vector functions, etc:
+It provides the following functions that can be used to generically manipulate and access vector data:
 * ```set()``` - calls ```static_cast<Derived *>(this)->init()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it can be used as an lvalue. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
-* ```operator[]``` - calls ```static_cast<Derived *>(this)->at()```, which is an lvalue reference to a single data value. Since this can modify the data, it is only enabled if it can be used as an lvalue.
-* ```operator[] const``` - calls ```static_cast<Derived *>(this)->at() const```, which is a const lvalue reference to a single data value. This is read-only, so it is always available.
+* ```operator[]``` - calls ```static_cast<Derived *>(this)->at()```, which is a reference to a single data value. The data is in logical order.
+* ```size()``` - relies on Count template parameter
+* ```data()``` - relies on raw_data() in Derived - pointer access in physical order
+* ```sequence()``` - relies on make_sequence_pack() - the physical order to logical order mapping
 
 
 ## Testing
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. The tests have been run on:
 
-* MSVC 2019 - v16.9 or higher (required for constexpr with anonymous unions)
+* MSVC 2019 - v16.10
 
 ```
+[doctest] doctest version is "2.4.6"
+[doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   54 |   54 passed | 0 failed | 0 skipped
-[doctest] assertions: 1210 | 1210 passed | 0 failed |
+[doctest] test cases:   59 |   59 passed | 0 failed | 0 skipped
+[doctest] assertions: 1509 | 1509 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 The official tests have not been run with these compilers, but the project compiled without error with these (via [Compiler Explorer](https://godbolt.org/)):
 
-* gcc 10.2
-* clang 11.0
-
-It could work on earlier versions of gcc and clang, and it certainly should work on later versions. MSVC requires v16.9 for VS2019 at a minimum.
+* gcc 11.1
+* clang 12 (on Windows with MVSC installed); clang(trunk) on compiler explorer
 
 ## Similar Projects
 

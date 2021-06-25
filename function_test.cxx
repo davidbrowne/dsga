@@ -94,22 +94,26 @@ TEST_SUITE("test operators")
 	{
 		SUBCASE("non-sqrt related")
 		{
-			// pow()
+			// pow(), e.g., pow(2, 10) = 2^10 = 1024
 
-			// exp()
+			// exp(), e.g., e^x = exp(x)
 
-			// log()
+			// log(), e.g., log(x) = ln(x) = log<base e>(x)
 
-			// exp2()
+			// exp2(), e.g., 2^x = exp2(x)
 
-			// log2()
+			// log2(), e.g., log2(x) = lb(x) = log<base 2>(x)
 
 		}
 
 		SUBCASE("sqrt related")
 		{
 			//
-			// constexpr versions of these may be off by an ulp from std library
+			// cxcm constexpr versions of these may be off by an ulp from standard library.
+			// Because these implementation results do not exactly match the standard's,
+			// you have to explicitly opt-in to these constexpr versions of sqrt() and
+			// inversesqrt() via define macro CXCM_APPROXIMATIONS_ALLOWED (prior to
+			// including cxcm.hxx or dsga.hxx).
 			//
 
 			// sqrt()

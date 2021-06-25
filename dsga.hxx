@@ -24,7 +24,7 @@
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
-constexpr inline int DSGA_MINOR_VERSION = 2;
+constexpr inline int DSGA_MINOR_VERSION = 3;
 constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
@@ -3010,11 +3010,11 @@ namespace dsga
 	struct component_match<Size, Args...>
 	{
 		// total number components in Args...
-		static constexpr std::size_t value = (component_size<Args>::value + ...+ 0);
-		using tuple_rep = std::tuple<Args...>;
+		static constexpr std::size_t value = (component_size<Args>::value + ... + 0);
+		using tuple_pack = std::tuple<Args...>;
 
 		// get the last Arg type in the pack
-		using last_type = typename std::tuple_element<std::tuple_size_v<tuple_rep> - 1u, tuple_rep>::type;
+		using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> - 1u, tuple_pack>;
 
 		// see what the component count is if we didn't use the last Arg type in pack
 		static constexpr std::size_t previous_size = value - component_size<last_type>::value;
@@ -3037,7 +3037,7 @@ namespace dsga
 	// create a tuple from a vector
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	constexpr auto to_tuple(const vector_base<W, T, C, D> &arg)
+	constexpr auto to_tuple(const vector_base<W, T, C, D> &arg) noexcept
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
 		{

@@ -7,6 +7,9 @@
 //#include "dev_3rd/nanobench.h"
 #include "dsga.hxx"
 
+// see https://compiler-explorer.com/z/9jjh5oj5o for an example
+// of this but using std::array<> instead of dsga vectors
+
 // something that looks like a 4x4 matrix class, in column order
 template <std::size_t C, std::size_t R, std::floating_point T>
 struct m4;
@@ -25,7 +28,7 @@ struct m4<4u, 4u, double>
 	// variadic constructor!
 	template <typename ... Args>
 	requires dsga::met_component_count<Size, Args...>
-	m4(Args ... args)
+	m4(Args ... args) noexcept
 	{
 		auto arg_tuple = dsga::flatten_args_to_tuple(args...);
 		[&]<std::size_t ...Is>(std::index_sequence <Is...>)
