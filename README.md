@@ -166,6 +166,7 @@ It provides the following functions that can be used to generically manipulate a
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. The tests have been run on:
 
 * MSVC 2019 - v16.10
+* clang 12 (on Windows with MSVC installed)
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -176,10 +177,10 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. The 
 [doctest] Status: SUCCESS!
 ```
 
-The official tests have not been run with these compilers, but the project compiled without error with these (via [Compiler Explorer](https://godbolt.org/)):
+The unit tests have not been run with these compilers, but the project compiled without error with these (via [Compiler Explorer](https://godbolt.org/)):
 
 * gcc 11.1
-* clang 12 (on Windows with MVSC installed); clang(trunk) on compiler explorer
+* clang trunk, where there is also a clang 12.0.0 choice
 
 ## Similar Projects
 
