@@ -29,9 +29,9 @@ auto project_point_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_
 
 ## Installation
 
-Currently this is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
+Currently this is a single header library with a single file dependency, so I guess a two header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
 
-It does now depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. A copy of this file is in this repository.
+We now depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. A copy of this file is in this repository.
 
 
 ## Motivation
@@ -166,7 +166,7 @@ It provides the following functions that can be used to generically manipulate a
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. The tests have been run on:
 
 * MSVC 2019 - v16.10
-* clang 12 (on Windows with MSVC installed)
+* clang 12.0.0 on Windows with MSVC installed (uses MSVC standard library)
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -179,8 +179,8 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. The 
 
 The unit tests have not been run with these compilers, but the project compiled without error with these (via [Compiler Explorer](https://godbolt.org/)):
 
-* gcc 11.1
-* clang trunk, where there is also a clang 12.0.0 choice
+* gcc 11.1, but not gcc 10.3 (no bit_cast)
+* clang trunk, but not standard clang 12.0.0 (no bit_cast)
 
 ## Similar Projects
 

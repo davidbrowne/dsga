@@ -293,8 +293,8 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		constexpr		auto					sequence()			const	noexcept						{ return this->as_derived().make_sequence_pack(); }
 
-		// number of accessible T elements
-		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
+		// number of accessible T elements - required by spec
+		constexpr		int			length()						const	noexcept						{ return static_cast<int>(Count); }
 	};
 
 	// basic_vector will act as the primary vector class in this library.
@@ -3784,6 +3784,135 @@ namespace dsga
 		}
 
 	}
+
+	//
+	// matrices
+	//
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+	struct basic_matrix
+	{
+		static constexpr std::size_t Size = C * R;
+
+		constexpr int length() const noexcept
+		{
+			return C;
+		}
+
+		std::array<basic_vector<T, R>, C> value;
+
+		//
+		// operator [] gets the column vector
+		//
+
+		basic_vector<T, R> &operator [](std::size_t index) noexcept
+		{
+			return value[index];
+		}
+
+		const basic_vector<T, R> &operator [](std::size_t index) const noexcept
+		{
+			return value[index];
+		}
+
+		//
+		// constructors
+		//
+
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires met_component_count<Size, Args...>
+		basic_matrix(Args ... args) noexcept
+		{
+			auto arg_tuple = flatten_args_to_tuple(args...);
+			[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+			{
+				((value[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Size>{});
+		}
+
+		// diagonal constructor for square matrices
+		template <dimensional_scalar U>
+		requires std::convertible_to<U, T> && (C == R)
+		basic_matrix(U arg) noexcept
+		{
+			for (int i = 0; i < C; ++i)
+			{
+				for (int j = 0; j < R; ++j)
+				{
+					value[i][j] = ((i == j) ? static_cast<T>(arg) : static_cast<T>(0));
+				}
+			}
+		}
+
+		// implicit constructor from a matrix
+		template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
+		requires implicitly_convertible_to<U, T> 
+		basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+		{
+			for (std::size_t i = 0; i < C; ++i)
+			{
+				if (i >= Cols)
+				{
+					// not enough columns in arg
+					for (std::size_t j = 0; j < R; ++j)
+					{
+						value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+					}
+				}
+				else
+				{
+					for (std::size_t j = 0; j < R; ++j)
+					{
+						if (j >= Rows)
+						{
+							// not enough rows in arg
+							value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+						}
+						else
+						{
+							value[i][j] = static_cast<T>(arg[i][j]);
+						}
+					}
+				}
+			}
+		}
+
+		// explicit constructor from a matrix
+		template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
+		explicit basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+		{
+			for (std::size_t i = 0; i < C; ++i)
+			{
+				if (i >= Cols)
+				{
+					// not enough columns in arg
+					for (std::size_t j = 0; j < R; ++j)
+					{
+						value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+					}
+				}
+				else
+				{
+					for (std::size_t j = 0; j < R; ++j)
+					{
+						if (j >= Rows)
+						{
+							// not enough rows in arg
+							value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+						}
+						else
+						{
+							value[i][j] = static_cast<T>(arg[i][j]);
+						}
+					}
+				}
+			}
+		}
+
+	};
 
 }	// namespace dsga
 

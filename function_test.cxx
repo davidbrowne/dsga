@@ -82,7 +82,8 @@ TEST_SUITE("test operators")
 
 			// acosh()
 			auto acoshs = acosh(coshs);
-			CHECK_EQ(dvec3(1, 0, 1), acoshs);
+//			std::printf("%.17g, %.17g, %.17g\n", acoshs[0], acoshs[1], acoshs[2]);		// "0.99999999999999989, 0, 0.99999999999999989" for gcc
+			CHECK_EQ(dvec3(1, 0, 1), acoshs);					// this PASSES with both MSVC v16.10 and clang 12 on Windows; this FAILS with gcc 10.3
 
 			// atanh()
 			auto atanhs = atanh(tanhs);
