@@ -56,5 +56,12 @@
 			<ExpandedItem>*($T4 *)this</ExpandedItem>
 		</Expand>
 	</Type>
-	
+
+	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
+		<DisplayString >{{ {value} }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value</ExpandedItem>
+		</Expand>
+	</Type>
+
 </AutoVisualizer>

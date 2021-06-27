@@ -10,52 +10,6 @@
 // see https://compiler-explorer.com/z/9jjh5oj5o for an example
 // of this but using std::array<> instead of dsga vectors
 
-// something that looks like a 4x4 matrix class, in column order
-template <std::size_t C, std::size_t R, std::floating_point T>
-struct m4;
-
-template <>
-struct m4<4u, 4u, double>
-{
-	using T = double;
-	static constexpr std::size_t C = 4u;
-	static constexpr std::size_t R = 4u;
-
-	static constexpr std::size_t Size = C * R;
-
-	double value[C][R];
-
-	// variadic constructor!
-	template <typename ... Args>
-	requires dsga::met_component_count<Size, Args...>
-	m4(Args ... args) noexcept
-	{
-		auto arg_tuple = dsga::flatten_args_to_tuple(args...);
-		[&]<std::size_t ...Is>(std::index_sequence <Is...>)
-		{
-			((value[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
-		}(std::make_index_sequence<Size>{});
-	}
-
-	//template <dsga::dimensional_scalar T1, dsga::dimensional_scalar T2, dsga::dimensional_scalar T3, dsga::dimensional_scalar T4, 
-	//	dsga::dimensional_scalar T5, dsga::dimensional_scalar T6, dsga::dimensional_scalar T7, dsga::dimensional_scalar T8, 
-	//	dsga::dimensional_scalar T9, dsga::dimensional_scalar T10, dsga::dimensional_scalar T11, dsga::dimensional_scalar T12, 
-	//	dsga::dimensional_scalar T13, dsga::dimensional_scalar T14, dsga::dimensional_scalar T15, dsga::dimensional_scalar T16>
-	//m4(T1  t1, T2  t2, T3  t3, T4 t4,
-	//   T5  t5, T6  t6, T7  t7, T8 t8,
-	//   T9  t9, T10 t10, T11 t11, T12 t12,
-	//   T13 t13, T14 t14, T15 t15, T16 t16)
-	//	: value{
-	//	static_cast<double>(t1), static_cast<double>(t2), static_cast<double>(t3), static_cast<double>(t4), 
-	//	static_cast<double>(t5), static_cast<double>(t6), static_cast<double>(t7), static_cast<double>(t8), 
-	//	static_cast<double>(t9), static_cast<double>(t10), static_cast<double>(t11), static_cast<double>(t12), 
-	//	static_cast<double>(t13), static_cast<double>(t14), static_cast<double>(t15), static_cast<double>(t16) }
-	//{
-	//}
-};
-
-using mat4 = m4<4u, 4u, double>;
-
 void mat_box()
 {
 	dscal one(1);
@@ -65,7 +19,7 @@ void mat_box()
 
 	double rando = 5;
 
-	auto val = mat4(four, rando, three, rando, rando, one, two, rando, three);
+	auto val = dmat4(four, rando, three, rando, rando, one, two, rando, three);
 
 	for (std::size_t i = 0; i < 4; ++i)
 	{

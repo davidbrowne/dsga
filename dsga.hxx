@@ -4095,6 +4095,37 @@ using dvec2 = regvec2<double>;
 using dvec3 = regvec3<double>;
 using dvec4 = regvec4<double>;
 
+// float matrices
+using mat2x2 = dsga::basic_matrix<float, 2, 2>;
+using mat2x3 = dsga::basic_matrix<float, 2, 3>;
+using mat2x4 = dsga::basic_matrix<float, 2, 4>;
+using mat3x2 = dsga::basic_matrix<float, 3, 2>;
+using mat3x3 = dsga::basic_matrix<float, 3, 3>;
+using mat3x4 = dsga::basic_matrix<float, 3, 4>;
+using mat4x2 = dsga::basic_matrix<float, 4, 2>;
+using mat4x3 = dsga::basic_matrix<float, 4, 3>;
+using mat4x4 = dsga::basic_matrix<float, 4, 4>;
+
+using mat2 = dsga::basic_matrix<float, 2, 2>;
+using mat3 = dsga::basic_matrix<float, 3, 3>;
+using mat4 = dsga::basic_matrix<float, 4, 4>;
+
+// double matrices
+using dmat2x2 = dsga::basic_matrix<double, 2, 2>;
+using dmat2x3 = dsga::basic_matrix<double, 2, 3>;
+using dmat2x4 = dsga::basic_matrix<double, 2, 4>;
+using dmat3x2 = dsga::basic_matrix<double, 3, 2>;
+using dmat3x3 = dsga::basic_matrix<double, 3, 3>;
+using dmat3x4 = dsga::basic_matrix<double, 3, 4>;
+using dmat4x2 = dsga::basic_matrix<double, 4, 2>;
+using dmat4x3 = dsga::basic_matrix<double, 4, 3>;
+using dmat4x4 = dsga::basic_matrix<double, 4, 4>;
+
+using dmat2 = dsga::basic_matrix<double, 2, 2>;
+using dmat3 = dsga::basic_matrix<double, 3, 3>;
+using dmat4 = dsga::basic_matrix<double, 4, 4>;
+
+
 //
 // bring the vector functions into the global namespace
 //
