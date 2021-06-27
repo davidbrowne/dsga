@@ -3817,6 +3817,18 @@ namespace dsga
 		}
 
 		//
+		// defaulted functions
+		//
+
+		constexpr basic_matrix() noexcept = default;
+		constexpr ~basic_matrix() noexcept = default;
+
+		constexpr basic_matrix(const basic_matrix &) noexcept = default;
+		constexpr basic_matrix(basic_matrix &&) noexcept = default;
+		constexpr basic_matrix &operator =(const basic_matrix &) noexcept = default;
+		constexpr basic_matrix &operator =(basic_matrix &&) noexcept = default;
+
+		//
 		// constructors
 		//
 

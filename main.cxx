@@ -28,16 +28,6 @@ void mat_box()
 	}
 }
 
-auto playing()
-{
-	auto x = [] <std::size_t ...Indexes>(std::index_sequence<Indexes...> /* dummy */)
-	{
-		return sizeof...(Indexes);
-	};
-
-	return x(std::make_index_sequence<3>{});
-}
-
 fvec4 sometest()
 {
 	iscal first = 9;
@@ -101,8 +91,6 @@ fvec4 sometest()
 // but becomes legal when you have a tuple interface
 	[[ maybe_unused ]] auto &[a, b, c, d] = bar;
 	[[ maybe_unused ]] const auto &[e, f, g, h] = somethingoranother.zzwy;
-
-	[[ maybe_unused ]] auto ieils = playing();
 
 //	our_type_helper<decltype(somethingoranother.zzwy)> stupid_thing;
 	bvec2 bool_vec(true, false);
@@ -322,34 +310,9 @@ void inv_sqrt_doubles_test()
 }
 
 
-
-void test_bin_op()
-{
-	constexpr dvec3 dv(41.5, 42.5, 43.5);
-	ivec3 iv(40, 50, 60);
-
-	[[ maybe_unused ]] auto vec_vec1 = dv + iv;
-	[[ maybe_unused ]] auto vec_vec2 = iv + dv;
-
-	[[ maybe_unused ]] auto not_vec = ~iv;
-	[[ maybe_unused ]] auto neg_vec = -dv;
-
-	[[ maybe_unused ]] constexpr int some_int = static_cast<int>(98.6);
-
-	auto vec_scal = dv + 300;
-	[[ maybe_unused ]] auto scal_vec = -400 + iv;
-
-	const volatile int nine_k = 9000;
-	const volatile int &nine_k_ref = nine_k;
-	vec_scal.y = nine_k_ref;
-
-	ivec2 vec_from_cvref(nine_k_ref, nine_k_ref);
-}
-
-
 // https://twitter.com/the_whole_daisy/status/1379580525078147072
 // https://godbolt.org/z/h5P1Mxsrz
-// TLDR -- operator precedence ('=' is right to left, ',' is left to right) matters with binary fold extpressions.
+// TLDR -- operator precedence ('=' is right to left, ',' is left to right) matters with binary fold expressions.
 //
 //#include <iostream>
 //
@@ -541,8 +504,6 @@ int main(int argc, char *argv[])
 //	inv_sqrt_all_floats_test();
 //	inv_sqrt_doubles_test();
 	
-	//	test_bin_op();
-
 //	mat_box();
 
 	sometest();

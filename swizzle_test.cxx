@@ -1750,6 +1750,27 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_aggregate_v<dswizzle1>);
 			CHECK_UNARY(std::is_aggregate_v<dswizzle4>);
 		}
+
+		SUBCASE("type traits for basic_matrix")
+		{
+			using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
+
+			CHECK_UNARY(std::is_standard_layout_v<dmat4>);
+			CHECK_UNARY(std::is_default_constructible_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_constructible_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_default_constructible_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_copy_constructible_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_move_constructible_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_copyable_v<dmat4>);
+			CHECK_UNARY(std::is_trivial_v<dmat4>);
+			CHECK_UNARY(std::is_copy_assignable_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_copy_assignable_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_move_assignable_v<dmat4>);
+			CHECK_UNARY(std::is_trivially_destructible_v<dmat4>);
+
+			CHECK_UNARY_FALSE(std::is_aggregate_v<dmat4>);
+		}
+
 	}
 
 	TEST_CASE("structured binding (which requires) tuple interface (tuple_size, tuple_element, get)")
