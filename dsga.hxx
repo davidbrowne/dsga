@@ -15,7 +15,12 @@
 #include <span>						// external types to/from vectors
 #include <numbers>
 #include <bit>						// bit_cast
+
+#if !defined(CXCM_CXCM_HXX)
+
 #include "cxcm.hxx"
+
+#endif
 
 //
 // Data Structures for Geometric Algebra (dsga)
@@ -3630,10 +3635,6 @@ namespace dsga
 		}
 
 		//
-		// 8.6 is matrix functions which will happen when we have matrices
-		//
-
-		//
 		// 8.7 - vector relational
 		//
 
@@ -3923,9 +3924,44 @@ namespace dsga
 				}
 			}
 		}
-
 	};
 
+	//
+	// matrix operators
+	//
+
+	// component-wise equality operator for matrices, scalar boolean result: ==, !=
+
+	// unary ops on matrices: ++, --, +, -
+
+	// component-wise binary ops with matrix and scalar: +, -, *, /
+
+	// component-wise binary ops with same size matrices: +, -, /
+
+	// linear-algebriac binary ops between a matrix and a vector or matrix: *
+
+
+	//
+	// matrix functions
+	//
+
+	namespace functions
+	{
+		//
+		// 8.6 is matrix functions
+		//
+
+		// matrixCompMult() - component-wise matrix multiplication
+
+		// outerProduct() - matrix from a row vector times a column vector
+
+		// transpose() - self evident
+
+		// determinant() - only on square matrices
+
+		// inverse() - only on square matrices
+
+	}
 }	// namespace dsga
 
 //
