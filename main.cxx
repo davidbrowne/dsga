@@ -42,6 +42,11 @@ fvec4 sometest()
 	[[ maybe_unused]] bool b1 = within_box(ivec2(3, 5), ivec2(4, 4), iscal(2));
 
 
+	auto m = dmat2x3(3, 5., 7., 9, 11., 13.);
+	auto n = dmat4x2(2., 4., 6, 8., 10., 12., 14., 16.);
+	[[ maybe_unused]] auto r = m * n;
+
+
 	dsga::storage_wrapper<int, 4> sw{ 999, 9999, 99999, 999999 };
 	sw.set(1, 2, 3, 4);
 

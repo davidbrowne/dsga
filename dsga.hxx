@@ -10,17 +10,12 @@
 #include <type_traits>				// requirements
 #include <concepts>					// requirements
 #include <array>					// underlying storage
-#include <tuple>					// tuple interface for structured bindings
+#include <tuple>					// tuple interface for structured bindings, matrix variadic constructor
 #include <algorithm>				// min()
 #include <span>						// external types to/from vectors
-#include <numbers>
+#include <numbers>					// pi_v<>, inv_pi_v<>
 #include <bit>						// bit_cast
-
-#if !defined(CXCM_CXCM_HXX)
-
 #include "cxcm.hxx"
-
-#endif
 
 //
 // Data Structures for Geometric Algebra (dsga)
@@ -2898,7 +2893,7 @@ namespace dsga
 	}
 
 	//
-	// equality comparisons - these make unit tests easier, otherwise use vector relational functions (section 8.7)
+	// component-wise equality operator for vectors, scalar boolean result: ==, != (thanks to c++20)
 	//
 
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
@@ -3818,6 +3813,18 @@ namespace dsga
 		}
 
 		//
+
+		template <std::size_t Row>
+		requires (Row < R)
+		basic_vector<T, C> row() const noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return basic_vector<T, C>(value[Is][Row]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		//
 		// defaulted functions
 		//
 
@@ -3924,22 +3931,277 @@ namespace dsga
 				}
 			}
 		}
+
+		//
+		// assignment operators
+		//
+
+		template <floating_point_dimensional_scalar U>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_matrix &operator =(const basic_matrix<U, C, R> &other) noexcept
+		{
+			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				((value[Is] = other[Is]), ...);
+			}(std::make_index_sequence<C>{});
+
+			return *this;
+		}
+
 	};
 
 	//
 	// matrix operators
 	//
 
-	// component-wise equality operator for matrices, scalar boolean result: ==, !=
+	// component-wise equality operator for matrices, scalar boolean result: ==, != (thanks to c++20)
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	requires implicitly_convertible_to<U, T>
+	constexpr bool operator ==(const basic_matrix<T, C, R> &lhs, const basic_matrix<U, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return ((lhs[Is] == rhs[Is]) && ...);
+		}(std::make_index_sequence<C>{});
+	}
 
-	// unary ops on matrices: ++, --, +, -
+	// unary operators
 
-	// component-wise binary ops with matrix and scalar: +, -, *, /
+	// unary +
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	constexpr auto operator +(const basic_matrix<T, C, R> &arg) noexcept
+	{
+		return basic_matrix<T, C, R>(arg);
+	}
 
-	// component-wise binary ops with same size matrices: +, -, /
+	// unary -
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	constexpr auto operator -(const basic_matrix<T, C, R> &arg) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<T, C, R>((-arg[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
 
-	// linear-algebriac binary ops between a matrix and a vector or matrix: *
+	// pre-increment
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	constexpr auto &operator ++(basic_matrix<T, C, R> &arg) noexcept
+	{
+		[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			((++arg[Is]),...);
+		}(std::make_index_sequence<C>{});
+		return arg;
+	}
 
+	// post-increment
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	constexpr auto operator ++(basic_matrix<T, C, R> &arg, int) noexcept
+	{
+		basic_matrix<T, C, R> value(arg);
+		[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			((++arg[Is]),...);
+		}(std::make_index_sequence<C>{});
+		return value;
+	}
+
+	// pre-decrement
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	constexpr auto &operator --(basic_matrix<T, C, R> &arg) noexcept
+	{
+		[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			((--arg[Is]),...);
+		}(std::make_index_sequence<C>{});
+		return arg;
+	}
+
+	// post-decrement
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	constexpr auto operator --(basic_matrix<T, C, R> &arg, int) noexcept
+	{
+		basic_matrix<T, C, R> value(arg);
+		[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			((--arg[Is]),...);
+		}(std::make_index_sequence<C>{});
+		return value;
+	}
+
+	// operator + with scalar
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
+							  U rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] + rhs)...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator +(U lhs,
+							  const basic_matrix<T, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs + rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// operator - with scalar
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator -(const basic_matrix<T, C, R> &lhs,
+							  U rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] - rhs)...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator -(U lhs,
+							  const basic_matrix<T, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs - rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// operator * with scalar
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
+							  U rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] * rhs)...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator *(U lhs,
+							  const basic_matrix<T, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs * rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// operator / with scalar
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator /(const basic_matrix<T, C, R> &lhs,
+							  U rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] / rhs)...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator /(U lhs,
+							  const basic_matrix<T, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs / rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// operator + with same size matrices
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
+							  const basic_matrix<U, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] + rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// operator - with same size matrices
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator -(const basic_matrix<T, C, R> &lhs,
+							  const basic_matrix<U, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] - rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// operator / with same size matrices
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	constexpr auto operator /(const basic_matrix<T, C, R> &lhs,
+							  const basic_matrix<U, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] / rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	//
+	// linear-algebriac binary ops
+	//
+
+	// matrix * (column) vector => (column) vector
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R,
+		bool W, dimensional_scalar U, typename D>
+	constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
+							  const vector_base<W, U, C, D> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_vector<std::common_type_t<T, U>, R>(dot(lhs.row(Is), rhs)...);
+		}(std::make_index_sequence<R>{});
+	}
+
+	// (row) vector * matrix => (row) vector
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R,
+		bool W, dimensional_scalar U, typename D>
+	constexpr auto operator *(const vector_base<W, U, R, D> &lhs,
+							  const basic_matrix<T, C, R> &rhs) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		{
+			return basic_vector<std::common_type_t<T, U>, C>(dot(lhs, rhs[Is])...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// matrix * matrix => matrix
+
+	// this works generically, but calling row<Is>() redundantly a lot --
+	// could probably use transpose() for more efficiency (for generic approach)
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R,
+		floating_point_dimensional_scalar U, std::size_t M>
+	constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
+							  const basic_matrix<U, M, C> &rhs) noexcept
+	{
+		return [&]<std::size_t ...Js>(std::index_sequence <Js...>)
+		{
+			return basic_matrix<std::common_type_t<T, U>, M, R>(
+				[&]<std::size_t ...Is>(std::index_sequence <Is...>, auto col)
+				{
+					return basic_vector<std::common_type_t<T, U>, R>(dot(lhs.row<Is>(), col)...);
+				}(std::make_index_sequence<R>{}, rhs[Js]) ...);
+		}(std::make_index_sequence<M>{});
+	}
 
 	//
 	// matrix functions
