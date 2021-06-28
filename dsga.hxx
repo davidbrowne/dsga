@@ -4189,24 +4189,24 @@ namespace dsga
 	// to be generic and efficient without for loops, we create a
 	// transpose of lhs, which is inefficent to have to create, but makes
 	// row access efficient for calculating the matrix product.
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R,
-		floating_point_dimensional_scalar U, std::size_t Q>
-	constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
-							  const basic_matrix<U, Q, C> &rhs) noexcept
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R1,
+		floating_point_dimensional_scalar U, std::size_t C2>
+	constexpr auto operator *(const basic_matrix<T, C, R1> &lhs,
+							  const basic_matrix<U, C2, C> &rhs) noexcept
 	{
 		auto transposed = [&]<std::size_t ...Js>(std::index_sequence <Js...>)
 		{
-			return basic_matrix<T, R, C>(lhs.row<Js>()...);
-		}(std::make_index_sequence<R>{});
+			return basic_matrix<T, R1, C>(lhs.row<Js>()...);
+		}(std::make_index_sequence<R1>{});
 
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>)
 		{
-			return basic_matrix<std::common_type_t<T, U>, Q, R>(
+			return basic_matrix<std::common_type_t<T, U>, C2, R1>(
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>, auto col)
 				{
-					return basic_vector<std::common_type_t<T, U>, R>(dot(transposed[Is], col)...);
-				}(std::make_index_sequence<R>{}, rhs[Js]) ...);
-		}(std::make_index_sequence<Q>{});
+					return basic_vector<std::common_type_t<T, U>, R1>(dot(transposed[Is], col)...);
+				}(std::make_index_sequence<R1>{}, rhs[Js]) ...);
+		}(std::make_index_sequence<C2>{});
 	}
 
 	//
