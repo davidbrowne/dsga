@@ -4189,22 +4189,21 @@ namespace dsga
 	// to be generic and efficient without for loops, we create a
 	// transpose of lhs, which is inefficent to have to create, but makes
 	// row access efficient for calculating the matrix product.
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R1,
-		floating_point_dimensional_scalar U, std::size_t C2>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R1, std::size_t C2>
 	constexpr auto operator *(const basic_matrix<T, C, R1> &lhs,
-							  const basic_matrix<U, C2, C> &rhs) noexcept
+							  const basic_matrix<T, C2, C> &rhs) noexcept
 	{
-		auto transposed = [&]<std::size_t ...Js>(std::index_sequence <Js...>)
+		auto transposed = [&]<std::size_t ...Ks>(std::index_sequence <Ks...>)
 		{
-			return basic_matrix<T, R1, C>(lhs.row<Js>()...);
+			return basic_matrix<T, R1, C>(lhs.row<Ks>()...);
 		}(std::make_index_sequence<R1>{});
 
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>)
 		{
-			return basic_matrix<std::common_type_t<T, U>, C2, R1>(
+			return basic_matrix<T, C2, R1>(
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>, auto col)
 				{
-					return basic_vector<std::common_type_t<T, U>, R1>(dot(transposed[Is], col)...);
+					return basic_vector<T, R1>(dot(transposed[Is], col)...);
 				}(std::make_index_sequence<R1>{}, rhs[Js]) ...);
 		}(std::make_index_sequence<C2>{});
 	}
@@ -4219,16 +4218,171 @@ namespace dsga
 		// 8.6 is matrix functions
 		//
 
-		// matrixCompMult() - component-wise matrix multiplication
+		// component-wise matrix multiplication, since operator * is linear-algebraic for a matrix with a vector or other matrix
+		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+		constexpr auto matrixCompMult(const basic_matrix<T, C, R> &lhs,
+									  const basic_matrix<U, C, R> &rhs) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
+			{
+				return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] * rhs[Is])...);
+			}(std::make_index_sequence<C>{});
+		}
 
 		// outerProduct() - matrix from a row vector times a column vector
+		template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1,
+			bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+		requires (floating_point_dimensional_scalar<T1> || floating_point_dimensional_scalar<T2>) && ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
+		constexpr auto outerProduct(const vector_base<W1, T1, C1, D1> &lhs,
+									const vector_base<W2, T2, C2, D2> &rhs) noexcept
+		{
+			return [&]<std::size_t ...Js>(std::index_sequence <Js...>)
+			{
+				return basic_matrix<std::common_type_t<T1, T2>, C1, C2>(
+					[&]<std::size_t ...Is>(std::index_sequence <Is...>, auto row)
+					{
+						return basic_vector<std::common_type_t<T1, T2>, C1>((lhs[Is] * row)...);
+					}(std::make_index_sequence<C1>{}, rhs[Js]) ...);
+			}(std::make_index_sequence<C2>{});
+		}
 
-		// transpose() - self evident
+		// transpose a matrix
+		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+		constexpr auto transpose(const basic_matrix<T, C, R> &arg) noexcept
+		{
+			return [&]<std::size_t ...Is>(std::index_sequence <Is...>)
+			{
+				return basic_matrix<T, R, C>(arg.row<Is>()...);
+			}(std::make_index_sequence<R>{});
+		}
 
 		// determinant() - only on square matrices
 
+		// going for efficiency
+		template <floating_point_dimensional_scalar T>
+		constexpr auto determinant(const basic_matrix<T, 2u, 2u> &arg) noexcept
+		{
+			return 
+				+ arg[0][0] * arg[1][1]
+				- arg[0][1] * arg[1][0]
+				;
+		}
+
+		// going for efficiency
+		template <floating_point_dimensional_scalar T>
+		constexpr auto determinant(const basic_matrix<T, 3u, 3u> &arg) noexcept
+		{
+			// same results as dot(arg[0], cross(arg[1], arg[2]))
+			return
+				+ arg[0][0] * arg[1][1] * arg[2][2]
+				+ arg[1][0] * arg[2][1] * arg[0][2]
+				+ arg[2][0] * arg[0][1] * arg[1][2]
+				- arg[2][0] * arg[1][1] * arg[0][2]
+				- arg[1][0] * arg[0][1] * arg[2][2]
+				- arg[0][0] * arg[2][1] * arg[1][2]
+				;
+		}
+
+		template <floating_point_dimensional_scalar T>
+		constexpr auto determinant(const basic_matrix<T, 4u, 4u> &arg) noexcept
+		{
+			return
+				+ arg[0][0] * arg[1][1] * arg[2][2] * arg[3][3] + arg[0][0] * arg[2][1] * arg[3][2] * arg[1][3] + arg[0][0] * arg[3][1] * arg[1][2] * arg[2][3]
+				- arg[0][0] * arg[3][1] * arg[2][2] * arg[1][3] - arg[0][0] * arg[2][1] * arg[1][2] * arg[3][3] - arg[0][0] * arg[1][1] * arg[3][2] * arg[2][3]
+				- arg[1][0] * arg[0][1] * arg[2][2] * arg[3][3] - arg[2][0] * arg[0][1] * arg[3][2] * arg[1][3] - arg[3][0] * arg[0][1] * arg[1][2] * arg[2][3]
+				+ arg[3][0] * arg[0][1] * arg[2][2] * arg[1][3] + arg[2][0] * arg[0][1] * arg[1][2] * arg[3][3] + arg[1][0] * arg[0][1] * arg[3][2] * arg[2][3]
+
+				+ arg[1][0] * arg[2][1] * arg[0][2] * arg[3][3] + arg[2][0] * arg[3][1] * arg[0][2] * arg[1][3] + arg[3][0] * arg[1][1] * arg[0][2] * arg[2][3]
+				- arg[3][0] * arg[2][1] * arg[0][2] * arg[1][3] - arg[2][0] * arg[1][1] * arg[0][2] * arg[3][3] - arg[1][0] * arg[3][1] * arg[0][2] * arg[2][3]
+				- arg[1][0] * arg[2][1] * arg[3][2] * arg[0][3] - arg[2][0] * arg[3][1] * arg[1][2] * arg[0][3] - arg[3][0] * arg[1][1] * arg[2][2] * arg[0][3]
+				+ arg[3][0] * arg[2][1] * arg[1][2] * arg[0][3] + arg[2][0] * arg[1][1] * arg[3][2] * arg[0][3] + arg[1][0] * arg[3][1] * arg[2][2] * arg[0][3]
+				;
+		}
+
 		// inverse() - only on square matrices
 
+		// going for efficiency
+		template <floating_point_dimensional_scalar T>
+		constexpr auto inverse(const basic_matrix<T, 2u, 2u> &arg) noexcept
+		{
+			return basic_matrix<T, 2u, 2u>( arg[1][1], -arg[0][1],
+										   -arg[1][0],  arg[0][0]) / determinant(arg);
+		}
+
+		// going for efficiency
+		template <floating_point_dimensional_scalar T>
+		constexpr auto inverse(const basic_matrix<T, 3u, 3u> &arg) noexcept
+		{
+			return basic_matrix<T, 3u, 3u>(
+				+(arg[1][1] * arg[2][2] - arg[2][1] * arg[1][2]),
+				-(arg[0][1] * arg[2][2] - arg[2][1] * arg[0][2]),
+				+(arg[0][1] * arg[1][2] - arg[1][1] * arg[0][2]),
+				-(arg[1][0] * arg[2][2] - arg[2][0] * arg[1][2]),
+				+(arg[0][0] * arg[2][2] - arg[2][0] * arg[0][2]),
+				-(arg[0][0] * arg[1][2] - arg[1][0] * arg[0][2]),
+				+(arg[1][0] * arg[2][1] - arg[2][0] * arg[1][1]),
+				-(arg[0][0] * arg[2][1] - arg[2][0] * arg[0][1]),
+				+(arg[0][0] * arg[1][1] - arg[1][0] * arg[0][1])
+				) / determinant(arg);
+		}
+
+		// going for efficiency
+		template <floating_point_dimensional_scalar T>
+		constexpr auto inverse(const basic_matrix<T, 4u, 4u> &arg) noexcept
+		{
+			return basic_matrix<T, 4u, 4u>(
+				+ arg[1][1] * arg[2][2] * arg[3][3] + arg[2][1] * arg[3][2] * arg[1][3] + arg[3][1] * arg[1][2] * arg[2][3]
+				- arg[3][1] * arg[2][2] * arg[1][3] - arg[2][1] * arg[1][2] * arg[3][3] - arg[1][1] * arg[3][2] * arg[2][3],
+
+				- arg[0][1] * arg[2][2] * arg[3][3] - arg[2][1] * arg[3][2] * arg[0][3] - arg[3][1] * arg[0][2] * arg[2][3]
+				+ arg[3][1] * arg[2][2] * arg[0][3] + arg[2][1] * arg[0][2] * arg[3][3] + arg[0][1] * arg[3][2] * arg[2][3],
+
+				+ arg[0][1] * arg[1][2] * arg[3][3] + arg[1][1] * arg[3][2] * arg[0][3] + arg[3][1] * arg[0][2] * arg[1][3]
+				- arg[3][1] * arg[1][2] * arg[0][3] - arg[1][1] * arg[0][2] * arg[3][3] - arg[0][1] * arg[3][2] * arg[1][3],
+
+				- arg[0][1] * arg[1][2] * arg[2][3] - arg[1][1] * arg[2][2] * arg[0][3] - arg[2][1] * arg[0][2] * arg[1][3]
+				+ arg[2][1] * arg[1][2] * arg[0][3] + arg[1][1] * arg[0][2] * arg[2][3] + arg[0][1] * arg[2][2] * arg[1][3],
+
+
+				- arg[1][0] * arg[2][2] * arg[3][3] - arg[2][0] * arg[3][2] * arg[1][3] - arg[3][0] * arg[1][2] * arg[2][3]
+				+ arg[3][0] * arg[2][2] * arg[1][3] + arg[2][0] * arg[1][2] * arg[3][3] + arg[1][0] * arg[3][2] * arg[2][3],
+
+				+ arg[0][0] * arg[2][2] * arg[3][3] + arg[2][0] * arg[3][2] * arg[0][3] + arg[3][0] * arg[0][2] * arg[2][3]
+				- arg[3][0] * arg[2][2] * arg[0][3] - arg[2][0] * arg[0][2] * arg[3][3] - arg[0][0] * arg[3][2] * arg[2][3],
+
+				- arg[0][0] * arg[1][2] * arg[3][3] - arg[1][0] * arg[3][2] * arg[0][3] - arg[3][0] * arg[0][2] * arg[1][3]
+				+ arg[3][0] * arg[1][2] * arg[0][3] + arg[1][0] * arg[0][2] * arg[3][3] + arg[0][0] * arg[3][2] * arg[1][3],
+
+				+ arg[0][0] * arg[1][2] * arg[2][3] + arg[1][0] * arg[2][2] * arg[0][3] + arg[2][0] * arg[0][2] * arg[1][3]
+				- arg[2][0] * arg[1][2] * arg[0][3] - arg[1][0] * arg[0][2] * arg[2][3] - arg[0][0] * arg[2][2] * arg[1][3],
+
+
+				+ arg[1][0] * arg[2][1] * arg[3][3] + arg[2][0] * arg[3][1] * arg[1][3] + arg[3][0] * arg[1][1] * arg[2][3]
+				- arg[3][0] * arg[2][1] * arg[1][3] - arg[2][0] * arg[1][1] * arg[3][3] - arg[1][0] * arg[3][1] * arg[2][3],
+
+				- arg[0][0] * arg[2][1] * arg[3][3] - arg[2][0] * arg[3][1] * arg[0][3] - arg[3][0] * arg[0][1] * arg[2][3]
+				+ arg[3][0] * arg[2][1] * arg[0][3] + arg[2][0] * arg[0][1] * arg[3][3] + arg[0][0] * arg[3][1] * arg[2][3],
+
+				+ arg[0][0] * arg[1][1] * arg[3][3] + arg[1][0] * arg[3][1] * arg[0][3] + arg[3][0] * arg[0][1] * arg[1][3]
+				- arg[3][0] * arg[1][1] * arg[0][3] - arg[1][0] * arg[0][1] * arg[3][3] - arg[0][0] * arg[3][1] * arg[1][3],
+
+				- arg[0][0] * arg[1][1] * arg[2][3] - arg[1][0] * arg[2][1] * arg[0][3] - arg[2][0] * arg[0][1] * arg[1][3]
+				+ arg[2][0] * arg[1][1] * arg[0][3] + arg[1][0] * arg[0][1] * arg[2][3] + arg[0][0] * arg[2][1] * arg[1][3],
+
+
+				- arg[1][0] * arg[2][1] * arg[3][2] - arg[2][0] * arg[3][1] * arg[1][2] - arg[3][0] * arg[1][1] * arg[2][2]
+				+ arg[3][0] * arg[2][1] * arg[1][2] + arg[2][0] * arg[1][1] * arg[3][2] + arg[1][0] * arg[3][1] * arg[2][2],
+
+				+ arg[0][0] * arg[2][1] * arg[3][2] + arg[2][0] * arg[3][1] * arg[0][2] + arg[3][0] * arg[0][1] * arg[2][2]
+				- arg[3][0] * arg[2][1] * arg[0][2] - arg[2][0] * arg[0][1] * arg[3][2] - arg[0][0] * arg[3][1] * arg[2][2],
+
+				- arg[0][0] * arg[1][1] * arg[3][2] - arg[1][0] * arg[3][1] * arg[0][2] - arg[3][0] * arg[0][1] * arg[1][2]
+				+ arg[3][0] * arg[1][1] * arg[0][2] + arg[1][0] * arg[0][1] * arg[3][2] + arg[0][0] * arg[3][1] * arg[1][2],
+
+				+ arg[0][0] * arg[1][1] * arg[2][2] + arg[1][0] * arg[2][1] * arg[0][2] + arg[2][0] * arg[0][1] * arg[1][2]
+				- arg[2][0] * arg[1][1] * arg[0][2] - arg[1][0] * arg[0][1] * arg[2][2] - arg[0][0] * arg[2][1] * arg[1][2]
+				) / determinant(arg);
+		}
 	}
 }	// namespace dsga
 
