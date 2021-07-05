@@ -48,12 +48,13 @@ fvec4 sometest()
 
 	[[ maybe_unused]] auto op = outerProduct(dvec3(3, 5, 7), dvec3(2, 4, 6));
 
-	auto some3x3 = dsga::basic_matrix<float, 3u, 3u>(vec3(1, 2, 3), vec3(-3, 4, -2), vec3(2, -2, 1));
+	auto some3x3 = mat3(vec3(1, 2, 3), vec3(-3, 4, -2), vec3(2, -2, 1));
 	auto iverse = inverse(some3x3);
 	[[ maybe_unused]] auto ident1 = some3x3 * iverse;
 	[[ maybe_unused]] auto ident2 = iverse * some3x3;
 
-	auto some4x4 = dsga::basic_matrix<float, 4u, 4u>(vec4(1, 2, 1, -2), vec4(-2, 1, -2, 1), vec4(0, 2, -2, 1), vec4(-1, -1, 2, 2));
+//	auto some4x4 = dsga::basic_matrix<double, 4u, 4u>(dvec4(1, 2, 1, -2), dvec4(-2, 1, -2, 1), dvec4(0, 2, -2, 1), dvec4(-1, -1, 2, 2));
+	auto some4x4 = dmat4(dvec4(1, 0, 2, 2), dvec4(0, 2, 1, 0), dvec4(0, 1, 0, 1), dvec4(1, 2, 1, 4));
 	auto iverse4 = inverse(some4x4);
 	[[ maybe_unused]] auto ident4_1 = some4x4 * iverse4;
 	[[ maybe_unused]] auto ident4_2 = iverse4 * some4x4;

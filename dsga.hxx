@@ -3802,12 +3802,12 @@ namespace dsga
 		// operator [] gets the column vector
 		//
 
-		basic_vector<T, R> &operator [](std::size_t index) noexcept
+		constexpr basic_vector<T, R> &operator [](std::size_t index) noexcept
 		{
 			return value[index];
 		}
 
-		const basic_vector<T, R> &operator [](std::size_t index) const noexcept
+		constexpr const basic_vector<T, R> &operator [](std::size_t index) const noexcept
 		{
 			return value[index];
 		}
@@ -3816,7 +3816,7 @@ namespace dsga
 
 		template <std::size_t Row>
 		requires (Row < R)
-		basic_vector<T, C> row() const noexcept
+		constexpr basic_vector<T, C> row() const noexcept
 		{
 			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
@@ -3843,7 +3843,7 @@ namespace dsga
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires met_component_count<Size, Args...>
-		basic_matrix(Args ... args) noexcept
+		constexpr basic_matrix(Args ... args) noexcept
 		{
 			auto arg_tuple = flatten_args_to_tuple(args...);
 			[&]<std::size_t ...Is>(std::index_sequence <Is...>)
@@ -3855,7 +3855,7 @@ namespace dsga
 		// diagonal constructor for square matrices
 		template <dimensional_scalar U>
 		requires std::convertible_to<U, T> && (C == R)
-		basic_matrix(U arg) noexcept
+		constexpr basic_matrix(U arg) noexcept
 		{
 			for (int i = 0; i < C; ++i)
 			{
@@ -3868,8 +3868,8 @@ namespace dsga
 
 		// implicit constructor from a matrix
 		template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
-		requires implicitly_convertible_to<U, T> 
-		basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+		requires implicitly_convertible_to<U, T> && (Cols != C || Rows != R)
+		constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{
@@ -3901,8 +3901,8 @@ namespace dsga
 
 		// explicit constructor from a matrix
 		template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
-		explicit basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>) && (Cols != C || Rows != R)
+		explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{
@@ -4195,7 +4195,7 @@ namespace dsga
 	{
 		auto transposed = [&]<std::size_t ...Ks>(std::index_sequence <Ks...>)
 		{
-			return basic_matrix<T, R1, C>(lhs.row<Ks>()...);
+			return basic_matrix<T, R1, C>(lhs.template row<Ks>()...);
 		}(std::make_index_sequence<R1>{});
 
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>)
@@ -4203,7 +4203,7 @@ namespace dsga
 			return basic_matrix<T, C2, R1>(
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>, auto col)
 				{
-					return basic_vector<T, R1>(dot(transposed[Is], col)...);
+					return basic_vector<T, R1>(functions::dot(transposed[Is], col)...);
 				}(std::make_index_sequence<R1>{}, rhs[Js]) ...);
 		}(std::make_index_sequence<C2>{});
 	}
@@ -4252,7 +4252,7 @@ namespace dsga
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence <Is...>)
 			{
-				return basic_matrix<T, R, C>(arg.row<Is>()...);
+				return basic_matrix<T, R, C>(arg.template row<Is>()...);
 			}(std::make_index_sequence<R>{});
 		}
 

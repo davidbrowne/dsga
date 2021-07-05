@@ -173,7 +173,7 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. The 
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   59 |   59 passed | 0 failed | 0 skipped
-[doctest] assertions: 1509 | 1509 passed | 0 failed |
+[doctest] assertions: 1522 | 1522 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
