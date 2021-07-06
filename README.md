@@ -156,7 +156,8 @@ We want to use both types of vectors in the same way, for constructors, equality
 It provides the following functions that can be used to generically manipulate and access vector data:
 * ```set()``` - calls ```static_cast<Derived *>(this)->init()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it can be used as an lvalue. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
 * ```operator[]``` - calls ```static_cast<Derived *>(this)->at()```, which is a reference to a single data value. The data is in logical order.
-* ```size()``` - relies on Count template parameter
+* ```length()``` - relies on Count template parameter, returns ```int```
+* ```size()``` - relies on Count template parameter, returns ```std::size_t```
 * ```data()``` - relies on raw_data() in Derived - pointer access in physical order
 * ```sequence()``` - relies on make_sequence_pack() - the physical order to logical order mapping
 
@@ -166,21 +167,21 @@ It provides the following functions that can be used to generically manipulate a
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. The tests have been run on:
 
 * MSVC 2019 - v16.10
-* clang 12.0.0 on Windows with MSVC installed (uses MSVC standard library)
 
 ```
 [doctest] doctest version is "2.4.6"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   59 |   59 passed | 0 failed | 0 skipped
-[doctest] assertions: 1522 | 1522 passed | 0 failed |
+[doctest] assertions: 1535 | 1535 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-The unit tests have not been run with these compilers, but the project compiled without error with these (via [Compiler Explorer](https://godbolt.org/)):
+The unit tests will not run with these compilers, primarily due to lack of support for ```std::is_corresponding_member()```, but the project compiled without error with these (via [Compiler Explorer](https://godbolt.org/)):
 
 * gcc 11.1, but not gcc 10.3 (no bit_cast)
 * clang trunk, but not standard clang 12.0.0 (no bit_cast)
+* clang 12.0.0 on Windows with MSVC installed (uses MSVC standard library)
 
 ## Similar Projects
 

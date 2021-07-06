@@ -59,7 +59,6 @@ fvec4 sometest()
 	[[ maybe_unused]] auto ident4_1 = some4x4 * iverse4;
 	[[ maybe_unused]] auto ident4_2 = iverse4 * some4x4;
 
-
 	dsga::storage_wrapper<int, 4> sw{ 999, 9999, 99999, 999999 };
 	sw.set(1, 2, 3, 4);
 

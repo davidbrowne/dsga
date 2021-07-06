@@ -291,10 +291,13 @@ namespace dsga
 		constexpr const	T *			data()							const	noexcept						{ return this->as_derived().raw_data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto					sequence()			const	noexcept						{ return this->as_derived().make_sequence_pack(); }
+		constexpr		auto		sequence()						const	noexcept						{ return this->as_derived().make_sequence_pack(); }
 
 		// number of accessible T elements - required by spec
 		constexpr		int			length()						const	noexcept						{ return static_cast<int>(Count); }
+
+		// not required by spec, but more c++ container-like
+		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
 	};
 
 	// basic_vector will act as the primary vector class in this library.
@@ -493,7 +496,7 @@ namespace dsga
 		dimensional_storage_t<T, Size> value;
 
 		// logically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
+		// allows for self-assignment without aliasing issues
 		template <typename ... Args>
 		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
 		constexpr void init(Args ...args) noexcept
@@ -539,7 +542,7 @@ namespace dsga
 		}
 
 		// physically contiguous -- used by data() for read/write access to data
-		constexpr T *raw_data() noexcept
+		constexpr T *raw_data() noexcept requires Writable
 		{
 			return value.data();
 		}
@@ -592,7 +595,7 @@ namespace dsga
 		dimensional_storage_t<T, Size> value;
 
 		// logically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
+		// allows for self-assignment without aliasing issues
 		template <typename U>
 		requires Writable && std::convertible_to<U, T>
 		constexpr void init(U other) noexcept
@@ -668,7 +671,7 @@ namespace dsga
 		}
 
 		// physically contiguous -- used by data() for read/write access to data
-		constexpr T *raw_data() noexcept
+		constexpr T *raw_data() noexcept requires Writable
 		{
 			return value.data();
 		}
@@ -835,7 +838,7 @@ namespace dsga
 		//
 
 		// logically and physically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
+		// allows for self-assignment without aliasing issues
 		template <typename U>
 		requires std::convertible_to<U, T>
 		constexpr void init(U value) noexcept
@@ -852,7 +855,7 @@ namespace dsga
 		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -993,7 +996,7 @@ namespace dsga
 		//
 
 		// logically and physically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
+		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void init(Args ...args) noexcept
@@ -1013,7 +1016,7 @@ namespace dsga
 		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1273,7 +1276,7 @@ namespace dsga
 		//
 
 		// logically and physically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
+		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void init(Args ...args) noexcept
@@ -1293,8 +1296,7 @@ namespace dsga
 		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
-
+		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -1837,7 +1839,7 @@ namespace dsga
 		//
 
 		// logically and physically contiguous - used by set() for write access to data
-		// allows for self-assignment that works properly
+		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void init(Args ...args) noexcept
@@ -1857,7 +1859,7 @@ namespace dsga
 		constexpr	const	T * 	raw_data()				const	noexcept	{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto		make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
 
 		// support for range-for loop
 		constexpr auto begin()			noexcept	{ return store.value.begin(); }
@@ -4344,7 +4346,7 @@ namespace dsga
 	{
 		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
 		{
-			return basic_vector<std::common_type_t<T, U>, R>(dot(lhs.row(Is), rhs)...);
+			return basic_vector<std::common_type_t<T, U>, R>(dot(lhs.template row<Is>(), rhs)...);
 		}(std::make_index_sequence<R>{});
 	}
 
@@ -4564,38 +4566,38 @@ using dvec3 = regvec3<double>;
 using dvec4 = regvec4<double>;
 
 // float matrices
-using mat2x2 = dsga::basic_matrix<float, 2, 2>;
-using mat2x3 = dsga::basic_matrix<float, 2, 3>;
-using mat2x4 = dsga::basic_matrix<float, 2, 4>;
-using mat3x2 = dsga::basic_matrix<float, 3, 2>;
-using mat3x3 = dsga::basic_matrix<float, 3, 3>;
-using mat3x4 = dsga::basic_matrix<float, 3, 4>;
-using mat4x2 = dsga::basic_matrix<float, 4, 2>;
-using mat4x3 = dsga::basic_matrix<float, 4, 3>;
-using mat4x4 = dsga::basic_matrix<float, 4, 4>;
+using mat2x2 = dsga::basic_matrix<float, 2u, 2u>;
+using mat2x3 = dsga::basic_matrix<float, 2u, 3u>;
+using mat2x4 = dsga::basic_matrix<float, 2u, 4u>;
+using mat3x2 = dsga::basic_matrix<float, 3u, 2u>;
+using mat3x3 = dsga::basic_matrix<float, 3u, 3u>;
+using mat3x4 = dsga::basic_matrix<float, 3u, 4u>;
+using mat4x2 = dsga::basic_matrix<float, 4u, 2u>;
+using mat4x3 = dsga::basic_matrix<float, 4u, 3u>;
+using mat4x4 = dsga::basic_matrix<float, 4u, 4u>;
 
-using mat2 = dsga::basic_matrix<float, 2, 2>;
-using mat3 = dsga::basic_matrix<float, 3, 3>;
-using mat4 = dsga::basic_matrix<float, 4, 4>;
+using mat2 = dsga::basic_matrix<float, 2u, 2u>;
+using mat3 = dsga::basic_matrix<float, 3u, 3u>;
+using mat4 = dsga::basic_matrix<float, 4u, 4u>;
 
 // double matrices
-using dmat2x2 = dsga::basic_matrix<double, 2, 2>;
-using dmat2x3 = dsga::basic_matrix<double, 2, 3>;
-using dmat2x4 = dsga::basic_matrix<double, 2, 4>;
-using dmat3x2 = dsga::basic_matrix<double, 3, 2>;
-using dmat3x3 = dsga::basic_matrix<double, 3, 3>;
-using dmat3x4 = dsga::basic_matrix<double, 3, 4>;
-using dmat4x2 = dsga::basic_matrix<double, 4, 2>;
-using dmat4x3 = dsga::basic_matrix<double, 4, 3>;
-using dmat4x4 = dsga::basic_matrix<double, 4, 4>;
+using dmat2x2 = dsga::basic_matrix<double, 2u, 2u>;
+using dmat2x3 = dsga::basic_matrix<double, 2u, 3u>;
+using dmat2x4 = dsga::basic_matrix<double, 2u, 4u>;
+using dmat3x2 = dsga::basic_matrix<double, 3u, 2u>;
+using dmat3x3 = dsga::basic_matrix<double, 3u, 3u>;
+using dmat3x4 = dsga::basic_matrix<double, 3u, 4u>;
+using dmat4x2 = dsga::basic_matrix<double, 4u, 2u>;
+using dmat4x3 = dsga::basic_matrix<double, 4u, 3u>;
+using dmat4x4 = dsga::basic_matrix<double, 4u, 4u>;
 
-using dmat2 = dsga::basic_matrix<double, 2, 2>;
-using dmat3 = dsga::basic_matrix<double, 3, 3>;
-using dmat4 = dsga::basic_matrix<double, 4, 4>;
+using dmat2 = dsga::basic_matrix<double, 2u, 2u>;
+using dmat3 = dsga::basic_matrix<double, 3u, 3u>;
+using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
 
 
 //
-// bring the vector functions into the global namespace
+// bring the vector and matrix free functions into the global namespace
 //
 using namespace dsga::functions;
 

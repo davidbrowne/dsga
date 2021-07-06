@@ -1751,6 +1751,23 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_aggregate_v<dswizzle4>);
 		}
 
+		SUBCASE("type traits for common initial sequence for anonymous union")
+		{
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::value, &dsga::indexed_vector<int, 1, 1, 0>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::value, &dsga::indexed_vector<int, 2, 2, 1, 0>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 3>::value, &dsga::indexed_vector<int, 3, 3, 2, 0, 1>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 1, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 2, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::value, &dsga::indexed_vector<int, 4, 2, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::value, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::value, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
+		}
+
 		SUBCASE("type traits for basic_matrix")
 		{
 			using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
