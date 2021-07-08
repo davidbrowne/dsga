@@ -52,15 +52,7 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 Current version: `v0.3.0`
 
-Implemented:
-
-The vector class is implemented. Still missing:
-
-* Most tests for vector functions (from section 8 of the spec)
-
-Implementation just getting started:
-
-* The matrix classes, their interactions with vectors, and their tests.
+***All the vector and matrix functionality is implemented***. While there are many tests, there are many more to write for both the vectors and the matrices.
 
 ## Usage
 
@@ -136,6 +128,36 @@ using dscal = regvec1<double>;
 using dvec2 = regvec2<double>;
 using dvec3 = regvec3<double>;
 using dvec4 = regvec4<double>;
+
+// float matrices
+using mat2x2 = dsga::basic_matrix<float, 2u, 2u>;
+using mat2x3 = dsga::basic_matrix<float, 2u, 3u>;
+using mat2x4 = dsga::basic_matrix<float, 2u, 4u>;
+using mat3x2 = dsga::basic_matrix<float, 3u, 2u>;
+using mat3x3 = dsga::basic_matrix<float, 3u, 3u>;
+using mat3x4 = dsga::basic_matrix<float, 3u, 4u>;
+using mat4x2 = dsga::basic_matrix<float, 4u, 2u>;
+using mat4x3 = dsga::basic_matrix<float, 4u, 3u>;
+using mat4x4 = dsga::basic_matrix<float, 4u, 4u>;
+
+using mat2 = dsga::basic_matrix<float, 2u, 2u>;
+using mat3 = dsga::basic_matrix<float, 3u, 3u>;
+using mat4 = dsga::basic_matrix<float, 4u, 4u>;
+
+// double matrices
+using dmat2x2 = dsga::basic_matrix<double, 2u, 2u>;
+using dmat2x3 = dsga::basic_matrix<double, 2u, 3u>;
+using dmat2x4 = dsga::basic_matrix<double, 2u, 4u>;
+using dmat3x2 = dsga::basic_matrix<double, 3u, 2u>;
+using dmat3x3 = dsga::basic_matrix<double, 3u, 3u>;
+using dmat3x4 = dsga::basic_matrix<double, 3u, 4u>;
+using dmat4x2 = dsga::basic_matrix<double, 4u, 2u>;
+using dmat4x3 = dsga::basic_matrix<double, 4u, 3u>;
+using dmat4x4 = dsga::basic_matrix<double, 4u, 4u>;
+
+using dmat2 = dsga::basic_matrix<double, 2u, 2u>;
+using dmat3 = dsga::basic_matrix<double, 3u, 3u>;
+using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
 ```
 
 ## How It Works
@@ -150,17 +172,16 @@ We want to use both types of vectors in the same way, for constructors, equality
 ```vector_base``` carries the following information:
 * Whether it can be used as an lvalue, i.e., is it writable
 * The type of the data in the vector (some arithmetic type)
-* How many elements are in the vector (1-4), i.e., the Count
+* How many elements are in the vector (1-4), i.e., the ```Count```
 * The type of the derived class
 
 It provides the following functions that can be used to generically manipulate and access vector data:
-* ```set()``` - calls ```static_cast<Derived *>(this)->init()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it can be used as an lvalue. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
-* ```operator[]``` - calls ```static_cast<Derived *>(this)->at()```, which is a reference to a single data value. The data is in logical order.
-* ```length()``` - relies on Count template parameter, returns ```int```
-* ```size()``` - relies on Count template parameter, returns ```std::size_t```
-* ```data()``` - relies on raw_data() in Derived - pointer access in physical order
-* ```sequence()``` - relies on make_sequence_pack() - the physical order to logical order mapping
-
+* ```set()``` - relies on ```init()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it is writable. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
+* ```operator[]``` - relies on ```at()```, which is a reference to a single data value. If writable then can use as an lvalue. The data is in logical order.
+* ```data()``` - provides pointer to data access via ```raw_data()```. If writable can write down the dereferenced pointer. Pointer access is in physical order.
+* ```sequence()``` - relies on ```make_sequence_pack()```. The physical order to logical order mapping in a parameter pack.
+*  ```length()``` - relies on ```Count``` template parameter, and it returns type ```int```.
+* ```size()``` - relies on ```Count``` template parameter, and it returns type ```std::size_t```.
 
 ## Testing
 
@@ -181,7 +202,7 @@ The unit tests will not run with these compilers, primarily due to lack of suppo
 
 * gcc 11.1, but not gcc 10.3 (no bit_cast)
 * clang trunk, but not standard clang 12.0.0 (no bit_cast)
-* clang 12.0.0 on Windows with MSVC installed (uses MSVC standard library)
+* clang 12.0.0 on Windows with MSVC installed (uses MSVC standard library so it can use bit_cast)
 
 ## Similar Projects
 
