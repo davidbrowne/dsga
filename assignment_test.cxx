@@ -26,10 +26,10 @@ TEST_SUITE("test assignment")
 	constexpr uvec3 uthree(0xae50d46b, 0x10712fd0, 0x47946919);
 	constexpr uvec4 ufour(0x686e22e1, 0x4b79b211, 0x5f70e079, 0x5c30ee44);
 
-	// all default assignment *is* implemented inside the class, so each dimension of basic_vector has its own implementation
-	TEST_CASE("default assignment")
+	// all standard assignment *is* implemented inside the class, so each dimension of basic_vector has its own implementation
+	TEST_CASE("vector standard assignment")
 	{
-		SUBCASE("1D default assignment =")
+		SUBCASE("1D standard assignment =")
 		{
 			iscal v1(97);
 			ivec4 v4(17);
@@ -41,7 +41,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v4, ivec4(17, 25, 17, 17));
 		}
 
-		SUBCASE("2D default assignment =")
+		SUBCASE("2D standard assignment =")
 		{
 			ivec2 v2(83);
 			ivec4 v4(17);
@@ -54,7 +54,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v4, ivec4(10, 83, 20, 83));
 		}
 
-		SUBCASE("3D default assignment =")
+		SUBCASE("3D standard assignment =")
 		{
 			ivec3 v3(71);
 			ivec4 v4(17);
@@ -68,7 +68,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(44, 33, 71));
 		}
 
-		SUBCASE("4D default assignment =")
+		SUBCASE("4D standard assignment =")
 		{
 			ivec2 v2(83, 29);
 			ivec3 v3(71, 10, 4);
@@ -85,7 +85,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator +=")
+	TEST_CASE("vector operator +=")
 	{
 		SUBCASE("basic_vector operator +=")
 		{
@@ -120,7 +120,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator -=")
+	TEST_CASE("vector operator -=")
 	{
 		SUBCASE("basic_vector operator -=")
 		{
@@ -155,7 +155,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator *=")
+	TEST_CASE("vector operator *=")
 	{
 		SUBCASE("basic_vector operator *=")
 		{
@@ -190,7 +190,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator /=")
+	TEST_CASE("vector operator /=")
 	{
 		SUBCASE("basic_vector operator /=")
 		{
@@ -225,7 +225,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator %=")
+	TEST_CASE("vector operator %=")
 	{
 		SUBCASE("basic_vector operator %=")
 		{
@@ -260,7 +260,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator <<=")
+	TEST_CASE("vector operator <<=")
 	{
 		SUBCASE("basic_vector operator <<=")
 		{
@@ -295,7 +295,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator >>=")
+	TEST_CASE("vector operator >>=")
 	{
 		SUBCASE("basic_vector operator >>=")
 		{
@@ -329,7 +329,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(20, 30, 40));
 		}
 	}
-	TEST_CASE("operator &=")
+	TEST_CASE("vector operator &=")
 	{
 		SUBCASE("basic_vector operator &=")
 		{
@@ -364,7 +364,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator |=")
+	TEST_CASE("vector operator |=")
 	{
 		SUBCASE("basic_vector operator |=")
 		{
@@ -399,7 +399,7 @@ TEST_SUITE("test assignment")
 		}
 	}
 
-	TEST_CASE("operator ^=")
+	TEST_CASE("vector operator ^=")
 	{
 		SUBCASE("basic_vector operator ^=")
 		{
@@ -432,5 +432,11 @@ TEST_SUITE("test assignment")
 			v3.xzy ^= ufour.w;
 			CHECK_EQ(v3, uvec3(0xe6418336, 0x1e4e7277, 0x87577383));
 		}
+	}
+
+	TEST_CASE("matrix standard assignment =")
+	{
+		// A = B;
+
 	}
 }

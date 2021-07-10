@@ -18,7 +18,7 @@
 // operators are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test operators")
 {
-	TEST_CASE("angle and trigonometry functions")
+	TEST_CASE("vector angle and trigonometry functions")
 	{
 		const float my_pi = std::numbers::pi_v<float>;
 		fvec3 degs(30, 45, 60);
@@ -91,7 +91,7 @@ TEST_SUITE("test operators")
 		}
 	}
 
-	TEST_CASE("exponential functions")
+	TEST_CASE("vector exponential functions")
 	{
 		SUBCASE("non-sqrt related")
 		{
@@ -124,7 +124,7 @@ TEST_SUITE("test operators")
 		}
 	}
 
-	TEST_CASE("common functions")
+	TEST_CASE("vector common functions")
 	{
 		SUBCASE("most common")
 		{
@@ -201,7 +201,7 @@ TEST_SUITE("test operators")
 		}
 	}
 
-	TEST_CASE("geometric functions")
+	TEST_CASE("vector geometric functions")
 	{
 		SUBCASE("generic vector functions")
 		{
@@ -253,6 +253,22 @@ TEST_SUITE("test operators")
 			// all()
 
 			// not() - c++ doesn't allow not(), so Not()
+
 		}
 	}
+
+	TEST_CASE("matrix functions")
+	{
+		// matrixCompMult()
+
+		// outerProduct()
+
+		// transpose()
+
+		// determinant()
+
+		// inverse()
+
+	}
+
 }

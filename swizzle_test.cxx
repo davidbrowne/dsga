@@ -1780,6 +1780,8 @@ TEST_SUITE("test swizzling applications")
 			// https://stackoverflow.com/questions/48209179/do-scalar-members-in-a-union-count-towards-the-common-initial-sequence
 			// https://stackoverflow.com/questions/48058545/are-there-any-guarantees-for-unions-that-contain-a-wrapped-type-and-the-type-its
 
+#if defined(__cpp_lib_is_layout_compatible)
+
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::value, &dsga::indexed_vector<int, 1, 1, 0>::value));
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::value, &dsga::indexed_vector<int, 2, 2, 1, 0>::value));
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 3>::value, &dsga::indexed_vector<int, 3, 3, 2, 0, 1>::value));
@@ -1793,6 +1795,8 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::value, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value));
 			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
 			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
+
+#endif
 		}
 
 		SUBCASE("type traits for basic_matrix")
@@ -1803,8 +1807,10 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_default_constructible_v<dmat4>);
 			CHECK_UNARY(std::is_trivially_constructible_v<dmat4>);
 			CHECK_UNARY(std::is_trivially_default_constructible_v<dmat4>);
+#if !defined(__clang__)
 			CHECK_UNARY(std::is_trivially_copy_constructible_v<dmat4>);
 			CHECK_UNARY(std::is_trivially_move_constructible_v<dmat4>);
+#endif
 			CHECK_UNARY(std::is_trivially_copyable_v<dmat4>);
 			CHECK_UNARY(std::is_trivial_v<dmat4>);
 			CHECK_UNARY(std::is_copy_assignable_v<dmat4>);

@@ -188,4 +188,10 @@ TEST_SUITE("test comparisons")
 			CHECK_NE(ivec2(555, 888).xyyx, ivec4(555, 888, 555, 888));
 		}
 	}
+
+	TEST_CASE("matrix comparisons")
+	{
+		// (A == B)
+	}
+
 }

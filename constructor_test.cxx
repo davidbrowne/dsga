@@ -22,7 +22,7 @@ TEST_SUITE("test constructors")
 	constexpr ivec2	cx_two		(7, 8);
 	[[ maybe_unused ]] constexpr iscal	cx_one		(9);
 
-	TEST_CASE("1D constructors")
+	TEST_CASE("vector 1D constructors")
 	{
 		// the four non-defaulted constructors
 		fscal c1d_1(cx_four);		// #1 - implicit type conversion
@@ -48,7 +48,7 @@ TEST_SUITE("test constructors")
 		CHECK_NE(cld_4, iscal(3));
 	}
 
-	TEST_CASE("2D constructors")
+	TEST_CASE("vector 2D constructors")
 	{
 		// the five non-defaulted constructors
 		ivec2 c2d_1(17);			// #1
@@ -79,7 +79,7 @@ TEST_SUITE("test constructors")
 		CHECK_NE(c2d_5, ivec2(100, 75));
 	}
 
-	TEST_CASE("3D constructors")
+	TEST_CASE("vector 3D constructors")
 	{
 		// the eight non-defaulted constructors
 		ivec3 c3d_1(23);				// #1
@@ -125,7 +125,7 @@ TEST_SUITE("test constructors")
 		CHECK_NE(c3d_8, ivec3(42, 2, 3));
 	}
 
-	TEST_CASE("4D constructors")
+	TEST_CASE("vector 4D constructors")
 	{
 		// the fourteen non-defaulted constructors
 		ivec4 c4d_01(-8);					// #1
@@ -199,5 +199,12 @@ TEST_SUITE("test constructors")
 
 		CHECK_EQ(c4d_14, ivec4(42, 24, 0, 1));
 		CHECK_NE(c4d_14, ivec4(42, 24, 2, 3));
+	}
+
+
+	TEST_CASE("matrix constructors")
+	{
+		// auto A = dmat4(dmat3(1));
+
 	}
 }

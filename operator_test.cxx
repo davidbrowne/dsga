@@ -18,7 +18,7 @@
 // operators are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test operators")
 {
-	TEST_CASE("unary operator +")
+	TEST_CASE("vector unary operator +")
 	{
 		iscal i1(2);
 		ivec2 i2(3, 4);
@@ -34,7 +34,7 @@ TEST_SUITE("test operators")
 
 	}
 
-	TEST_CASE("unary operator -")
+	TEST_CASE("vector unary operator -")
 	{
 		iscal i1(2);
 		ivec2 i2(3, 4);
@@ -49,7 +49,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(ivec3(-5, -6, -7), res3);
 	}
 
-	TEST_CASE("unary pre-increment operator ++")
+	TEST_CASE("vector unary pre-increment operator ++")
 	{
 		iscal i1(2);
 		ivec2 i2(3, 4);
@@ -68,7 +68,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(i3, ivec3(6, 7, 8));
 	}
 
-	TEST_CASE("unary post-increment operator ++")
+	TEST_CASE("vector unary post-increment operator ++")
 	{
 		iscal i1(2);
 		ivec2 i2(3, 4);
@@ -87,7 +87,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(i3, ivec3(6, 7, 8));
 	}
 
-	TEST_CASE("unary pre-decrement operator --")
+	TEST_CASE("vector unary pre-decrement operator --")
 	{
 		iscal i1(2);
 		ivec2 i2(3, 4);
@@ -106,7 +106,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(i3, ivec3(4, 5, 6));
 	}
 
-	TEST_CASE("unary post-decrement operator --")
+	TEST_CASE("vector unary post-decrement operator --")
 	{
 		iscal i1(2);
 		ivec2 i2(3, 4);
@@ -125,7 +125,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(i3, ivec3(4, 5, 6));
 	}
 
-	TEST_CASE("binary operator +")
+	TEST_CASE("vector binary operator +")
 	{
 		// commutative
 		iscal i1(2);
@@ -150,7 +150,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(4 + i1, 6);
 	}
 
-	TEST_CASE("binary operator -")
+	TEST_CASE("vector binary operator -")
 	{
 		// non-commutative
 		iscal i1(2);
@@ -175,7 +175,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(4 - i1, 2);
 	}
 
-	TEST_CASE("binary operator *")
+	TEST_CASE("vector binary operator *")
 	{
 		// commutative
 		iscal i1(2);
@@ -200,7 +200,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(4 * i1, 8);
 	}
 
-	TEST_CASE("binary operator /")
+	TEST_CASE("vector binary operator /")
 	{
 		// non-commutative
 		iscal i1(1020);
@@ -225,7 +225,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(40 / iscal(8), 5);
 	}
 
-	TEST_CASE("binary operator %")
+	TEST_CASE("vector binary operator %")
 	{
 		// non-commutative
 		iscal i1(1023);
@@ -250,7 +250,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(41 % iscal(7), 6);
 	}
 
-	TEST_CASE("unary operator ~")
+	TEST_CASE("vector unary operator ~")
 	{
 		iscal i1(0x00ff00cc);
 		ivec2 i2(0xab00ff00, 0x00de0048);
@@ -268,7 +268,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(~i2.y, 0xff21ffb7);
 	}
 
-	TEST_CASE("binary operator <<")
+	TEST_CASE("vector binary operator <<")
 	{
 		// non-commutative
 		iscal i1(1023);
@@ -293,7 +293,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(2 << iscal(7), 256);
 	}
 
-	TEST_CASE("binary operator >>")
+	TEST_CASE("vector binary operator >>")
 	{
 		// non-commutative
 		iscal i1(123456);
@@ -319,7 +319,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(56723 >> iscal(7), 443);
 	}
 
-	TEST_CASE("binary operator &")
+	TEST_CASE("vector binary operator &")
 	{
 		// commutative
 		uscal u1(0x638d9e07);
@@ -344,7 +344,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(0x324a77e1u & u2.y, 0x200255e1u);
 	}
 
-	TEST_CASE("binary operator |")
+	TEST_CASE("vector binary operator |")
 	{
 		// commutative
 		uscal u1(0x638d9e07);
@@ -369,7 +369,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(0x324a77e1u | u2.y, 0x334bf7f3u);
 	}
 
-	TEST_CASE("binary operator ^")
+	TEST_CASE("vector binary operator ^")
 	{
 		// commutative
 		uscal u1(0x638d9e07);
@@ -392,5 +392,92 @@ TEST_SUITE("test operators")
 		CHECK_EQ(u2.y ^ uscal(0x324a77e1), 0x1349a212u);
 		CHECK_EQ(u2.y ^ 0x324a77e1u, 0x1349a212u);
 		CHECK_EQ(0x324a77e1u ^ u2.y, 0x1349a212u);
+	}
+
+	TEST_CASE("matrix unary operator +")
+	{
+		//  auto B = +A;
+	}
+
+	TEST_CASE("matrix unary operator -")
+	{
+		//  auto B = -A;
+	}
+
+	TEST_CASE("matrix unary pre-increment operator ++")
+	{
+		// ++A;
+	}
+
+	TEST_CASE("matrix unary post-increment operator ++")
+	{
+		// auto B = A++;
+	}
+
+	TEST_CASE("matrix unary pre-decrement operator --")
+	{
+		// --A;
+	}
+
+	TEST_CASE("matrix unary post-decrement operator --")
+	{
+		// auto B = A--;
+	}
+
+	TEST_CASE("matrix binary operator +")
+	{
+		// dmat2 A, B;
+		// double x;
+		// ...
+		// auto foo = A + x;
+		// auto bar = x + A;
+		// auto baz = A + B;
+	}
+
+	TEST_CASE("matrix binary operator -")
+	{
+		// dmat2 A, B;
+		// double x;
+		// ...
+		// auto foo = A - x;
+		// auto bar = x - A;
+		// auto baz = A - B;
+	}
+
+	TEST_CASE("matrix binary operator *")
+	{
+		// dmat2 A;
+		// double x;
+		// ...
+		// auto foo = A * x;
+		// auto bar = x * A;
+	}
+
+	TEST_CASE("matrix binary operator /")
+	{
+		// dmat2 A, B;
+		// double x;
+		// ...
+		// auto foo = A / x;
+		// auto bar = x / A;
+		// auto baz = A / B;
+	}
+
+	TEST_CASE("matrix linear-algebraic *")
+	{
+		// dmat3 A, B;
+		// dvec3 v;
+		// ...
+		// auto foo = A * v;
+		// auto bar = v * A;
+		// auto baz = A * B;
+	}
+
+	TEST_CASE("matrix row and column access")
+	{
+		// dmat3 A;
+		// 
+		// auto col = A[0u] ;
+		// auto row = A.template row<1u>();
 	}
 }

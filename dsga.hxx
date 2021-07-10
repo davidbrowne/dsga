@@ -14,7 +14,12 @@
 #include <algorithm>				// min()
 #include <span>						// external types to/from vectors
 #include <numbers>					// pi_v<>, inv_pi_v<>
+#include <version>
+
+#if defined(__cpp_lib_bit_cast)
 #include <bit>						// bit_cast
+#endif
+
 #include "cxcm.hxx"
 
 //
@@ -3001,9 +3006,12 @@ namespace dsga
 		static constexpr bool valid = (previous_size < Size) && (value >= Size);
 	};
 
+	template <std::size_t Size, typename ...Args>
+	inline constexpr bool component_match_v = component_match<Size, Args...>::valid;
+
 	// do Args... supply the correct number of components for Size without having leftover Args
 	template <std::size_t Size, typename ...Args>
-	concept met_component_count = component_match<Size, Args...>::valid;
+	concept met_component_count = component_match_v<Size, Args...>;
 
 	// create a tuple from a scalar
 
@@ -3433,6 +3441,8 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isinf_op);
 		}
 
+#if defined(__cpp_lib_bit_cast)
+
 		constexpr inline auto float_bits_to_int_op = [](float arg) { return std::bit_cast<int>(arg); };
 
 		template <bool W, std::size_t C, typename D>
@@ -3496,6 +3506,8 @@ namespace dsga
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, ulong_long_bits_to_double_op);
 		}
+
+#endif
 
 		constexpr inline auto fma_op = []<floating_point_dimensional_scalar T>(T a, T b, T c) { return std::fma(a, b, c); };
 
