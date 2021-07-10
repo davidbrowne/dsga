@@ -93,8 +93,8 @@ TEST_SUITE("test conversions")
 
 			// using operator[] and size()
 			std::array<double, 16> val1;
-			for (int i = 0; i < 4; ++i)
-				for (int j = 0; j < vec_arr[i].length(); ++j)
+			for (std::size_t i = 0; i < 4; ++i)
+				for (std::size_t j = 0; j < vec_arr[i].size(); ++j)
 					val1[4 * i + j] = vec_arr[i][j];
 
 			CHECK_EQ(val1, lotsa_data);
@@ -134,7 +134,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, iscal(9));
 
 			// non-const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = non_const_int_data[i];
 			}
@@ -157,7 +157,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, iscal(11));
 
 			// const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = static_cast<int>(cx_one[i]);
 			}
@@ -192,7 +192,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec2(7, 8));
 
 			// non-const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = non_const_int_data[i];
 			}
@@ -215,7 +215,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec2(11, 11));
 
 			// const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = static_cast<int>(cx_two[i]);
 			}
@@ -252,7 +252,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec3(4, 5, 6));
 
 			// non-const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = non_const_int_data[i];
 			}
@@ -275,7 +275,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec3(11, 11, 11));
 
 			// const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = static_cast<int>(cx_three[i]);
 			}
@@ -314,7 +314,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec4(0, 1, 2, 3));
 
 			// non-const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = non_const_int_data[i];
 			}
@@ -337,7 +337,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec4(11, 11, 11, 11));
 
 			// const operator[]
-			for (int i = 0; i < simple_dest.length(); ++i)
+			for (std::size_t i = 0; i < simple_dest.size(); ++i)
 			{
 				simple_dest[i] = static_cast<int>(cx_four[i]);
 			}

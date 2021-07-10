@@ -394,6 +394,14 @@ TEST_SUITE("test operators")
 		CHECK_EQ(0x324a77e1u ^ u2.y, 0x1349a212u);
 	}
 
+	TEST_CASE("vector length and size")
+	{
+		// length()
+
+		// size()
+
+	}
+
 	TEST_CASE("matrix unary operator +")
 	{
 		//  auto B = +A;
@@ -480,4 +488,13 @@ TEST_SUITE("test operators")
 		// auto col = A[0u] ;
 		// auto row = A.template row<1u>();
 	}
+
+	TEST_CASE("matrix length and size")
+	{
+		// length()
+
+		// size()
+
+	}
+
 }

@@ -1914,7 +1914,7 @@ TEST_SUITE("test swizzling applications")
 
 		SUBCASE("range-for const dimension_data")
 		{
-			const ivec4 const_data{ 19, 28, 37, 46 };
+			const ivec4 const_data(19, 28, 37, 46);
 			ivec4 data_dest(0);
 
 			// for basic_vector
@@ -1932,7 +1932,7 @@ TEST_SUITE("test swizzling applications")
 
 		SUBCASE("range-for dimension_data allows modifying")
 		{
-			ivec4 mutable_data{ 0, 0, 0, 0 };
+			ivec4 mutable_data(0, 0, 0, 0);
 
 			// for indexed_vector
 
@@ -1943,12 +1943,12 @@ TEST_SUITE("test swizzling applications")
 				++dest_indx;
 			}
 
-			CHECK_EQ(mutable_data, ivec4{0, 1, 4, 9});
+			CHECK_EQ(mutable_data, ivec4(0, 1, 4, 9));
 		}
 
 		SUBCASE("range-for non-const indexed_vector")
 		{
-			ivec4 non_const_data{ 55, 64, 73, 82 };
+			ivec4 non_const_data(55, 64, 73, 82);
 			ivec4 data_dest(0);
 
 			// for indexed_vector
@@ -1961,12 +1961,12 @@ TEST_SUITE("test swizzling applications")
 				++dest_indx;
 			}
 
-			CHECK_EQ(data_dest, ivec4{73, 82, 55, 64});
+			CHECK_EQ(data_dest, ivec4(73, 82, 55, 64));
 		}
 
 		SUBCASE("range-for const indexed_vector")
 		{
-			const ivec4 const_data{ 19, 28, 37, 46 };
+			const ivec4 const_data(19, 28, 37, 46);
 			ivec4 data_dest(0);
 
 			// for indexed_vector
@@ -1979,12 +1979,12 @@ TEST_SUITE("test swizzling applications")
 				++dest_indx;
 			}
 
-			CHECK_EQ(data_dest, ivec4{37, 46, 19, 28});
+			CHECK_EQ(data_dest, ivec4(37, 46, 19, 28));
 		}
 
 		SUBCASE("range-for indexed_vector allows aliasing")
 		{
-			ivec4 mutable_data{ 0, 0, 0, 0 };
+			ivec4 mutable_data(0, 0, 0, 0);
 
 			// for indexed_vector
 
@@ -1995,7 +1995,7 @@ TEST_SUITE("test swizzling applications")
 				++dest_indx;
 			}
 
-			CHECK_EQ(mutable_data, ivec4{3, 2, 1, 0});
+			CHECK_EQ(mutable_data, ivec4(3, 2, 1, 0));
 		}
 	}
 
@@ -2004,10 +2004,10 @@ TEST_SUITE("test swizzling applications")
 		SUBCASE("first case")
 		{
 			// vector declarations
-			ivec4 somethingoranother( 0, 1, 2, 3 );
+			ivec4 somethingoranother(0, 1, 2, 3);
 
 			// test temporary rvalue with a swizzle to see if they compare equal
-			CHECK_EQ(ivec3( 1, 3, 0 ), somethingoranother.ywx);
+			CHECK_EQ(ivec3(1, 3, 0), somethingoranother.ywx);
 
 			// testing full construction of different types from components (OtherScalar types)
 			fvec3 foo(4, 3, 2);
@@ -2029,7 +2029,7 @@ TEST_SUITE("test swizzling applications")
 			CHECK_NE(somethingoranother.ww, pair);
 
 			// vector type instance from lambda
-			auto pairgen = []() -> fvec2 { return fvec2{5, 6}; };
+			auto pairgen = []() -> fvec2 { return fvec2(5, 6); };
 
 			// compare vector type from lambda with a vector type with same data
 			CHECK_EQ(pair, pairgen());

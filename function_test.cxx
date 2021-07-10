@@ -168,6 +168,8 @@ TEST_SUITE("test operators")
 
 		SUBCASE("bit changing functions")
 		{
+#if defined(__cpp_lib_bit_cast)
+
 			// floatBitsToInt()
 
 			// floatBitsToUint()
@@ -184,6 +186,7 @@ TEST_SUITE("test operators")
 
 			// ulongLongBitsToDouble()
 
+#endif
 		}
 
 		SUBCASE("other common functions")

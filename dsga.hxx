@@ -3786,6 +3786,11 @@ namespace dsga
 			return C;
 		}
 
+		constexpr std::size_t size() const noexcept
+		{
+			return C;
+		}
+
 		std::array<basic_vector<T, R>, C> value;
 
 		//
