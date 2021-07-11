@@ -65,7 +65,7 @@ TEST_SUITE("test operators")
 
 		SUBCASE("hyperbolic trig")
 		{
-			dvec3 vals(-1, 0, 1);
+			dvec3 vals(-2, 0, 2);
 
 			// sinh()
 			auto sinhs = sinh(vals);
@@ -82,8 +82,7 @@ TEST_SUITE("test operators")
 
 			// acosh()
 			auto acoshs = acosh(coshs);
-//			std::printf("%.17g, %.17g, %.17g\n", acoshs[0], acoshs[1], acoshs[2]);		// "0.99999999999999989, 0, 0.99999999999999989" for gcc
-			CHECK_EQ(dvec3(1, 0, 1), acoshs);					// this PASSES with both MSVC v16.10 and clang 12 on Windows; this FAILS with gcc 10.3
+			CHECK_EQ(dvec3(2, 0, 2), acoshs);
 
 			// atanh()
 			auto atanhs = atanh(tanhs);
