@@ -3013,6 +3013,18 @@ namespace dsga
 	template <std::size_t Size, typename ...Args>
 	concept met_component_count = component_match_v<Size, Args...>;
 
+	template <typename T>
+	struct valid_component_source : std::false_type {};
+
+	template <dimensional_scalar T>
+	struct valid_component_source<T> : std::true_type { };
+
+	template <dimensional_scalar T, std::size_t C>
+	struct valid_component_source<basic_vector<T, C>> : std::true_type { };
+
+	template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+	struct valid_component_source<indexed_vector<T, S, C, Is...>> : std::true_type { };
+
 	// create a tuple from a scalar
 
 	auto to_tuple(dimensional_scalar auto arg) noexcept
@@ -3837,7 +3849,7 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires met_component_count<Size, Args...>
+		requires (valid_component_source<Args>::value && ...) && met_component_count<Size, Args...>
 		constexpr basic_matrix(Args ... args) noexcept
 		{
 			auto arg_tuple = flatten_args_to_tuple(args...);

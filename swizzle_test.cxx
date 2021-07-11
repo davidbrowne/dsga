@@ -1807,10 +1807,8 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_default_constructible_v<dmat4>);
 			CHECK_UNARY(std::is_trivially_constructible_v<dmat4>);
 			CHECK_UNARY(std::is_trivially_default_constructible_v<dmat4>);
-#if !defined(__clang__)
 			CHECK_UNARY(std::is_trivially_copy_constructible_v<dmat4>);
 			CHECK_UNARY(std::is_trivially_move_constructible_v<dmat4>);
-#endif
 			CHECK_UNARY(std::is_trivially_copyable_v<dmat4>);
 			CHECK_UNARY(std::is_trivial_v<dmat4>);
 			CHECK_UNARY(std::is_copy_assignable_v<dmat4>);
