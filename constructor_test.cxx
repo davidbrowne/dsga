@@ -22,6 +22,18 @@ TEST_SUITE("test constructors")
 	constexpr ivec2	cx_two		(7, 8);
 	[[ maybe_unused ]] constexpr iscal	cx_one		(9);
 
+	TEST_CASE("vectors from length 1 vectors (scalars)")
+	{
+		// make sure constructors work with length 1 vector (dscal, fscal, etc.) as if it were a scalar
+		dscal eight(8);
+		dvec2 dv2(eight);
+		dvec3 dv3(eight);
+		dvec4 dv4(eight);
+		CHECK_EQ(dv2, dvec2(8, 8));
+		CHECK_EQ(dv3, dvec3(8, 8, 8));
+		CHECK_EQ(dv4, dvec4(8, 8, 8, 8));
+	}
+
 	TEST_CASE("vector 1D constructors")
 	{
 		// the four non-defaulted constructors
@@ -212,6 +224,15 @@ TEST_SUITE("test constructors")
 			CHECK_EQ(m1, mat2x2(vec2(7, 0), vec2(0, 7)));
 			CHECK_EQ(m2, dmat3x3(dvec3(3, 0, 0), dvec3(0, 3, 0), dvec3(0, 0, 3)));
 			CHECK_EQ(m3, mat4x4(vec4(-2, 0, 0, 0), vec4(0, -2, 0, 0), vec4(0, 0, -2, 0), vec4(0, 0, 0, -2)));
+
+			// make sure constructors work with length 1 vector (dscal, fscal, etc.) as if it were a scalar
+			dscal eight(8);
+			dmat2 dm2(eight);
+			dmat3 dm3(eight);
+			dmat4 dm4(eight);
+			CHECK_EQ(dm2, dmat2(dvec2(8, 0), dvec2(0, 8)));
+			CHECK_EQ(dm3, dmat3(dvec3(8, 0, 0), dvec3(0, 8, 0), dvec3(0, 0, 8)));
+			CHECK_EQ(dm4, dmat4(dvec4(8, 0, 0, 0), dvec4(0, 8, 0, 0), dvec4(0, 0, 8, 0), dvec4(0, 0, 0, 8)));
 		}
 
 		SUBCASE("variadic component constructor")
