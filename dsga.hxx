@@ -3864,9 +3864,9 @@ namespace dsga
 		requires std::convertible_to<U, T> && (C == R)
 		constexpr basic_matrix(U arg) noexcept
 		{
-			for (int i = 0; i < C; ++i)
+			for (std::size_t i = 0; i < C; ++i)
 			{
-				for (int j = 0; j < R; ++j)
+				for (std::size_t j = 0; j < R; ++j)
 				{
 					value[i][j] = ((i == j) ? static_cast<T>(arg) : static_cast<T>(0));
 				}

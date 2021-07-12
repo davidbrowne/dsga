@@ -201,11 +201,8 @@ TEST_SUITE("test constructors")
 		CHECK_NE(c4d_14, ivec4(42, 24, 2, 3));
 	}
 
-
 	TEST_CASE("matrix constructors")
 	{
-		// auto A = dmat4(dmat3(1));
-
 		SUBCASE("diagonal constructor")
 		{
 			auto m1 = mat2(7);
@@ -429,6 +426,5 @@ TEST_SUITE("test constructors")
 			CHECK_EQ(m44_43, mat4x4(9, 9, 9, 0, 9, 9, 9, 0, 9, 9, 9, 0, 9, 9, 9, 1));
 			CHECK_EQ(m44_44, m44);
 		}
-
 	}
 }

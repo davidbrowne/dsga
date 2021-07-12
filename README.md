@@ -52,7 +52,7 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 Current version: `v0.3.0`
 
-***All the vector and matrix functionality is implemented***. While there are many tests, there are many more to write for both the vectors and the matrices.
+***All the vector and matrix functionality is implemented***. While there are many tests, there are many more to write for both the vectors and the matrices, but primarily for matrix functions and operators.
 
 ## Usage
 
@@ -193,16 +193,24 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. The 
 [doctest] doctest version is "2.4.6"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   59 |   59 passed | 0 failed | 0 skipped
-[doctest] assertions: 1535 | 1535 passed | 0 failed |
+[doctest] test cases:   77 |   77 passed | 0 failed | 0 skipped
+[doctest] assertions: 1650 | 1650 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-The unit tests will not run with these compilers, primarily due to lack of support for ```std::is_corresponding_member()```, but the project compiled without error with these (via [Compiler Explorer](https://godbolt.org/)):
+The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and these are protected (along with ```std::bit_cast<>()```) with feature macros:
 
-* gcc 11.1, but not gcc 10.3 (no bit_cast)
-* clang trunk, but not standard clang 12.0.0 (no bit_cast)
-* clang 12.0.0 on Windows with MSVC installed (uses MSVC standard library so it can use bit_cast)
+* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution
+* clang 12.0.0 on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library)
+
+```
+[doctest] doctest version is "2.4.6"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:   77 |   77 passed | 0 failed | 0 skipped
+[doctest] assertions: 1637 | 1637 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
 
 ## Similar Projects
 

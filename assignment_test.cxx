@@ -436,8 +436,6 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("matrix standard assignment =")
 	{
-		// A = B;
-
 		auto m2x2 = mat2x2(fvec2(1, 1), fvec2(1, 1));
 		auto m2x3 = mat2x3(fvec2(2, 2), fvec2(2, 2), fvec2(2, 2));
 		auto m2x4 = mat2x4(fvec2(3, 3), fvec2(3, 3), fvec2(3, 3), fvec2(3, 3));
@@ -510,6 +508,5 @@ TEST_SUITE("test assignment")
 			mat = m4x4;
 			CHECK_EQ(mat, m4x4);
 		}
-
 	}
 }
