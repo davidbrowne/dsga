@@ -206,5 +206,229 @@ TEST_SUITE("test constructors")
 	{
 		// auto A = dmat4(dmat3(1));
 
+		SUBCASE("diagonal constructor")
+		{
+			auto m1 = mat2(7);
+			auto m2 = dmat3(3);
+			auto m3 = mat4(-2);
+
+			CHECK_EQ(m1, mat2x2(vec2(7, 0), vec2(0, 7)));
+			CHECK_EQ(m2, dmat3x3(dvec3(3, 0, 0), dvec3(0, 3, 0), dvec3(0, 0, 3)));
+			CHECK_EQ(m3, mat4x4(vec4(-2, 0, 0, 0), vec4(0, -2, 0, 0), vec4(0, 0, -2, 0), vec4(0, 0, 0, -2)));
+		}
+
+		SUBCASE("variadic component constructor")
+		{
+			dscal one(1);
+			dvec2 two(2);
+			dvec3 three(3);
+			dvec4 four(4);
+
+			double rando = 5;
+
+			auto m1 = dmat4(four, rando, three, rando, rando, one, two, rando, three);
+			auto m2 = mat2x3(four, rando, four);
+			auto m3 = mat3x4(one, three, rando, two, three, rando, one);
+			auto m4 = dmat3x3(two, three, four);
+
+			CHECK_EQ(m1, dmat4x4(4, 4, 4, 4, 5, 3, 3, 3, 5, 5, 1, 2, 2, 5, 3, 3));
+			CHECK_EQ(m2, mat2x3(4, 4, 4, 4, 5, 4));
+			CHECK_EQ(m3, mat3x4(1, 3, 3, 3, 5, 2, 2, 3, 3, 3, 5, 1));
+			CHECK_EQ(m4, dmat3x3(2, 2, 3, 3, 3, 4, 4, 4, 4));
+		}
+
+		SUBCASE("matrix argument constructor")
+		{
+			mat2x2 m22(2, 2, 2, 2);
+			mat2x3 m23(3, 3, 3, 3, 3, 3);
+			mat2x4 m24(4, 4, 4, 4, 4, 4, 4, 4);
+			mat3x2 m32(5, 5, 5, 5, 5, 5);
+			mat3x3 m33(6, 6, 6, 6, 6, 6, 6, 6, 6);
+			mat3x4 m34(7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7);
+			mat4x2 m42(8, 8, 8, 8, 8, 8, 8, 8);
+			mat4x3 m43(9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9);
+			mat4x4 m44(11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11);
+
+			mat2x2 m22_22(m22);
+			mat2x2 m22_23(m23);
+			mat2x2 m22_24(m24);
+			mat2x2 m22_32(m32);
+			mat2x2 m22_33(m33);
+			mat2x2 m22_34(m34);
+			mat2x2 m22_42(m42);
+			mat2x2 m22_43(m43);
+			mat2x2 m22_44(m44);
+
+			CHECK_EQ(m22_22, m22);
+			CHECK_EQ(m22_23, mat2x2(3, 3, 3, 3));
+			CHECK_EQ(m22_24, mat2x2(4, 4, 4, 4));
+			CHECK_EQ(m22_32, mat2x2(5, 5, 5, 5));
+			CHECK_EQ(m22_33, mat2x2(6, 6, 6, 6));
+			CHECK_EQ(m22_34, mat2x2(7, 7, 7, 7));
+			CHECK_EQ(m22_42, mat2x2(8, 8, 8, 8));
+			CHECK_EQ(m22_43, mat2x2(9, 9, 9, 9));
+			CHECK_EQ(m22_44, mat2x2(11, 11, 11, 11));
+
+			mat2x3 m23_22(m22);
+			mat2x3 m23_23(m23);
+			mat2x3 m23_24(m24);
+			mat2x3 m23_32(m32);
+			mat2x3 m23_33(m33);
+			mat2x3 m23_34(m34);
+			mat2x3 m23_42(m42);
+			mat2x3 m23_43(m43);
+			mat2x3 m23_44(m44);
+
+			CHECK_EQ(m23_22, mat2x3(2, 2, 0, 2, 2, 0));
+			CHECK_EQ(m23_23, m23);
+			CHECK_EQ(m23_24, mat2x3(4, 4, 4, 4, 4, 4));
+			CHECK_EQ(m23_32, mat2x3(5, 5, 0, 5, 5, 0));
+			CHECK_EQ(m23_33, mat2x3(6, 6, 6, 6, 6, 6));
+			CHECK_EQ(m23_34, mat2x3(7, 7, 7, 7, 7, 7));
+			CHECK_EQ(m23_42, mat2x3(8, 8, 0, 8, 8, 0));
+			CHECK_EQ(m23_43, mat2x3(9, 9, 9, 9, 9, 9));
+			CHECK_EQ(m23_44, mat2x3(11, 11, 11, 11, 11, 11));
+
+			mat2x4 m24_22(m22);
+			mat2x4 m24_23(m23);
+			mat2x4 m24_24(m24);
+			mat2x4 m24_32(m32);
+			mat2x4 m24_33(m33);
+			mat2x4 m24_34(m34);
+			mat2x4 m24_42(m42);
+			mat2x4 m24_43(m43);
+			mat2x4 m24_44(m44);
+
+			CHECK_EQ(m24_22, mat2x4(2, 2, 0, 0, 2, 2, 0, 0));
+			CHECK_EQ(m24_23, mat2x4(3, 3, 3, 0, 3, 3, 3, 0));
+			CHECK_EQ(m24_24, m24);
+			CHECK_EQ(m24_32, mat2x4(5, 5, 0, 0, 5, 5, 0, 0));
+			CHECK_EQ(m24_33, mat2x4(6, 6, 6, 0, 6, 6, 6, 0));
+			CHECK_EQ(m24_34, mat2x4(7, 7, 7, 7, 7, 7, 7, 7));
+			CHECK_EQ(m24_42, mat2x4(8, 8, 0, 0, 8, 8, 0, 0));
+			CHECK_EQ(m24_43, mat2x4(9, 9, 9, 0, 9, 9, 9, 0));
+			CHECK_EQ(m24_44, mat2x4(11, 11, 11, 11, 11, 11, 11, 11));
+
+			mat3x2 m32_22(m22);
+			mat3x2 m32_23(m23);
+			mat3x2 m32_24(m24);
+			mat3x2 m32_32(m32);
+			mat3x2 m32_33(m33);
+			mat3x2 m32_34(m34);
+			mat3x2 m32_42(m42);
+			mat3x2 m32_43(m43);
+			mat3x2 m32_44(m44);
+
+			CHECK_EQ(m32_22, mat3x2(2, 2, 2, 2, 0, 0));
+			CHECK_EQ(m32_23, mat3x2(3, 3, 3, 3, 0, 0));
+			CHECK_EQ(m32_24, mat3x2(4, 4, 4, 4, 0, 0));
+			CHECK_EQ(m32_32, m32);
+			CHECK_EQ(m32_33, mat3x2(6, 6, 6, 6, 6, 6));
+			CHECK_EQ(m32_34, mat3x2(7, 7, 7, 7, 7, 7));
+			CHECK_EQ(m32_42, mat3x2(8, 8, 8, 8, 8, 8));
+			CHECK_EQ(m32_43, mat3x2(9, 9, 9, 9, 9, 9));
+			CHECK_EQ(m32_44, mat3x2(11, 11, 11, 11, 11, 11));
+
+			mat3x3 m33_22(m22);
+			mat3x3 m33_23(m23);
+			mat3x3 m33_24(m24);
+			mat3x3 m33_32(m32);
+			mat3x3 m33_33(m33);
+			mat3x3 m33_34(m34);
+			mat3x3 m33_42(m42);
+			mat3x3 m33_43(m43);
+			mat3x3 m33_44(m44);
+
+			CHECK_EQ(m33_22, mat3x3(2, 2, 0, 2, 2, 0, 0, 0, 1));
+			CHECK_EQ(m33_23, mat3x3(3, 3, 3, 3, 3, 3, 0, 0, 1));
+			CHECK_EQ(m33_24, mat3x3(4, 4, 4, 4, 4, 4, 0, 0, 1));
+			CHECK_EQ(m33_32, mat3x3(5, 5, 0, 5, 5, 0, 5, 5, 1));
+			CHECK_EQ(m33_33, m33);
+			CHECK_EQ(m33_34, mat3x3(7, 7, 7, 7, 7, 7, 7, 7, 7));
+			CHECK_EQ(m33_42, mat3x3(8, 8, 0, 8, 8, 0, 8, 8, 1));
+			CHECK_EQ(m33_43, mat3x3(9, 9, 9, 9, 9, 9, 9, 9, 9));
+			CHECK_EQ(m33_44, mat3x3(11, 11, 11, 11, 11, 11, 11, 11, 11));
+
+			mat3x4 m34_22(m22);
+			mat3x4 m34_23(m23);
+			mat3x4 m34_24(m24);
+			mat3x4 m34_32(m32);
+			mat3x4 m34_33(m33);
+			mat3x4 m34_34(m34);
+			mat3x4 m34_42(m42);
+			mat3x4 m34_43(m43);
+			mat3x4 m34_44(m44);
+
+			CHECK_EQ(m34_22, mat3x4(2, 2, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0));
+			CHECK_EQ(m34_23, mat3x4(3, 3, 3, 0, 3, 3, 3, 0, 0, 0, 0, 0));
+			CHECK_EQ(m34_24, mat3x4(4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0));
+			CHECK_EQ(m34_32, mat3x4(5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 0, 0));
+			CHECK_EQ(m34_33, mat3x4(6, 6, 6, 0, 6, 6, 6, 0, 6, 6, 6, 0));
+			CHECK_EQ(m34_34, m34);
+			CHECK_EQ(m34_42, mat3x4(8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 0, 0));
+			CHECK_EQ(m34_43, mat3x4(9, 9, 9, 0, 9, 9, 9, 0, 9, 9, 9, 0));
+			CHECK_EQ(m34_44, mat3x4(11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11));
+
+			mat4x2 m42_22(m22);
+			mat4x2 m42_23(m23);
+			mat4x2 m42_24(m24);
+			mat4x2 m42_32(m32);
+			mat4x2 m42_33(m33);
+			mat4x2 m42_34(m34);
+			mat4x2 m42_42(m42);
+			mat4x2 m42_43(m43);
+			mat4x2 m42_44(m44);
+
+			CHECK_EQ(m42_22, mat4x2(2, 2, 2, 2, 0, 0, 0, 0));
+			CHECK_EQ(m42_23, mat4x2(3, 3, 3, 3, 0, 0, 0, 0));
+			CHECK_EQ(m42_24, mat4x2(4, 4, 4, 4, 0, 0, 0, 0));
+			CHECK_EQ(m42_32, mat4x2(5, 5, 5, 5, 5, 5, 0, 0));
+			CHECK_EQ(m42_33, mat4x2(6, 6, 6, 6, 6, 6, 0, 0));
+			CHECK_EQ(m42_34, mat4x2(7, 7, 7, 7, 7, 7, 0, 0));
+			CHECK_EQ(m42_42, m42);
+			CHECK_EQ(m42_43, mat4x2(9, 9, 9, 9, 9, 9, 9, 9));
+			CHECK_EQ(m42_44, mat4x2(11, 11, 11, 11, 11, 11, 11, 11));
+
+			mat4x3 m43_22(m22);
+			mat4x3 m43_23(m23);
+			mat4x3 m43_24(m24);
+			mat4x3 m43_32(m32);
+			mat4x3 m43_33(m33);
+			mat4x3 m43_34(m34);
+			mat4x3 m43_42(m42);
+			mat4x3 m43_43(m43);
+			mat4x3 m43_44(m44);
+
+			CHECK_EQ(m43_22, mat4x3(2, 2, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0));
+			CHECK_EQ(m43_23, mat4x3(3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0));
+			CHECK_EQ(m43_24, mat4x3(4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0));
+			CHECK_EQ(m43_32, mat4x3(5, 5, 0, 5, 5, 0, 5, 5, 0, 0, 0, 0));
+			CHECK_EQ(m43_33, mat4x3(6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0));
+			CHECK_EQ(m43_34, mat4x3(7, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0));
+			CHECK_EQ(m43_42, mat4x3(8, 8, 0, 8, 8, 0, 8, 8, 0, 8, 8, 0));
+			CHECK_EQ(m43_43, m43);
+			CHECK_EQ(m43_44, mat4x3(11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11));
+
+			mat4x4 m44_22(m22);
+			mat4x4 m44_23(m23);
+			mat4x4 m44_24(m24);
+			mat4x4 m44_32(m32);
+			mat4x4 m44_33(m33);
+			mat4x4 m44_34(m34);
+			mat4x4 m44_42(m42);
+			mat4x4 m44_43(m43);
+			mat4x4 m44_44(m44);
+
+			CHECK_EQ(m44_22, mat4x4(2, 2, 0, 0, 2, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
+			CHECK_EQ(m44_23, mat4x4(3, 3, 3, 0, 3, 3, 3, 0, 0, 0, 1, 0, 0, 0, 0, 1));
+			CHECK_EQ(m44_24, mat4x4(4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 1, 0, 0, 0, 0, 1));
+			CHECK_EQ(m44_32, mat4x4(5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 1, 0, 0, 0, 0, 1));
+			CHECK_EQ(m44_33, mat4x4(6, 6, 6, 0, 6, 6, 6, 0, 6, 6, 6, 0, 0, 0, 0, 1));
+			CHECK_EQ(m44_34, mat4x4(7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 1));
+			CHECK_EQ(m44_42, mat4x4(8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 1, 0, 8, 8, 0, 1));
+			CHECK_EQ(m44_43, mat4x4(9, 9, 9, 0, 9, 9, 9, 0, 9, 9, 9, 0, 9, 9, 9, 1));
+			CHECK_EQ(m44_44, m44);
+		}
+
 	}
 }

@@ -4141,7 +4141,8 @@ namespace dsga
 	// component-wise equality operator for matrices, scalar boolean result: ==, != (thanks to c++20)
 	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
 	requires implicitly_convertible_to<U, T>
-	constexpr bool operator ==(const basic_matrix<T, C, R> &lhs, const basic_matrix<U, C, R> &rhs) noexcept
+	constexpr bool operator ==(const basic_matrix<T, C, R> &lhs,
+							   const basic_matrix<U, C, R> &rhs) noexcept
 	{
 		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
 		{

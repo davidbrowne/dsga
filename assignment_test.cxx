@@ -438,5 +438,78 @@ TEST_SUITE("test assignment")
 	{
 		// A = B;
 
+		auto m2x2 = mat2x2(fvec2(1, 1), fvec2(1, 1));
+		auto m2x3 = mat2x3(fvec2(2, 2), fvec2(2, 2), fvec2(2, 2));
+		auto m2x4 = mat2x4(fvec2(3, 3), fvec2(3, 3), fvec2(3, 3), fvec2(3, 3));
+		auto m3x2 = mat3x2(fvec3(4, 4, 4), fvec3(4, 4, 4));
+		auto m3x3 = mat3x3(fvec3(5, 5, 5), fvec3(5, 5, 5), fvec3(5, 5, 5));
+		auto m3x4 = mat3x4(fvec3(6, 6, 6), fvec3(6, 6, 6), fvec3(6, 6, 6), fvec3(6, 6, 6));
+		auto m4x2 = mat4x2(fvec4(7, 7, 7, 7), fvec4(7, 7, 7, 7));
+		auto m4x3 = mat4x3(fvec4(8, 8, 8, 8), fvec4(8, 8, 8, 8), fvec4(8, 8, 8, 8));
+		auto m4x4 = mat4x4(fvec4(9, 9, 9, 9), fvec4(9, 9, 9, 9), fvec4(9, 9, 9, 9), fvec4(9, 9, 9, 9));
+
+		SUBCASE("mat2x2 standard assignment =")
+		{
+			auto mat = mat2x2(m4x4);
+			mat = m2x2;
+			CHECK_EQ(mat, m2x2);
+		}
+
+		SUBCASE("mat2x3 standard assignment =")
+		{
+			auto mat = mat2x3(m4x4);
+			mat = m2x3;
+			CHECK_EQ(mat, m2x3);
+		}
+
+		SUBCASE("mat2x4 standard assignment =")
+		{
+			auto mat = mat2x4(m4x4);
+			mat = m2x4;
+			CHECK_EQ(mat, m2x4);
+		}
+
+		SUBCASE("mat3x2 standard assignment =")
+		{
+			auto mat = mat3x2(m4x4);
+			mat = m3x2;
+			CHECK_EQ(mat, m3x2);
+		}
+
+		SUBCASE("mat3x3 standard assignment =")
+		{
+			auto mat = mat3x3(m4x4);
+			mat = m3x3;
+			CHECK_EQ(mat, m3x3);
+		}
+
+		SUBCASE("mat3x4 standard assignment =")
+		{
+			auto mat = mat3x4(m4x4);
+			mat = m3x4;
+			CHECK_EQ(mat, m3x4);
+		}
+
+		SUBCASE("mat4x2 standard assignment =")
+		{
+			auto mat = mat4x2(m4x4);
+			mat = m4x2;
+			CHECK_EQ(mat, m4x2);
+		}
+
+		SUBCASE("mat4x3 standard assignment =")
+		{
+			auto mat = mat4x3(m4x4);
+			mat = m4x3;
+			CHECK_EQ(mat, m4x3);
+		}
+
+		SUBCASE("mat4x4 standard assignment =")
+		{
+			auto mat = mat4x4(m2x2);
+			mat = m4x4;
+			CHECK_EQ(mat, m4x4);
+		}
+
 	}
 }
