@@ -52,7 +52,7 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 Current version: `v0.3.0`
 
-***All the vector and matrix functionality is implemented***. While eventually there will likely be even more tests, all that is missing for basic test coverage are tests of the matrix free functions.
+***All the vector and matrix functionality is implemented***. While eventually there will likely be even more tests, all that is missing for basic test coverage are tests of the vector and matrix free functions.
 
 ## Usage
 

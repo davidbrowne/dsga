@@ -3335,7 +3335,7 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, fmod_op);
 		}
 
-		constexpr inline auto min_op = []<floating_point_dimensional_scalar T>(T x, T y) { return x <= y ? x : y; };
+		constexpr inline auto min_op = []<floating_point_dimensional_scalar T>(T x, T y) { return y < x ? y : x; };
 
 		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto min(const vector_base<W1, T, C, D1> &x,
@@ -3344,7 +3344,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, min_op);
 		}
 
-		constexpr inline auto max_op = []<floating_point_dimensional_scalar T>(T x, T y) { return y <= x ? x : y; };
+		constexpr inline auto max_op = []<floating_point_dimensional_scalar T>(T x, T y) { return x > y ? x : y; };
 
 		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto max(const vector_base<W1, T, C, D1> &x, const vector_base<W2, T, C, D2> &y) noexcept
