@@ -110,10 +110,12 @@ TEST_SUITE("test operators")
 		{
 			//
 			// cxcm constexpr versions of these may be off by an ulp from standard library.
-			// Because these implementation results do not exactly match the standard's,
+			// Because these implementation results do not exactly match the MSVC's standard,
 			// you have to explicitly opt-in to these constexpr versions of sqrt() and
 			// inversesqrt() via define macro CXCM_APPROXIMATIONS_ALLOWED (prior to
 			// including cxcm.hxx or dsga.hxx).
+			//
+			// we need a better analysis of how the constexpr version differs from std::sqrt().
 			//
 
 			// sqrt()
@@ -261,7 +263,12 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("matrix functions")
 	{
-		// matrixCompMult()
+		// matrixCompMult() - equivalent to component-wise "matrix/matrix binary operator *"
+		mat2x3 A(1, 2, 3, 4, 5, 6);
+		mat2x3 B(5, 10, 15, 20, 25, 30);
+		auto mcm = matrixCompMult(A, B);
+
+		CHECK_EQ(mcm, mat2x3(5, 20, 45, 80, 125, 180));
 
 		// outerProduct()
 
@@ -272,5 +279,4 @@ TEST_SUITE("test operators")
 		// inverse()
 
 	}
-
 }

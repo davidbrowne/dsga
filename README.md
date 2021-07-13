@@ -52,7 +52,7 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 Current version: `v0.3.0`
 
-***All the vector and matrix functionality is implemented***. While there are many tests, there are many more to write for both the vectors and the matrices, but primarily for matrix functions and operators.
+***All the vector and matrix functionality is implemented***. While eventually there will likely be even more tests, all that is missing for basic test coverage are tests of the matrix free functions.
 
 ## Usage
 
@@ -194,7 +194,7 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. The 
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   78 |   78 passed | 0 failed | 0 skipped
-[doctest] assertions: 1656 | 1656 passed | 0 failed |
+[doctest] assertions: 1725 | 1725 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -208,7 +208,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   78 |   78 passed | 0 failed | 0 skipped
-[doctest] assertions: 1643 | 1643 passed | 0 failed |
+[doctest] assertions: 1712 | 1712 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

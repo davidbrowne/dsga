@@ -396,82 +396,146 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("vector length and size")
 	{
+		// int length() is a member function required by the spec, but
+		// std::size_t size() is more helpful for array indexing without warnings.
+		// the values are the same, the only difference is the type (signed vs unsigned).
+
+		// for vector, length()/size() returns the number of vector components that are indexable.
+
 		// length()
+		CHECK_EQ(fscal(1).length(), 1);
+		CHECK_EQ(vec2(1, 1).length(), 2);
+		CHECK_EQ(vec3(1, 1, 1).length(), 3);
+		CHECK_EQ(vec4(1, 1, 1, 1).length(), 4);
+
+		CHECK_EQ(vec4(1, 1, 1, 1).zywx.length(), 4);
+		CHECK_EQ(vec4(1, 1, 1, 1).yyy.length(), 3);
+		CHECK_EQ(vec4(1, 1, 1, 1).wx.length(), 2);
+		CHECK_EQ(vec4(1, 1, 1, 1).z.length(), 1);
 
 		// size()
+		CHECK_EQ(fscal(1).size(), 1u);
+		CHECK_EQ(vec2(1, 1).size(), 2u);
+		CHECK_EQ(vec3(1, 1, 1).size(), 3u);
+		CHECK_EQ(vec4(1, 1, 1, 1).size(), 4u);
 
+		CHECK_EQ(vec4(1, 1, 1, 1).zywx.size(), 4u);
+		CHECK_EQ(vec4(1, 1, 1, 1).yyy.size(), 3u);
+		CHECK_EQ(vec4(1, 1, 1, 1).wx.size(), 2u);
+		CHECK_EQ(vec4(1, 1, 1, 1).z.size(), 1u);
 	}
 
 	TEST_CASE("matrix unary operator +")
 	{
-		//  auto B = +A;
+		mat2 A(1, 2, 3, 4);
+
+		CHECK_EQ(+A, mat2(1, 2, 3, 4));
 	}
 
 	TEST_CASE("matrix unary operator -")
 	{
-		//  auto B = -A;
+		mat2 A(1, 2, 3, 4);
+
+		CHECK_EQ(-A, mat2(-1, -2, -3, -4));
 	}
 
 	TEST_CASE("matrix unary pre-increment operator ++")
 	{
-		// ++A;
+		mat2 A(1, 2, 3, 4);
+
+		auto B = ++A;
+		CHECK_EQ(A, B);
+		CHECK_EQ(A, mat2(2, 3, 4, 5));
 	}
 
 	TEST_CASE("matrix unary post-increment operator ++")
 	{
-		// auto B = A++;
+		mat2 A(1, 2, 3, 4);
+
+		auto B = A++;
+		CHECK_NE(A, B);
+		CHECK_EQ(A, mat2(2, 3, 4, 5));
+		CHECK_EQ(B, mat2(1, 2, 3, 4));
 	}
 
 	TEST_CASE("matrix unary pre-decrement operator --")
 	{
-		// --A;
+		mat2 A(1, 2, 3, 4);
+
+		auto B = --A;
+		CHECK_EQ(A, B);
+		CHECK_EQ(A, mat2(0, 1, 2, 3));
 	}
 
 	TEST_CASE("matrix unary post-decrement operator --")
 	{
-		// auto B = A--;
+		mat2 A(1, 2, 3, 4);
+
+		auto B = A--;
+		CHECK_NE(A, B);
+		CHECK_EQ(A, mat2(0, 1, 2, 3));
+		CHECK_EQ(B, mat2(1, 2, 3, 4));
 	}
 
-	TEST_CASE("matrix binary operator +")
+	TEST_CASE("matrix component-wise binary operator +")
 	{
-		// dmat2 A, B;
-		// double x;
-		// ...
-		// auto foo = A + x;
-		// auto bar = x + A;
-		// auto baz = A + B;
+		mat2x3 A(1, 2, 3, 4, 5, 6);
+		mat2x3 B(5, 10, 15, 20, 25, 30);
+		float x = 7.0f;
+		
+		auto foo = A + x;
+		auto bar = x + A;
+		auto baz = A + B;
+
+		CHECK_EQ(foo, mat2x3(8, 9, 10, 11, 12, 13));
+		CHECK_EQ(bar, mat2x3(8, 9, 10, 11, 12, 13));
+		CHECK_EQ(baz, mat2x3(6, 12, 18, 24, 30, 36));
 	}
 
-	TEST_CASE("matrix binary operator -")
+	TEST_CASE("matrix component-wise binary operator -")
 	{
-		// dmat2 A, B;
-		// double x;
-		// ...
-		// auto foo = A - x;
-		// auto bar = x - A;
-		// auto baz = A - B;
+		mat2x3 A(1, 2, 3, 4, 5, 6);
+		mat2x3 B(5, 10, 15, 20, 25, 30);
+		float x = 7.0f;
+		
+		auto foo = A - x;
+		auto bar = x - A;
+		auto baz = B - A;
+
+		CHECK_EQ(foo, mat2x3(-6, -5, -4, -3, -2, -1));
+		CHECK_EQ(bar, mat2x3(6, 5, 4, 3, 2, 1));
+		CHECK_EQ(baz, mat2x3(4, 8, 12, 16, 20, 24));
 	}
 
-	TEST_CASE("matrix binary operator *")
+	TEST_CASE("matrix scalar component-wise binary operator *")
 	{
-		// dmat2 A;
-		// double x;
-		// ...
-		// auto foo = A * x;
-		// auto bar = x * A;
+		mat2x3 A(1, 2, 3, 4, 5, 6);
+		float x = 7.0f;
+		
+		auto foo = A * x;
+		auto bar = x * A;
+
+		CHECK_EQ(foo, mat2x3(7, 14, 21, 28, 35, 42));
+		CHECK_EQ(bar, mat2x3(7, 14, 21, 28, 35, 42));
 	}
 
-	TEST_CASE("matrix binary operator /")
+	TEST_CASE("matrix component-wise binary operator /")
 	{
-		// dmat2 A, B;
-		// double x;
-		// ...
-		// auto foo = A / x;
-		// auto bar = x / A;
-		// auto baz = A / B;
+		mat2x3 A(6, 12, 18, 24, 30, 36);
+		mat2x3 B(3, 6, 9, 12, 16, 18);
+		float x = 12.0f;
+		float y = 72.0f;
+		
+		auto foo = A / x;
+		auto bar = y / B;
+		auto baz = A / B;
+
+		CHECK_EQ(foo, mat2x3(0.5, 1, 1.5, 2, 2.5, 3));
+		CHECK_EQ(bar, mat2x3(24, 12, 8, 6, 4.5, 4));
+		CHECK_EQ(baz, mat2x3(2, 2, 2, 2, 1.875, 2));
 	}
 
-	TEST_CASE("matrix linear-algebraic *")
+	TEST_CASE("matrix linear-algebraic binary operator *")
 	{
 		// dmat3 A, B;
 		// dvec3 v;
@@ -479,22 +543,65 @@ TEST_SUITE("test operators")
 		// auto foo = A * v;
 		// auto bar = v * A;
 		// auto baz = A * B;
+		// 
+		dmat3 A(1, 1, 3, 0, 1, 2, 2, 1, 5);
+		dmat3 B(1, 0, 2, 0, 3, 0, 4, 0, 5);
+		dvec3 v(3, 7, 11);
+
+		auto foo = A * v;
+		auto bar = v * A;
+		auto baz = A * B;
+
+		CHECK_EQ(foo, dvec3(25, 21, 78));
+		CHECK_EQ(bar, dvec3(43, 29, 68));
+		CHECK_EQ(baz, dmat3(5, 3, 13, 0, 3, 6, 14, 9, 37));
 	}
 
 	TEST_CASE("matrix row and column access")
 	{
-		// dmat3 A;
-		// 
-		// auto col = A[0u] ;
-		// auto row = A.template row<1u>();
+		dmat4 A(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+		// matrix columns
+		CHECK_EQ(A[0], dvec4(0, 1, 2, 3));
+		CHECK_EQ(A[1], dvec4(4, 5, 6, 7));
+		CHECK_EQ(A[2], dvec4(8, 9, 10, 11));
+		CHECK_EQ(A[3], dvec4(12, 13, 14, 15));
+
+		// matrix rows
+		CHECK_EQ(A.template row<0u>(), dvec4(0, 4, 8, 12));
+		CHECK_EQ(A.template row<1u>(), dvec4(1, 5, 9, 13));
+		CHECK_EQ(A.template row<2u>(), dvec4(2, 6, 10, 14));
+		CHECK_EQ(A.template row<3u>(), dvec4(3, 7, 11, 15));
 	}
 
 	TEST_CASE("matrix length and size")
 	{
+		// int length() is a member function required by the spec, but
+		// std::size_t size() is more helpful for array indexing without warnings.
+		// the values are the same, the only difference is the type (signed vs unsigned).
+		
+		// for matrix, length()/size() returns the number of column vectors of the matrix.
+
 		// length()
+		CHECK_EQ(mat2x2(vec2(1, 1), vec2(1, 1)).length(), 2);
+		CHECK_EQ(mat2x3(vec3(1, 1, 1), vec3(1, 1, 1)).length(), 2);
+		CHECK_EQ(mat2x4(vec4(1, 1, 1, 1), vec4(1, 1, 1, 1)).length(), 2);
+		CHECK_EQ(mat3x2(vec2(1, 1), vec2(1, 1), vec2(1, 1)).length(), 3);
+		CHECK_EQ(mat3x3(vec3(1, 1, 1), vec3(1, 1, 1), vec3(1, 1, 1)).length(), 3);
+		CHECK_EQ(mat3x4(vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1)).length(), 3);
+		CHECK_EQ(mat4x2(vec2(1, 1), vec2(1, 1), vec2(1, 1), vec2(1, 1)).length(), 4);
+		CHECK_EQ(mat4x3(vec3(1, 1, 1), vec3(1, 1, 1), vec3(1, 1, 1), vec3(1, 1, 1)).length(), 4);
+		CHECK_EQ(mat4x4(vec4(1, 1, 1 ,1), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1)).length(), 4);
 
 		// size()
-
+		CHECK_EQ(mat2x2(vec2(1, 1), vec2(1, 1)).size(), 2u);
+		CHECK_EQ(mat2x3(vec3(1, 1, 1), vec3(1, 1, 1)).size(), 2u);
+		CHECK_EQ(mat2x4(vec4(1, 1, 1, 1), vec4(1, 1, 1, 1)).size(), 2u);
+		CHECK_EQ(mat3x2(vec2(1, 1), vec2(1, 1), vec2(1, 1)).size(), 3u);
+		CHECK_EQ(mat3x3(vec3(1, 1, 1), vec3(1, 1, 1), vec3(1, 1, 1)).size(), 3u);
+		CHECK_EQ(mat3x4(vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1)).size(), 3u);
+		CHECK_EQ(mat4x2(vec2(1, 1), vec2(1, 1), vec2(1, 1), vec2(1, 1)).size(), 4u);
+		CHECK_EQ(mat4x3(vec3(1, 1, 1), vec3(1, 1, 1), vec3(1, 1, 1), vec3(1, 1, 1)).size(), 4u);
+		CHECK_EQ(mat4x4(vec4(1, 1, 1 ,1), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1)).size(), 4u);
 	}
-
 }

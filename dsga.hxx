@@ -4352,7 +4352,7 @@ namespace dsga
 	{
 		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
 		{
-			return basic_vector<std::common_type_t<T, U>, R>(dot(lhs.template row<Is>(), rhs)...);
+			return basic_vector<std::common_type_t<T, U>, R>(functions::dot(lhs.template row<Is>(), rhs)...);
 		}(std::make_index_sequence<R>{});
 	}
 
@@ -4365,7 +4365,7 @@ namespace dsga
 	{
 		return[&]<std::size_t ...Is>(std::index_sequence <Is...>)
 		{
-			return basic_vector<std::common_type_t<T, U>, C>(dot(lhs, rhs[Is])...);
+			return basic_vector<std::common_type_t<T, U>, C>(functions::dot(lhs, rhs[Is])...);
 		}(std::make_index_sequence<C>{});
 	}
 
