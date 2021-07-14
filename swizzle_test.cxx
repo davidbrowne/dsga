@@ -1782,6 +1782,34 @@ TEST_SUITE("test swizzling applications")
 
 #if defined(__cpp_lib_is_layout_compatible)
 
+
+			// proof that we are using the common initial sequence ***properly*** by introducing
+			// dsga::storage_wrapper<> for the anonymous union instead of just adding a std::array<>:
+
+			struct A
+			{
+				int i;
+			};
+
+			struct B
+			{
+				int j;
+			};
+
+			struct C
+			{
+				B k;
+			};
+
+			struct D
+			{
+				A l;
+			};
+
+			CHECK_UNARY(std::is_corresponding_member(&A::i, &B::j));		// using two structs of the same type form
+			CHECK_UNARY_FALSE(std::is_corresponding_member(&A::i, &C::k));	// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
+			CHECK_UNARY(std::is_corresponding_member(&D::l, &C::k));		// analogous to using dsga::storage_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
+
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::value, &dsga::indexed_vector<int, 1, 1, 0>::value));
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::value, &dsga::indexed_vector<int, 2, 2, 1, 0>::value));
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 3>::value, &dsga::indexed_vector<int, 3, 3, 2, 0, 1>::value));
