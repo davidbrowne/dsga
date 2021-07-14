@@ -537,13 +537,6 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("matrix linear-algebraic binary operator *")
 	{
-		// dmat3 A, B;
-		// dvec3 v;
-		// ...
-		// auto foo = A * v;
-		// auto bar = v * A;
-		// auto baz = A * B;
-		// 
 		dmat3 A(1, 1, 3, 0, 1, 2, 2, 1, 5);
 		dmat3 B(1, 0, 2, 0, 3, 0, 4, 0, 5);
 		dvec3 v(3, 7, 11);
@@ -572,6 +565,18 @@ TEST_SUITE("test operators")
 		CHECK_EQ(A.template row<1u>(), dvec4(1, 5, 9, 13));
 		CHECK_EQ(A.template row<2u>(), dvec4(2, 6, 10, 14));
 		CHECK_EQ(A.template row<3u>(), dvec4(3, 7, 11, 15));
+	}
+
+	TEST_CASE("matrix component access")
+	{
+		dmat4 A(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+
+		dmat4 B;
+		for (std::size_t i = 0u; i < 4u; ++i)
+			for (std::size_t j = 0u; j < 4u; ++j)
+				B[i][j] = A[i][j];
+
+		CHECK_EQ(A, B);
 	}
 
 	TEST_CASE("matrix length and size")
