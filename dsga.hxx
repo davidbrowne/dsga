@@ -3619,7 +3619,7 @@ namespace dsga
 
 		// i and n must be normalized in order to achieve desired results
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		constexpr auto reflect(const vector_base<W1, T, C, D1> &i,
+		constexpr auto refract(const vector_base<W1, T, C, D1> &i,
 							   const vector_base<W2, T, C, D2> &n,
 							   T eta) noexcept
 		{
@@ -3628,7 +3628,7 @@ namespace dsga
 			if (k < T(0))
 				return basic_vector<T, C>(T(0));
 
-			return eta * i - (eta * dot(n, i) + sqrt(k)) * n;
+			return eta * i - (eta * dot(n, i) + cxcm::sqrt(k)) * n;
 		}
 
 		//

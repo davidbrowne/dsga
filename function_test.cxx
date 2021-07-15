@@ -230,25 +230,58 @@ TEST_SUITE("test operators")
 		SUBCASE("generic vector functions")
 		{
 			// length()
+			vec2 length_vals1 = vec2(3, 4);
+			vec2 length_vals2 = vec2(5, 12);
+			auto length1 = length(length_vals1);
+			auto length2 = length(length_vals2);
 
-			// distance
+			CHECK_EQ(length1, 5.f);
+			CHECK_EQ(length2, 13.f);
+
+			// distance()
+			vec2 p1(12, 23);
+			vec2 p2(4, 38);
+			auto dist = distance(p1, p2);
+			CHECK_EQ(dist, 17.f);
 
 			// dot()
+			const float my_pi = std::numbers::pi_v<float>;
+			auto dot_val = dot(vec2(1, 0), vec2(cos(my_pi / 4), sin(my_pi / 4)));
+			CHECK_EQ(dot_val, std::numbers::sqrt2_v<float> / 2);
 
 			// cross()
+			auto x_axis = dvec3(1, 0, 0);
+			auto y_axis = dvec3(0, 1, 0);
+			auto z_axis = dvec3(0, 0, 1);
+			CHECK_EQ(z_axis, cross(x_axis, y_axis));
+			CHECK_EQ(x_axis, cross(y_axis, z_axis));
+			CHECK_EQ(y_axis, -cross(x_axis, z_axis));
+
+			auto cross_val = cross(vec3(1, 0, 0), vec3(cos(my_pi / 4), sin(my_pi / 4), 0));
+			CHECK_EQ(cross_val, vec3(0, 0, std::numbers::sqrt2_v<float> / 2));
 
 			// normalize()
+			auto pre_norm = vec4(4, -4, 4, -4);
+			auto normed = normalize(pre_norm);
+			CHECK_EQ(normed, vec4(0.5, -0.5, 0.5, -0.5));
 
 		}
 
 		SUBCASE("'normal' vector functions")
 		{
-			// faceforward()
-
 			// reflect()
+			auto norm = vec3(0, 0, 1);
+			auto I = normalize(vec3(std::numbers::sqrt2_v<float> / 2, -std::numbers::sqrt2_v<float> / 2, 1));
+			auto reflect_vec = reflect(I, norm);
+			CHECK_EQ(reflect_vec, vec3(0.5, -0.5, -std::numbers::sqrt2_v<float> / 2));
+
+			// faceforward()
+			auto ff = faceforward(norm, I, norm);
+			CHECK_EQ(ff, -norm);
 
 			// refract()
-
+			auto refract_val = refract(I, norm, 1.0f);
+			CHECK_EQ(refract_val, reflect_vec);
 		}
 	}
 
