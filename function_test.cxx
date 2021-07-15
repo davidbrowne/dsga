@@ -289,28 +289,57 @@ TEST_SUITE("test operators")
 	{
 		SUBCASE("standard relational functions")
 		{
+			auto v1 = vec3(1, 1, 5);
+			auto v2 = vec3(0, 1, 6);
+
 			// lessThan()
+			auto lt_vec = lessThan(v1, v2);
+			CHECK_EQ(lt_vec, bvec3(false, false, true));
 
 			// lessThanEqual()
+			auto lte_vec = lessThanEqual(v1, v2);
+			CHECK_EQ(lte_vec, bvec3(false, true, true));
 
 			// greaterThan()
+			auto gt_vec = greaterThan(v1, v2);
+			CHECK_EQ(gt_vec, bvec3(true, false, false));
 
 			// greaterThanEqual()
+			auto gte_vec = greaterThanEqual(v1, v2);
+			CHECK_EQ(gte_vec, bvec3(true, true, false));
 
 			// equal()
+			auto eq_vec = equal(v1, v2);
+			CHECK_EQ(eq_vec, bvec3(false, true, false));
 
 			// notEqual()
-
+			auto neq_vec = notEqual(v1, v2);
+			CHECK_EQ(neq_vec, bvec3(true, false, true));
 		}
 
 		SUBCASE("reduced relational functions")
 		{
+			auto v0 = vec3(1, 1, 5);
+			auto v1 = vec3(1, 4, 8);
+			auto v2 = vec3(0, 1, 6);
+
 			// any()
+			auto any_true = any(lessThan(v0, v2));
+			CHECK_UNARY(any_true);
+			auto any_not_true = any(lessThan(v1, v2));
+			CHECK_UNARY_FALSE(any_not_true);
 
 			// all()
+			auto all_true = all(greaterThan(v1, v2));
+			CHECK_UNARY(all_true);
+			auto all_not_true = all(greaterThan(v0, v2));
+			CHECK_UNARY_FALSE(all_not_true);
 
 			// not() - c++ doesn't allow not(), so Not()
-
+			auto not_true = all(Not(lessThan(v1, v2)));
+			CHECK_UNARY(not_true);
+			auto not_not_true = all(Not(lessThan(v0, v2)));
+			CHECK_UNARY_FALSE(not_not_true);
 		}
 	}
 

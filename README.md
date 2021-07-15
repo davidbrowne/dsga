@@ -194,7 +194,7 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. The 
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1754 | 1754 passed | 0 failed |
+[doctest] assertions: 1766 | 1766 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -208,7 +208,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1738 | 1738 passed | 0 failed |
+[doctest] assertions: 1750 | 1750 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
