@@ -193,8 +193,8 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. The 
 [doctest] doctest version is "2.4.6"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   78 |   78 passed | 0 failed | 0 skipped
-[doctest] assertions: 1725 | 1725 passed | 0 failed |
+[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
+[doctest] assertions: 1735 | 1735 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -207,8 +207,8 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] doctest version is "2.4.6"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   78 |   78 passed | 0 failed | 0 skipped
-[doctest] assertions: 1712 | 1712 passed | 0 failed |
+[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
+[doctest] assertions: 1719 | 1719 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

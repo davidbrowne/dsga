@@ -1788,27 +1788,27 @@ TEST_SUITE("test swizzling applications")
 
 			struct A
 			{
-				int i;
+				std::array<double, 4> i;
 			};
 
 			struct B
 			{
-				int j;
+				std::array<double, 4> j;
 			};
 
-			struct C
+			struct faux_vector
 			{
 				B k;
 			};
 
-			struct D
+			struct faux_wrapper
 			{
 				A l;
 			};
 
-			CHECK_UNARY(std::is_corresponding_member(&A::i, &B::j));		// using two structs of the same type form
-			CHECK_UNARY_FALSE(std::is_corresponding_member(&A::i, &C::k));	// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
-			CHECK_UNARY(std::is_corresponding_member(&D::l, &C::k));		// analogous to using dsga::storage_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
+			CHECK_UNARY(std::is_corresponding_member(&A::i, &B::j));						// using two structs of the same type form
+			CHECK_UNARY_FALSE(std::is_corresponding_member(&A::i, &faux_vector::k));		// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
+			CHECK_UNARY(std::is_corresponding_member(&faux_wrapper::l, &faux_vector::k));	// analogous to using dsga::storage_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
 
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::value, &dsga::indexed_vector<int, 1, 1, 0>::value));
 			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::value, &dsga::indexed_vector<int, 2, 2, 1, 0>::value));
