@@ -3711,13 +3711,13 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		constexpr inline auto not_op = [](bool x) -> bool { return !x; };
+		constexpr inline auto logical_not_op = [](bool x) -> bool { return !x; };
 
 		// c++ is not allowing a function named not()
 		template <bool W, std::size_t C, typename D>
-		constexpr auto Not(const vector_base<W, bool, C, D> &x) noexcept
+		constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept
 		{
-			return detail::unary_op_execute(std::make_index_sequence<C>{}, x, not_op);
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, x, logical_not_op);
 		}
 
 		//
