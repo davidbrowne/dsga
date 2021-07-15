@@ -95,14 +95,30 @@ TEST_SUITE("test operators")
 		SUBCASE("non-sqrt related")
 		{
 			// pow(), e.g., pow(2, 10) = 2^10 = 1024
+			vec3 pow_bases(2, std::numbers::e_v<float>, 10);
+			vec3 pow_exps(std::numbers::log2e_v<float>, std::numbers::ln10_v<float>, 3);
+			vec3 pow_result = pow(pow_bases, pow_exps);
+			CHECK_EQ(pow_result, vec3(std::numbers::e_v<float>, 10, 1000));
 
 			// exp(), e.g., e^x = exp(x)
+			vec2 exp_vals(std::numbers::ln10_v<float>, std::numbers::ln2_v<float>);
+			vec2 exp_result = exp(exp_vals);
+			CHECK_EQ(exp_result, vec2(10, 2));
 
 			// log(), e.g., log(x) = ln(x) = log<base e>(x)
+			vec2 log_vals(10, 2);
+			vec2 log_result = log(log_vals);
+			CHECK_EQ(log_result, vec2(std::numbers::ln10_v<float>, std::numbers::ln2_v<float>));
 
 			// exp2(), e.g., 2^x = exp2(x)
+			vec3 exp2_vals(std::numbers::log2e_v<float>, 2, 10);
+			vec3 exp2_result = exp2(exp2_vals);
+			CHECK_EQ(exp2_result, vec3(std::numbers::e_v<float>, 4, 1024));
 
 			// log2(), e.g., log2(x) = lb(x) = log<base 2>(x)
+			vec3 log2_vals(std::numbers::e_v<float>, 4, 1024);
+			vec3 log2_result = log2(log2_vals);
+			CHECK_EQ(log2_result, vec3(std::numbers::log2e_v<float>, 2, 10));
 
 		}
 
@@ -119,9 +135,13 @@ TEST_SUITE("test operators")
 			//
 
 			// sqrt()
+			auto vals = vec3(4, 16, 64);
+			auto sqrtvals = sqrt(vals);
+			CHECK_EQ(sqrtvals, vec3(2, 4, 8));
 
 			// inversesqrt()
-
+			auto invsqrtvals = inversesqrt(vals);
+			CHECK_EQ(invsqrtvals, vec3(0.5, 0.25, 0.125));
 		}
 	}
 
