@@ -3439,16 +3439,32 @@ namespace dsga
 
 		constexpr inline auto isnan_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::isnan(arg); };
 
-		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
-		constexpr auto isnan(const vector_base<W, T, C, D> &arg) noexcept
+		// isnan() is defined for each derived type due to the way MSVC implemented their isnan() in <cmath>
+
+		template <floating_point_dimensional_scalar T, std::size_t C>
+		constexpr auto isnan(const basic_vector<T, C> &arg) noexcept
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isnan_op);
+		}
+
+		template <floating_point_dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		constexpr auto isnan(const indexed_vector<T, S, C, Is...> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isnan_op);
 		}
 
 		constexpr inline auto isinf_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::isinf(arg); };
 
-		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
-		constexpr auto isinf(const vector_base<W, T, C, D> &arg) noexcept
+		// isinf() is defined for each derived type due to the way MSVC implemented their isinf() in <cmath>
+
+		template <floating_point_dimensional_scalar T, std::size_t C>
+		constexpr auto isinf(const basic_vector<T, C> &arg) noexcept
+		{
+			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isinf_op);
+		}
+
+		template <floating_point_dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		constexpr auto isinf(const indexed_vector<T, S, C, Is...> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isinf_op);
 		}
@@ -3955,7 +3971,46 @@ namespace dsga
 			return *this;
 		}
 
+		// support for range-for loop
+		constexpr auto begin()			noexcept	{ return value.begin(); }
+		constexpr auto begin()	const	noexcept	{ return value.cbegin(); }
+		constexpr auto cbegin()	const	noexcept	{ return value.cbegin(); }
+		constexpr auto end()			noexcept	{ return value.end(); }
+		constexpr auto end()	const	noexcept	{ return value.cend(); }
+		constexpr auto cend()	const	noexcept	{ return value.cend(); }
 	};
+
+	//
+	// get<> part of tuple interface -- needed for structured bindings
+	//
+
+	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(dsga::basic_matrix<T, C, R> & arg) noexcept
+	{
+		return arg[N];
+	}
+
+	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(const dsga::basic_matrix<T, C, R> & arg) noexcept
+	{
+		return arg[N];
+	}
+
+	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(dsga::basic_matrix<T, C, R> && arg) noexcept
+	{
+		return std::move(arg[N]);
+	}
+
+	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
+	requires (N >= 0) && (N < C)
+	constexpr auto && get(const dsga::basic_matrix<T, C, R> && arg) noexcept
+	{
+		return std::move(arg[N]);
+	}
 
 	//
 	// matrix functions
@@ -4427,6 +4482,17 @@ template <std::size_t I, bool W, dsga::dimensional_scalar T, std::size_t C, type
 struct std::tuple_element<I, dsga::vector_base<W, T, C, D>>
 {
 	using type = T;
+};
+
+template <dsga::floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+struct std::tuple_size<dsga::basic_matrix<T, C, R>> : std::integral_constant<std::size_t, C>
+{
+};
+
+template <std::size_t I, dsga::floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+struct std::tuple_element<I, dsga::basic_matrix<T, C, R>>
+{
+	using type = dsga::basic_vector<T, R>;
 };
 
 // converting from external vector type or data to internal vector type
