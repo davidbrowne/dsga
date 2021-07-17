@@ -192,36 +192,79 @@ TEST_SUITE("test operators")
 #if defined(__cpp_lib_bit_cast)
 
 			// floatBitsToInt()
+			auto floatToInt = floatBitsToInt(vec4(123.125, 6967.0e+4, -654.0, std::numbers::pi_v<float>));
+			CHECK_EQ(floatToInt, ivec4(1123434496, 1283777166, -1004306432, 1078530011));
 
 			// floatBitsToUint()
+			auto floatToUint = floatBitsToUint(vec4(87.5e-17, 6967.0e+4, -654.0, std::numbers::inv_sqrt3_v<float>));
+			CHECK_EQ(floatToUint, uvec4(645673883u, 1283777166u, 3290660864u, 1058262330u));
 
 			// doubleBitsToLongLong()
+			auto doubleToLongLong = doubleBitsToLongLong(dvec4(123.125, 6967.0e+4, -654.0, std::numbers::phi_v<double>));
+			CHECK_EQ(doubleToLongLong, llvec4(4638364568563744768ll, 4724447884039159808ll, -4574408176199270400ll, 4609965796441453736ll));
 
 			// doubleBitsToUlongLong()
+			auto doubleToUlongLong = doubleBitsToUlongLong(dvec4(1.5e-17, 6967.0e+4, -654.0, std::numbers::inv_sqrtpi_v<double>));
+			CHECK_EQ(doubleToUlongLong, ullvec4(4355345018344775537ull, 4724447884039159808ull, 13872335897510281216ull, 4603256987541740397ull));
 
 			// intBitsToFloat()
+			auto intToFloat = intBitsToFloat(ivec4(1123434496, 1283777166, -1004306432, 1078530011));
+			CHECK_EQ(intToFloat, vec4(123.125, 6967.0e+4, -654.0, std::numbers::pi_v<float>));
 
 			// uintBitsToFloat()
+			auto uintToFloat = uintBitsToFloat(uvec4(645673883u, 1283777166u, 3290660864u, 1058262330u));
+			CHECK_EQ(uintToFloat, vec4(87.5e-17, 6967.0e+4, -654.0, std::numbers::inv_sqrt3_v<float>));
 
 			// longLongBitsToDouble()
+			auto longLongToDouble = longLongBitsToDouble(llvec4(4638364568563744768ll, 4724447884039159808ll, -4574408176199270400ll, 4609965796441453736ll));
+			CHECK_EQ(longLongToDouble, dvec4(123.125, 6967.0e+4, -654.0, std::numbers::phi_v<double>));
 
 			// ulongLongBitsToDouble()
+			auto ulongLongToDouble = ulongLongBitsToDouble(ullvec4(4355345018344775537ull, 4724447884039159808ull, 13872335897510281216ull, 4603256987541740397ull));
+			CHECK_EQ(ulongLongToDouble, dvec4(1.5e-17, 6967.0e+4, -654.0, std::numbers::inv_sqrtpi_v<double>));
 
 #endif
 		}
 
 		SUBCASE("other common functions")
 		{
+			dvec4 bad_nums(std::numeric_limits<double>::quiet_NaN(),
+						   0.0,
+						   std::numeric_limits<double>::infinity(),
+						   -std::numeric_limits<double>::infinity());
+
 			// isnan()
+			auto isnan_vals = isnan(bad_nums); 
+			CHECK_EQ(isnan_vals, bvec4(true, false, false, false));
 
 			// isinf()
+			auto isinf_vals = isinf(bad_nums);
+			CHECK_EQ(isinf_vals, bvec4(false, false, true, true));
 
 			// fma()
+			dvec3 a(2, 4, 6);
+			dvec3 b(3, 5, 7);
+			dvec3 c(20, 40, 60);
+
+			auto fma_vals = fma(a, b, c);
+			CHECK_EQ(fma_vals, dvec3(26, 60, 102));
 
 			// frexp()
+			ivec3 exps(0);
+			dvec3 frexp_data(10, 20, 30);
+
+			auto frexp_vals = frexp(frexp_data, exps);
+
+			CHECK_EQ(frexp_vals, dvec3(0.625, 0.625, 0.9375));
+			CHECK_EQ(exps, ivec3(4, 5, 5));
 
 			// ldexp()
+			dvec3 ld_data(0.625, 0.625, 0.9375);
+			ivec3 ld_exps(4, 5, 5);
 
+			auto ldexp_vals = ldexp(ld_data, ld_exps);
+
+			CHECK_EQ(ldexp_vals, dvec3(10, 20, 30));
 		}
 	}
 

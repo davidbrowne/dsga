@@ -3554,7 +3554,10 @@ namespace dsga
 		auto frexp(const vector_base<W1, T, C, D1> &x,
 				   vector_base<W2, int, C, D2> &exp) noexcept
 		{
-			return detail::binary_op_execute_no_convert(std::make_index_sequence<C>{}, x, exp, frexp_op);
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return basic_vector<T, C>(frexp_op(x[Is], exp[Is])...);
+			}(std::make_index_sequence<C>{});
 		}
 
 		constexpr inline auto ldexp_op = []<floating_point_dimensional_scalar T>(T x, int exp) { return std::ldexp(x, exp); };
@@ -3578,7 +3581,7 @@ namespace dsga
 		constexpr auto dot(const vector_base<W1, T, C, D1> &x,
 						   const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
 				return ((x[Is] * y[Is]) + ...);
 			}(std::make_index_sequence<C>{});
