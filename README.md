@@ -32,14 +32,6 @@ auto project_point_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_
 Currently this is a single header library with a single file dependency, so I guess a two header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
 
 We now depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. A copy of this file is in this repository.
-```
-// cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
-//
-//          Copyright David Browne 2020-2021.
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file LICENSE_1_0.txt or copy at
-//          https://www.boost.org/LICENSE_1_0.txt)
-```
 
 ## Motivation
 
@@ -59,7 +51,11 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 Current version: `v0.3.0`
 
-***All the vector and matrix functionality is implemented***. While eventually there will likely be even more tests, all that is missing for basic test coverage are tests of the vector and matrix free functions.
+***All the vector and matrix functionality is implemented***. While eventually there will likely be even more tests, all that is missing for basic test coverage are tests for 16 vector free functions.
+
+This project need documentation. Currently, the documentation that is offered is this README page and the GLSL specification. Work on documentation will start after the basic test coverage is completed.
+
+In addition, we need examples of projects that make use of this library. Work on some of these example projects will overlap with the documentation effort.
 
 ## Usage
 
@@ -68,73 +64,55 @@ Use it more or less like you would use vectors in a shader program, but not nece
 The following types are pretty much what you expect, but there is a 1D version of a vector that we suffix as "scal" for scalar. It helps with keeping things interoperating, and it provides a way to swizzle a supposed "scalar" value:
 
 ``` c++
-//
 // specialized using types
-//
-
-// this 1D vector is a swizzlable scalar -- analog to glsl primitive types
-template <dsga::dimensional_scalar ScalarType>
-using regvec1 = dsga::basic_vector<ScalarType, 1u>;
-
-// 2D vector
-template <dsga::dimensional_scalar ScalarType>
-using regvec2 = dsga::basic_vector<ScalarType, 2u>;
-
-// 3D vector
-template <dsga::dimensional_scalar ScalarType>
-using regvec3 = dsga::basic_vector<ScalarType, 3u>;
-
-// 4D vector
-template <dsga::dimensional_scalar ScalarType>
-using regvec4 = dsga::basic_vector<ScalarType, 4u>;
 
 // boolean vectors
-using bscal = regvec1<bool>;
-using bvec2 = regvec2<bool>;
-using bvec3 = regvec3<bool>;
-using bvec4 = regvec4<bool>;
+using bscal = dsga::basic_vector<bool, 1u>;
+using bvec2 = dsga::basic_vector<bool, 2u>;
+using bvec3 = dsga::basic_vector<bool, 3u>;
+using bvec4 = dsga::basic_vector<bool, 4u>;
 
 // int vectors
-using iscal = regvec1<int>;
-using ivec2 = regvec2<int>;
-using ivec3 = regvec3<int>;
-using ivec4 = regvec4<int>;
+using iscal = dsga::basic_vector<int, 1u>;
+using ivec2 = dsga::basic_vector<int, 2u>;
+using ivec3 = dsga::basic_vector<int, 3u>;
+using ivec4 = dsga::basic_vector<int, 4u>;
 
 // unsigned int vectors
-using uscal = regvec1<unsigned>;
-using uvec2 = regvec2<unsigned>;
-using uvec3 = regvec3<unsigned>;
-using uvec4 = regvec4<unsigned>;
+using uscal = dsga::basic_vector<unsigned, 1u>;
+using uvec2 = dsga::basic_vector<unsigned, 2u>;
+using uvec3 = dsga::basic_vector<unsigned, 3u>;
+using uvec4 = dsga::basic_vector<unsigned, 4u>;
 
 // long long vectors (not in glsl)
-using llscal = regvec1<long long>;
-using llvec2 = regvec2<long long>;
-using llvec3 = regvec3<long long>;
-using llvec4 = regvec4<long long>;
+using llscal = dsga::basic_vector<long long, 1u>;
+using llvec2 = dsga::basic_vector<long long, 2u>;
+using llvec3 = dsga::basic_vector<long long, 3u>;
+using llvec4 = dsga::basic_vector<long long, 4u>;
 
 // unsigned long long vectors (not in glsl)
-using ullscal = regvec1<unsigned long long>;
-using ullvec2 = regvec2<unsigned long long>;
-using ullvec3 = regvec3<unsigned long long>;
-using ullvec4 = regvec4<unsigned long long>;
+using ullscal = dsga::basic_vector<unsigned long long, 1u>;
+using ullvec2 = dsga::basic_vector<unsigned long long, 2u>;
+using ullvec3 = dsga::basic_vector<unsigned long long, 3u>;
+using ullvec4 = dsga::basic_vector<unsigned long long, 4u>;
 
 // float vectors with out an 'f' prefix -- this is from glsl
-using scal = regvec1<float>;
-using vec2 = regvec2<float>;
-using vec3 = regvec3<float>;
-using vec4 = regvec4<float>;
+using scal = dsga::basic_vector<float, 1u>;
+using vec2 = dsga::basic_vector<float, 2u>;
+using vec3 = dsga::basic_vector<float, 3u>;
+using vec4 = dsga::basic_vector<float, 4u>;
 
 // also float vectors, but using the common naming convention (not in glsl)
-using fscal = regvec1<float>;
-using fvec2 = regvec2<float>;
-using fvec3 = regvec3<float>;
-using fvec4 = regvec4<float>;
+using fscal = dsga::basic_vector<float, 1u>;
+using fvec2 = dsga::basic_vector<float, 2u>;
+using fvec3 = dsga::basic_vector<float, 3u>;
+using fvec4 = dsga::basic_vector<float, 4u>;
 
 // double vectors
-using dscal = regvec1<double>;
-using dvec2 = regvec2<double>;
-using dvec3 = regvec3<double>;
-using dvec4 = regvec4<double>;
+using dscal = dsga::basic_vector<double, 1u>;
+using dvec2 = dsga::basic_vector<double, 2u>;
+using dvec3 = dsga::basic_vector<double, 3u>;
+using dvec4 = dsga::basic_vector<double, 4u>;
 
 // float matrices
 using mat2x2 = dsga::basic_matrix<float, 2u, 2u>;
@@ -192,26 +170,7 @@ It provides the following functions that can be used to generically manipulate a
 
 ## Testing
 
-I occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs:
-```
-// Microbenchmark framework for C++11/14/17/20
-// https://github.com/martinus/nanobench
-//
-// Licensed under the MIT License <http://opensource.org/licenses/MIT>.
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2019-2021 Martin Ankerl <martin.ankerl@gmail.com>
-```
-
-This project uses [doctest](https://github.com/onqtam/doctest) for testing:
-```
-// doctest.h - the lightest feature-rich C++ single-header testing framework for unit tests and TDD
-//
-// Copyright (c) 2016-2021 Viktor Kirilov
-//
-// Distributed under the MIT Software License
-// See accompanying file LICENSE.txt or copy at
-// https://opensource.org/licenses/MIT
-```
+This project uses [doctest](https://github.com/onqtam/doctest) for testing. I occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
 The tests have been run on:
 
@@ -222,21 +181,31 @@ The tests have been run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1766 | 1766 passed | 0 failed |
+[doctest] assertions: 1780 | 1780 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and these are protected (along with ```std::bit_cast<>()```) with feature macros:
+The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>``` or where there is lack of support for ```std::bit_cast<>()```, and these are protected with feature test macros:
 
-* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution
-* clang 12.0.0 on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library)
+* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```)
 
 ```
 [doctest] doctest version is "2.4.6"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1750 | 1750 passed | 0 failed |
+[doctest] assertions: 1756 | 1756 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+* clang 12.0.0 on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
+
+```
+[doctest] doctest version is "2.4.6"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
+[doctest] assertions: 1764 | 1764 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -258,3 +227,35 @@ It is a common pastime for people to write these kind of vector libraries. The t
 ```
 
 This project uses the [Boost Software License 1.0](https://choosealicense.com/licenses/bsl-1.0/).
+
+### Third Party Attribution 
+
+The libraries we use (some just occasionally):
+
+```
+// cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
+//
+//          Copyright David Browne 2020-2021.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file LICENSE_1_0.txt or copy at
+//          https://www.boost.org/LICENSE_1_0.txt)
+```
+
+```
+// doctest.h - the lightest feature-rich C++ single-header testing framework for unit tests and TDD
+//
+// Copyright (c) 2016-2021 Viktor Kirilov
+//
+// Distributed under the MIT Software License
+// See accompanying file LICENSE.txt or copy at
+// https://opensource.org/licenses/MIT
+```
+
+```
+// Microbenchmark framework for C++11/14/17/20
+// https://github.com/martinus/nanobench
+//
+// Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2019-2021 Martin Ankerl <martin.ankerl@gmail.com>
+```
