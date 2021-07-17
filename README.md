@@ -32,7 +32,14 @@ auto project_point_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_
 Currently this is a single header library with a single file dependency, so I guess a two header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
 
 We now depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. A copy of this file is in this repository.
-
+```
+// cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
+//
+//          Copyright David Browne 2020-2021.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file LICENSE_1_0.txt or copy at
+//          https://www.boost.org/LICENSE_1_0.txt)
+```
 
 ## Motivation
 
@@ -185,7 +192,28 @@ It provides the following functions that can be used to generically manipulate a
 
 ## Testing
 
-This project uses [doctest](https://github.com/onqtam/doctest) for testing. The tests have been run on:
+I occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs:
+```
+// Microbenchmark framework for C++11/14/17/20
+// https://github.com/martinus/nanobench
+//
+// Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2019-2021 Martin Ankerl <martin.ankerl@gmail.com>
+```
+
+This project uses [doctest](https://github.com/onqtam/doctest) for testing:
+```
+// doctest.h - the lightest feature-rich C++ single-header testing framework for unit tests and TDD
+//
+// Copyright (c) 2016-2021 Viktor Kirilov
+//
+// Distributed under the MIT Software License
+// See accompanying file LICENSE.txt or copy at
+// https://opensource.org/licenses/MIT
+```
+
+The tests have been run on:
 
 * MSVC 2019 - v16.10
 
@@ -221,5 +249,12 @@ It is a common pastime for people to write these kind of vector libraries. The t
 * mango (repo has been removed by owner) - this is the project that I read the blog about for vector component access and swizzling, so it is nice to have as another example. Again, more mature than dsga.
 
 ## License [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
+
+```
+//          Copyright David Browne 2020-2021.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file LICENSE_1_0.txt or copy at
+//          https://www.boost.org/LICENSE_1_0.txt)
+```
 
 This project uses the [Boost Software License 1.0](https://choosealicense.com/licenses/bsl-1.0/).
