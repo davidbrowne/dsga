@@ -3318,21 +3318,29 @@ namespace dsga
 
 		constexpr inline auto mod_op = []<floating_point_dimensional_scalar T>(T x, T y) { return x - y * cxcm::floor(x / y); };
 
-		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
-		constexpr auto mod(const vector_base<W, T, C, D> &arg) noexcept
+		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto mod(const vector_base<W1, T, C, D1> &x,
+						   const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, mod_op);
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, mod_op);
 		}
 
-		constexpr inline auto fmod_op = [](floating_point_dimensional_scalar auto arg) { return cxcm::fmod(arg); };
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto mod(const vector_base<W, T, C, D> &x,
+						   T y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, mod_op);
+		}
+
+		constexpr inline auto modf_op = []<floating_point_dimensional_scalar T>(T x, T y) { return x - y; };
 
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires W2
 		constexpr auto modf(const vector_base<W1, T, C, D1> &arg,
 							vector_base<W2, T, C, D2> &i) noexcept
 		{
-			i = trunc(arg);
-			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, fmod_op);
+			(*static_cast<D2 *>(&i)) = trunc(arg);
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, arg, i, modf_op);
 		}
 
 		constexpr inline auto min_op = []<floating_point_dimensional_scalar T>(T x, T y) { return y < x ? y : x; };

@@ -149,26 +149,60 @@ TEST_SUITE("test operators")
 	{
 		SUBCASE("most common")
 		{
+			ivec3 int_data(-10, 0, 9);
+
 			// abs()
+			auto abs_vals = abs(int_data);
+			CHECK_EQ(abs_vals, ivec3(10, 0, 9));
 
 			// sign()
+			auto sign_vals = sign(int_data);
+			CHECK_EQ(sign_vals, ivec3(-1, 0, 1));
+
+			vec4 float_data(-1.75, -0.25, 0.5, 1.0);
+			dvec4 double_data(11.5, 12.5, -11.5, -12.5);
 
 			// floor()
+			auto floor_vals = floor(float_data);
+			CHECK_EQ(floor_vals, vec4(-2, -1, 0, 1));
 
 			// trunc()
+			auto trunc_vals = trunc(float_data);
+			CHECK_EQ(trunc_vals, vec4(-1, 0, 0, 1));
 
 			// round()
+			auto round_vals = round(float_data);
+			CHECK_EQ(round_vals, vec4(-2, 0, 1, 1));
 
 			// roundEven()
+			auto re_float_data = roundEven(float_data);
+			CHECK_EQ(re_float_data, vec4(-2, 0, 0, 1));
+			auto re_double_data = roundEven(double_data);
+			CHECK_EQ(re_double_data, dvec4(12, 12, -12, -12));
 
 			// ceil()
+			auto ceil_vals = ceil(float_data);
+			CHECK_EQ(ceil_vals, vec4(-1, 0, 1, 1));
 
 			// fract()
+			auto fract_vals = fract(float_data);
+			CHECK_EQ(fract_vals, vec4(0.25, 0.75, 0.5, 0));
+
+			vec4 mod_x_data(7.75, -12.25, 4, -0.5);
+			vec4 mod_y_data(2.25, -2.5, 3.125, -0.75);
 
 			// mod()
+			auto mod_vals_vector = mod(mod_x_data, mod_y_data);
+			auto mod_vals_scalar = mod(mod_x_data, 1.625f);
+
+			CHECK_EQ(mod_vals_vector, vec4(1, -2.25, 0.875, -0.5));
+			CHECK_EQ(mod_vals_scalar, vec4(1.25, 0.75, 0.75, 1.125));
 
 			// modf()
-
+			vec4 modf_int_part;
+			auto modf_vals = modf(mod_y_data, modf_int_part);
+			CHECK_EQ(modf_int_part, vec4(2, -2, 3, -0));
+			CHECK_EQ(modf_vals, vec4(0.25, -0.5, 0.125, -0.75));
 		}
 
 		SUBCASE("in range functions")

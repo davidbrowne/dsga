@@ -1,4 +1,4 @@
-# dsga: Data Structures for Geometric Algorithms
+# dsga : Data Structures for Geometric Algorithms
 
 dsga is a c\+\+20 library that implements/will implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). This library was not intended to be used for rendering. My requirements in general are for things like 3D CAD/CAM applications and other geometric things.
 
@@ -37,13 +37,9 @@ We now depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/m
 
 I wanted to expand the point/vector class that we use at work. We have x, y, and z data members, but that is the only way to get at the data. I wanted something more flexible that would use contiguous memory like an array, but still be useful with x, y, z data member access. I specifically did *NOT* want accessor functions as the way to get x, y, and z data. I wanted data member access.
 
-After reading a [blog](https://t0rakka.silvrback.com/simd-scalar-accessor) about this very type of issue, I started thinking more about this, and how to deal with unions and their common initial sequence. I saw some confusion about the common initial sequence, and I based my implementation on what I read in these discussions:
-* [Language lawyers: unions and "common initial sequence"](https://www.reddit.com/r/cpp_questions/comments/7ktrrj/language_lawyers_unions_and_common_initial/)
-* [Union common initial sequence with primitive](https://stackoverflow.com/questions/43655657/union-common-initial-sequence-with-primitive)
-* [Do scalar members in a union count towards the common initial sequence?](https://stackoverflow.com/questions/48209179/do-scalar-members-in-a-union-count-towards-the-common-initial-sequence)
-* [Are there any guarantees for unions that contain a wrapped type and the type itself?](https://stackoverflow.com/questions/48058545/are-there-any-guarantees-for-unions-that-contain-a-wrapped-type-and-the-type-its)
+After reading a [blog article](https://t0rakka.silvrback.com/simd-scalar-accessor) about this very type of issue, I started thinking more about this, and once I better understood anonymous unions and the common initial sequence concept (since verified with ```std::is_corresponding_member<>```), I was ready to write this library.
 
-Once I understood these issues, I decided I wanted to try and get as much vector and matrix functionality I could with this approach. That is why in the end I decided to implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). dsga's implementation doesn't care about data-packing or rendering.
+I decided that instead of limiting my swizzling to just x, y, and z values, I would go all the way and try and get as much vector and matrix functionality I could with this approach. That is why in the end I decided to implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). dsga's implementation doesn't care about data-packing or rendering.
 
 I also wanted to learn more about c\+\+20. I was interested in learning git (been using subversion for 20 years) and how to create a public repo. This project is the result.
 
@@ -59,9 +55,9 @@ In addition, we need examples of projects that make use of this library. Work on
 
 ## Usage
 
-Use it more or less like you would use vectors in a shader program, but not necessarily for shading.
+Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading.
 
-The following types are pretty much what you expect, but there is a 1D version of a vector that we suffix as "scal" for scalar. It helps with keeping things interoperating, and it provides a way to swizzle a supposed "scalar" value:
+The following types are pretty much what you expect, but there is a 1D version of a vector that we suffix as ```scal``` for scalar. It helps with keeping things interoperating, and it provides a way to swizzle a supposed "scalar" value:
 
 ``` c++
 // specialized using types
@@ -145,7 +141,7 @@ using dmat3 = dsga::basic_matrix<double, 3u, 3u>;
 using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
 ```
 
-## How It Works
+## How The Vectors Work
 
 There are really two vector classes: ```basic_vector``` and ```indexed_vector```. ```basic_vector``` is what you would normally think of as a contiguously stored vector/point representation. ```indexed_vector``` is a view on ```basic_vector```, which may only be modified under certain conditions.
 
@@ -181,13 +177,24 @@ The tests have been run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1780 | 1780 passed | 0 failed |
+[doctest] assertions: 1793 | 1793 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>``` or where there is lack of support for ```std::bit_cast<>()```, and these are protected with feature test macros:
 
-* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```)
+* clang 12.0.0 on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
+
+```
+[doctest] doctest version is "2.4.6"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
+[doctest] assertions: 1777 | 1777 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```), last successful build:
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -198,16 +205,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] Status: SUCCESS!
 ```
 
-* clang 12.0.0 on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
-
-```
-[doctest] doctest version is "2.4.6"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1764 | 1764 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
+Currently, gcc will not build due to an internal compiler error (no work-around yet).
 
 ## Similar Projects
 
