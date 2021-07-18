@@ -201,11 +201,11 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1756 | 1756 passed | 0 failed |
+[doctest] assertions: 1758 | 1758 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-Currently, gcc will not build due to an internal compiler error (no work-around yet).
+Currently, gcc will not build all the tests due to an internal compiler error, so functions that need cxcm::trunc() are not tested with gcc, e.g., trunc(), ceil(), floor(), round(), mod(), etc.
 
 ## Similar Projects
 
