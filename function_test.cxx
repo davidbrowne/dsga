@@ -159,10 +159,10 @@ TEST_SUITE("test operators")
 			auto sign_vals = sign(int_data);
 			CHECK_EQ(sign_vals, ivec3(-1, 0, 1));
 
+#if !(defined(__GNUC__) || defined(__GNUG__))
+
 			vec4 float_data(-1.75, -0.25, 0.5, 1.0);
 			dvec4 double_data(11.5, 12.5, -11.5, -12.5);
-
-#if !(defined(__GNUC__) || defined(__GNUG__))
 
 			// floor()
 			auto floor_vals = floor(float_data);
@@ -211,18 +211,70 @@ TEST_SUITE("test operators")
 
 		SUBCASE("in range functions")
 		{
+			vec4 x(10, -8, 4, 0);
+			vec4 y(7, -9, 4, 1);
+			float boundary{ 0.5f };
+
 			// min()
+			auto min_vals = min(x, y);
+			CHECK_EQ(min_vals, vec4(7, -9, 4, 0));
+			auto min_boundary_vals = min(x, boundary);
+			CHECK_EQ(min_boundary_vals, vec4(0.5f, -8, 0.5f, 0));
 
 			// max()
+			auto max_vals = max(x, y);
+			CHECK_EQ(max_vals, vec4(10, -8, 4, 1));
+			auto max_boundary_vals = max(x, boundary);
+			CHECK_EQ(max_boundary_vals, vec4(10, 0.5f, 4, 0.5f));
 
 			// clamp()
+			dvec4 more_vals(-4, 3, 2, -2.5);
+			dvec4 high_vec(0, 2, 4, -3);
+			dvec4 low_vec(-3, 0, 1, -4);
+			double high_scalar{ 2.5 };
+			double low_scalar{ -3 };
+
+			auto vector_clamp = clamp(more_vals, low_vec, high_vec);
+			CHECK_EQ(vector_clamp, dvec4(-3, 2, 2, -3));
+			auto scalar_clamp = clamp(more_vals, low_scalar, high_scalar);
+			CHECK_EQ(scalar_clamp, dvec4(-3, 2.5, 2, -2.5));
 
 			// mix()
+			
+			// first version
+			vec4 vector_mix_steps(0, .5, .75, 1);
+			float scalar_mix_step{0.25};
+			
+			auto vector_mix_vals = mix(x, y, vector_mix_steps);
+			CHECK_EQ(vector_mix_vals, vec4(10, -8.5, 4, 1));
+			auto scalar_mix_vals = mix(x, y, scalar_mix_step);
+			CHECK_EQ(scalar_mix_vals, vec4(9.25, -8.25, 4, 0.25));
+
+			// second version
+			bvec4 mix_toggles(true, false, true, false);
+			auto bool_mix_vals = mix(x, y, mix_toggles);
+			CHECK_EQ(bool_mix_vals, vec4(7, -8, 4, 0));
 
 			// step()
+			auto vector_step_vals = step(x, y);
+			CHECK_EQ(vector_step_vals, vec4(0, 0, 1, 1));
+
+			float edge{ 3.75 };
+			auto scalar_step_vals = step(edge, x);
+			CHECK_EQ(scalar_step_vals, vec4(1, 0, 1, 0));
 
 			// smoothstep()
+			vec4 smoothstep_edge0(-3, 0, 1, -4);
+			vec4 smoothstep_edge1(0, 2, 7, -3);
 
+			auto vector_smoothstep_vals = smoothstep(smoothstep_edge0, smoothstep_edge1, x);
+			CHECK_EQ(vector_smoothstep_vals, vec4(1, 0, 0.5, 1));
+
+			float scalar_edge0{ 2 };
+			float scalar_edge1{ 6 };
+
+			auto scalar_smoothstep_vals = smoothstep(scalar_edge0, scalar_edge1, x);
+			CHECK_EQ(scalar_smoothstep_vals, vec4(1, 0, 0.5, 0));
 		}
 
 		SUBCASE("bit changing functions")

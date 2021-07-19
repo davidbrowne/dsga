@@ -45,13 +45,15 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 ## Status
 
-Current version: `v0.3.0`
+Current version: `v0.4.0`
 
-***All the vector and matrix functionality is implemented***. While eventually there will likely be even more tests, all that is missing for basic test coverage are tests for 16 vector free functions.
+* All the vector and matrix functionality is implemented.
+* First pass at test coverage. Everything major has some test, but code coverage is not 100%. 
 
-This project need documentation. Currently, the documentation that is offered is this README page and the GLSL specification. Work on documentation will start after the basic test coverage is completed.
-
-In addition, we need examples of projects that make use of this library. Work on some of these example projects will overlap with the documentation effort.
+### The next steps
+* Single header download. Currently you need two headers, but ```cxcm.hxx``` will be merged into ```dsga.hxx```.
+* Documentation. Currently, the documentation that is offered is the source code and tests, this README page, and the GLSL specification.
+* Example projects. Need small, medium, and large examples.
 
 ## Usage
 
@@ -159,7 +161,7 @@ We want to use both types of vectors in the same way, for constructors, equality
 It provides the following functions that can be used to generically manipulate and access vector data:
 * ```set()``` - relies on ```init()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it is writable. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
 * ```operator[]``` - relies on ```at()```, which is a reference to a single data value. If writable then can use as an lvalue. The data is in logical order.
-* ```data()``` - provides pointer to data access via ```raw_data()```. If writable can write down the dereferenced pointer. Pointer access is in physical order.
+* ```data()``` - provides pointer to data access via ```raw_data()```. If it is writable, then can use pointer to write data. Pointer access is in physical order.
 * ```sequence()``` - relies on ```make_sequence_pack()```. The physical order to logical order mapping in a parameter pack.
 *  ```length()``` - relies on ```Count``` template parameter, and it returns type ```int```.
 * ```size()``` - relies on ```Count``` template parameter, and it returns type ```std::size_t```.
@@ -177,7 +179,7 @@ The tests have been run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1793 | 1793 passed | 0 failed |
+[doctest] assertions: 1806 | 1806 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -190,7 +192,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1777 | 1777 passed | 0 failed |
+[doctest] assertions: 1790 | 1790 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -201,11 +203,11 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1758 | 1758 passed | 0 failed |
+[doctest] assertions: 1771 | 1771 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-Currently, gcc will not build all the tests due to an internal compiler error, so functions that need cxcm::trunc() are not tested with gcc, e.g., trunc(), ceil(), floor(), round(), mod(), etc.
+Currently, gcc will not build all the tests due to an internal compiler error (introduced after gcc 9.3.0), so dsga functions that need cxcm::trunc() are not tested with gcc, e.g., trunc(), ceil(), floor(), round(), mod(), etc.
 
 ## Similar Projects
 
