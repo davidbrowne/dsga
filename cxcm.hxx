@@ -20,7 +20,7 @@
 
 constexpr inline int CXCM_MAJOR_VERSION = 0;
 constexpr inline int CXCM_MINOR_VERSION = 1;
-constexpr inline int CXCM_PATCH_VERSION = 6;
+constexpr inline int CXCM_PATCH_VERSION = 7;
 
 namespace cxcm
 {
@@ -115,11 +115,8 @@ namespace cxcm
 
 		// rounds towards zero
 
-		// works for double and long double, as long as:
-		// std::numeric_limits<long double>::digits <= 64
-
 		template <std::floating_point T>
-		constexpr T trunc(T value) noexcept requires (std::numeric_limits<T>::digits <= 64)
+		constexpr T trunc(T value) noexcept
 		{
 			return static_cast<T>(static_cast<long long>(value));
 		}

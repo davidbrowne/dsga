@@ -1,6 +1,6 @@
 # dsga : Data Structures for Geometric Algorithms
 
-dsga is a c\+\+20 library that implements/will implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). This library was not intended to be used for rendering. My requirements in general are for things like 3D CAD/CAM applications and other geometric things.
+dsga is a c\+\+20 library that implements the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). This library was not intended to be used for rendering. My requirements in general are for things like 3D CAD/CAM applications and other geometric things.
 
 ## Quick Peek
 
@@ -203,11 +203,9 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1771 | 1771 passed | 0 failed |
+[doctest] assertions: 1782 | 1782 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
-
-Currently, gcc will not build all the tests due to an internal compiler error (introduced after gcc 9.3.0), so dsga functions that need cxcm::trunc() are not tested with gcc, e.g., trunc(), ceil(), floor(), round(), mod(), etc.
 
 ## Similar Projects
 

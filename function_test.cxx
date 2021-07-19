@@ -159,8 +159,6 @@ TEST_SUITE("test operators")
 			auto sign_vals = sign(int_data);
 			CHECK_EQ(sign_vals, ivec3(-1, 0, 1));
 
-#if !(defined(__GNUC__) || defined(__GNUG__))
-
 			vec4 float_data(-1.75, -0.25, 0.5, 1.0);
 			dvec4 double_data(11.5, 12.5, -11.5, -12.5);
 
@@ -205,8 +203,6 @@ TEST_SUITE("test operators")
 			auto modf_vals = modf(mod_y_data, modf_int_part);
 			CHECK_EQ(modf_int_part, vec4(2, -2, 3, -0));
 			CHECK_EQ(modf_vals, vec4(0.25, -0.5, 0.125, -0.75));
-
-#endif
 		}
 
 		SUBCASE("in range functions")
