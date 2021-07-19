@@ -411,7 +411,7 @@ constexpr auto sum2(const dsga::vector_base<W1, T1, C, D1> &lhs,
 {
 	return
 	[&] <std::size_t ...Is, std::size_t ...Js, typename BinOp>(std::index_sequence<Is ...> /* dummy */, const T1 *lhs_ptr,
-															   std::index_sequence<Js ...> /* dummy */, const T2 *rhs_ptr, BinOp lambda)
+															   std::index_sequence<Js ...> /* dummy */, const T2 *rhs_ptr, BinOp lambda) noexcept
 	{
 		return dsga::basic_vector<dsga::detail::binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs_ptr[Is], rhs_ptr[Js])...);
 	}(lhs.sequence(), lhs.data(), rhs.sequence(), rhs.data(), dsga::plus_op);
@@ -424,7 +424,7 @@ constexpr auto sum3(const dsga::vector_base<W1, T1, C, D1> &lhs,
 					const dsga::vector_base<W2, T2, C, D2> &rhs) noexcept
 {
 	return
-	[&]<typename BinOp>(BinOp lambda)
+	[&]<typename BinOp>(BinOp lambda) noexcept
 	{
 		dsga::basic_vector<dsga::detail::binary_op_return_t<BinOp, T1, T2>, C> v(0);
 
