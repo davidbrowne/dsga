@@ -45,13 +45,13 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 ## Status
 
-Current version: `v0.4.0`
+Current version: `v0.4.1`
 
 * All the vector and matrix functionality is implemented.
 * First pass at test coverage. Everything major has some test, but code coverage is not 100%. 
 
 ### The next steps
-* Single header download. Currently you need two headers, but ```cxcm.hxx``` will be merged into ```dsga.hxx```.
+* Official single header release. ```cxcm.hxx``` has been merged into ```dsga.hxx```, but it needs some testing before we make the first official release of dsga.
 * Documentation. Currently, the documentation that is offered is the source code and tests, this README page, and the GLSL specification.
 * Example projects. Need small, medium, and large examples.
 
