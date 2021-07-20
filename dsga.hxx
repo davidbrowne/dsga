@@ -3887,6 +3887,12 @@ namespace dsga
 		static constexpr std::size_t value = C;
 	};
 
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	struct component_size<vector_base<W, T, C, D>>
+	{
+		static constexpr std::size_t value = C;
+	};
+
 	template <dimensional_scalar T>
 	struct component_size<T>
 	{
@@ -3952,6 +3958,9 @@ namespace dsga
 	template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 	struct valid_component_source<indexed_vector<T, S, C, Is...>> : std::true_type { };
 
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	struct valid_component_source<vector_base<W, T, C, D>> : std::true_type { };
+
 	// create a tuple from a scalar
 
 	auto to_tuple(dimensional_scalar auto arg) noexcept
@@ -3960,6 +3969,24 @@ namespace dsga
 	}
 
 	// create a tuple from a vector
+
+	template <dimensional_scalar T, std::size_t C>
+	constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
+	{
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return std::make_tuple(arg[Is]...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+	constexpr auto to_tuple(const indexed_vector<T, S, C, Is...> &arg) noexcept
+	{
+		return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+		{
+			return std::make_tuple(arg[Js]...);
+		}(std::make_index_sequence<C>{});
+	}
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	constexpr auto to_tuple(const vector_base<W, T, C, D> &arg) noexcept
@@ -3973,7 +4000,7 @@ namespace dsga
 	// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
 	// and dimensional_scalars.
 	template <typename ...Args>
-	auto flatten_args_to_tuple(Args ...args) noexcept
+	auto flatten_args_to_tuple(const Args & ...args) noexcept
 	{
 		return std::tuple_cat(to_tuple(args)...);
 	}
@@ -4819,7 +4846,7 @@ namespace dsga
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (valid_component_source<Args>::value && ...) && met_component_count<Size, Args...>
-		constexpr basic_matrix(Args ... args) noexcept
+		constexpr basic_matrix(const Args & ...args) noexcept
 		{
 			auto arg_tuple = flatten_args_to_tuple(args...);
 			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
