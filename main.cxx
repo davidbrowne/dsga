@@ -221,37 +221,6 @@ fvec4 sometest()
 	return bar;
 }
 
-// Microsoft bug here
-// https://developercommunity.visualstudio.com/content/problem/1259625/constexpr-and-anonymous-union-intialization-error.html
-// Fixed in v16.9 Preview 1
-
-/*
-struct A
-{
-	int store;
-};
-
-struct C
-{
-	union
-	{
-		A a;
-	};
-
-	constexpr C(int val)
-	{
-		a.store = val;
-	}
-};
-
-constexpr int c_val(const C &c)
-{
-	return c.a.store;
-}
-
-constexpr int some_c_val = c_val(C(7));
-*/
-
 #define CXCM_DISABLE_RUNTIME_OPTIMIZATIONS
 #include "cxcm.hxx"
 

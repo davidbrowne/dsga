@@ -34,6 +34,9 @@ constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, floa
     auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
     auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
     return mix(linear_control_points.x, linear_control_points.y, t);
+// #if defined(__cpp_lib_interpolate)
+//  return std::lerp(linear_control_points.x, linear_control_points.y, t);
+// #endif
 }
 
 // main cubic bezier eval function -- takes 2D control points with float values.
@@ -51,9 +54,9 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 
 ## Installation
 
-This is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
+This is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [Usage](#usage) section you can see using directives that bring a lot of this library into the top level namespace.
 
-We depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. This library has been brought into ```dsga.hxx``` in a nested ```namespace cxcm``` under ```namespace dsga```.
+We depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```.
 
 ## Motivation
 
@@ -63,7 +66,7 @@ After reading a [blog article](https://t0rakka.silvrback.com/simd-scalar-accesso
 
 I decided that instead of limiting my swizzling to just x, y, and z values, I would go all the way and try and get as much vector and matrix functionality I could with this approach. That is why in the end I decided to implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). dsga's implementation doesn't care about data-packing or rendering.
 
-I also wanted to learn more about c\+\+20. I was interested in learning git (been using subversion for 20 years) and how to create a public repo. This project is the result.
+I also wanted to learn more about c\+\+20. I was interested in learning git (been using subversion for around 20 years) and how to create a public repo. This project is the result.
 
 ## Status
 
@@ -77,11 +80,11 @@ Current version: `v0.4.3`
 * Documentation. Currently, the documentation that is offered is the source code and tests, this README page, and the GLSL specification.
 * Example projects. Need small, medium, and large examples.
 
-## Usage
+## <a name="usage"></a>Usage
 
 Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading.
 
-The following types are pretty much what you expect, but there is a 1D version of a vector that we suffix as ```scal``` for scalar. It helps with keeping things interoperating, and it provides a way to swizzle a supposed "scalar" value:
+We have using directives that bring the types (and the functions on the types) into the top level namespace. The types are pretty much what you expect, but there is a 1D version of a vector that we suffix as ```scal``` for scalar. It helps with keeping things interoperating, and it provides a way to swizzle a supposed "scalar" value:
 
 ``` c++
 // specialized using types
@@ -163,6 +166,12 @@ using dmat4x4 = dsga::basic_matrix<double, 4u, 4u>;
 using dmat2 = dsga::basic_matrix<double, 2u, 2u>;
 using dmat3 = dsga::basic_matrix<double, 3u, 3u>;
 using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
+
+//
+// bring the vector and matrix free functions into the global namespace
+//
+
+using namespace dsga::functions;
 ```
 
 ## How The Vectors Work
@@ -190,7 +199,7 @@ It provides the following functions that can be used to generically manipulate a
 
 ## How The Matrices Work
 
-The matrices each have between 2-4 rows and 2-4 columns, inclusive, giving 9 possible sizes. The components of the matrices must be floating point types. The matrices store things in column major order, and the naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The columns are represented as an array of floating point ```dsga::basic_vector``` in the ```dsga::basic_matrix``` class. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function.
+The matrices each have between 2-4 rows and 2-4 columns, inclusive, giving 9 possible matrix sizes. The components of the matrices must be floating point types. The matrices store things in column major order, and the naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The columns are represented as an array of floating point ```dsga::basic_vector``` in the ```dsga::basic_matrix``` class. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function. Any component of a matrix ```A``` can be accessed by double ```operator []``` calls, such as ```A[col_num][row_num]```.
 
 For an example of GLSL vs. math notation, ```mat4x2``` is a matrix with 4 columns with 2 rows, but math notation specifies the number of rows first, followed by number of columns. So a ```mat4x2``` in ```dsga``` is a 2x4 matrix using math notation.
 

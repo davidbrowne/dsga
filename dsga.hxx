@@ -1174,8 +1174,11 @@ namespace dsga
 	// 		sequence() - relies on make_sequence_pack() in Derived - the physical order to logical order mapping
 	//
 	// https://yuml.me/diagram/scruffy/class/draw
-	// [vector_base;set();operator_brackets();data();sequence();length();size()|Count (template parameter)]^[basic_vector; init();at();raw_data();make_sequence_pack()]
-	// [vector_base]^[indexed_vector; init();at();raw_data();make_sequence_pack()]
+	// 
+	//[vector_base;set();operator_brackets();data();sequence();length();size()|Count (template parameter)]^[<<vector duck type>>basic_vector; ]
+	//[vector_base]^[<<vector duck type>>indexed_vector]
+	//[<<vector duck type>>|init();at();raw_data();make_sequence_pack()]^-.-[basic_vector]
+	//[<<vector duck type>>]^-.-[indexed_vector]
 	//
 	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 	requires dimensional_storage<T, Count>
