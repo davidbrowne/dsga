@@ -31,21 +31,21 @@ auto project_point_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_
 // cubic bezier linear interpolation, one ordinate at a time, e.g., x, y, z, or w
 constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, float t) noexcept
 {
-	auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
-	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-	return mix(linear_control_points.x, linear_control_points.y, t);
+    auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
+    auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+    return mix(linear_control_points.x, linear_control_points.y, t);
 }
 
 // main cubic bezier eval function -- takes 2D control points with float values.
 // returns the 2D point on the curve at t
 constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t) noexcept
 {
-	auto AoS = mat4x2(p0, p1, p2, p3);
+    auto AoS = mat4x2(p0, p1, p2, p3);
 
-	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-	{
-		return vec2(single_ordinate_cubic_bezier_eval(AoS.template row<Is>(), t)...);
-	}(std::make_index_sequence<2u>{});
+    return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+    {
+        return vec2(single_ordinate_cubic_bezier_eval(AoS.template row<Is>(), t)...);
+    }(std::make_index_sequence<2u>{});
 }
 ```
 
