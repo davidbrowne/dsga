@@ -961,6 +961,8 @@ namespace dsga
 
 	} // namespace cxcm
 
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	//
 	// helper template function to convert a std::index_sequence to a std::array.
 	// can be used for indirect indexing.
@@ -1179,6 +1181,7 @@ namespace dsga
 	//[vector_base]^[<<vector duck type>>indexed_vector]
 	//[<<vector duck type>>|init();at();raw_data();make_sequence_pack()]^-.-[basic_vector]
 	//[<<vector duck type>>]^-.-[indexed_vector]
+	//[basic_vector]++-*>[indexed_vector]
 	//
 	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 	requires dimensional_storage<T, Count>
@@ -3845,6 +3848,36 @@ namespace dsga
 	// get<> part of tuple interface -- needed for structured bindings
 	//
 
+	template <int N, dimensional_scalar T, std::size_t S>
+	requires (N >= 0) && (N < S)
+	constexpr auto && get(dsga::storage_wrapper<T, S> & arg) noexcept
+	{
+		return arg[N];
+	}
+
+	template <int N, dimensional_scalar T, std::size_t S>
+	requires (N >= 0) && (N < S)
+	constexpr auto && get(const dsga::storage_wrapper<T, S> & arg) noexcept
+	{
+		return arg[N];
+	}
+
+	template <int N, dimensional_scalar T, std::size_t S>
+	requires (N >= 0) && (N < S)
+	constexpr auto && get(dsga::storage_wrapper<T, S> && arg) noexcept
+	{
+		return std::move(arg[N]);
+	}
+
+	template <int N, dimensional_scalar T, std::size_t S>
+	requires (N >= 0) && (N < S)
+	constexpr auto && get(const dsga::storage_wrapper<T, S> && arg) noexcept
+	{
+		return std::move(arg[N]);
+	}
+
+	//
+
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires (N >= 0) && (N < C)
 	constexpr auto && get(dsga::vector_base<W, T, C, D> & arg) noexcept
@@ -5433,6 +5466,17 @@ namespace dsga
 //
 // tuple inteface for basic_vector and indexed_vector and vec_base -- supports structured bindings
 //
+
+template<dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_size<dsga::storage_wrapper<T, S>> : std::integral_constant<std::size_t, S>
+{
+};
+
+template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_element<I, dsga::storage_wrapper<T, S>>
+{
+	using type = T;
+};
 
 template<dsga::dimensional_scalar T, std::size_t S>
 struct std::tuple_size<dsga::basic_vector<T, S>> : std::integral_constant<std::size_t, S>
