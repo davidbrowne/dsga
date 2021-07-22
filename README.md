@@ -5,33 +5,55 @@ dsga is a c\+\+20 library that implements the vectors and matrices from the [Ope
 ## Quick Peek
 
 ``` c++
+// get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
+// to a 2D vector in the plane
 auto perpendicular(const vec2 &some_vec)
 {
     return some_vec.yx * vec2(-1, 1);
 }
 
-auto my_dot(const dvec3 &v1, const dvec3 &v2)
-{
-    return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-}
-
-// no coincident point or collinear checking
+// project a point to a line in 3D - there is no coincident or collinear point checking
 auto project_point_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_in_space)
 {
     auto v1 = p1 - p0;
     auto vq = point_in_space - p0;
-    auto t = my_dot(vq, v1) / my_dot(v1, v1);
+    auto t = dot(vq, v1) / dot(v1, v1);
 
     return p1 + t * v1;
 }
+```
 
+``` c++
+//
+// evaluate a 2D cubic bezier curve at t
+//
+
+// cubic bezier linear interpolation, one ordinate at a time, e.g., x, y, z, or w
+constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, float t) noexcept
+{
+	auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
+	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+	return mix(linear_control_points.x, linear_control_points.y, t);
+}
+
+// main cubic bezier eval function -- takes 2D control points with float values.
+// returns the 2D point on the curve at t
+constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t) noexcept
+{
+	auto AoS = mat4x2(p0, p1, p2, p3);
+
+	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+	{
+		return vec2(single_ordinate_cubic_bezier_eval(AoS.template row<Is>(), t)...);
+	}(std::make_index_sequence<2u>{});
+}
 ```
 
 ## Installation
 
-Currently this is a single header library with a single file dependency, so I guess a two header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
+This is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). The functions are in the ```dsga``` namespace.
 
-We now depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. A copy of this file is in this repository.
+We depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. This library has been brought into ```dsga.hxx``` in a nested ```namespace cxcm``` under ```namespace dsga```.
 
 ## Motivation
 
@@ -45,7 +67,7 @@ I also wanted to learn more about c\+\+20. I was interested in learning git (bee
 
 ## Status
 
-Current version: `v0.4.1`
+Current version: `v0.4.3`
 
 * All the vector and matrix functionality is implemented.
 * First pass at test coverage. Everything major has some test, but code coverage is not 100%. 
@@ -166,6 +188,12 @@ It provides the following functions that can be used to generically manipulate a
 *  ```length()``` - relies on ```Count``` template parameter, and it returns type ```int```.
 * ```size()``` - relies on ```Count``` template parameter, and it returns type ```std::size_t```.
 
+## How The Matrices Work
+
+The matrices each have between 2-4 rows and 2-4 columns, inclusive, giving 9 possible sizes. The components of the matrices must be floating point types. The matrices store things in column major order, and the naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The columns are represented as an array of floating point ```dsga::basic_vector``` in the ```dsga::basic_matrix``` class. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function.
+
+For an example of GLSL vs. math notation, ```mat4x2``` is a matrix with 4 columns with 2 rows, but math notation specifies the number of rows first, followed by number of columns. So a ```mat4x2``` in ```dsga``` is a 2x4 matrix using math notation.
+
 ## Testing
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. I occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
@@ -179,7 +207,7 @@ The tests have been run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1806 | 1806 passed | 0 failed |
+[doctest] assertions: 1808 | 1808 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -192,18 +220,18 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1790 | 1790 passed | 0 failed |
+[doctest] assertions: 1792 | 1792 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```), last successful build:
+* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```):
 
 ```
 [doctest] doctest version is "2.4.6"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1782 | 1782 passed | 0 failed |
+[doctest] assertions: 1784 | 1784 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

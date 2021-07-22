@@ -65,6 +65,9 @@
     <ClCompile Include="function_test.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="examples.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dsga.natvis" />

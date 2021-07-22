@@ -221,99 +221,6 @@ fvec4 sometest()
 	return bar;
 }
 
-
-// quadratic bezier evaluator ?
-
-template <bool W, dsga::floating_point_dimensional_scalar T, typename D>
-constexpr auto quadratic_bezier_1d_eval(const dsga::vector_base<W, T, 3u, D> &control_points, T t) noexcept
-{
-	// so we can swizzle
-	auto quadratic_control_points = dsga::basic_vector<T, 3u>(control_points);
-
-	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-	return mix(linear_control_points.x, linear_control_points.y, t);
-}
-
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
-	bool W2, typename D2, bool W3, typename D3>
-requires (C > 1u)
-constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
-									 const dsga::vector_base<W2, T, C, D2> &p1,
-									 const dsga::vector_base<W3, T, C, D3> &p2,
-									 T t) noexcept
-{
-	dsga::basic_matrix<T, 4, C> coord_matrix(p0, p1, p2);
-
-	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-	{
-		return dsga::basic_vector<T, C>(quadratic_bezier_1d_eval(coord_matrix.template row<Is>(), t)...);
-	}(std::make_index_sequence<C>{});
-}
-
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
-	bool W2, typename D2, bool W3, typename D3>
-constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
-									 const dsga::vector_base<W2, T, 1u, D2> &p1,
-									 const dsga::vector_base<W3, T, 1u, D3> &p2,
-									 T t) noexcept
-{
-	return quadratic_bezier_1d_eval(dsga::basic_vector<T, 4u>(p0, p1, p2), t);
-}
-
-// cubic bezier evaluator ?
-
-template <bool W, dsga::floating_point_dimensional_scalar T, typename D>
-constexpr auto cubic_bezier_1d_eval(const dsga::vector_base<W, T, 4u, D> &control_points, T t) noexcept
-{
-	// so we can swizzle
-	auto cubic_control_points = dsga::basic_vector<T, 4u>(control_points);
-
-	auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
-	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-	return mix(linear_control_points.x, linear_control_points.y, t);
-}
-
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
-	bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-requires (C > 1u)
-constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
-								 const dsga::vector_base<W2, T, C, D2> &p1,
-								 const dsga::vector_base<W3, T, C, D3> &p2,
-								 const dsga::vector_base<W4, T, C, D4> &p3,
-								 T t) noexcept
-{
-	auto coord_matrix = dsga::basic_matrix<T, 4, C>(p0, p1, p2, p3);
-
-	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-	{
-		return dsga::basic_vector<T, C>(cubic_bezier_1d_eval(coord_matrix.template row<Is>(), t)...);
-	}(std::make_index_sequence<C>{});
-}
-
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
-	bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
-								 const dsga::vector_base<W2, T, 1u, D2> &p1,
-								 const dsga::vector_base<W3, T, 1u, D3> &p2,
-								 const dsga::vector_base<W4, T, 1u, D4> &p3,
-								 T t) noexcept
-{
-	return cubic_bezier_1d_eval(dsga::basic_vector<T, 4u>(p0, p1, p2, p3), t);
-}
-
-void cubic_bezier_example()
-{
-	vec2 p0(2, 2);
-	vec2 p1(5, 4);
-	vec2 p2(3, 5);
-	vec2 p3(8, 3);
-	float t1{ 0.25f };
-	float t2{ 0.75f };
-
-	[[ maybe_unused ]] auto val1 = cubic_bezier_eval(p0, p1, p2, p3, t1);		// (3.5, 3.28125)
-	[[ maybe_unused ]] auto val2 = cubic_bezier_eval(p0, p1, p2, p3, t2);		// (5.375, 3.96875)
-}
-
 // Microsoft bug here
 // https://developercommunity.visualstudio.com/content/problem/1259625/constexpr-and-anonymous-union-intialization-error.html
 // Fixed in v16.9 Preview 1
@@ -614,7 +521,6 @@ int main(int argc, char *argv[])
 //	inv_sqrt_doubles_test();
 	
 //	mat_box();
-	cubic_bezier_example();
 	sometest();
 
 

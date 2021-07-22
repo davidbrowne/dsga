@@ -181,6 +181,7 @@
     <ClCompile Include="comparison_test.cxx" />
     <ClCompile Include="constructor_test.cxx" />
     <ClCompile Include="conversion_test.cxx" />
+    <ClCompile Include="examples.cxx" />
     <ClCompile Include="function_test.cxx" />
     <ClCompile Include="main.cxx" />
     <ClCompile Include="nanobench.cxx" />

@@ -15,6 +15,40 @@
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
+constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, float t) noexcept
+{
+	auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
+	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+	return mix(linear_control_points.x, linear_control_points.y, t);
+}
+
+constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t) noexcept
+{
+	auto AoS = mat4x2(p0, p1, p2, p3);
+
+	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+	{
+		return vec2(single_ordinate_cubic_bezier_eval(AoS.template row<Is>(), t)...);
+	}(std::make_index_sequence<2u>{});
+}
+
+//void cubic_bezier_example()
+//{
+//	vec2 p0(2, 2);
+//	vec2 p1(5, 4);
+//	vec2 p2(3, 5);
+//	vec2 p3(8, 3);
+//	float t1{ 0.25f };
+//	float t2{ 0.75f };
+//
+//	auto val1 = simple_cubic_bezier_eval(p0, p1, p2, p3, t1);		// (3.5, 3.28125)
+//	CHECK_EQ(val1, vec2(3.5, 3.28125));
+//
+//	auto val2 = simple_cubic_bezier_eval(p0, p1, p2, p3, t2);		// (5.375, 3.96875)
+//	CHECK_EQ(val1, vec2(5.375, 3.96875));
+//}
+
+
 // operators are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test operators")
 {
@@ -271,6 +305,23 @@ TEST_SUITE("test operators")
 
 			auto scalar_smoothstep_vals = smoothstep(scalar_edge0, scalar_edge1, x);
 			CHECK_EQ(scalar_smoothstep_vals, vec4(1, 0, 0.5, 0));
+
+			//
+			// real-world example of using mix() and other functions -- cubic bezier evaluation
+			//
+
+			vec2 p0(2, 2);
+			vec2 p1(5, 4);
+			vec2 p2(3, 5);
+			vec2 p3(8, 3);
+			float t1{ 0.25f };
+			float t2{ 0.75f };
+
+			auto val1 = simple_cubic_bezier_eval(p0, p1, p2, p3, t1);
+			CHECK_EQ(val1, vec2(3.5, 3.28125));
+
+			auto val2 = simple_cubic_bezier_eval(p0, p1, p2, p3, t2);
+			CHECK_EQ(val2, vec2(5.375, 3.96875));
 		}
 
 		SUBCASE("bit changing functions")
