@@ -33,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="DOCUMENTATION.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE_1_0.txt" />

@@ -171,6 +171,7 @@
     <ClInclude Include="dsga.hxx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DOCUMENTATION.md" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

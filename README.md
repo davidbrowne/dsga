@@ -54,7 +54,7 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 
 ## Installation
 
-This is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [Usage](#usage) section you can see using directives that bring a lot of this library into the top level namespace.
+This is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](DOCUMENTATION.md) you can see using directives that bring a lot of this library into the top level namespace.
 
 We depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```.
 
@@ -80,99 +80,12 @@ Current version: `v0.4.3`
 * Documentation. Currently, the documentation that is offered is the source code and tests, this README page, and the GLSL specification.
 * Example projects. Need small, medium, and large examples.
 
-## <a name="usage"></a>Usage
+## Usage
 
 Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading.
 
-We have using directives that bring the types (and the functions on the types) into the top level namespace. The types are pretty much what you expect, but there is a 1D version of a vector that we suffix as ```scal``` for scalar. It helps with keeping things interoperating, and it provides a way to swizzle a supposed "scalar" value:
+The [documentation](DOCUMENTATION.md) explains more about how the vector and matrix classes work, and describes the API.
 
-``` c++
-// specialized using types
-
-// boolean vectors
-using bscal = dsga::basic_vector<bool, 1u>;
-using bvec2 = dsga::basic_vector<bool, 2u>;
-using bvec3 = dsga::basic_vector<bool, 3u>;
-using bvec4 = dsga::basic_vector<bool, 4u>;
-
-// int vectors
-using iscal = dsga::basic_vector<int, 1u>;
-using ivec2 = dsga::basic_vector<int, 2u>;
-using ivec3 = dsga::basic_vector<int, 3u>;
-using ivec4 = dsga::basic_vector<int, 4u>;
-
-// unsigned int vectors
-using uscal = dsga::basic_vector<unsigned, 1u>;
-using uvec2 = dsga::basic_vector<unsigned, 2u>;
-using uvec3 = dsga::basic_vector<unsigned, 3u>;
-using uvec4 = dsga::basic_vector<unsigned, 4u>;
-
-// long long vectors (not in glsl)
-using llscal = dsga::basic_vector<long long, 1u>;
-using llvec2 = dsga::basic_vector<long long, 2u>;
-using llvec3 = dsga::basic_vector<long long, 3u>;
-using llvec4 = dsga::basic_vector<long long, 4u>;
-
-// unsigned long long vectors (not in glsl)
-using ullscal = dsga::basic_vector<unsigned long long, 1u>;
-using ullvec2 = dsga::basic_vector<unsigned long long, 2u>;
-using ullvec3 = dsga::basic_vector<unsigned long long, 3u>;
-using ullvec4 = dsga::basic_vector<unsigned long long, 4u>;
-
-// float vectors with out an 'f' prefix -- this is from glsl
-using scal = dsga::basic_vector<float, 1u>;
-using vec2 = dsga::basic_vector<float, 2u>;
-using vec3 = dsga::basic_vector<float, 3u>;
-using vec4 = dsga::basic_vector<float, 4u>;
-
-// also float vectors, but using the common naming convention (not in glsl)
-using fscal = dsga::basic_vector<float, 1u>;
-using fvec2 = dsga::basic_vector<float, 2u>;
-using fvec3 = dsga::basic_vector<float, 3u>;
-using fvec4 = dsga::basic_vector<float, 4u>;
-
-// double vectors
-using dscal = dsga::basic_vector<double, 1u>;
-using dvec2 = dsga::basic_vector<double, 2u>;
-using dvec3 = dsga::basic_vector<double, 3u>;
-using dvec4 = dsga::basic_vector<double, 4u>;
-
-// float matrices
-using mat2x2 = dsga::basic_matrix<float, 2u, 2u>;
-using mat2x3 = dsga::basic_matrix<float, 2u, 3u>;
-using mat2x4 = dsga::basic_matrix<float, 2u, 4u>;
-using mat3x2 = dsga::basic_matrix<float, 3u, 2u>;
-using mat3x3 = dsga::basic_matrix<float, 3u, 3u>;
-using mat3x4 = dsga::basic_matrix<float, 3u, 4u>;
-using mat4x2 = dsga::basic_matrix<float, 4u, 2u>;
-using mat4x3 = dsga::basic_matrix<float, 4u, 3u>;
-using mat4x4 = dsga::basic_matrix<float, 4u, 4u>;
-
-using mat2 = dsga::basic_matrix<float, 2u, 2u>;
-using mat3 = dsga::basic_matrix<float, 3u, 3u>;
-using mat4 = dsga::basic_matrix<float, 4u, 4u>;
-
-// double matrices
-using dmat2x2 = dsga::basic_matrix<double, 2u, 2u>;
-using dmat2x3 = dsga::basic_matrix<double, 2u, 3u>;
-using dmat2x4 = dsga::basic_matrix<double, 2u, 4u>;
-using dmat3x2 = dsga::basic_matrix<double, 3u, 2u>;
-using dmat3x3 = dsga::basic_matrix<double, 3u, 3u>;
-using dmat3x4 = dsga::basic_matrix<double, 3u, 4u>;
-using dmat4x2 = dsga::basic_matrix<double, 4u, 2u>;
-using dmat4x3 = dsga::basic_matrix<double, 4u, 3u>;
-using dmat4x4 = dsga::basic_matrix<double, 4u, 4u>;
-
-using dmat2 = dsga::basic_matrix<double, 2u, 2u>;
-using dmat3 = dsga::basic_matrix<double, 3u, 3u>;
-using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
-
-//
-// bring the vector and matrix free functions into the global namespace
-//
-
-using namespace dsga::functions;
-```
 
 ## How The Vectors Work
 
