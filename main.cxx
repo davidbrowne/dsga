@@ -28,8 +28,11 @@ void mat_box()
 	}
 }
 
+#include "examples.cxx"
 fvec4 sometest()
 {
+	[[ maybe_unused ]]auto qbezval = quadratic_bezier_eval(vec2(2, 4), vec2(4, 5), vec2(8, 3), 0.25f);
+
 	iscal first = 9;
 	iscal first2 = 100;
 	ivec2 second{ 20, 30 };

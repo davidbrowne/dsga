@@ -1,8 +1,8 @@
 # dsga : Data Structures for Geometric Algorithms
 
-dsga is a c\+\+20 library that implements the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). This library was not intended to be used for rendering. My requirements in general are for things like 3D CAD/CAM applications and other geometric things.
+**dsga** is a **c++20 library** that implements the **vectors** and **matrices** from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). It is not intended to be used for rendering, just for sharing the **fundamental data structures** and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other **geometric and algebraic things**. See [motivation](MOTIVATION.md) for more details.
 
-## Quick Peek
+## A Quick Peek At Some Examples
 
 ``` c++
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
@@ -54,31 +54,23 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 
 ## Installation
 
-This is a single header library. All you need to do is include [dsga.hxx](https://raw.githubusercontent.com/davidbrowne/dsga/main/dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](DOCUMENTATION.md) you can see using directives that bring a lot of this library into the top level namespace.
+This is a **single header library**, where you just need the file [dsga.hxx](dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](DOCUMENTATION.md), using directives can be seen that bring a lot of this library into the top level namespace.
 
-We depend on [cxcm.hxx](https://raw.githubusercontent.com/davidbrowne/cxcm/main/cxcm.hxx) where the functions are in the [cxcm](https://github.com/davidbrowne/cxcm) namespace. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```.
+Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
-## Motivation
-
-I wanted to expand the point/vector class that we use at work. We have x, y, and z data members, but that is the only way to get at the data. I wanted something more flexible that would use contiguous memory like an array, but still be useful with x, y, z data member access. I specifically did *NOT* want accessor functions as the way to get x, y, and z data. I wanted data member access.
-
-After reading a [blog article](https://t0rakka.silvrback.com/simd-scalar-accessor) about this very type of issue, I started thinking more about this, and once I better understood anonymous unions and the common initial sequence concept (since verified with ```std::is_corresponding_member<>```), I was ready to write this library.
-
-I decided that instead of limiting my swizzling to just x, y, and z values, I would go all the way and try and get as much vector and matrix functionality I could with this approach. That is why in the end I decided to implement the vectors and matrices from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). dsga's implementation doesn't care about data-packing or rendering.
-
-I also wanted to learn more about c\+\+20. I was interested in learning git (been using subversion for around 20 years) and how to create a public repo. This project is the result.
+This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
 
 ## Status
 
 Current version: `v0.4.3`
 
-* All the vector and matrix functionality is implemented.
-* First pass at test coverage. Everything major has some test, but code coverage is not 100%. 
+* **All the vector and matrix functionality is implemented.**
+* First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
 
 ### The next steps
-* Official single header release. ```cxcm.hxx``` has been merged into ```dsga.hxx```, but it needs some testing before we make the first official release of dsga.
-* Documentation. Currently, the documentation that is offered is the source code and tests, this README page, and the GLSL specification.
-* Example projects. Need small, medium, and large examples.
+* Official single header release: ```cxcm.hxx``` has been merged into ```dsga.hxx```, but it needs some testing before we make the first official release of dsga.
+* Documentation: currently being improved. The documentation that is offered is the source code and tests, this README page, and the GLSL specification. We are working on general usage documentation, API, some details on how it is implemented, and a quick motivation for the project.
+* Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start.
 
 ## Usage
 
@@ -86,43 +78,15 @@ Use it more or less like you would use vectors and matrices in a shader program,
 
 The [documentation](DOCUMENTATION.md) explains more about how the vector and matrix classes work, and describes the API.
 
-
-## How The Vectors Work
-
-There are really two vector classes: ```basic_vector``` and ```indexed_vector```. ```basic_vector``` is what you would normally think of as a contiguously stored vector/point representation. ```indexed_vector``` is a view on ```basic_vector```, which may only be modified under certain conditions.
-
-A ```basic_vector``` has data members that provide "swizzling". These data members are of type ```indexed_vector```, and this is where they are a view on the owning ```basic_vector```. Only the ```indexed_vector```s that do not have duplicate indexes in the swizzle are modifiable, e.g., ```foo.xzy``` is modifiable, while ```foo.zzy``` is not modifiable. Either way, an ```indexed_vector``` from a swizzle has a lifetime tied to the lifetime of the ```basic_vector``` it came from.
-
-We want to use both types of vectors in the same way, for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc. Instead of duplicating this effort, ```basic_vector``` and ```indexed_vector``` derive from a [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class called ```vector_base```, and this is now the foundation for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc:
-![vec_base](./vec_base_uml.svg)
-
-```vector_base``` carries the following information:
-* Whether it can be used as an lvalue, i.e., is it writable
-* The type of the data in the vector (some arithmetic type)
-* How many elements are in the vector (1-4), i.e., the ```Count```
-* The type of the derived class
-
-It provides the following functions that can be used to generically manipulate and access vector data:
-* ```set()``` - relies on ```init()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it is writable. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
-* ```operator[]``` - relies on ```at()```, which is a reference to a single data value. If writable then can use as an lvalue. The data is in logical order.
-* ```data()``` - provides pointer to data access via ```raw_data()```. If it is writable, then can use pointer to write data. Pointer access is in physical order.
-* ```sequence()``` - relies on ```make_sequence_pack()```. The physical order to logical order mapping in a parameter pack.
-*  ```length()``` - relies on ```Count``` template parameter, and it returns type ```int```.
-* ```size()``` - relies on ```Count``` template parameter, and it returns type ```std::size_t```.
-
-## How The Matrices Work
-
-The matrices each have between 2-4 rows and 2-4 columns, inclusive, giving 9 possible matrix sizes. The components of the matrices must be floating point types. The matrices store things in column major order, and the naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The columns are represented as an array of floating point ```dsga::basic_vector``` in the ```dsga::basic_matrix``` class. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function. Any component of a matrix ```A``` can be accessed by double ```operator []``` calls, such as ```A[col_num][row_num]```.
-
-For an example of GLSL vs. math notation, ```mat4x2``` is a matrix with 4 columns with 2 rows, but math notation specifies the number of rows first, followed by number of columns. So a ```mat4x2``` in ```dsga``` is a 2x4 matrix using math notation.
+More in depth explanation can be found in the [details](DETAILS.md).
 
 ## Testing
 
-This project uses [doctest](https://github.com/onqtam/doctest) for testing. I occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
+This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
 The tests have been run on:
 
-* MSVC 2019 - v16.10
+* **MSVC 2019 - v16.10**
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -135,7 +99,7 @@ The tests have been run on:
 
 The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>``` or where there is lack of support for ```std::bit_cast<>()```, and these are protected with feature test macros:
 
-* clang 12.0.0 on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
+* **clang 12.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -146,7 +110,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] Status: SUCCESS!
 ```
 
-* gcc 10.3 on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```):
+* **gcc 10.3** on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```):
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -159,7 +123,7 @@ The following run all the unit tests except where there is lack of support for `
 
 ## Similar Projects
 
-It is a common pastime for people to write these kind of vector libraries. The three I wanted to mention here are:
+It is a common pastime for people to write these kind of vector libraries. The three we wanted to mention here are:
 
 * [glm](https://github.com/g-truc/glm) - popular long lived project that is similar in goals with respect to being based on OpenGL Shading Language specification, but is much more mature. It will work with c\+\+98, while dsga is for c\+\+20.
 * [DirectXMath](https://github.com/microsoft/DirectXMath) - this is from Microsoft and basically performs the same role as glm, but with DirectX instead of OpenGL. It is also long lived and much more mature than dsga.

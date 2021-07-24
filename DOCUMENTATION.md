@@ -2,9 +2,9 @@
 
 Jump to [API](#api).
 
-This single header library aims to provide the basic functionality of the types and functions in the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). We are only interested in the vector and matrix types, along with the corresponding functions that operate on these types. We don't support the language as a whole, just the data types, and that is so we can develop geometric algebraic algorithms. The types are very flexible, and they can be used for a natural rapid prototyping environment for C++.
+This single header library aims to provide the basic functionality of the types and functions in the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). We are only interested in the vector and matrix types, along with the corresponding functions that operate on these types. We don't support the language as a whole, just the data types, and that is so we can develop geometric algebraic algorithms. The types are very flexible, and they can be used for a natural rapid prototyping environment for ```c++```.
 
-Here we provide the documentation on what is in the specification, and also some information on how we differ from the specification. To see more about how this works in the context of C++20, have a look at the [details](DETAILS.md) for more information.
+Here we provide the documentation on what is in the specification, and also some information on how we differ from the specification. To see more about how this works in the context of ```c++20```, have a look at the [details](DETAILS.md) for more information.
 
 ## Types and Functions
 
@@ -100,15 +100,15 @@ using namespace dsga::functions;
 
 ## Vector Types
 
-In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), the various dimensions of the vectors and matrices are between 2 and 4, inclusive. For dsga, this is true for the matrices, but for the vectors we also allow vectors of length 1. We don't call them "vectors", but we suffix their type with "scal" for scalar, as opposed to a suffix of "vec1".
+In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), the various dimensions of the vectors and matrices are between 2 and 4, inclusive. For ```dsga```, this is true for the matrices, but for the vectors we also length 1. We don't call them "vectors", but we suffix their type with "scal" for scalar, as opposed to a suffix of "vec1".
 
-We have gone against the specification for a few reasons. Having 1-dimensional vectors is a good way of dealing with how [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) has modifed the basic types, e.g., float, double, int. In GLSL, these basic types are not the same as they are in C++. They behave as if they are vectors of length 1, including [swizzling](#swizzling). Since we can't change the basic types, we provide the "scalar" analog vector type that mimics what happens, e.g., bscal, iscal, fscal, dscal.
+We have gone against the specification for a few reasons. Having length 1 vectors is a good way of dealing with how [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) has modifed the basic types, e.g., float, double, int. In GLSL, these basic types are not the same as they are in ```c++```. They behave as if they are vectors of length 1, including [swizzling](#swizzling). Since we can't change the basic types, we provide the "scalar" analog vector type that mimics what happens, e.g., ```bscal```, ```iscal```, ```fscal```, ```dscal```.
 
 Since these "scalar" types are really vectors of length 1, they can use the vector functions. The functions don't discriminate based on size in dsga. In the cubic bezier evaluator example, we call the vector function ```mix()``` several times, and the last time is on vectors of length 1. If we decided to not allow vector functions on "scalar" types like fscal, then in this situation we could have called ```std::lerp()``` for the length 1 vector case.
 
 ### Swizzling
 
-Swizzling is the act of taking a vector and creating a new vector from it that is a specialized "view" on the original vector. The "swizzle" of a vector is itself a vector, although of different sort, and can be mostly used like a non-swizzle. If there is ever a problem, just wrap up the swizzle in a vector contructor:
+[Swizzling](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) is the act of taking a vector and creating a new vector from it that is a specialized "view" on the original vector. The "swizzle" of a vector is itself a vector, although of different sort, and can be mostly used like a non-swizzle. If there is ever a problem, just wrap up the swizzle in a vector contructor:
 
 ```c++
 vec4 big_vec;
@@ -117,7 +117,7 @@ vec4 big_vec;
 vec3 smaller_vec(big_vec.zyx);
 ```
 
-Swizzling uses dot notation, e.g., ```foo.xy, bar.zw, baz.xxyy```. This gives you a type of vector that is a view on the data of the original vector. The swizzles are part of the original vector, and they have the same lifetime. The "x" index means the first value in the vector, "y" means the second, "z" means the third, and "w" means the fourth, so "xyzw" are the possible values in a swizzle, depending on the size of the original vector. In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), there are 3 different domains for swizzling: ```xyzw```, ```rgba```, and ```stpq```. We use "xyzw" when talking about spatial coordinates, "rgba" when talking about color coordinates, and "stpq" when talking about texture coordinates. Since dsga is intended for geometry and algebra, we only bothered supporting "xyzw" for swizzling.
+Swizzling uses dot notation, e.g., ```foo.xy, bar.zw, baz.xxyy```. This gives you a type of vector that is a view on the data of the original vector. The swizzles are part of the original vector, and they have the same lifetime. The "x" index means the first value in the vector, "y" means the second, "z" means the third, and "w" means the fourth, so "xyzw" are the possible values in a swizzle, depending on the size of the original vector. In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), there are 3 different domains for swizzling: ```xyzw```, ```rgba```, and ```stpq```. We use "xyzw" when talking about spatial coordinates, "rgba" when talking about color coordinates, and "stpq" when talking about texture coordinates. Since dsga is intended for geometry and algebra, we only bothered supporting **xyzw** for swizzling.
 
 A 1-dimensional vector can only refer to "x", but it can do so up to 4 times in a swizzle:
 ```c++
@@ -152,6 +152,46 @@ As noted above, matrices each have between 2-4 rows and 2-4 columns, giving 9 po
 For an example of GLSL type names vs. math notation, ```mat4x2``` is a matrix with 4 columns with 2 rows, but math notation specifies the number of rows first, followed by number of columns. So the GLSL type ```mat4x2``` is a 2x4 matrix using math notation ("m by n" which is "rows by columns").
 
 ## API
+
+It is difficult to give a straightforward list of all the functions in the vector and matrix structs. First, there are many different classes for different sized vectors, although each has roughly the same API. Second, we specialize the vectors and matrices based on size and type. Third, the function signatures are pretty difficult to read, as they:
+
+* are generic, which means they usually use base classes
+* use templates
+* use concepts
+* have many different versions
+
+We have gone to the trouble of enumerating all the specific classes we support in the above section on types and functions, and there are a lot of them. Some functions take as arguments or return as values some general types, e.g., floating-point vector, as opposed to saying vec2, vec3, vec4, dvec2, dvec3, or dvec4 (and possibly even fscal and dscal). So the question becomes how we represent the generic categories in the documentation for the API. We can follow what GLSL did, and that may be the best approach for the vector types:
+
+* **genIType** - int, iscal, ivec2, ivec3, ivec4, long long, llscal, llvec2, llvec3, llvec4
+* **genUType** - unsigned, uscal, uvec2, uvec3, uvec4, unsigned long long, ullscal, ullvec2, ullvec3, ullvec4
+* **genBType** - bool, bscal, bvec2, bvec3, bvec4
+* **genFType** - float, scal, vec2, vec3, vec4, fscal, fvec2, fvec3, fvec4
+* **genDType** - double, dscal, dvec2, dvec3, dvec4
+
+Sometimes we just want to say integral types or floating-point types. In those cases we will list options for multiple categories.
+
+We don't want to repeat what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), but a brief description should be beneficial.
+
+### Iterators
+
+Both the vector and matrix structs support **begin()/cbegin()** and **end()/cend()** in order to provide basic ```iterator``` support through non-const and const iterators. This gives us access to:
+
+* Standard Library Algorithms
+* [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for) support 
+
+### Tuple Interface
+
+Both the vector and matrix structs support **std::tuple_element<>**, **std::tuple_size<>** and **get<>** in order to provide basic ```std::tuple``` support. This gives us access to:
+
+* Data structures in same manner as ```tuple```s do
+* [Structured Binding support](https://en.cppreference.com/w/cpp/language/structured_binding)
+
+### Low-level Pointer Access
+
+Both the vector and matrix structs support **data()** and **size()** in order to provide pointer access to the underlying data. *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this method exists if it is deemed appropriate.
+
+* ```data()``` gives a pointer to the underlying vector elements or matrix columns
+* ```size()``` gives the number of elements in the vector or number of columns in the matrix.
 
 ### Vector
 
@@ -189,12 +229,14 @@ GLSL does not support the types ```long long``` or ```unsigned long long```, but
 * 
 * 
 * 
-
 #### Operators
 #### Functions
 
 ### Matrix
 
+#### Constructors
+* 
+* 
+* 
 #### Operators
 #### Functions
-

@@ -34,6 +34,11 @@
   <ItemGroup>
     <None Include="README.md" />
     <None Include="DOCUMENTATION.md" />
+    <None Include="DETAILS.md" />
+    <None Include="MOTIVATION.md" />
+    <None Include="vec_base_uml.svg">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE_1_0.txt" />

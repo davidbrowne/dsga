@@ -20,6 +20,7 @@ constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, floa
 	auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
 	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
 	return mix(linear_control_points.x, linear_control_points.y, t);
+//	return std::lerp(linear_control_points.x, linear_control_points.y, t);
 }
 
 constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t) noexcept

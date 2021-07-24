@@ -36,6 +36,13 @@ namespace dsga
 {
 	namespace cxcm
 	{
+		// copyright for cxcm
+		
+        //          Copyright David Browne 2020-2021.
+        // Distributed under the Boost Software License, Version 1.0.
+        //    (See accompanying file LICENSE_1_0.txt or copy at
+        //          https://www.boost.org/LICENSE_1_0.txt)
+
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
 		constexpr inline int CXCM_PATCH_VERSION = 7;
@@ -1182,6 +1189,7 @@ namespace dsga
 	//[<<vector duck type>>|init();at();raw_data();make_sequence_pack()]^-.-[basic_vector]
 	//[<<vector duck type>>]^-.-[indexed_vector]
 	//[basic_vector]++-*>[indexed_vector]
+	//[basic_vector]++-1>[storage_wrapper]
 	//
 	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 	requires dimensional_storage<T, Count>
@@ -4987,7 +4995,11 @@ namespace dsga
 			return *this;
 		}
 
-		// support for range-for loop
+		// pointer interface
+		constexpr			basic_vector<T, R> *	data()			noexcept	{ return value.data(); }
+		constexpr	const	basic_vector<T, R> *	data()	const	noexcept	{ return value.data(); }
+
+		// support for range-based for loop
 		constexpr auto begin()			noexcept	{ return value.begin(); }
 		constexpr auto begin()	const	noexcept	{ return value.cbegin(); }
 		constexpr auto cbegin()	const	noexcept	{ return value.cbegin(); }

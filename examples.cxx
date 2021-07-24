@@ -19,6 +19,7 @@ constexpr auto quadratic_bezier_ordinate_eval(const dsga::vector_base<W, T, 3u, 
 
 	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
 	return mix(linear_control_points.x, linear_control_points.y, t);
+//	return std::lerp(linear_control_points.x, linear_control_points.y, t);
 }
 
 template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
@@ -29,7 +30,7 @@ constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 									 const dsga::vector_base<W3, T, C, D3> &p2,
 									 T t) noexcept
 {
-	dsga::basic_matrix<T, 4, C> coord_matrix(p0, p1, p2);
+	dsga::basic_matrix<T, 3, C> coord_matrix(p0, p1, p2);
 
 	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 	{
@@ -61,6 +62,7 @@ constexpr auto cubic_bezier_ordinate_eval(const dsga::vector_base<W, T, 4u, D> &
 	auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
 	auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
 	return mix(linear_control_points.x, linear_control_points.y, t);
+//	return std::lerp(linear_control_points.x, linear_control_points.y, t);
 }
 
 template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,

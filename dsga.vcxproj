@@ -171,8 +171,11 @@
     <ClInclude Include="dsga.hxx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DETAILS.md" />
     <None Include="DOCUMENTATION.md" />
+    <None Include="MOTIVATION.md" />
     <None Include="README.md" />
+    <None Include="vec_base_uml.svg" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE_1_0.txt" />
