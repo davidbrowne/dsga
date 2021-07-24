@@ -34,9 +34,6 @@ constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, floa
     auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
     auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
     return mix(linear_control_points.x, linear_control_points.y, t);
-// #if defined(__cpp_lib_interpolate)
-//  return std::lerp(linear_control_points.x, linear_control_points.y, t);
-// #endif
 }
 
 // main cubic bezier eval function -- takes 2D control points with float values.
@@ -54,7 +51,7 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 
 ## Installation
 
-This is a **single header library**, where you just need the file [dsga.hxx](dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](DOCUMENTATION.md), using directives can be seen that bring a lot of this library into the top level namespace.
+This is a **single header library**, where you just need the file [dsga.hxx](dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](DOCUMENTATION.md), [using directives](DOCUMENTATION.md#types-and-functions) can be seen that bring a lot of this library into the top level namespace.
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 

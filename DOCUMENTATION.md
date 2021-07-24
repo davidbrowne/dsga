@@ -151,6 +151,8 @@ As noted above, matrices each have between 2-4 rows and 2-4 columns, giving 9 po
 
 For an example of GLSL type names vs. math notation, ```mat4x2``` is a matrix with 4 columns with 2 rows, but math notation specifies the number of rows first, followed by number of columns. So the GLSL type ```mat4x2``` is a 2x4 matrix using math notation ("m by n" which is "rows by columns").
 
+The matrix types are very generic. One can pre-mulitply (matrix on left, vector on right), post-multiply (vector on left, matrix on right), treat square matrices that are meant to represent transformations as left-handed or right-handed, etc. There is no default preferred interpretation, although the user may have a preferred approach to using matrices.
+
 ## API
 
 It is difficult to give a straightforward list of all the functions in the vector and matrix structs. First, there are many different classes for different sized vectors, although each has roughly the same API. Second, we specialize the vectors and matrices based on size and type. Third, the function signatures are pretty difficult to read, as they:
@@ -160,7 +162,7 @@ It is difficult to give a straightforward list of all the functions in the vecto
 * use concepts
 * have many different versions
 
-We have gone to the trouble of enumerating all the specific classes we support in the above section on types and functions, and there are a lot of them. Some functions take as arguments or return as values some general types, e.g., floating-point vector, as opposed to saying vec2, vec3, vec4, dvec2, dvec3, or dvec4 (and possibly even fscal and dscal). So the question becomes how we represent the generic categories in the documentation for the API. We can follow what GLSL did, and that may be the best approach for the vector types:
+We have gone to the trouble of [enumerating all the specific classes](#types-and-functions) we support in the above section on types and functions, and there are a lot of them. Some functions take as arguments or return as values some general types, e.g., floating-point vector, as opposed to saying vec2, vec3, vec4, dvec2, dvec3, or dvec4 (and possibly even fscal and dscal). So the question becomes how we represent the generic categories in the documentation for the API. We can follow what GLSL did, and that may be the best approach for the vector types:
 
 * **genIType** - int, iscal, ivec2, ivec3, ivec4, long long, llscal, llvec2, llvec3, llvec4
 * **genUType** - unsigned, uscal, uvec2, uvec3, uvec4, unsigned long long, ullscal, ullvec2, ullvec3, ullvec4
@@ -172,21 +174,21 @@ Sometimes we just want to say integral types or floating-point types. In those c
 
 We don't want to repeat what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), but a brief description should be beneficial.
 
-### Iterators
+#### Iterators
 
 Both the vector and matrix structs support **begin()/cbegin()** and **end()/cend()** in order to provide basic ```iterator``` support through non-const and const iterators. This gives us access to:
 
 * Standard Library Algorithms
 * [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for) support 
 
-### Tuple Interface
+#### Tuple Interface
 
 Both the vector and matrix structs support **std::tuple_element<>**, **std::tuple_size<>** and **get<>** in order to provide basic ```std::tuple``` support. This gives us access to:
 
 * Data structures in same manner as ```tuple```s do
 * [Structured Binding support](https://en.cppreference.com/w/cpp/language/structured_binding)
 
-### Low-level Pointer Access
+#### Low-level Pointer Access
 
 Both the vector and matrix structs support **data()** and **size()** in order to provide pointer access to the underlying data. *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this method exists if it is deemed appropriate.
 

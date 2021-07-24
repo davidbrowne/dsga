@@ -1184,7 +1184,7 @@ namespace dsga
 	//
 	// https://yuml.me/diagram/scruffy/class/draw
 	// 
-	//[vector_base;set();operator_brackets();data();sequence();length();size()|Count (template parameter)]^[<<vector duck type>>basic_vector; ]
+	//[vector_base;set();operator_brackets();data();sequence();length();size()|Count (template parameter)]^[<<vector duck type>>basic_vector|anonymous union ]
 	//[vector_base]^[<<vector duck type>>indexed_vector]
 	//[<<vector duck type>>|init();at();raw_data();make_sequence_pack()]^-.-[basic_vector]
 	//[<<vector duck type>>]^-.-[indexed_vector]
