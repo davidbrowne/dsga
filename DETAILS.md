@@ -130,3 +130,98 @@ struct basic_matrix;
 The most interesting thing about ```basic_matrix``` is that there is no preferred point of view of the matrix. From a linear algebraic point of view, we can both pre-multiply or post-multiply a vector and matrix. If a matrix represents a transformation, there is no inherent left-handed world vs right-handed world. A user of the library can have a point of view about how matrices should work for their project, and they can impose whatever constraints they desire, but ```basic_matrix``` doesn't force them down any particular path.
 
 Since the underlying representation is an array of column vectors, it makes post-multiplying a vector with a matrix slightly more efficient (vector * matrix), due to treating the vector as a row vector for that multiplication, but that is not likely to make a difference in the long run.
+
+## Detailed Generic Example
+
+A the top of the [README](README.md) there is a quick example of evaluating a cubic bezier curve for 2D points that uses float as the type of the vector elements. This works great as a one-off example, but what if one cares to generalize this as part of a library? What if it is desired to work directly with swizzles? In this case, we probably need to start working with ```vector_base```.
+
+Now the control points can use any of the floating-point types, and they can have any number of elements that are allowed for the vector types. The return value will be a vector with the same floating-point type and same number of elements.
+
+```c++
+//
+// quadratic bezier evaluator
+//
+
+// recursive interpolation approach
+template <bool W, dsga::floating_point_dimensional_scalar T, typename D>
+constexpr auto quadratic_bezier_ordinate_eval(const dsga::vector_base<W, T, 3u, D> &control_points, T t) noexcept
+{
+    // so we can swizzle
+    auto quadratic_control_points = dsga::basic_vector<T, 3u>(control_points);
+
+    auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+    return mix(linear_control_points.x, linear_control_points.y, t);
+}
+
+template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+ bool W2, typename D2, bool W3, typename D3>
+requires (C > 1u)
+constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
+                                     const dsga::vector_base<W2, T, C, D2> &p1,
+                                     const dsga::vector_base<W3, T, C, D3> &p2,
+                                     T t) noexcept
+{
+    dsga::basic_matrix<T, 3u, C> coord_matrix(p0, p1, p2);
+
+    return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+    {
+        return dsga::basic_vector<T, C>(quadratic_bezier_ordinate_eval(coord_matrix.template row<Is>(), t)...);
+    }(std::make_index_sequence<C>{});
+}
+
+// specializing for length 1 vector case
+template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+    bool W2, typename D2, bool W3, typename D3>
+constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
+                                     const dsga::vector_base<W2, T, 1u, D2> &p1,
+                                     const dsga::vector_base<W3, T, 1u, D3> &p2,
+                                     T t) noexcept
+{
+    return quadratic_bezier_ordinate_eval(dsga::basic_vector<T, 3u>(p0, p1, p2), t);
+}
+
+//
+// cubic bezier evaluator
+//
+
+// recursive interpolation approach
+template <bool W, dsga::floating_point_dimensional_scalar T, typename D>
+constexpr auto cubic_bezier_ordinate_eval(const dsga::vector_base<W, T, 4u, D> &control_points, T t) noexcept
+{
+    // so we can swizzle
+    auto cubic_control_points = dsga::basic_vector<T, 4u>(control_points);
+
+    auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
+    auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+    return mix(linear_control_points.x, linear_control_points.y, t);
+}
+
+template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+    bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
+requires (C > 1u)
+constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
+                                 const dsga::vector_base<W2, T, C, D2> &p1,
+                                 const dsga::vector_base<W3, T, C, D3> &p2,
+                                 const dsga::vector_base<W4, T, C, D4> &p3,
+                                 T t) noexcept
+{
+    auto coord_matrix = dsga::basic_matrix<T, 4u, C>(p0, p1, p2, p3);
+
+    return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+    {
+        return dsga::basic_vector<T, C>(cubic_bezier_ordinate_eval(coord_matrix.template row<Is>(), t)...);
+    }(std::make_index_sequence<C>{});
+}
+
+// specializing for length 1 vector case
+template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+    bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
+constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
+                                 const dsga::vector_base<W2, T, 1u, D2> &p1,
+                                 const dsga::vector_base<W3, T, 1u, D3> &p2,
+                                 const dsga::vector_base<W4, T, 1u, D4> &p3,
+                                 T t) noexcept
+{
+    return cubic_bezier_ordinate_eval(dsga::basic_vector<T, 4u>(p0, p1, p2, p3), t);
+}
+```

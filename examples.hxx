@@ -30,7 +30,7 @@ constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 									 const dsga::vector_base<W3, T, C, D3> &p2,
 									 T t) noexcept
 {
-	dsga::basic_matrix<T, 3, C> coord_matrix(p0, p1, p2);
+	dsga::basic_matrix<T, 3u, C> coord_matrix(p0, p1, p2);
 
 	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 	{
@@ -38,6 +38,7 @@ constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 	}(std::make_index_sequence<C>{});
 }
 
+// specializing for length 1 vector case
 template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3>
 constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
@@ -45,7 +46,7 @@ constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
 									 const dsga::vector_base<W3, T, 1u, D3> &p2,
 									 T t) noexcept
 {
-	return quadratic_bezier_ordinate_eval(dsga::basic_vector<T, 4u>(p0, p1, p2), t);
+	return quadratic_bezier_ordinate_eval(dsga::basic_vector<T, 3u>(p0, p1, p2), t);
 }
 
 //
@@ -74,7 +75,7 @@ constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 								 const dsga::vector_base<W4, T, C, D4> &p3,
 								 T t) noexcept
 {
-	auto coord_matrix = dsga::basic_matrix<T, 4, C>(p0, p1, p2, p3);
+	auto coord_matrix = dsga::basic_matrix<T, 4u, C>(p0, p1, p2, p3);
 
 	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 	{
@@ -82,6 +83,7 @@ constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 	}(std::make_index_sequence<C>{});
 }
 
+// specializing for length 1 vector case
 template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
 constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
