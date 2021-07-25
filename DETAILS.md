@@ -36,3 +36,46 @@ To get what we want, each member of the union must share a common intial sequenc
 Since we are using a union where everything has the same common initial sequence, the data is shared and accessible for all the union members without having the restrictions that other unions have (otherwise the active union data member must be written to before being read from), and everything has the same lifetime as the ```basic_vector``` they come from.
 
 ## Inside indexed_vector
+
+```indexed_vector``` is the heart of swizzling. For a union where everything has the same common initial sequence, everything uses the same storage. ```indexed_vector``` therefore has a **Size**, which is the size of the underlying storage, and it has a **Count**, which is the number of elements it represents in the swizzle.
+
+For example, if you had a length 4 vector ```v```, and you swizzled it like ```v.yzx```, then the ```indexed_vector``` for ```yzx``` has a Size == 4 (the same size as the length 4 vector), and it has a Count == 3, since we swizzled three ordinates.
+
+The swizzle decides how to index into the storage. Continuing this example, ```yzx``` has three indices: 1, 2, 0. This is how the values are looked up in the length 4 storage. The size, count, underlying type stored in the vector, and the indices for the swizzle are all passed as template parameters to ```indexed_vector```.
+
+```operator []``` and ```set()``` (and of course ```at()``` and ```init()```)all take into account the indirect index access, so it manages the logical sequential nature of the vector.
+
+```indexed_vector``` is intended as a **view** on a ```basic_vector```; however, it is possible to create a stand-alone ```indexed_vector```, initialized via aggregate methods. It is hard to see why anyone would want to do that though, when ```basic_vector``` exists.
+
+## Inside vector_base
+
+```vector_base``` is fairly well described above. It relies on derived classes implementing the vector duck type interface, but the only enforcement there would be compile errors if they didn't. A ```c++20``` concept was attempted to check for this interface, but not much time was spent on making it work, so it was abandoned. We may try again to create such a concept.
+
+We want operations and functions to work the same on a ```basic_vector``` or a swizzle of one of these vectors, and ```vector_base``` was created to give a common type for all the functions and operators to work with. This cuts our code in half, eliminating that redundancy. There are situations where we need to be explicit with ```basic_vector``` and ```indexed_vector```, supplying functions aimed specifically at the derived vector classes, but that is not the norm.
+
+## Inside "vector duck type"
+
+Since ```vector_base``` is a CRTP base class, this imaginary interface provides functionality by directly invoking the derived class's versions of some interface functions:
+
+* ```init()``` - used by ```set()```
+* ```at()``` - used by ```operator []```
+* ```raw_data()``` - used by ```data()```
+* ```make_sequence_pack()``` - used by ```sequence()```
+
+This interface is what allows the CRTP nature of this class/struct relationship to work.
+
+## Inside storage_wrapper
+
+For the anonymous union inside ```basic_vector```, we needed a way to change values at the top level, not through a swizzle. Also, an anonymous union can and must initialize and access one and only one union member at compile time, so this is necessary for constexpr variables of ```basic_index```. We could have picked any of the swizzles (although ```xyzw``` for length 4 vectors seems most appropriate) to be the data member that is manipulated and accessed above the swizzle level, but as long as we create a variable of a type that shares a common initial sequence, it doesn't matter, as it won't grow the size of ```basic_vector``` and can share values through the common initial sequence.
+
+```storage_wrapper``` can do pretty much all the things that ```vector_base``` can, but it can also be stand-alone. If one wanted, they could create an instance of one, initializing it via aggregate methods; however, there seems to be no compelling reason to create one of these stand-alone as one can have a ```basic_vector```, which is more powerful.
+
+## How Matrix Works
+
+```basic_matrix``` is a pretty simple type, all thing considered. It is just an array of column ```basic_vector```s, and associated operators and functions for performing matrix operations. Use ```operator []``` to access columns and use ```template row<>()``` to access rows. Individual elements can be accessed like a two-dimensional array: ```mat[col_num][row_num]```. That is about it.
+
+## Inside basic_matrix
+
+The most interesting thing about ```basic_matrix``` is that there is no preferred point of view of the matrix. From a linear algebraic point of view, we can both pre-multiply or post-multiply a vector and matrix. If a matrix represents a transformation, there is no inherent left-handed world vs right-handed world. A user of the library can have a point of view about how matrices should work for their project, and they can impose whatever constraints they desire, but ```basic_matrix``` doesn't force them down any particular path.
+
+Since the underlying representation is an array of column vectors, it makes post-multiplying a vector with a matrix slightly more efficient (vector * matrix), due to treating the vector as a row vector for that multiplication, but that is not likely to make a difference in the long run.

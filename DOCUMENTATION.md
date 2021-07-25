@@ -131,14 +131,14 @@ vec3 smaller_vec(big_vec.zyx);
 
 Swizzling uses dot notation, e.g., ```foo.xy, bar.zw, baz.xxyy```. This gives you a type of vector that is a view on the data of the original vector. The swizzles are part of the original vector, and they have the same lifetime. The "x" index means the first value in the vector, "y" means the second, "z" means the third, and "w" means the fourth, so "xyzw" are the possible values in a swizzle, depending on the size of the original vector. In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), there are 3 different domains for swizzling: ```xyzw```, ```rgba```, and ```stpq```. We use "xyzw" when talking about spatial coordinates, "rgba" when talking about color coordinates, and "stpq" when talking about texture coordinates. Since dsga is intended for geometry and algebra, we only bothered supporting **xyzw** for swizzling.
 
-A 1-dimensional vector can only refer to "x", but it can do so up to 4 times in a swizzle:
+A length 1 vector can only refer to "x", but it can do so up to 4 times in a swizzle:
 ```c++
 fscal length_one_vec;
 ...
 auto length_four_vec = vec4(length_one_vec.xxxx);
 ```
 
-Similarly, 2-dimensional vectors can refer to combinations of "xy", 3-dimensional vectors can refer to combinations of "xyz", and 4-dimensional vectors can refer to combinations of "xyzw". Since the maximum size of a vector is 4, that is the maximum number of swizzle characters you can use.
+Similarly, length 2 vectors can refer to combinations of "xy", length 3 vectors can refer to combinations of "xyz", and length 4 vectors can refer to combinations of "xyzw". Since the maximum size of a vector is 4, that is the maximum number of swizzle characters you can use.
 
 Swizzling to a size of 1 is another reason to allow vectors of length 1:
 ```c++
