@@ -27,6 +27,11 @@ It provides the following functions that can be used to generically manipulate a
 
 ## Inside basic_vector
 
+```c++
+template <dimensional_scalar T, std::size_t Size>
+struct basic_vector;
+```
+
 Since we wanted to use notation such as ```foo.xy``` to access swizzles, the swizzled items must obviously be data members; however, there are many possible swizzles, increasing dramatically for the vector length 4 case (341 swizzles!). We don't want the ```sizeof``` ```basic_vector``` to grow, and the only way to be able to add many data members without the ```sizeof``` a class/struct growing is through a union. Since we don't want to have an intermediate name for access, it must be an **anonymous union**.
 
 To get what we want, each member of the union must share a common intial sequence. The anonymous union for each struct is made up of one member of type **storage_wrapper** and many swizzled ```indexed_vector```s, the number depending on the length of the vector. We have tests (using the function ```std::is_corresponding_member()```) that confirm that these all share a **common initial sequence**. Both ```storage_wrapper``` and the ```indexed_vector```s have the same storage type (for now it is a ```std::array```), and the ```sizeof``` the array is the ```sizeof``` the ```basic_vector```.
@@ -37,11 +42,42 @@ Since we are using a union where everything has the same common initial sequence
 
 ## Inside indexed_vector
 
+```c++
+template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+struct indexed_vector;
+```
+
 ```indexed_vector``` is the heart of swizzling. For a union where everything has the same common initial sequence, everything uses the same storage. ```indexed_vector``` therefore has a **Size**, which is the size of the underlying storage, and it has a **Count**, which is the number of elements it represents in the swizzle.
 
 For example, if you had a length 4 vector ```v```, and you swizzled it like ```v.yzx```, then the ```indexed_vector``` for ```yzx``` has a Size == 4 (the same size as the length 4 vector), and it has a Count == 3, since we swizzled three ordinates.
 
 The swizzle decides how to index into the storage. Continuing this example, ```yzx``` has three indices: 1, 2, 0. This is how the values are looked up in the length 4 storage. The size, count, underlying type stored in the vector, and the indices for the swizzle are all passed as template parameters to ```indexed_vector```.
+
+```c++
+// some members that might be found in the basic_vector<T, 4u> anonymous union:
+
+union
+{
+    storage_wrapper<T, 4u>                      store;
+
+    indexed_vector<T, 4u, 1u, 0u>               x;      // Writable
+    indexed_vector<T, 4u, 1u, 1u>               y;      // Writable
+    indexed_vector<T, 4u, 1u, 2u>               z;      // Writable
+    ...
+    indexed_vector<T, 4u, 2u, 1u, 0u>           yx;     // Writable
+    indexed_vector<T, 4u, 2u, 1u, 1u>           yy;
+    indexed_vector<T, 4u, 2u, 1u, 2u>           yz;     // Writable
+    ...
+    indexed_vector<T, 4u, 3u, 1u, 1u, 2u>       yyz;
+    indexed_vector<T, 4u, 3u, 1u, 2u, 0u>       yzx;    // Writable
+    indexed_vector<T, 4u, 3u, 1u, 2u, 1u>       yzy;
+    ...
+    indexed_vector<T, 4u, 4u, 0u, 3u, 1u, 1u>   xwyy;
+    indexed_vector<T, 4u, 4u, 0u, 3u, 1u, 2u>   xwyz;   // Writable
+    indexed_vector<T, 4u, 4u, 0u, 3u, 1u, 3u>   xwyw;
+    ...
+};
+```
 
 ```operator []``` and ```set()``` (and of course ```at()``` and ```init()```)all take into account the indirect index access, so it manages the logical sequential nature of the vector.
 
@@ -49,9 +85,14 @@ The swizzle decides how to index into the storage. Continuing this example, ```y
 
 ## Inside vector_base
 
-```vector_base``` is fairly well described above. It relies on derived classes implementing the vector duck type interface, but the only enforcement there would be compile errors if they didn't. A ```c++20``` concept was attempted to check for this interface, but not much time was spent on making it work, so it was abandoned. We may try again to create such a concept.
+```c++
+template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
+struct vector_base;
+```
 
-We want operations and functions to work the same on a ```basic_vector``` or a swizzle of one of these vectors, and ```vector_base``` was created to give a common type for all the functions and operators to work with. This cuts our code in half, eliminating that redundancy. There are situations where we need to be explicit with ```basic_vector``` and ```indexed_vector```, supplying functions aimed specifically at the derived vector classes, but that is not the norm.
+```vector_base``` is fairly well described above. It relies on derived classes implementing the "vector duck type" interface, but the only enforcement there would be compile errors if they didn't. A ```c++20``` concept was attempted to check for the "vector duck type" interface, but not much time was spent on making it work, so it was abandoned. We may try again to create such a concept.
+
+We want operations and functions to work the same on a ```basic_vector``` or a swizzle of one of these vectors (```indexed_vector```), and ```vector_base``` was created to give a common type for all the functions and operators to work with. This cuts our code in half, eliminating that redundancy. There are situations where we need to be explicit with ```basic_vector``` and ```indexed_vector```, supplying functions aimed specifically at the derived vector classes, but that is not the norm.
 
 ## Inside "vector duck type"
 
@@ -66,6 +107,11 @@ This interface is what allows the CRTP nature of this class/struct relationship 
 
 ## Inside storage_wrapper
 
+```c++
+template <dimensional_scalar T, std::size_t Size>
+struct storage_wrapper;
+```
+
 For the anonymous union inside ```basic_vector```, we needed a way to change values at the top level, not through a swizzle. Also, an anonymous union can and must initialize and access one and only one union member at compile time, so this is necessary for constexpr variables of ```basic_index```. We could have picked any of the swizzles (although ```xyzw``` for length 4 vectors seems most appropriate) to be the data member that is manipulated and accessed above the swizzle level, but as long as we create a variable of a type that shares a common initial sequence, it doesn't matter, as it won't grow the size of ```basic_vector``` and can share values through the common initial sequence.
 
 ```storage_wrapper``` can do pretty much all the things that ```vector_base``` can, but it can also be stand-alone. If one wanted, they could create an instance of one, initializing it via aggregate methods; however, there seems to be no compelling reason to create one of these stand-alone as one can have a ```basic_vector```, which is more powerful.
@@ -75,6 +121,11 @@ For the anonymous union inside ```basic_vector```, we needed a way to change val
 ```basic_matrix``` is a pretty simple type, all thing considered. It is just an array of column ```basic_vector```s, and associated operators and functions for performing matrix operations. Use ```operator []``` to access columns and use ```template row<>()``` to access rows. Individual elements can be accessed like a two-dimensional array: ```mat[col_num][row_num]```. That is about it.
 
 ## Inside basic_matrix
+
+```c++
+template <floating_point_dimensional_scalar T, std::size_t Cols, std::size_t Rows>
+struct basic_matrix;
+```
 
 The most interesting thing about ```basic_matrix``` is that there is no preferred point of view of the matrix. From a linear algebraic point of view, we can both pre-multiply or post-multiply a vector and matrix. If a matrix represents a transformation, there is no inherent left-handed world vs right-handed world. A user of the library can have a point of view about how matrices should work for their project, and they can impose whatever constraints they desire, but ```basic_matrix``` doesn't force them down any particular path.
 

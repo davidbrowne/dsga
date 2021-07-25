@@ -219,9 +219,9 @@ Both the vector and matrix structs support **std::tuple_element<>**, **std::tupl
 
 ### Low-level Pointer Access
 
-Both the vector and matrix structs support ```data()``` and ```size()``` in order to provide pointer access to the underlying data. The parameter pack returned by ```sequence()``` can also be helpful here with vector indirection mapping. *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this approach exists if it is deemed appropriate:
+Both the vector and matrix structs support ```data()``` and ```size()``` in order to provide pointer access to the underlying data. The parameter pack returned by ```sequence()``` can also be helpful here to map the physical order from ```data()``` to the logical order (only useful for generic vector situations or when using ```indexed_vector```). *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this approach exists if it is deemed appropriate:
 
-* **T \*data()** gives a pointer to the underlying vector elements or matrix columns.
+* **T \*data()** gives a pointer to the underlying vector elements or matrix columns, in physical order.
 * **std::size_t size()** gives the number of elements in the vector or number of columns in the matrix.
 * **std::index_sequence<Is...> sequence()** (only for vectors) gives a parameter pack that maps the physical order to the logical order. For a ```basic_vector``` those are the same, but for an ```indexed_vector``` they are mostly not the same. Pack expansion and folding are tools that might help with the low-level pointer access for vectors.
 
@@ -405,7 +405,7 @@ Vector Relational Functions
 * ```notEqual()```
 * ```any()```
 * ```all()```
-* ```logicalNot()``` - can't use keywork not as a function name in ```c++```, so using ```logicalNot()```
+* ```logicalNot()``` - can't use keyword ```not()``` as a function name in ```c++```, so using ```logicalNot()```
 
 Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. It likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
 
@@ -486,7 +486,7 @@ constexpr basic_matrix(const Args & ...args) noexcept;
 
 ### Matrix Functions
 
-* ```matrixCompMult()```
+* ```matrixCompMult()``` - since we use ```operator *``` for linear algebraic purposes instead of component-wise multiplication
 * ```outerProduct()```
 * ```transpose()```
 * ```determinant()```

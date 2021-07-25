@@ -66,7 +66,6 @@ Current version: `v0.4.3`
 
 ### The next steps
 * Official single header release: ```cxcm.hxx``` has been merged into ```dsga.hxx```, but it needs some testing before we make the first official release of dsga.
-* Documentation: currently being improved. The documentation that is offered is the source code and tests, this README page, and the GLSL specification. We are working on general usage documentation, API, some details on how it is implemented, and a quick motivation for the project.
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start.
 
 ## Usage
