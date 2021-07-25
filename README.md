@@ -7,13 +7,13 @@
 ``` c++
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
-auto perpendicular(const vec2 &some_vec)
+constexpr auto get_perpendicular(const vec2 &some_vec) noexcept
 {
     return some_vec.yx * vec2(-1, 1);
 }
 
 // project a point to a line in 3D - there is no coincident or collinear point checking
-auto project_point_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_in_space)
+constexpr auto project_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_in_space) noexcept
 {
     auto v1 = p1 - p0;
     auto vq = point_in_space - p0;

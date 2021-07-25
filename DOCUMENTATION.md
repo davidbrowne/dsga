@@ -11,6 +11,18 @@ Here we provide the documentation on what is in the specification, and also some
 This is an approximation of how we "export" the specific types and function to the top-level namespace. These types are all different based on their sizes and the types of data they hold. They can be dealt with more generically, but for that information see the [details](DETAILS.md) page.
 
 ``` c++
+// the underlying c++20 template classes (concepts have been mostly omitted)
+namespace dsga
+{
+    template <dimensional_scalar T, std::size_t Size>
+    struct basic_vector;
+    // ...
+
+    template <floating_point_dimensional_scalar T, std::size_t Columns, std::size_t Rows>
+    struct basic_matrix;
+    // ...
+}
+
 // specialized using types
 
 // boolean vectors
@@ -147,13 +159,30 @@ big_vec.zyx = big_vec.xzz;      // ok, data destinations are all unique even if 
 
 ## Matrix Types
 
-As noted above, matrices each have between 2-4 rows and 2-4 columns, giving 9 possible matrix sizes. The components of the matrices must be floating point types. The matrices store things in column major order, and the type naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The set of columns is represented as an array of floating point vectors. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function. Any component of a matrix ```A``` can be accessed by two adjacent ```operator []``` calls, such as ```A[col_num][row_num]```.
+As noted above, matrices each have between 2-4 rows and 2-4 columns, giving 9 possible matrix sizes. The components of the matrices must be floating-point types. The matrices store things in column major order, and the type naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The set of columns is represented as an array of floating point vectors. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function. Any component of a matrix ```A``` can be accessed by two adjacent ```operator []``` calls, such as ```A[col_num][row_num]```.
 
 For an example of GLSL type names vs. math notation, ```mat4x2``` is a matrix with 4 columns with 2 rows, but math notation specifies the number of rows first, followed by number of columns. So the GLSL type ```mat4x2``` is a 2x4 matrix using math notation ("m by n" which is "rows by columns").
 
-The matrix types are very generic. One can pre-mulitply (matrix on left, vector on right), post-multiply (vector on left, matrix on right), treat square matrices that are meant to represent transformations as left-handed or right-handed, etc. There is no default preferred interpretation, although the user may have a preferred approach to using matrices.
+The matrix types are very generic. One can pre-mulitply (matrix on left, vector on right), post-multiply (vector on left, matrix on right), treat square matrices that are meant to represent transformations as left-handed or right-handed, etc. There is no default preferred interpretation in ```dsga```, although users may have a preferred approach to using matrices.
 
-## API
+# API
+
+* Matrices and Vectors
+   * [Iterators](#iterators)
+   * [Tuple Interface](#tuple-interface)
+   * [Low Level Pointer Access](#low-level-pointer-access)
+* [Vector](#vector)
+   * [Rule Of Six For Vectors](#rule-of-six-for-vectors)
+   * [Vector Constructors](#vector-constructors)
+   * [Vector Members](#vector-members)
+   * [Vector Operators](#vector-operators)
+   * [Vector Functions](#vector-functions)
+* [Matrix](#matrix)
+   * [Rule Of Six For Matrices](#rule-of-six-for-matrices)
+   * [Matrix Constructors](#matrix-constructors)
+   * [Matrix Members](#matrix-members)
+   * [Matrix Operators](#matrix-operators)
+   * [Matrix Functions](#matrix-functions)
 
 It is difficult to give a straightforward list of all the functions in the vector and matrix structs. First, there are many different classes for different sized vectors, although each has roughly the same API. Second, we specialize the vectors and matrices based on size and type. Third, the function signatures are pretty difficult to read, as they:
 
@@ -172,33 +201,34 @@ We have gone to the trouble of [enumerating all the specific classes](#types-and
 
 Sometimes we just want to say integral types or floating-point types. In those cases we will list options for multiple categories.
 
-We don't want to repeat what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), but a brief description should be beneficial.
+Please look at what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), especially Section 5 and Section 8, for a thorough look at the API. We will summarize what was implemented and how we supplmented matrix and vector.
 
-#### Iterators
+### Iterators
 
 Both the vector and matrix structs support **begin()/cbegin()** and **end()/cend()** in order to provide basic ```iterator``` support through non-const and const iterators. This gives us access to:
 
 * Standard Library Algorithms
-* [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for) support 
+* [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for)
 
-#### Tuple Interface
+### Tuple Interface
 
 Both the vector and matrix structs support **std::tuple_element<>**, **std::tuple_size<>** and **get<>** in order to provide basic ```std::tuple``` support. This gives us access to:
 
-* Data structures in same manner as ```tuple```s do
-* [Structured Binding support](https://en.cppreference.com/w/cpp/language/structured_binding)
+* Data structures in same manner as ```tuple```
+* [Structured Binding](https://en.cppreference.com/w/cpp/language/structured_binding)
 
-#### Low-level Pointer Access
+### Low-level Pointer Access
 
-Both the vector and matrix structs support **data()** and **size()** in order to provide pointer access to the underlying data. *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this method exists if it is deemed appropriate.
+Both the vector and matrix structs support ```data()``` and ```size()``` in order to provide pointer access to the underlying data. The parameter pack returned by ```sequence()``` can also be helpful here with vector indirection mapping. *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this approach exists if it is deemed appropriate:
 
-* ```data()``` gives a pointer to the underlying vector elements or matrix columns
-* ```size()``` gives the number of elements in the vector or number of columns in the matrix.
+* **T \*data()** gives a pointer to the underlying vector elements or matrix columns.
+* **std::size_t size()** gives the number of elements in the vector or number of columns in the matrix.
+* **std::index_sequence<Is...> sequence()** (only for vectors) gives a parameter pack that maps the physical order to the logical order. For a ```basic_vector``` those are the same, but for an ```indexed_vector``` they are mostly not the same. Pack expansion and folding are tools that might help with the low-level pointer access for vectors.
 
-### Vector
+## Vector
 
 ```c++
-// length 1 vectors/scalar hybrids
+// length 1 vector/scalar hybrids
 //
 // bscal - bool
 // iscal - int
@@ -210,7 +240,7 @@ Both the vector and matrix structs support **data()** and **size()** in order to
 // dscal - double
 ```
 
-These length 1 vectors are not officially in GLSL, but they did change their fundamental types to behave as if they are. We try to automatically convert from these to the underlying scalar type when we can. If there is a problem, just cast it to the underlying type.
+These length 1 vectors are not officially in GLSL, but GLSL did change the fundamental types to behave as if they are. We try to automatically convert from these to the underlying scalar type when we can. If there is a problem, just cast it to the underlying type.
 
 ```c++
 // length 2-4 vectors
@@ -227,18 +257,237 @@ These length 1 vectors are not officially in GLSL, but they did change their fun
 
 GLSL does not support the types ```long long``` or ```unsigned long long```, but we extended the vectors to support those types. ```fvec2, fvec3, fvec4``` are redundant with ```vec2, vec3, vec4```, but they exist because they follow the type prefix style naming if one prefers to be more explicit.
 
-#### Constructors
-* 
-* 
-* 
-#### Operators
-#### Functions
+### Rule of Six For Vectors
 
-### Matrix
+The six special functions are all defaulted in vectors.
+```c++
+constexpr basic_vector() noexcept = default;
+constexpr ~basic_vector() noexcept = default;
 
-#### Constructors
-* 
-* 
-* 
-#### Operators
-#### Functions
+constexpr basic_vector(const basic_vector &) noexcept = default;
+constexpr basic_vector(basic_vector &&) noexcept = default;
+constexpr basic_vector &operator =(const basic_vector &) noexcept = default;
+constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
+```
+
+### Vector Constructors
+* **Single Scalar Argument** - the scalar parameter is used to initialize every element of the vector.
+
+```c++
+template <typename U>
+explicit constexpr basic_vector(U value) noexcept;
+```
+
+* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the vector elements, and as long as the types are convertible. It is fine if a vector argument has more data than needed, as long as some of the data is needed. It is an error to pass unused arguments. For vectors, each of the combinations is its own constructor for efficient initialization reasons, but the following hypothetical constructor is what it would look like if they were combined into one, behaving the same way as if there were multiple constructors:
+
+```c++
+// variadic constructor of scalar and vector arguments
+template <typename ... Args>
+constexpr basic_vector(const Args & ...args) noexcept;
+``` 
+
+This approach is exactly what ```basic_matrix``` does.
+
+### Vector Members
+
+* **operator =** - Assignment operator - the vector needs to be the same length and underlying type must be convertible.
+* **int length()** - this is part of the spec, and is the same as ```size()``` except it has a different return type. It can work with ```operator []``` in a for loop.
+* **operator []** - a generic way to access vector data. the ```x``` value is index 0, the ```y``` value is index 1, the ```z``` value is index 2, and the ```w``` value is index 3, assuming the vector is long enough to access those index values. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing.
+* **set()** - this is the way of setting all the values for the vector at the same time. It takes the same number of scalar arguments as there are vector elements. This function is helpful at preventing trouble when there are potential aliasing problems.
+
+### Vector Operators
+
+* unary ```operator +```
+* unary ```operator -```
+* unary ```operator ++``` (pre-increment)
+* unary ```operator ++``` (post-increment)
+* unary ```operator --``` (pre-decrement)
+* unary ```operator --``` (post-decrement)
+* binary ```operator +```
+* binary ```operator -```
+* binary ```operator *```
+* binary ```operator /```
+* binary ```operator %```
+* binary ```operator >>```
+* binary ```operator <<```
+* binary ```operator &```
+* binary ```operator |```
+* binary ```operator ^```
+* unary ```operator ~```
+* ```operator +=```
+* ```operator -=```
+* ```operator *=```
+* ```operator /=```
+* ```operator %=```
+* ```operator <<=```
+* ```operator >>=```
+* ```operator &=```
+* ```operator |=```
+* ```operator ^=```
+* ```operator ==```
+* ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
+
+### Vector Functions
+
+Angle and Trigonometry Functions
+* ```radians()```
+* ```degrees()```
+* ```sin()```
+* ```cos()```
+* ```tan()```
+* ```asin()```
+* ```acos()```
+* ```atan()```
+* ```sinh()```
+* ```cosh()```
+* ```tanh()```
+* ```asinh()```
+* ```acosh()```
+* ```atanh()```
+
+Exponential Functions
+* ```pow()```
+* ```exp()```
+* ```log()```
+* ```exp2()```
+* ```log2()```
+* ```sqrt()```
+* ```inversesqrt()```
+
+Common Functions
+* ```abs()```
+* ```sign()```
+* ```floor()```
+* ```trunc()```
+* ```round()```
+* ```roundEven()```
+* ```ceil()```
+* ```fract()```
+* ```mod()```
+* ```modf()```
+* ```min()```
+* ```max()```
+* ```clamp()```
+* ```mix()```
+* ```step()```
+* ```smoothstep()```
+* ```isnan()```
+* ```isinf()```
+* ```floatBitsToInt()```
+* ```floatBitsToUint()```
+* ```doubleBitsToLongLong()``` - not in GLSL
+* ```doubleBitsToUlongLong()``` - not in GLSL
+* ```intBitsToFloat()```
+* ```uintBitsToFloat()```
+* ```longLongBitsToDouble()``` - not in GLSL
+* ```ulongLongBitsToDouble()``` - not in GLSL
+* ```fma()```
+* ```frexp()```
+* ```ldexp()```
+
+Geometric Functions
+* ```length()```
+* ```distance()```
+* ```dot()```
+* ```cross()```
+* ```normalize()```
+* ```faceforward()```
+* ```reflect()```
+* ```refract()```
+
+Vector Relational Functions
+
+* ```lessThan()```
+* ```lessThanEqual()```
+* ```greaterThan()```
+* ```greaterThanEqual()```
+* ```equal()```
+* ```notEqual()```
+* ```any()```
+* ```all()```
+* ```logicalNot()``` - can't use keywork not as a function name in ```c++```, so using ```logicalNot()```
+
+Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. It likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
+
+## Matrix
+
+Matrix elements are of a floating-point type. All of these types are in GLSL.
+
+```c++
+mat2x2/mat2, mat2x3, mat2x4 - 2 column float matrices
+mat3x2, mat3x3/mat3, mat3x4 - 3 column float matrices
+mat4x2, mat4x3, mat4x4/mat4 - 4 column float matrices
+
+dmat2x2/dmat2, dmat2x3, dmat2x4 - 2 column double matrices
+dmat3x2, dmat3x3/dmat3, dmat3x4 - 3 column double matrices
+dmat4x2, dmat4x3, dmat4x4/dmat4 - 4 column double matrices
+```
+
+### Rule of Six For Matrices
+
+The six special functions are all defaulted in matrices.
+```c++
+constexpr basic_matrix() noexcept = default;
+constexpr ~basic_matrix() noexcept = default;
+
+constexpr basic_matrix(const basic_matrix &) noexcept = default;
+constexpr basic_matrix(basic_matrix &&) noexcept = default;
+constexpr basic_matrix &operator =(const basic_matrix &) noexcept = default;
+constexpr basic_matrix &operator =(basic_matrix &&) noexcept = default;
+```
+
+### Matrix Constructors
+* **Single Scalar Argument** - this constructor only works on square matrices, where the number of rows and columns is the same. The scalar parameter is used to initialize every diagonal element of the matrix, with all the other elements set to 0.
+
+```c++
+// diagonal constructor for square matrices
+template <dimensional_scalar U>
+constexpr basic_matrix(U arg) noexcept;
+```
+
+* **Single Matrix Argument** - any matrix can be used to create another matrix, regardless of any size differences. If they are the same size, then the defaulted copy/move constructor will be called. If they are different sizes, then this constructor intializes what it can of the matrix as if the rows and columns were intersected. If there are matrix elements that are not initialized by the matrix argument, they will be set to 0. If it is a square matrix, and a diagonal element has not been initialized, it will be set to 1.
+
+```c++
+template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
+constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+```
+
+* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if a vector argument has more data than needed, as long as some of the data is needed. It is an error to pass unused arguments:
+
+```c++
+// variadic constructor of scalar and vector arguments
+template <typename ... Args>
+constexpr basic_matrix(const Args & ...args) noexcept;
+``` 
+
+### Matrix Members
+
+* **operator =** - Assignment operator - the matrix needs to be the same size and underlying type must be convertible.
+* **int length()** - this is part of the spec, and is the same as ```size()``` except it has a different return type. It can work with ```operator []``` in a for loop.
+* **operator []** - a generic way to access matrix data. The values returned by this operator are the columns of the matrix, which are of type ```basic_vector```. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing. Along with ```operator []``` in ```basic_vector```, we can access individual matrix elements with notation such as **auto val = my_matrix[col][row];**.
+
+### Matrix Operators
+
+* unary ```operator +```
+* unary ```operator -```
+* unary ```operator ++``` (pre-increment)
+* unary ```operator ++``` (post-increment)
+* unary ```operator --``` (pre-decrement)
+* unary ```operator --``` (post-decrement)
+* binary ```operator +```
+* binary ```operator -```
+* binary ```operator *``` - linear algebraic operations
+   * vector * matrix
+   * matrix * vector
+   * matrix * matrix
+* binary ```operator /```
+* ```operator ==```
+* ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
+
+### Matrix Functions
+
+* ```matrixCompMult()```
+* ```outerProduct()```
+* ```transpose()```
+* ```determinant()```
+* ```inverse()```
