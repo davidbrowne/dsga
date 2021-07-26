@@ -42,6 +42,7 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 {
     auto AoS = mat4x2(p0, p1, p2, p3);
 
+    // lambda pack wrapper
     return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
     {
         return vec2(single_ordinate_cubic_bezier_eval(AoS.template row<Is>(), t)...);
