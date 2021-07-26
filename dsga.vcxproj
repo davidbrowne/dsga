@@ -164,12 +164,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="common_initial_sequence.hxx" />
-    <ClInclude Include="cxcm.hxx" />
     <ClInclude Include="dev_3rd\doctest.h" />
     <ClInclude Include="dev_3rd\nanobench.h" />
     <ClInclude Include="dsga.hxx" />
-    <ClInclude Include="examples.hxx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DETAILS.md" />

@@ -18,19 +18,10 @@
     <ClInclude Include="dev_3rd\doctest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="common_initial_sequence.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dsga.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cxcm.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dev_3rd\nanobench.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="examples.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

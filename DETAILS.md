@@ -32,7 +32,7 @@ template <dimensional_scalar T, std::size_t Size>
 struct basic_vector;
 ```
 
-Since we wanted to use notation such as ```foo.xy``` to access swizzles, the swizzled items must obviously be data members; however, there are many possible swizzles, increasing dramatically for the vector length 4 case (341 swizzles!). We don't want the ```sizeof``` ```basic_vector``` to grow, and the only way to be able to add many data members without the ```sizeof``` a class/struct growing is through a union. Since we don't want to have an intermediate name for access, it must be an **anonymous union**.
+Since we wanted to use notation such as ```foo.xy``` to access swizzles, the swizzled items must obviously be data members; however, there are many possible swizzles, increasing dramatically for the vector length 4 case (340 swizzles!). We don't want the ```sizeof``` ```basic_vector``` to grow, and the only way to be able to add many data members without the ```sizeof``` a class/struct growing is through a union. Since we don't want to have an intermediate name for access, it must be an **anonymous union**.
 
 To get what we want, each member of the union must share a common intial sequence. The anonymous union for each struct is made up of one member of type **storage_wrapper** and many swizzled ```indexed_vector```s, the number depending on the length of the vector. We have tests (using the function ```std::is_corresponding_member()```) that confirm that these all share a **common initial sequence**. Both ```storage_wrapper``` and the ```indexed_vector```s have the same storage type (for now it is a ```std::array```), and the ```sizeof``` the array is the ```sizeof``` the ```basic_vector```.
 
