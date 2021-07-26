@@ -161,7 +161,7 @@ big_vec.zyx = big_vec.xzz;      // ok, data destinations are all unique even if 
 
 GLSL doesn't provide functions for testing how close vectors are to each other within a tolerance. In our ```dsga``` implementation, we provide two types of tolerance checking:
 
-* Euclidean Distance - the treats the vectors as mathematical vectors or points, and compares the Euclidean distance between them to see if they are within the tolerance. The tolerance is a strictly less-than comparison. The use of type ```vector_base``` is an advanced feature, and is used to make sure it covers vectors and their swizzles. More can be learned about ```vector_base``` in the [details](DETAILS.md).
+* Euclidean Distance - this treats the vectors as mathematical vectors or points, and it compares the Euclidean distance between them to see if they are within the tolerance. The tolerance is a strictly less-than comparison. Tolerances need to be non-negative. The use of type ```vector_base``` is an advanced feature, and it is used to make sure it covers vectors and their swizzles. More can be learned about ```vector_base``` in the [details](DETAILS.md).
 ```c++
 namespace dsga
 {
@@ -171,7 +171,7 @@ namespace dsga
                                    T tolerance) noexcept;
 }
 ```
-* Bounding Box - this is a component-wise tolerance check. There is a version of this function that takes a vector of tolerances as well. All the vector elements must be within tolerance or the whole answer is false. The tolerance is a strictly less-than comparison. This function also uses ```vector_base``` like the other tolerance functions, and for the same reasons.
+* Bounding Box - this is a component-wise tolerance check. There is a version of this function that takes a vector of tolerances as well. All the vector elements must be within tolerance or the whole answer is false. The tolerance is a strictly less-than comparison. All tolerances need to be non-negative. This function also uses ```vector_base``` like the other tolerance functions, and for the same reasons.
 ```c++
 namespace dsga
 {
@@ -276,7 +276,7 @@ GLSL does not support the types ```long long``` or ```unsigned long long```, but
 
 ### Rule of Six For Vectors
 
-The six special functions are all defaulted in vectors.
+The six special functions are all defaulted for ```basic_vector```.
 ```c++
 constexpr basic_vector() noexcept = default;
 constexpr ~basic_vector() noexcept = default;
@@ -442,7 +442,7 @@ dmat4x2, dmat4x3, dmat4x4/dmat4 - 4 column double matrices
 
 ### Rule of Six For Matrices
 
-The six special functions are all defaulted in matrices.
+The six special functions are all defaulted for ```basic_matrix```.
 ```c++
 constexpr basic_matrix() noexcept = default;
 constexpr ~basic_matrix() noexcept = default;

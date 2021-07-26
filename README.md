@@ -70,7 +70,7 @@ Current version: `v0.4.3`
 
 ## Usage
 
-Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading.
+Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading. We hope to be able to use it for rapid development of geometric algorithms.
 
 The [documentation](DOCUMENTATION.md) explains more about how the vector and matrix classes work, and describes the API.
 
