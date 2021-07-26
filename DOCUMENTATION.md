@@ -157,6 +157,31 @@ big_vec.xyx = vec3(1, 2, 3);    // error, trying to assign to position "x" more 
 big_vec.zyx = big_vec.xzz;      // ok, data destinations are all unique even if sources are not
 ```
 
+### Tolerance Checking
+
+GLSL doesn't provide functions for testing how close vectors are to each other within a tolerance. In our ```dsga``` implementation, we provide two types of tolerance checking:
+
+* Euclidean Distance - the treats the vectors as mathematical vectors or points, and compares the Euclidean distance between them to see if they are within the tolerance. The tolerance is a strictly less-than comparison. The use of type ```vector_base``` is an advanced feature, and is used to make sure it covers vectors and their swizzles. More can be learned about ```vector_base``` in the [details](DETAILS.md).
+```c++
+namespace dsga
+{
+    template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+    constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
+                                   const vector_base<W2, T, C, D2> &y,
+                                   T tolerance) noexcept;
+}
+```
+* Bounding Box - this is a component-wise tolerance check. There is a version of this function that takes a vector of tolerances as well. All the vector elements must be within tolerance or the whole answer is false. The tolerance is a strictly less-than comparison. This function also uses ```vector_base``` like the other tolerance functions, and for the same reasons.
+```c++
+namespace dsga
+{
+    template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+    constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
+                              const vector_base<W2, T, C, D2> &y,
+                              T tolerance) noexcept;
+}
+```
+
 ## Matrix Types
 
 As noted above, matrices each have between 2-4 rows and 2-4 columns, giving 9 possible matrix sizes. The components of the matrices must be floating-point types. The matrices store things in column major order, and the type naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The set of columns is represented as an array of floating point vectors. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function. Any component of a matrix ```A``` can be accessed by two adjacent ```operator []``` calls, such as ```A[col_num][row_num]```.
