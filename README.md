@@ -1,6 +1,6 @@
 # dsga : Data Structures for Geometric Algorithms
 
-**dsga** is a **c++20 library** that implements the **vectors** and **matrices** from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). It is not intended to be used for rendering, just for sharing the **fundamental data structures** and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other **geometric and algebraic things**. See [motivation](MOTIVATION.md) for more details.
+**dsga** is a **c++20 library** that implements the **vectors** and **matrices** from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). It is not intended to be used for rendering, just for sharing the **fundamental data structures** and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other **geometric and algebraic things**. See [motivation](docs/MOTIVATION.md) for more details.
 
 ## A Quick Peek At Some Examples
 
@@ -52,7 +52,7 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 
 ## Installation
 
-This is a **single header library**, where you just need the file [dsga.hxx](dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](DOCUMENTATION.md), [using directives](DOCUMENTATION.md#types-and-functions) can be seen that bring a lot of this library into the top level namespace.
+This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](docs/DOCUMENTATION.md), [using directives](docs/DOCUMENTATION.md#types-and-functions) can be seen that bring a lot of this library into the top level namespace.
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
@@ -67,15 +67,15 @@ Current version: `v0.4.3`
 
 ### The next steps
 * Official single header release: ```cxcm.hxx``` has been merged into ```dsga.hxx```, but it needs some testing before we make the first official release of dsga.
-* Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](DETAILS.md#detailed-generic-example).
+* Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
 
 ## Usage
 
 Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading. We hope to be able to use it for rapid development of geometric algorithms.
 
-The [documentation](DOCUMENTATION.md) explains more about how the vector and matrix classes work, and describes the API.
+The [documentation](docs/DOCUMENTATION.md) explains more about how the vector and matrix classes work, and describes the API.
 
-More in depth explanation can be found in the [details](DETAILS.md).
+More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 ## Testing
 

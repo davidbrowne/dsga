@@ -166,31 +166,32 @@
   <ItemGroup>
     <ClInclude Include="dev_3rd\doctest.h" />
     <ClInclude Include="dev_3rd\nanobench.h" />
-    <ClInclude Include="dsga.hxx" />
+    <ClInclude Include="examples\bezier.hxx" />
+    <ClInclude Include="include\dsga.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DETAILS.md" />
-    <None Include="DOCUMENTATION.md" />
-    <None Include="MOTIVATION.md" />
+    <None Include="docs\DETAILS.md" />
+    <None Include="docs\DOCUMENTATION.md" />
+    <None Include="docs\MOTIVATION.md" />
+    <None Include="docs\vec_base_uml.svg" />
     <None Include="README.md" />
-    <None Include="vec_base_uml.svg" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE_1_0.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="assignment_test.cxx" />
-    <ClCompile Include="comparison_test.cxx" />
-    <ClCompile Include="constructor_test.cxx" />
-    <ClCompile Include="conversion_test.cxx" />
-    <ClCompile Include="function_test.cxx" />
-    <ClCompile Include="main.cxx" />
-    <ClCompile Include="nanobench.cxx" />
-    <ClCompile Include="operator_test.cxx" />
-    <ClCompile Include="swizzle_test.cxx" />
+    <Natvis Include="dsga.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="dsga.natvis" />
+    <ClCompile Include="src\main.cxx" />
+    <ClCompile Include="src\nanobench.cxx" />
+    <ClCompile Include="tests\assignment_test.cxx" />
+    <ClCompile Include="tests\comparison_test.cxx" />
+    <ClCompile Include="tests\constructor_test.cxx" />
+    <ClCompile Include="tests\conversion_test.cxx" />
+    <ClCompile Include="tests\function_test.cxx" />
+    <ClCompile Include="tests\operator_test.cxx" />
+    <ClCompile Include="tests\swizzle_test.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
