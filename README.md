@@ -66,7 +66,7 @@ Current version: `v0.4.3`
 
 ### The next steps
 * Official single header release: ```cxcm.hxx``` has been merged into ```dsga.hxx```, but it needs some testing before we make the first official release of dsga.
-* Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start.
+* Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](DETAILS.md#detailed-generic-example).
 
 ## Usage
 

@@ -191,15 +191,7 @@ It is difficult to give a straightforward list of all the functions in the vecto
 * use concepts
 * have many different versions
 
-We have gone to the trouble of [enumerating all the specific classes](#types-and-functions) we support in the above section on types and functions, and there are a lot of them. Some functions take as arguments or return as values some general types, e.g., floating-point vector, as opposed to saying vec2, vec3, vec4, dvec2, dvec3, or dvec4 (and possibly even fscal and dscal). So the question becomes how we represent the generic categories in the documentation for the API. We can follow what GLSL did, and that may be the best approach for the vector types:
-
-* **genIType** - int, iscal, ivec2, ivec3, ivec4, long long, llscal, llvec2, llvec3, llvec4
-* **genUType** - unsigned, uscal, uvec2, uvec3, uvec4, unsigned long long, ullscal, ullvec2, ullvec3, ullvec4
-* **genBType** - bool, bscal, bvec2, bvec3, bvec4
-* **genFType** - float, scal, vec2, vec3, vec4, fscal, fvec2, fvec3, fvec4
-* **genDType** - double, dscal, dvec2, dvec3, dvec4
-
-Sometimes we just want to say integral types or floating-point types. In those cases we will list options for multiple categories.
+We have [enumerated all the specific classes](#types-and-functions) we support in the above section on types and functions, and there are a lot of them. GLSL has a bias towards the type ```float```, but we implemented the functions without that bias. If there is a ```float``` version of a function, then there is likely a ```double``` version. GLSL also does not provide support for the 64-bit integer types ```long long``` and ```unsigned long long```. So for the most part (but not in all cases), if there is function for ```int``` types, there should be a version for ```long long``` types. The same is true for ```unsigned int``` and ```unsigned long long```.
 
 Please look at what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), especially Section 5 and Section 8, for a thorough look at the API. We will summarize what was implemented and how we supplmented matrix and vector.
 
@@ -407,7 +399,7 @@ Vector Relational Functions
 * ```all()```
 * ```logicalNot()``` - can't use keyword ```not()``` as a function name in ```c++```, so using ```logicalNot()```
 
-Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. It likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
+Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. The unimplemented functions likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
 
 ## Matrix
 
