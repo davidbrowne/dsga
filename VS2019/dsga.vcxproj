@@ -77,19 +77,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\dev_3rd;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\dev_3rd;..\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\dev_3rd;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\dev_3rd;..\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\dev_3rd;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\dev_3rd;..\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\dev_3rd;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\dev_3rd;..\include</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -164,34 +164,34 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dev_3rd\doctest.h" />
-    <ClInclude Include="dev_3rd\nanobench.h" />
-    <ClInclude Include="examples\bezier.hxx" />
-    <ClInclude Include="include\dsga.hxx" />
+    <ClInclude Include="..\dev_3rd\doctest.h" />
+    <ClInclude Include="..\dev_3rd\nanobench.h" />
+    <ClInclude Include="..\examples\bezier.hxx" />
+    <ClInclude Include="..\include\dsga.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="docs\DETAILS.md" />
-    <None Include="docs\DOCUMENTATION.md" />
-    <None Include="docs\MOTIVATION.md" />
-    <None Include="docs\vec_base_uml.svg" />
-    <None Include="README.md" />
+    <None Include="..\docs\DETAILS.md" />
+    <None Include="..\docs\DOCUMENTATION.md" />
+    <None Include="..\docs\MOTIVATION.md" />
+    <None Include="..\docs\vec_base_uml.svg" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="LICENSE_1_0.txt" />
+    <Text Include="..\LICENSE_1_0.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\main.cxx" />
+    <ClCompile Include="..\src\nanobench.cxx" />
+    <ClCompile Include="..\tests\assignment_test.cxx" />
+    <ClCompile Include="..\tests\comparison_test.cxx" />
+    <ClCompile Include="..\tests\constructor_test.cxx" />
+    <ClCompile Include="..\tests\conversion_test.cxx" />
+    <ClCompile Include="..\tests\function_test.cxx" />
+    <ClCompile Include="..\tests\operator_test.cxx" />
+    <ClCompile Include="..\tests\swizzle_test.cxx" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dsga.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\main.cxx" />
-    <ClCompile Include="src\nanobench.cxx" />
-    <ClCompile Include="tests\assignment_test.cxx" />
-    <ClCompile Include="tests\comparison_test.cxx" />
-    <ClCompile Include="tests\constructor_test.cxx" />
-    <ClCompile Include="tests\conversion_test.cxx" />
-    <ClCompile Include="tests\function_test.cxx" />
-    <ClCompile Include="tests\operator_test.cxx" />
-    <ClCompile Include="tests\swizzle_test.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

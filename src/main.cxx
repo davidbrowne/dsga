@@ -28,7 +28,7 @@ void mat_box()
 	}
 }
 
-#include "examples.hxx"
+#include "../examples/bezier.hxx"
 fvec4 sometest()
 {
 	[[ maybe_unused ]]auto qbezval = quadratic_bezier_eval(vec2(2, 4), vec2(4, 5), vec2(8, 3), 0.25f);
@@ -223,80 +223,6 @@ fvec4 sometest()
 //	lastpair.xx = pairgen();
 	return bar;
 }
-
-#define CXCM_DISABLE_RUNTIME_OPTIMIZATIONS
-#include "cxcm.hxx"
-
-void inv_sqrt_all_floats_test()
-{
-	long long num_same = 0;
-	long long num_diff = 0;
-
-	float input = 0.0f;
-	//double input = 0x1.0p+52;
-	//double input_max = input + 0x1.0p+31 - 1;
-	//while (input < input_max)
-	while (input < std::numeric_limits<float>::max())
-	{
-		//input = std::nextafter(input, input_max);
-		//double contender = cxcm::rsqrt(input);
-		//double official = 1.0 / std::sqrt(input);
-
-		input = std::nextafter(input, std::numeric_limits<float>::max());
-		float contender = cxcm::rsqrt(input);
-		float official = 1.0f / std::sqrt(input);
-
-		if (contender == official)
-		{
-			++num_same;
-		}
-		else
-		{
-			++num_diff;
-//			std::printf("difference -- official = %0.6a  contender = %0.6a\n", official, contender);
-//			std::printf("difference -- official = %0.13a  contender = %0.13a\n", official, contender);
-		}
-	}
-
-	std::printf("floats: num_same = %lld\nnum_diff = %lld\n", num_same, num_diff);
-}
-
-void inv_sqrt_doubles_test()
-{
-	long long num_same = 0;
-	long long num_diff = 0;
-
-	double input = 0x1.0p+52;
-//	double input = 1.25;
-//	double input = 0.0;
-//	double input = 123456.789;
-//	double input = std::numeric_limits<double>::max();
-
-	for (long long i = 0; i < std::numeric_limits<int>::max(); ++i)
-	{
-		input = std::nextafter(input, std::numeric_limits<double>::max());
-//		input = std::nextafter(input, 0.0);
-		double contender = cxcm::rsqrt(input);
-		double official = 1.0 / std::sqrt(input);
-
-		if (contender == official)
-		{
-			++num_same;
-		}
-		else
-		{
-			++num_diff;
-//			std::printf("difference -- official = %0.13a  contender = %0.13a\n", official, contender);
-		}
-
-		if (((i+1) % 1000000) == 0)
-			std::printf("#");
-	}
-	std::printf("\n");
-
-	std::printf("doubles: num_same = %lld\nnum_diff = %lld\n", num_same, num_diff);
-}
-
 
 // https://twitter.com/the_whole_daisy/status/1379580525078147072
 // https://godbolt.org/z/h5P1Mxsrz

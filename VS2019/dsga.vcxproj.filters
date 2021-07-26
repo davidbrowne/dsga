@@ -15,61 +15,61 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dev_3rd\doctest.h">
+    <ClInclude Include="..\dev_3rd\doctest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dev_3rd\nanobench.h">
+    <ClInclude Include="..\dev_3rd\nanobench.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="examples\bezier.hxx">
+    <ClInclude Include="..\examples\bezier.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\dsga.hxx">
+    <ClInclude Include="..\include\dsga.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
-    <None Include="docs\DETAILS.md" />
-    <None Include="docs\DOCUMENTATION.md" />
-    <None Include="docs\MOTIVATION.md" />
-    <None Include="docs\vec_base_uml.svg">
+    <None Include="..\README.md" />
+    <None Include="..\docs\DETAILS.md" />
+    <None Include="..\docs\DOCUMENTATION.md" />
+    <None Include="..\docs\MOTIVATION.md" />
+    <None Include="..\docs\vec_base_uml.svg">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="LICENSE_1_0.txt" />
+    <Text Include="..\LICENSE_1_0.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\main.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\nanobench.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\assignment_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\comparison_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\constructor_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\conversion_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\function_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\operator_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\swizzle_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dsga.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\main.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\nanobench.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\assignment_test.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\comparison_test.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\constructor_test.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\conversion_test.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\function_test.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\operator_test.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\swizzle_test.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
