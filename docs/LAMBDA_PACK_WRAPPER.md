@@ -77,5 +77,5 @@ Imagine that we had an array-like type where we didn't have the ability to creat
 
 I am also assuming that compiler generated pack expansion has good codegen.
 
-To me this approach seems elegant. I am fond of the bezier example of this in the quick peek part of the [README](../README.md#a-quick-peek-at-some-examples), made even more generic and flexible in the [details](DETAILS.md#detailed-generic-example). Here, we pack expand all the rows, where each row represents a different set of ordinate values to evaluate, e.g., x, y, z, w. There are two functions, but the other function has nothing to do with pack expansion, it is all about computing the value for the pack expansions.
+To me this approach seems elegant. I am fond of the bezier example of this in the quick peek part of the [README](../README.md#a-quick-peek-at-some-examples), made even more generic and flexible in the [details](DETAILS.md#detailed-generic-example). Here, we pack expand all the rows, where each row represents a different set of ordinate values to evaluate, e.g., x, y, z, w. There are two functions, but the other function has nothing to do with managing pack expansion, it is all about computing the value for a particular pack expansion.
 

@@ -482,6 +482,7 @@ constexpr basic_matrix(const Args & ...args) noexcept;
 * **operator =** - Assignment operator - the matrix needs to be the same size and underlying type must be convertible.
 * **int length()** - this is part of the spec, and is the same as ```size()``` except it has a different return type. It can work with ```operator []``` in a for loop.
 * **operator []** - a generic way to access matrix data. The values returned by this operator are the columns of the matrix, which are of type ```basic_vector```. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing. Along with ```operator []``` in ```basic_vector```, we can access individual matrix elements with notation such as **auto val = my_matrix[col][row];**.
+* **row<std::size_t row_num>** - this returns a ```basic_vector``` that represents a row of the matrix. This is a template function, and the row must be specified at compile time.
 
 ### Matrix Operators
 
