@@ -38,10 +38,10 @@ namespace dsga
 	{
 		// copyright for cxcm
 		
-        //          Copyright David Browne 2020-2021.
-        // Distributed under the Boost Software License, Version 1.0.
-        //    (See accompanying file LICENSE_1_0.txt or copy at
-        //          https://www.boost.org/LICENSE_1_0.txt)
+		//          Copyright David Browne 2020-2021.
+		// Distributed under the Boost Software License, Version 1.0.
+		//    (See accompanying file LICENSE_1_0.txt or copy at
+		//          https://www.boost.org/LICENSE_1_0.txt)
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
@@ -4900,7 +4900,7 @@ namespace dsga
 		}
 
 		// diagonal constructor for square matrices
-		template <dimensional_scalar U>
+		template <typename U>
 		requires std::convertible_to<U, T> && (C == R)
 		constexpr basic_matrix(U arg) noexcept
 		{
@@ -4989,7 +4989,7 @@ namespace dsga
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((value[Is] = other[Is]), ...);
+				((value[Is] = other[Is]), ...);			// let basic_vector do any type conversion if needed
 			}(std::make_index_sequence<C>{});
 
 			return *this;

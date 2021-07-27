@@ -172,6 +172,7 @@
   <ItemGroup>
     <None Include="..\docs\DETAILS.md" />
     <None Include="..\docs\DOCUMENTATION.md" />
+    <None Include="..\docs\LAMBDA_PACK_WRAPPER.md" />
     <None Include="..\docs\MOTIVATION.md" />
     <None Include="..\docs\vec_base_uml.svg" />
     <None Include="..\README.md" />
