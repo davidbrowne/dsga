@@ -120,7 +120,7 @@ Since these "scalar" types are really vectors of length 1, they can use the vect
 
 ### Swizzling
 
-[Swizzling](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) is the act of taking a vector and creating a new vector from it that is a specialized "view" on the original vector. The "swizzle" of a vector is itself a vector, although of different sort, and can be mostly used like a non-swizzle. If there is ever a problem, just wrap up the swizzle in a vector constructor:
+[Swizzling](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) is the act of taking a vector and creating a new vector from it that is a specialized "view" on the original vector. The "swizzle" of a vector is itself a vector, although of a different sort, and can be mostly used like a non-swizzle. If there is ever a problem, just wrap up the swizzle in a vector constructor:
 
 ```c++
 vec4 big_vec;
@@ -218,7 +218,7 @@ It is difficult to give a straightforward list of all the functions in the vecto
 
 We have [enumerated all the specific classes](#types-and-functions) we support in the above section on types and functions, and there are a lot of them. GLSL has a bias towards the type ```float```, but we implemented the functions without that bias. If there is a ```float``` version of a function, then there is likely a ```double``` version. GLSL also does not provide support for the 64-bit integer types ```long long``` and ```unsigned long long```. So for the most part (but not in all cases), if there is function for ```int``` types, there should be a version for ```long long``` types. The same is true for ```unsigned int``` and ```unsigned long long```.
 
-Please look at what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), especially Section 5 and Section 8, for a thorough look at the API. We will summarize what was implemented and how we supplmented matrix and vector.
+Please look at what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), especially Section 5 and Section 8, for a thorough look at the API. We will summarize what was implemented and how we supplemented matrix and vector.
 
 ### Iterators
 
@@ -288,14 +288,14 @@ constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
 ```
 
 ### Vector Constructors
-* **Single Scalar Argument** - the scalar parameter is used to initialize every element of the vector.
+* **Single Scalar Argument** - the scalar parameter must be convertible to the underlying type, and it is used to initialize every element of the vector.
 
 ```c++
 template <typename U>
 explicit constexpr basic_vector(U value) noexcept;
 ```
 
-* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the vector elements, and as long as the types are convertible. It is fine if a vector argument has more data than needed, as long as some of the data is needed. It is an error to pass unused arguments. For vectors, each of the combinations is its own constructor for efficient initialization reasons, but the following hypothetical constructor is what it would look like if they were combined into one, behaving the same way as if there were multiple constructors:
+* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the vector elements, and as long as the types are convertible. It is fine if a vector argument has more data than necessary to complete the vector initialization, as long as at least some of the data is needed. It is an error to pass unused arguments. For the vector structs, each of the combinations is its own constructor for efficient initialization reasons, but the following hypothetical constructor is what it would look like if they were combined into one, behaving the same way as if there were multiple constructors:
 
 ```c++
 // variadic constructor of scalar and vector arguments
@@ -306,6 +306,8 @@ constexpr basic_vector(const Args & ...args) noexcept;
 This approach is exactly what ```basic_matrix``` does.
 
 ### Vector Members
+
+These are the members that are not part of the [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
 
 * **operator =** - assignment operator. The vector needs to be the same length and underlying types must be convertible.
 * **int length()** - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
@@ -454,22 +456,22 @@ constexpr basic_matrix &operator =(basic_matrix &&) noexcept = default;
 ```
 
 ### Matrix Constructors
-* **Single Scalar Argument** - this constructor only works on square matrices, where the number of rows and columns is the same. The scalar parameter is used to initialize every diagonal element of the matrix, with all the other elements set to 0.
+* **Single Scalar Argument** - this constructor only works on square matrices, where the number of rows and columns is the same. The parameter is used to initialize every diagonal element of the matrix, with all the other elements set to 0. The parameter must be convertible to the underlying floating-point type stored in the matrix.
 
 ```c++
 // diagonal constructor for square matrices
-template <dimensional_scalar U>
+template <typename U>
 constexpr basic_matrix(U arg) noexcept;
 ```
 
-* **Single Matrix Argument** - any matrix can be used to create another matrix, regardless of any size differences. If they are the same size, then the defaulted copy/move constructor will be called. If they are different sizes, then this constructor intializes what it can of the matrix as if the rows and columns were intersected. If there are matrix elements that are not initialized by the matrix argument, they will be set to 0. If it is a square matrix, and a diagonal element has not been initialized, it will be set to 1.
+* **Single Matrix Argument** - any matrix can be used to create another matrix, regardless of any size differences. If they are the same size, then the defaulted copy/move constructor will be called. If they are different sizes, then this constructor intializes what it can of the matrix as if the rows and columns were intersected with the argument's rows and columns. If there are matrix elements that are not initialized by the matrix argument, they will be set to 0. If it is a square matrix, and a diagonal element has not been initialized, it will be set to 1.
 
 ```c++
 template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
 constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 ```
 
-* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if a vector argument has more data than needed, as long as some of the data is needed. It is an error to pass unused arguments:
+* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if a vector argument has more data than necessary to complete the matrix initialization, as long as some of the data is needed. It is an error to pass unused arguments:
 
 ```c++
 // variadic constructor of scalar and vector arguments
@@ -478,6 +480,8 @@ constexpr basic_matrix(const Args & ...args) noexcept;
 ``` 
 
 ### Matrix Members
+
+These are the members that are not part of the [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
 
 * **operator =** - assignment operator. The matrix needs to be the same size and underlying types must be convertible.
 * **int length()** - returns the number of columns as an ```int```. This is part of the spec, and is the same as ```size()``` except it has a different return type.
