@@ -64,6 +64,7 @@ Current version: `v0.4.4`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
+* [Released v0.4.4](https://github.com/davidbrowne/dsga/releases/tag/v0.4.4)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
