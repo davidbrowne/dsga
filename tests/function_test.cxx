@@ -29,7 +29,7 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 
 	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 	{
-		return vec2(single_ordinate_cubic_bezier_eval(AoS.template row<Is>(), t)...);
+		return vec2(single_ordinate_cubic_bezier_eval(AoS.row(Is), t)...);
 	}(std::make_index_sequence<2u>{});
 }
 

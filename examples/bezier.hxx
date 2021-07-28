@@ -38,7 +38,7 @@ constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 	{
 		// evaluate the bezier function for each ordinate (i.e., row of control points)
-		return dsga::basic_vector<T, C>(quadratic_bezier_ordinate_eval(coord_matrix.template row<Is>(), t)...);
+		return dsga::basic_vector<T, C>(quadratic_bezier_ordinate_eval(coord_matrix.row(Is), t)...);
 	}(std::make_index_sequence<C>{});
 }
 
@@ -89,7 +89,7 @@ constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 	{
 		// evaluate the bezier function for each ordinate (i.e., row of control points)
-		return dsga::basic_vector<T, C>(cubic_bezier_ordinate_eval(coord_matrix.template row<Is>(), t)...);
+		return dsga::basic_vector<T, C>(cubic_bezier_ordinate_eval(coord_matrix.row(Is), t)...);
 	}(std::make_index_sequence<C>{});
 }
 

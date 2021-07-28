@@ -30,7 +30,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 4;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -4833,14 +4833,28 @@ namespace dsga
 	{
 		static constexpr std::size_t Size = C * R;
 
+		// number of columns
 		constexpr int length() const noexcept
 		{
 			return C;
 		}
 
+		// number of rows
+		constexpr int column_length() const noexcept
+		{
+			return R;
+		}
+
+		// returns number of columns (row size), not number of elements
 		constexpr std::size_t size() const noexcept
 		{
 			return C;
+		}
+
+		// returns number of rows
+		constexpr std::size_t column_size() const noexcept
+		{
+			return R;
 		}
 
 		std::array<basic_vector<T, R>, C> value;
@@ -4859,15 +4873,14 @@ namespace dsga
 			return value[index];
 		}
 
-		//
-
-		template <std::size_t Row>
-		requires (Row < R)
-		constexpr basic_vector<T, C> row() const noexcept
+		// get a row of the matrix as a vector
+		constexpr basic_vector<T, C> row(std::size_t row_index) const noexcept
 		{
+			// for each column of the matrix, get a row component, and bundle
+			// these components up into a vector that represents the row
 			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, C>(value[Is][Row]...);
+				return basic_vector<T, C>(value[Is][row_index]...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -5084,7 +5097,7 @@ namespace dsga
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				return basic_matrix<T, R, C>(arg.template row<Is>()...);
+				return basic_matrix<T, R, C>(arg.row(Is)...);
 			}(std::make_index_sequence<R>{});
 		}
 
@@ -5435,7 +5448,7 @@ namespace dsga
 	{
 		return[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_vector<std::common_type_t<T, U>, R>(functions::dot(lhs.template row<Is>(), rhs)...);
+			return basic_vector<std::common_type_t<T, U>, R>(functions::dot(lhs.row(Is), rhs)...);
 		}(std::make_index_sequence<R>{});
 	}
 

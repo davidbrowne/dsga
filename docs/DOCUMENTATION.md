@@ -120,7 +120,7 @@ Since these "scalar" types are really vectors of length 1, they can use the vect
 
 ### Swizzling
 
-[Swizzling](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) is the act of taking a vector and creating a new vector from it that is a specialized "view" on the original vector. The "swizzle" of a vector is itself a vector, although of different sort, and can be mostly used like a non-swizzle. If there is ever a problem, just wrap up the swizzle in a vector contructor:
+[Swizzling](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) is the act of taking a vector and creating a new vector from it that is a specialized "view" on the original vector. The "swizzle" of a vector is itself a vector, although of different sort, and can be mostly used like a non-swizzle. If there is ever a problem, just wrap up the swizzle in a vector constructor:
 
 ```c++
 vec4 big_vec;
@@ -184,7 +184,7 @@ namespace dsga
 
 ## Matrix Types
 
-As noted above, matrices each have between 2-4 rows and 2-4 columns, giving 9 possible matrix sizes. The components of the matrices must be floating-point types. The matrices store things in column major order, and the type naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The set of columns is represented as an array of floating point vectors. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```template row<N>()``` function. Any component of a matrix ```A``` can be accessed by two adjacent ```operator []``` calls, such as ```A[col_num][row_num]```.
+As noted above, matrices each have between 2-4 rows and 2-4 columns, giving 9 possible matrix sizes. The components of the matrices must be floating-point types. The matrices store things in column major order, and the type naming reflects that. It can be confusing to read since that is the opposite of the mathematical notation for matrices. The set of columns is represented as an array of floating point vectors. The columns of the matrix are accessible via array notation, i.e., ```operator []```. The rows of the matrix are accessible via the ```row()``` function. Any component of a matrix ```A``` can be accessed by two adjacent ```operator []``` calls, such as ```A[col_num][row_num]```.
 
 For an example of GLSL type names vs. math notation, ```mat4x2``` is a matrix with 4 columns with 2 rows, but math notation specifies the number of rows first, followed by number of columns. So the GLSL type ```mat4x2``` is a 2x4 matrix using math notation ("m by n" which is "rows by columns").
 
@@ -307,8 +307,8 @@ This approach is exactly what ```basic_matrix``` does.
 
 ### Vector Members
 
-* **operator =** - Assignment operator - the vector needs to be the same length and underlying type must be convertible.
-* **int length()** - this is part of the spec, and is the same as ```size()``` except it has a different return type. It can work with ```operator []``` in a for loop.
+* **operator =** - assignment operator. The vector needs to be the same length and underlying types must be convertible.
+* **int length()** - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
 * **operator []** - a generic way to access vector data. the ```x``` value is index 0, the ```y``` value is index 1, the ```z``` value is index 2, and the ```w``` value is index 3, assuming the vector is long enough to access those index values. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing.
 * **set()** - this is the way of setting all the values for the vector at the same time. It takes the same number of scalar arguments as there are vector elements. This function is helpful at preventing trouble when there are potential aliasing problems.
 
@@ -479,10 +479,12 @@ constexpr basic_matrix(const Args & ...args) noexcept;
 
 ### Matrix Members
 
-* **operator =** - Assignment operator - the matrix needs to be the same size and underlying type must be convertible.
-* **int length()** - this is part of the spec, and is the same as ```size()``` except it has a different return type. It can work with ```operator []``` in a for loop.
+* **operator =** - assignment operator. The matrix needs to be the same size and underlying types must be convertible.
+* **int length()** - returns the number of columns as an ```int```. This is part of the spec, and is the same as ```size()``` except it has a different return type.
+* **int column_length()** - like ```length()``` but for rows. Returns the number of rows as an ```int```.
+* **std::size_t column_size()** - like ```size()``` but for rows. Returns the number of rows as a ```std::size_t```.
 * **operator []** - a generic way to access matrix data. The values returned by this operator are the columns of the matrix, which are of type ```basic_vector```. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing. Along with ```operator []``` in ```basic_vector```, we can access individual matrix elements with notation such as **auto val = my_matrix[col][row];**.
-* **row<std::size_t row_num>** - this returns a ```basic_vector``` that represents a row of the matrix. This is a template function, and the row must be specified at compile time.
+* **row()** - this returns a ```basic_vector``` that represents a row of the matrix.
 
 ### Matrix Operators
 

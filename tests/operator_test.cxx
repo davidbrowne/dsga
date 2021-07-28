@@ -561,10 +561,10 @@ TEST_SUITE("test operators")
 		CHECK_EQ(A[3], dvec4(12, 13, 14, 15));
 
 		// matrix rows
-		CHECK_EQ(A.template row<0u>(), dvec4(0, 4, 8, 12));
-		CHECK_EQ(A.template row<1u>(), dvec4(1, 5, 9, 13));
-		CHECK_EQ(A.template row<2u>(), dvec4(2, 6, 10, 14));
-		CHECK_EQ(A.template row<3u>(), dvec4(3, 7, 11, 15));
+		CHECK_EQ(A.row(0u), dvec4(0, 4, 8, 12));
+		CHECK_EQ(A.row(1u), dvec4(1, 5, 9, 13));
+		CHECK_EQ(A.row(2u), dvec4(2, 6, 10, 14));
+		CHECK_EQ(A.row(3u), dvec4(3, 7, 11, 15));
 	}
 
 	TEST_CASE("matrix component access")
