@@ -33,23 +33,6 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 	}(std::make_index_sequence<2u>{});
 }
 
-//void cubic_bezier_example()
-//{
-//	vec2 p0(2, 2);
-//	vec2 p1(5, 4);
-//	vec2 p2(3, 5);
-//	vec2 p3(8, 3);
-//	float t1{ 0.25f };
-//	float t2{ 0.75f };
-//
-//	auto val1 = simple_cubic_bezier_eval(p0, p1, p2, p3, t1);		// (3.5, 3.28125)
-//	CHECK_EQ(val1, vec2(3.5, 3.28125));
-//
-//	auto val2 = simple_cubic_bezier_eval(p0, p1, p2, p3, t2);		// (5.375, 3.96875)
-//	CHECK_EQ(val1, vec2(5.375, 3.96875));
-//}
-
-
 // operators are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test operators")
 {

@@ -6,6 +6,60 @@
 
 //#include "dev_3rd/nanobench.h"
 #include "dsga.hxx"
+#include <vector>
+
+//
+// get the signed volume for connected triangular mesh
+//
+
+// for a watertight connected triangular mesh, get the signed volume.
+// vertices are 3d points, triangles have the indices to the vertices.
+// follows right-hand rule for the sign of the volume.
+//
+// preconditions: watertight mesh, non-degenerate triangles
+double signed_volume_watertight_mesh(const std::vector<dvec3> &vertices,
+									 const std::vector<uvec3> &triangles)
+{
+	double volume_times_six{ 0 };
+
+	// each triangle contributes a tetrahedronal volume using the origin as the 4th "vertex"
+	for (const auto &tri : triangles)
+		volume_times_six += determinant(mat3(vertices[tri[0]], vertices[tri[1]], vertices[tri[2]]));
+
+	return volume_times_six / 6.0;
+}
+
+// triangular mesh of a cube with sides length 2.
+// not worried about topology, e.g., adjacent triangles, for this example.
+void cube_mesh(std::vector<dvec3> &vertices,
+			   std::vector<uvec3> &triangles)
+{
+	vertices.clear();
+	vertices.reserve(8);
+	vertices.emplace_back(1, 1, 1);
+	vertices.emplace_back(-1, 1, 1);
+	vertices.emplace_back(-1, 1, -1);
+	vertices.emplace_back(1, 1, -1);
+	vertices.emplace_back(1, -1, 1);
+	vertices.emplace_back(-1, -1, 1);
+	vertices.emplace_back(-1, -1, -1);
+	vertices.emplace_back(1, -1, -1);
+
+	triangles.clear();
+	triangles.reserve(12);
+	triangles.emplace_back(1, 0, 2);
+	triangles.emplace_back(3, 2, 0);
+	triangles.emplace_back(0, 1, 4);
+	triangles.emplace_back(1, 2, 5);
+	triangles.emplace_back(2, 3, 6);
+	triangles.emplace_back(3, 0, 7);
+	triangles.emplace_back(5, 4, 1);
+	triangles.emplace_back(6, 5, 2);
+	triangles.emplace_back(7, 6, 3);
+	triangles.emplace_back(4, 7, 0);
+	triangles.emplace_back(6, 7, 5);
+	triangles.emplace_back(4, 5, 7);
+}
 
 // see https://compiler-explorer.com/z/9jjh5oj5o for an example
 // of this but using std::array<> instead of dsga vectors
@@ -32,6 +86,11 @@ void mat_box()
 fvec4 sometest()
 {
 	[[ maybe_unused ]]auto qbezval = quadratic_bezier_eval(vec2(2, 4), vec2(4, 5), vec2(8, 3), 0.25f);
+
+	std::vector<dvec3> vertices;
+	std::vector<uvec3> triangles;
+	cube_mesh(vertices, triangles);
+	[[ maybe_unused]] double signed_volume = signed_volume_watertight_mesh(vertices, triangles);
 
 	iscal first = 9;
 	iscal first2 = 100;

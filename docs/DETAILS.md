@@ -133,7 +133,7 @@ Since the underlying representation is an array of column vectors, it makes post
 
 ## Detailed Generic Example
 
-A the top of the [README](../README.md), there is a quick example of evaluating a cubic bezier curve for 2D points that uses float as the type of the vector elements. This works great as a one-off example, but what if one cares to generalize this as part of a library? What if it is desired to work directly with swizzles? In this case, ```vector_base``` will be the generic hook.
+At the top of the [README](../README.md), there is a quick example of evaluating a cubic bezier curve for 2D points that uses float as the type of the vector elements. This works great as a one-off example, but what if one cares to generalize this as part of a library? What if it is desired to work directly with swizzles? In this case, ```vector_base``` will be the generic hook.
 
 Now the control points can use any of the floating-point types, and they can have any number of elements that are allowed for the vector types. The return value will be a vector with the same floating-point type and same number of elements.
 
