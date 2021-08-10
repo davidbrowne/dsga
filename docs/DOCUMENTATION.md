@@ -305,7 +305,7 @@ constexpr basic_vector(const Args & ...args) noexcept;
 
 This approach is exactly what ```basic_matrix``` does.
 
-### Vector Members
+### Vector Member Functions
 
 These are the members that are not part of the [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
 
@@ -315,6 +315,7 @@ These are the members that are not part of the [iterator interface](#iterators),
 * **set()** - this is the way of setting all the values for the vector at the same time. It takes the same number of scalar arguments as there are vector elements. This function is helpful at preventing trouble when there are potential aliasing problems.
 
 ### Vector Operators
+The vector operators all work component-wise.
 
 * unary ```operator +```
 * unary ```operator -```
@@ -346,9 +347,11 @@ These are the members that are not part of the [iterator interface](#iterators),
 * ```operator ==```
 * ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
 
-### Vector Functions
+### Vector Free Functions
+The vector functions all work component-wise, except for the geometric functions and the two vector relational functions ```any()``` and ```all()```.
 
-Angle and Trigonometry Functions
+
+#### Angle and Trigonometry Functions
 * ```radians()```
 * ```degrees()```
 * ```sin()```
@@ -364,7 +367,7 @@ Angle and Trigonometry Functions
 * ```acosh()```
 * ```atanh()```
 
-Exponential Functions
+#### Exponential Functions
 * ```pow()```
 * ```exp()```
 * ```log()```
@@ -373,7 +376,7 @@ Exponential Functions
 * ```sqrt()```
 * ```inversesqrt()```
 
-Common Functions
+#### Common Functions
 * ```abs()```
 * ```sign()```
 * ```floor()```
@@ -404,7 +407,9 @@ Common Functions
 * ```frexp()```
 * ```ldexp()```
 
-Geometric Functions
+#### Geometric Functions
+The geometric functions treat a vector as an entity instead of as a collection of components.
+
 * ```length()```
 * ```distance()```
 * ```dot()```
@@ -414,7 +419,7 @@ Geometric Functions
 * ```reflect()```
 * ```refract()```
 
-Vector Relational Functions
+#### Vector Relational Functions
 
 * ```lessThan()```
 * ```lessThanEqual()```
@@ -422,9 +427,9 @@ Vector Relational Functions
 * ```greaterThanEqual()```
 * ```equal()```
 * ```notEqual()```
-* ```any()```
-* ```all()```
-* ```logicalNot()``` - can't use keyword ```not()``` as a function name in ```c++```, so using ```logicalNot()```
+* ```any()``` - result relies on the components' relationship with each other
+* ```all()``` - result relies on the components' relationship with each other
+* ```logicalNot()``` - can't use keyword ```not``` as a function name in ```c++```, so using ```logicalNot()```
 
 Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. The unimplemented functions likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
 
@@ -479,7 +484,7 @@ template <typename ... Args>
 constexpr basic_matrix(const Args & ...args) noexcept;
 ``` 
 
-### Matrix Members
+### Matrix Member Functions
 
 These are the members that are not part of the [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
 
@@ -491,6 +496,7 @@ These are the members that are not part of the [iterator interface](#iterators),
 * **row()** - this returns a ```basic_vector``` that represents a row of the matrix.
 
 ### Matrix Operators
+The matrix operators all work component-wise, except for ```operator *```, which performs linear algebraic functions with vectors and other matrices.
 
 * unary ```operator +```
 * unary ```operator -```
@@ -508,7 +514,8 @@ These are the members that are not part of the [iterator interface](#iterators),
 * ```operator ==```
 * ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
 
-### Matrix Functions
+### Matrix Free Functions
+The matrix functions treat a matrix as an entity instead of as a collection of components, except for matrixCompMult(), which works component-wise.
 
 * ```matrixCompMult()``` - since we use ```operator *``` for linear algebraic purposes instead of component-wise multiplication
 * ```outerProduct()```

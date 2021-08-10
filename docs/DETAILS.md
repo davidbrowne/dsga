@@ -79,7 +79,7 @@ union
 };
 ```
 
-```operator []``` and ```set()``` (and of course ```at()``` and ```init()```)all take into account the indirect index access, so it manages the logical sequential nature of the vector.
+```operator []``` and ```set()``` (and of course ```at()``` and ```init()```) all take into account the indirect index access, so it manages the logical sequential nature of the vector.
 
 ```indexed_vector``` is intended as a **view** on a ```basic_vector```; however, it is possible to create a stand-alone ```indexed_vector```, initialized via aggregate methods. It is hard to see why anyone would want to do that though, when ```basic_vector``` exists.
 
