@@ -1685,6 +1685,27 @@ TEST_SUITE("lvalue swizzle copy assignment")
 	}
 }
 
+// structs for demonstrating common initial sequence
+struct A
+{
+	std::array<double, 4> i;
+};
+
+struct B
+{
+	std::array<double, 4> j;
+};
+
+struct faux_vector
+{
+	B k;
+};
+
+struct faux_wrapper
+{
+	A l;
+};
+
 TEST_SUITE("test swizzling applications")
 {
 	TEST_CASE("type traits tests")
@@ -1782,29 +1803,8 @@ TEST_SUITE("test swizzling applications")
 
 #if defined(__cpp_lib_is_layout_compatible)
 
-
 			// proof that we are using the common initial sequence ***properly*** by introducing
 			// dsga::storage_wrapper<> for the anonymous union instead of just adding a std::array<>:
-
-			struct A
-			{
-				std::array<double, 4> i;
-			};
-
-			struct B
-			{
-				std::array<double, 4> j;
-			};
-
-			struct faux_vector
-			{
-				B k;
-			};
-
-			struct faux_wrapper
-			{
-				A l;
-			};
 
 			CHECK_UNARY(std::is_corresponding_member(&A::i, &B::j));						// using two structs of the same type form
 			CHECK_UNARY_FALSE(std::is_corresponding_member(&A::i, &faux_vector::k));		// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
