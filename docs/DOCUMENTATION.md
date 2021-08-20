@@ -408,12 +408,12 @@ The vector functions all work component-wise, except for the geometric functions
 * ```ldexp()```
 
 #### Geometric Functions
-The geometric functions treat a vector as an entity instead of as a collection of components.
+The geometric functions treat a vector as an entity instead of as a collection of components. The vector component type must be floating-point.
 
 * ```length()```
 * ```distance()```
 * ```dot()```
-* ```cross()```
+* ```cross()``` - only works for vectors of size 3
 * ```normalize()```
 * ```faceforward()```
 * ```reflect()```
@@ -515,9 +515,9 @@ The matrix operators all work component-wise, except for ```operator *```, which
 * ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
 
 ### Matrix Free Functions
-The matrix functions treat a matrix as an entity instead of as a collection of components, except for matrixCompMult(), which works component-wise.
+The matrix functions treat a matrix as an entity instead of as a collection of components, except for ```matrixCompMult()```, which works component-wise.
 
-* ```matrixCompMult()``` - since we use ```operator *``` for linear algebraic purposes instead of component-wise multiplication
+* ```matrixCompMult()``` - this function exists because ```operator *``` is used for linear algebraic purposes instead of component-wise multiplication
 * ```outerProduct()```
 * ```transpose()```
 * ```determinant()```
