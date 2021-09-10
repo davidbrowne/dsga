@@ -3914,139 +3914,154 @@ namespace dsga
 		return std::move(arg[N]);
 	}
 
-	// how many components can the item supply
-
-	template <typename T>
-	struct component_size;
-
-	template <dimensional_scalar T, std::size_t C>
-	struct component_size<basic_vector<T, C>>
+	namespace detail
 	{
-		static constexpr std::size_t value = C;
-	};
 
-	template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-	struct component_size<indexed_vector<T, S, C, Is...>>
-	{
-		static constexpr std::size_t value = C;
-	};
+		// how many components can the item supply
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	struct component_size<vector_base<W, T, C, D>>
-	{
-		static constexpr std::size_t value = C;
-	};
+		template <typename T>
+		struct component_size;
 
-	template <dimensional_scalar T>
-	struct component_size<T>
-	{
-		static constexpr std::size_t value = 1u;
-	};
-
-	// the make sure Size and Args... are valid together w.r.t. component count.
-	// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
-	template <std::size_t Size, typename ...Args>
-	struct component_match;
-
-	// can't have 0 Args unless Size is 0
-	template <std::size_t Size, typename ...Args>
-	requires (sizeof...(Args) == 0u)
-	struct component_match<Size, Args...>
-	{
-		static constexpr bool valid = (Size == 0u);
-	};
-
-	// check Size components needed with the info from variadic template Args and their component counts.
-	// make sure the component count from the Args is sufficient for Size, and that we use all the Args.
-	// if the last Arg isn't necessary to get to Size components, then the Args are invalid.
-	//
-	// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
-	//
-	// "...there must be enough components provided in the arguments to provide an initializer for
-	// every component in the constructed value. It is a compile-time error to provide extra
-	// arguments beyond this last used argument." section 5.4.2 of the spec for constructors (use case for this).
-	template <std::size_t Size, typename ...Args>
-	requires (sizeof...(Args) > 0u) && (Size > 0u)
-	struct component_match<Size, Args...>
-	{
-		// total number components in Args...
-		static constexpr std::size_t value = (component_size<Args>::value + ... + 0);
-		using tuple_pack = std::tuple<Args...>;
-
-		// get the last Arg type in the pack
-		using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> - 1u, tuple_pack>;
-
-		// see what the component count is if we didn't use the last Arg type in pack
-		static constexpr std::size_t previous_size = value - component_size<last_type>::value;
-
-		// check the conditions that we need exactly all those Args and that they give us enough components.
-		static constexpr bool valid = (previous_size < Size) && (value >= Size);
-	};
-
-	template <std::size_t Size, typename ...Args>
-	inline constexpr bool component_match_v = component_match<Size, Args...>::valid;
-
-	// do Args... supply the correct number of components for Size without having leftover Args
-	template <std::size_t Size, typename ...Args>
-	concept met_component_count = component_match_v<Size, Args...>;
-
-	template <typename T>
-	struct valid_component_source : std::false_type {};
-
-	template <dimensional_scalar T>
-	struct valid_component_source<T> : std::true_type { };
-
-	template <dimensional_scalar T, std::size_t C>
-	struct valid_component_source<basic_vector<T, C>> : std::true_type { };
-
-	template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-	struct valid_component_source<indexed_vector<T, S, C, Is...>> : std::true_type { };
-
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	struct valid_component_source<vector_base<W, T, C, D>> : std::true_type { };
-
-	// create a tuple from a scalar
-
-	auto to_tuple(dimensional_scalar auto arg) noexcept
-	{
-		return std::make_tuple(arg);
-	}
-
-	// create a tuple from a vector
-
-	template <dimensional_scalar T, std::size_t C>
-	constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
-	{
-		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		template <dimensional_scalar T, std::size_t C>
+		struct component_size<basic_vector<T, C>>
 		{
-			return std::make_tuple(arg[Is]...);
-		}(std::make_index_sequence<C>{});
-	}
+			static constexpr std::size_t value = C;
+		};
 
-	template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-	constexpr auto to_tuple(const indexed_vector<T, S, C, Is...> &arg) noexcept
-	{
-		return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		struct component_size<indexed_vector<T, S, C, Is...>>
 		{
-			return std::make_tuple(arg[Js]...);
-		}(std::make_index_sequence<C>{});
-	}
+			static constexpr std::size_t value = C;
+		};
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	constexpr auto to_tuple(const vector_base<W, T, C, D> &arg) noexcept
-	{
-		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		struct component_size<vector_base<W, T, C, D>>
 		{
-			return std::make_tuple(arg[Is]...);
-		}(std::make_index_sequence<C>{});
-	}
+			static constexpr std::size_t value = C;
+		};
 
-	// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
-	// and dimensional_scalars.
-	template <typename ...Args>
-	auto flatten_args_to_tuple(const Args & ...args) noexcept
-	{
-		return std::tuple_cat(to_tuple(args)...);
+		template <dimensional_scalar T>
+		struct component_size<T>
+		{
+			static constexpr std::size_t value = 1u;
+		};
+
+		// the make sure Size and Args... are valid together w.r.t. component count.
+		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
+		template <std::size_t Size, typename ...Args>
+		struct component_match;
+
+		// can't have 0 Args unless Size is 0
+		template <std::size_t Size, typename ...Args>
+		requires (sizeof...(Args) == 0u)
+		struct component_match<Size, Args...>
+		{
+			static constexpr bool valid = (Size == 0u);
+		};
+
+		// check Size components needed with the info from variadic template Args and their component counts.
+		// make sure the component count from the Args is sufficient for Size, and that we use all the Args.
+		// if the last Arg isn't necessary to get to Size components, then the Args are invalid.
+		//
+		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
+		//
+		// "...there must be enough components provided in the arguments to provide an initializer for
+		// every component in the constructed value. It is a compile-time error to provide extra
+		// arguments beyond this last used argument." section 5.4.2 of the spec for constructors (use case for this).
+		template <std::size_t Size, typename ...Args>
+		requires (sizeof...(Args) > 0u) && (Size > 0u)
+		struct component_match<Size, Args...>
+		{
+			// total number components in Args...
+			static constexpr std::size_t value = (component_size<Args>::value + ... + 0);
+			using tuple_pack = std::tuple<Args...>;
+
+			// get the last Arg type in the pack
+			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> -1u, tuple_pack>;
+
+			// see what the component count is if we didn't use the last Arg type in pack
+			static constexpr std::size_t previous_size = value - component_size<last_type>::value;
+
+			// check the conditions that we need exactly all those Args and that they give us enough components.
+			static constexpr bool valid = (previous_size < Size) && (value >= Size);
+		};
+
+		template <std::size_t Size, typename ...Args>
+		inline constexpr bool component_match_v = component_match<Size, Args...>::valid;
+
+		// do Args... supply the correct number of components for Size without having leftover Args
+		template <std::size_t Size, typename ...Args>
+		concept met_component_count = component_match_v<Size, Args...>;
+
+		template <typename T>
+		struct valid_component_source : std::false_type
+		{
+		};
+
+		template <dimensional_scalar T>
+		struct valid_component_source<T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar T, std::size_t C>
+		struct valid_component_source<basic_vector<T, C>> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		struct valid_component_source<indexed_vector<T, S, C, Is...>> : std::true_type
+		{
+		};
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		struct valid_component_source<vector_base<W, T, C, D>> : std::true_type
+		{
+		};
+
+		// create a tuple from a scalar
+
+		auto to_tuple(dimensional_scalar auto arg) noexcept
+		{
+			return std::make_tuple(arg);
+		}
+
+		// create a tuple from a vector
+
+		template <dimensional_scalar T, std::size_t C>
+		constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return std::make_tuple(arg[Is]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		constexpr auto to_tuple(const indexed_vector<T, S, C, Is...> &arg) noexcept
+		{
+			return[&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+			{
+				return std::make_tuple(arg[Js]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto to_tuple(const vector_base<W, T, C, D> &arg) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return std::make_tuple(arg[Is]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
+		// and dimensional_scalars.
+		template <typename ...Args>
+		auto flatten_args_to_tuple(const Args & ...args) noexcept
+		{
+			return std::tuple_cat(to_tuple(args)...);
+		}
+
 	}
 
 	//
@@ -4902,10 +4917,10 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (valid_component_source<Args>::value && ...) && met_component_count<Size, Args...>
+		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
 		constexpr basic_matrix(const Args & ...args) noexcept
 		{
-			auto arg_tuple = flatten_args_to_tuple(args...);
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((value[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
@@ -5486,6 +5501,93 @@ namespace dsga
 		}(std::make_index_sequence<C2>{});
 	}
 
+	//
+	// specialized using types
+	//
+
+	// boolean vectors
+	using bscal = basic_vector<bool, 1u>;
+	using bvec2 = basic_vector<bool, 2u>;
+	using bvec3 = basic_vector<bool, 3u>;
+	using bvec4 = basic_vector<bool, 4u>;
+
+	// int vectors
+	using iscal = basic_vector<int, 1u>;
+	using ivec2 = basic_vector<int, 2u>;
+	using ivec3 = basic_vector<int, 3u>;
+	using ivec4 = basic_vector<int, 4u>;
+
+	// unsigned int vectors
+	using uscal = basic_vector<unsigned, 1u>;
+	using uvec2 = basic_vector<unsigned, 2u>;
+	using uvec3 = basic_vector<unsigned, 3u>;
+	using uvec4 = basic_vector<unsigned, 4u>;
+
+	// long long vectors (not in glsl)
+	using llscal = basic_vector<long long, 1u>;
+	using llvec2 = basic_vector<long long, 2u>;
+	using llvec3 = basic_vector<long long, 3u>;
+	using llvec4 = basic_vector<long long, 4u>;
+
+	// unsigned long long vectors (not in glsl)
+	using ullscal = basic_vector<unsigned long long, 1u>;
+	using ullvec2 = basic_vector<unsigned long long, 2u>;
+	using ullvec3 = basic_vector<unsigned long long, 3u>;
+	using ullvec4 = basic_vector<unsigned long long, 4u>;
+
+	// float vectors with out an 'f' prefix -- this is from glsl
+	using scal = basic_vector<float, 1u>;
+	using vec2 = basic_vector<float, 2u>;
+	using vec3 = basic_vector<float, 3u>;
+	using vec4 = basic_vector<float, 4u>;
+
+	// also float vectors, but using the same naming convention as the other vectors do (not in glsl)
+	using fscal = basic_vector<float, 1u>;
+	using fvec2 = basic_vector<float, 2u>;
+	using fvec3 = basic_vector<float, 3u>;
+	using fvec4 = basic_vector<float, 4u>;
+
+	// double vectors
+	using dscal = basic_vector<double, 1u>;
+	using dvec2 = basic_vector<double, 2u>;
+	using dvec3 = basic_vector<double, 3u>;
+	using dvec4 = basic_vector<double, 4u>;
+
+	// float matrices
+	using mat2x2 = basic_matrix<float, 2u, 2u>;
+	using mat2x3 = basic_matrix<float, 2u, 3u>;
+	using mat2x4 = basic_matrix<float, 2u, 4u>;
+	using mat3x2 = basic_matrix<float, 3u, 2u>;
+	using mat3x3 = basic_matrix<float, 3u, 3u>;
+	using mat3x4 = basic_matrix<float, 3u, 4u>;
+	using mat4x2 = basic_matrix<float, 4u, 2u>;
+	using mat4x3 = basic_matrix<float, 4u, 3u>;
+	using mat4x4 = basic_matrix<float, 4u, 4u>;
+
+	using mat2 = basic_matrix<float, 2u, 2u>;
+	using mat3 = basic_matrix<float, 3u, 3u>;
+	using mat4 = basic_matrix<float, 4u, 4u>;
+
+	// double matrices
+	using dmat2x2 = basic_matrix<double, 2u, 2u>;
+	using dmat2x3 = basic_matrix<double, 2u, 3u>;
+	using dmat2x4 = basic_matrix<double, 2u, 4u>;
+	using dmat3x2 = basic_matrix<double, 3u, 2u>;
+	using dmat3x3 = basic_matrix<double, 3u, 3u>;
+	using dmat3x4 = basic_matrix<double, 3u, 4u>;
+	using dmat4x2 = basic_matrix<double, 4u, 2u>;
+	using dmat4x3 = basic_matrix<double, 4u, 3u>;
+	using dmat4x4 = basic_matrix<double, 4u, 4u>;
+
+	using dmat2 = basic_matrix<double, 2u, 2u>;
+	using dmat3 = basic_matrix<double, 3u, 3u>;
+	using dmat4 = basic_matrix<double, 4u, 4u>;
+
+	//
+	// bring the vector and matrix free functions into the dsga namespace
+	//
+	using namespace functions;
+
 }	// namespace dsga
 
 //
@@ -5620,93 +5722,6 @@ constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S>
 	for (std::size_t i = 0; i < count; ++i)
 		lhs[i] = static_cast<U>(rhs[i]);
 }
-
-//
-// specialized using types
-//
-
-// boolean vectors
-using bscal = dsga::basic_vector<bool, 1u>;
-using bvec2 = dsga::basic_vector<bool, 2u>;
-using bvec3 = dsga::basic_vector<bool, 3u>;
-using bvec4 = dsga::basic_vector<bool, 4u>;
-
-// int vectors
-using iscal = dsga::basic_vector<int, 1u>;
-using ivec2 = dsga::basic_vector<int, 2u>;
-using ivec3 = dsga::basic_vector<int, 3u>;
-using ivec4 = dsga::basic_vector<int, 4u>;
-
-// unsigned int vectors
-using uscal = dsga::basic_vector<unsigned, 1u>;
-using uvec2 = dsga::basic_vector<unsigned, 2u>;
-using uvec3 = dsga::basic_vector<unsigned, 3u>;
-using uvec4 = dsga::basic_vector<unsigned, 4u>;
-
-// long long vectors (not in glsl)
-using llscal = dsga::basic_vector<long long, 1u>;
-using llvec2 = dsga::basic_vector<long long, 2u>;
-using llvec3 = dsga::basic_vector<long long, 3u>;
-using llvec4 = dsga::basic_vector<long long, 4u>;
-
-// unsigned long long vectors (not in glsl)
-using ullscal = dsga::basic_vector<unsigned long long, 1u>;
-using ullvec2 = dsga::basic_vector<unsigned long long, 2u>;
-using ullvec3 = dsga::basic_vector<unsigned long long, 3u>;
-using ullvec4 = dsga::basic_vector<unsigned long long, 4u>;
-
-// float vectors with out an 'f' prefix -- this is from glsl
-using scal = dsga::basic_vector<float, 1u>;
-using vec2 = dsga::basic_vector<float, 2u>;
-using vec3 = dsga::basic_vector<float, 3u>;
-using vec4 = dsga::basic_vector<float, 4u>;
-
-// also float vectors, but using the same naming convention as the other vectors do (not in glsl)
-using fscal = dsga::basic_vector<float, 1u>;
-using fvec2 = dsga::basic_vector<float, 2u>;
-using fvec3 = dsga::basic_vector<float, 3u>;
-using fvec4 = dsga::basic_vector<float, 4u>;
-
-// double vectors
-using dscal = dsga::basic_vector<double, 1u>;
-using dvec2 = dsga::basic_vector<double, 2u>;
-using dvec3 = dsga::basic_vector<double, 3u>;
-using dvec4 = dsga::basic_vector<double, 4u>;
-
-// float matrices
-using mat2x2 = dsga::basic_matrix<float, 2u, 2u>;
-using mat2x3 = dsga::basic_matrix<float, 2u, 3u>;
-using mat2x4 = dsga::basic_matrix<float, 2u, 4u>;
-using mat3x2 = dsga::basic_matrix<float, 3u, 2u>;
-using mat3x3 = dsga::basic_matrix<float, 3u, 3u>;
-using mat3x4 = dsga::basic_matrix<float, 3u, 4u>;
-using mat4x2 = dsga::basic_matrix<float, 4u, 2u>;
-using mat4x3 = dsga::basic_matrix<float, 4u, 3u>;
-using mat4x4 = dsga::basic_matrix<float, 4u, 4u>;
-
-using mat2 = dsga::basic_matrix<float, 2u, 2u>;
-using mat3 = dsga::basic_matrix<float, 3u, 3u>;
-using mat4 = dsga::basic_matrix<float, 4u, 4u>;
-
-// double matrices
-using dmat2x2 = dsga::basic_matrix<double, 2u, 2u>;
-using dmat2x3 = dsga::basic_matrix<double, 2u, 3u>;
-using dmat2x4 = dsga::basic_matrix<double, 2u, 4u>;
-using dmat3x2 = dsga::basic_matrix<double, 3u, 2u>;
-using dmat3x3 = dsga::basic_matrix<double, 3u, 3u>;
-using dmat3x4 = dsga::basic_matrix<double, 3u, 4u>;
-using dmat4x2 = dsga::basic_matrix<double, 4u, 2u>;
-using dmat4x3 = dsga::basic_matrix<double, 4u, 3u>;
-using dmat4x4 = dsga::basic_matrix<double, 4u, 4u>;
-
-using dmat2 = dsga::basic_matrix<double, 2u, 2u>;
-using dmat3 = dsga::basic_matrix<double, 3u, 3u>;
-using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
-
-//
-// bring the vector and matrix free functions into the global namespace
-//
-using namespace dsga::functions;
 
 // closing include guard
 #endif

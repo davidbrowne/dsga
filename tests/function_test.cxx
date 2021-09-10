@@ -5,7 +5,7 @@
 //          https://www.boost.org/LICENSE_1_0.txt)
 
 #include "dsga.hxx"
-
+using namespace dsga;
 
 #if defined(__clang__)
 // clang 10.0 does not like colors on windows (link problems with isatty and fileno)

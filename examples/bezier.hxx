@@ -5,6 +5,7 @@
 //          https://www.boost.org/LICENSE_1_0.txt)
 
 #include "dsga.hxx"
+using namespace dsga;
 
 //
 // quadratic bezier evaluator

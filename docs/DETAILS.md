@@ -138,6 +138,8 @@ At the top of the [README](../README.md), there is a quick example of evaluating
 Now the control points can use any of the floating-point types, and they can have any number of elements that are allowed for the vector types. The return value will be a vector with the same floating-point type and same number of elements.
 
 ```c++
+using namespace dsga;
+
 //
 // quadratic bezier evaluator
 //

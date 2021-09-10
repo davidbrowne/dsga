@@ -17,22 +17,22 @@
 // follows right-hand rule for the sign of the volume.
 //
 // preconditions: watertight mesh, non-degenerate triangles
-double signed_volume_watertight_mesh(const std::vector<dvec3> &vertices,
-									 const std::vector<uvec3> &triangles)
+double signed_volume_watertight_mesh(const std::vector<dsga::dvec3> &vertices,
+									 const std::vector<dsga::uvec3> &triangles)
 {
 	double volume_times_six{ 0 };
 
 	// each triangle contributes a tetrahedronal volume using the origin as the 4th "vertex"
 	for (const auto &tri : triangles)
-		volume_times_six += determinant(mat3(vertices[tri[0]], vertices[tri[1]], vertices[tri[2]]));
+		volume_times_six += dsga::determinant(dsga::mat3(vertices[tri[0]], vertices[tri[1]], vertices[tri[2]]));
 
 	return volume_times_six / 6.0;
 }
 
 // triangular mesh of a cube with sides length 2.
 // not worried about topology, e.g., adjacent triangles, for this example.
-void cube_mesh(std::vector<dvec3> &vertices,
-			   std::vector<uvec3> &triangles)
+void cube_mesh(std::vector<dsga::dvec3> &vertices,
+			   std::vector<dsga::uvec3> &triangles)
 {
 	vertices.clear();
 	vertices.reserve(8);
@@ -66,14 +66,14 @@ void cube_mesh(std::vector<dvec3> &vertices,
 
 void mat_box()
 {
-	dscal one(1);
-	dvec2 two(2);
-	dvec3 three(3);
-	dvec4 four(4);
+	dsga::dscal one(1);
+	dsga::dvec2 two(2);
+	dsga::dvec3 three(3);
+	dsga::dvec4 four(4);
 
 	double rando = 5;
 
-	auto val = dmat4(four, rando, three, rando, rando, one, two, rando, three);
+	auto val = dsga::dmat4(four, rando, three, rando, rando, one, two, rando, three);
 
 	for (std::size_t i = 0; i < 4; ++i)
 	{
@@ -83,41 +83,41 @@ void mat_box()
 }
 
 #include "../examples/bezier.hxx"
-fvec4 sometest()
+dsga::fvec4 sometest()
 {
-	[[ maybe_unused ]]auto qbezval = quadratic_bezier_eval(vec2(2, 4), vec2(4, 5), vec2(8, 3), 0.25f);
+	[[ maybe_unused ]]auto qbezval = quadratic_bezier_eval(dsga::vec2(2, 4), dsga::vec2(4, 5), dsga::vec2(8, 3), 0.25f);
 
-	std::vector<dvec3> vertices;
-	std::vector<uvec3> triangles;
+	std::vector<dsga::dvec3> vertices;
+	std::vector<dsga::uvec3> triangles;
 	cube_mesh(vertices, triangles);
 	[[ maybe_unused]] double signed_volume = signed_volume_watertight_mesh(vertices, triangles);
 
-	iscal first = 9;
-	iscal first2 = 100;
-	ivec2 second{ 20, 30 };
+	dsga::iscal first = 9;
+	dsga::iscal first2 = 100;
+	dsga::ivec2 second{ 20, 30 };
 
 	[[ maybe_unused]] auto third = first + second;
 	[[ maybe_unused]] auto third2 = second + first;
 	[[ maybe_unused]] auto third3 = first + first2;
 
 
-	[[ maybe_unused]] bool b1 = within_box(ivec2(3, 5), ivec2(4, 4), iscal(2));
+	[[ maybe_unused]] bool b1 = dsga::within_box(dsga::ivec2(3, 5), dsga::ivec2(4, 4), dsga::iscal(2));
 
 
-	auto m = dmat2x3(3, 5., 7., 9, 11., 13.);
-	auto n = dmat4x2(2., 4., 6, 8., 10., 12., 14., 16.);
+	auto m = dsga::dmat2x3(3, 5., 7., 9, 11., 13.);
+	auto n = dsga::dmat4x2(2., 4., 6, 8., 10., 12., 14., 16.);
 	[[ maybe_unused]] auto r = m * n;
 
-	[[ maybe_unused]] auto op = outerProduct(dvec3(3, 5, 7), dvec3(2, 4, 6));
+	[[ maybe_unused]] auto op = dsga::outerProduct(dsga::dvec3(3, 5, 7), dsga::dvec3(2, 4, 6));
 
-	auto some3x3 = mat3(vec3(1, 2, 3), vec3(-3, 4, -2), vec3(2, -2, 1));
-	auto iverse = inverse(some3x3);
+	auto some3x3 = dsga::mat3(dsga::vec3(1, 2, 3), dsga::vec3(-3, 4, -2), dsga::vec3(2, -2, 1));
+	auto iverse = dsga::inverse(some3x3);
 	[[ maybe_unused]] auto ident1 = some3x3 * iverse;
 	[[ maybe_unused]] auto ident2 = iverse * some3x3;
 
 //	auto some4x4 = dsga::basic_matrix<double, 4u, 4u>(dvec4(1, 2, 1, -2), dvec4(-2, 1, -2, 1), dvec4(0, 2, -2, 1), dvec4(-1, -1, 2, 2));
-	auto some4x4 = dmat4(dvec4(1, 0, 2, 2), dvec4(0, 2, 1, 0), dvec4(0, 1, 0, 1), dvec4(1, 2, 1, 4));
-	auto iverse4 = inverse(some4x4);
+	auto some4x4 = dsga::dmat4(dsga::dvec4(1, 0, 2, 2), dsga::dvec4(0, 2, 1, 0), dsga::dvec4(0, 1, 0, 1), dsga::dvec4(1, 2, 1, 4));
+	auto iverse4 = dsga::inverse(some4x4);
 	[[ maybe_unused]] auto ident4_1 = some4x4 * iverse4;
 	[[ maybe_unused]] auto ident4_2 = iverse4 * some4x4;
 
@@ -125,18 +125,18 @@ fvec4 sometest()
 	sw.set(1, 2, 3, 4);
 
 	// vector declarations
-	ivec4 somethingoranother{ 0, 1, 2, 3 };
+	dsga::ivec4 somethingoranother{ 0, 1, 2, 3 };
 
 	[[ maybe_unused ]] bool val = false;
-	if (ivec3{1, 3, 0} == somethingoranother.ywx)
+	if (dsga::ivec3{1, 3, 0} == somethingoranother.ywx)
 		val = true;
 
-	fvec3 foo(4, 3, 2);
-	fvec4 bar(0);
-	fvec2 pair(5, 6);
+	dsga::fvec3 foo(4, 3, 2);
+	dsga::fvec4 bar(0);
+	dsga::fvec2 pair(5, 6);
 
-	[[ maybe_unused ]] fvec2 asdf(fscal(33), 55);
-	fvec4 quux(3, pair, foo.z);
+	[[ maybe_unused ]] dsga::fvec2 asdf(dsga::fscal(33), 55);
+	dsga::fvec4 quux(3, pair, foo.z);
 
 	if (foo.zy == somethingoranother.zw)
 		val = true;
@@ -144,7 +144,7 @@ fvec4 sometest()
 	if (somethingoranother.ww != pair)
 		val = true;
 
-	auto pairgen = []() -> fvec2 { return fvec2{5, 6}; };
+	auto pairgen = []() -> dsga::fvec2 { return dsga::fvec2{5, 6}; };
 	if (pair == pairgen())
 		val = true;
 
@@ -159,11 +159,11 @@ fvec4 sometest()
 	bar.zw = foo.xz;
 	pair.y = 8;
 
-	[[ maybe_unused ]] auto added = pair + fvec2(foo.xz);
-	[[ maybe_unused ]] auto added2 = fvec2(foo.xz) + pair;
-	[[ maybe_unused ]] auto added3 = fvec2(foo.xz) + fvec2(bar.zw);
-	[[ maybe_unused ]] auto added4 = 4.f + fvec2(foo.xz);
-	[[ maybe_unused ]] auto added5 = fvec2(foo.xz) + 4.f;
+	[[ maybe_unused ]] auto added = pair + dsga::fvec2(foo.xz);
+	[[ maybe_unused ]] auto added2 = dsga::fvec2(foo.xz) + pair;
+	[[ maybe_unused ]] auto added3 = dsga::fvec2(foo.xz) + dsga::fvec2(bar.zw);
+	[[ maybe_unused ]] auto added4 = 4.f + dsga::fvec2(foo.xz);
+	[[ maybe_unused ]] auto added5 = dsga::fvec2(foo.xz) + 4.f;
 
 
 // the following is illegal because you can't do a structure binding to an anonymous union,
@@ -172,40 +172,40 @@ fvec4 sometest()
 	[[ maybe_unused ]] const auto &[e, f, g, h] = somethingoranother.zzwy;
 
 //	our_type_helper<decltype(somethingoranother.zzwy)> stupid_thing;
-	bvec2 bool_vec(true, false);
+	dsga::bvec2 bool_vec(true, false);
 
-	bool_vec = bvec2(false, true);
+	bool_vec = dsga::bvec2(false, true);
 	bool_vec.yx = bool_vec.xy;
 	[[ maybe_unused ]] auto is_eq1 = (bool_vec.yx == bool_vec.xy);
 	[[ maybe_unused ]] auto is_eq2 = (bool_vec == bool_vec.xy);
 	[[ maybe_unused ]] auto is_eq3 = (bool_vec.xy == bool_vec);
-	[[ maybe_unused ]] auto is_eq4 = (bool_vec == bvec2(true, true));
-	fscal some_fscal = foo;
-	fvec2 blahblah(77, quux);
-	[[ maybe_unused ]] fvec2 newtrick = (fvec4)quux.yzwx;
-	fvec3 sametrick = (fvec4)quux.yxwz;
-	fvec3 blah3(77, quux);
-	fvec3 blah3_take2(11, fscal(373), quux);
-	fvec3 blah3_take2222(pair, quux);
-	fvec4 blah4(77, quux);
-	fvec4 blah4_two_plus(pair, quux);
-	fvec4 blah4_take2(11, fscal(373), quux);
-	fvec4 blah4_taked_infinity(-98758, 511, fscal(4430), quux);
-	fvec4 going_bigger(blah3, sametrick);
-	fvec4 yeehaw(pair, 909, quux);
-	fvec4 yeehaw_and_haw(38783, pair, sametrick);
+	[[ maybe_unused ]] auto is_eq4 = (bool_vec == dsga::bvec2(true, true));
+	dsga::fscal some_fscal = foo;
+	dsga::fvec2 blahblah(77, quux);
+	[[ maybe_unused ]] dsga::fvec2 newtrick = (dsga::fvec4)quux.yzwx;
+	dsga::fvec3 sametrick = (dsga::fvec4)quux.yxwz;
+	dsga::fvec3 blah3(77, quux);
+	dsga::fvec3 blah3_take2(11, dsga::fscal(373), quux);
+	dsga::fvec3 blah3_take2222(pair, quux);
+	dsga::fvec4 blah4(77, quux);
+	dsga::fvec4 blah4_two_plus(pair, quux);
+	dsga::fvec4 blah4_take2(11, dsga::fscal(373), quux);
+	dsga::fvec4 blah4_taked_infinity(-98758, 511, dsga::fscal(4430), quux);
+	dsga::fvec4 going_bigger(blah3, sametrick);
+	dsga::fvec4 yeehaw(pair, 909, quux);
+	dsga::fvec4 yeehaw_and_haw(38783, pair, sametrick);
 
 	[[ maybe_unused ]] float fllllloooat = some_fscal;
-	iscal intything = 7;
+	dsga::iscal intything = 7;
 	[[ maybe_unused ]] int j = intything;
 //	intything = fllllloooat;								// this shouldn't compile
 //	intything = some_fscal;									// this shouldn't compile
-	intything = static_cast<iscal>(some_fscal);
+	intything = static_cast<dsga::iscal>(some_fscal);
 	some_fscal = 8;
 
 	// bool vectors from non-bool components is ok since it is explicit.
 	// bool vectors are NOT implicitly convertible to.
-	[[ maybe_unused ]] bvec4 booooools{ 0, 3, 6.0f, 0.0f };
+	[[ maybe_unused ]] dsga::bvec4 booooools{ 0, 3, 6.0f, 0.0f };
 
 	constexpr double arr[] = { 64., 63., 62., 61. };
 	constexpr auto arr_vec = to_vec(arr);
@@ -223,7 +223,7 @@ fvec4 sometest()
 
 	[[ maybe_unused ]] auto &pair_second_copy = get<1>(pair);
 
-	ivec4 dest(0);
+	dsga::ivec4 dest(0);
 	unsigned dest_indx = 0;
 	for (auto &yyz : somethingoranother)
 	{
@@ -231,8 +231,8 @@ fvec4 sometest()
 		++dest_indx;
 	}
 
-	const ivec4 new_something{ 19, 28, 37, 46 };
-	ivec4 new_dest(0);
+	const dsga::ivec4 new_something{ 19, 28, 37, 46 };
+	dsga::ivec4 new_dest(0);
 	unsigned new_dest_indx = 0;
 	for (auto &yyz : new_something)
 	{
@@ -241,7 +241,7 @@ fvec4 sometest()
 	}
 
 	// compound operators for data_mappers
-	ivec4 frank(1, 2, 3, 4);
+	dsga::ivec4 frank(1, 2, 3, 4);
 	frank.wzyx += new_something;
 	frank = new_something.xyzz;
 	frank += new_something;
@@ -252,8 +252,8 @@ fvec4 sometest()
 
 	// swizzle range-for
 
-	ivec4 new_unconst{ 55, 64, 73, 82 };
-	ivec4 foo_dest(0);
+	dsga::ivec4 new_unconst{ 55, 64, 73, 82 };
+	dsga::ivec4 foo_dest(0);
 	unsigned foo_dest_indx = 0;
 	for (auto &sss : new_unconst.zwxy)
 	{
@@ -261,7 +261,7 @@ fvec4 sometest()
 		++foo_dest_indx;
 	}
 
-	ivec4 shuff_dest(0);
+	dsga::ivec4 shuff_dest(0);
 	unsigned shuff_dest_indx = 0;
 	for (auto &shufffff : new_something.zwxy)
 	{
@@ -269,15 +269,15 @@ fvec4 sometest()
 		++shuff_dest_indx;
 	}
 
-	auto ttt = radians(fvec3(123, 55, 40));
-	[[maybe_unused]] auto uuu = degrees(ttt);
-	[[maybe_unused]] auto vvv = sin(ttt);
+	auto ttt = dsga::radians(dsga::fvec3(123, 55, 40));
+	[[maybe_unused]] auto uuu = dsga::degrees(ttt);
+	[[maybe_unused]] auto vvv = dsga::sin(ttt);
 
 
-	[[ maybe_unused ]] ivec4 next_src{ 0, 0, 0, 0 };
+	[[ maybe_unused ]] dsga::ivec4 next_src{ 0, 0, 0, 0 };
 //	ivec4 next_dest;
 
-	fvec2 lastpair(7, 10);
+	dsga::fvec2 lastpair(7, 10);
 	lastpair.xy = pairgen();
 //	lastpair.xx = pairgen();
 	return bar;

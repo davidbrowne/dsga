@@ -5,6 +5,8 @@
 ## A Quick Peek At Some Examples
 
 ``` c++
+using namespace dsga;
+
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
 constexpr auto get_perpendicular(const vec2 &some_vec) noexcept
@@ -24,6 +26,8 @@ constexpr auto project_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &po
 ```
 
 ``` c++
+using namespace dsga;
+
 //
 // evaluate a 2D cubic bezier curve at t
 //
@@ -51,6 +55,8 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 ```
 
 ``` c++
+using namespace dsga;
+
 //
 // get the signed volume for connected triangular mesh
 //
@@ -124,11 +130,11 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.4.4`
+Current version: `v0.5.0`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
-* [Released v0.4.4](https://github.com/davidbrowne/dsga/releases/tag/v0.4.4)
+* [Released v0.5.0](https://github.com/davidbrowne/dsga/releases/tag/v0.5.0)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
