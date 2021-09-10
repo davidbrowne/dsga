@@ -29,8 +29,8 @@
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
-constexpr inline int DSGA_MINOR_VERSION = 4;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_MINOR_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
