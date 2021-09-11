@@ -122,7 +122,7 @@ double get_cube_volume()
 
 ## Installation
 
-This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). Most things are defined in the ```dsga``` namespace, but in the [documentation](docs/DOCUMENTATION.md), [using directives](docs/DOCUMENTATION.md#types-and-functions) can be seen that bring a lot of this library into the top level namespace.
+This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). Things are defined in the ```dsga``` namespace. The types provided by this library can be seen summarized in the [documentation](docs/DOCUMENTATION.md), [using directives](docs/DOCUMENTATION.md#types-and-functions).
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
@@ -153,7 +153,7 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. We o
 
 The tests have been run on:
 
-* **MSVC 2019 - v16.10**
+* **MSVC 2019 - v16.11**
 
 ```
 [doctest] doctest version is "2.4.6"

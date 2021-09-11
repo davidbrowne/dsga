@@ -138,8 +138,6 @@ At the top of the [README](../README.md), there is a quick example of evaluating
 Now the control points can use any of the floating-point types, and they can have any number of elements that are allowed for the vector types. The return value will be a vector with the same floating-point type and same number of elements.
 
 ```c++
-using namespace dsga;
-
 //
 // quadratic bezier evaluator
 //
@@ -151,8 +149,8 @@ constexpr auto quadratic_bezier_ordinate_eval(const dsga::vector_base<W, T, 3u, 
     // not sure of real type of control_points, so make a basic_vector so we can swizzle
     auto quadratic_control_points = dsga::basic_vector<T, 3u>(control_points);
 
-    auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-    return mix(linear_control_points.x, linear_control_points.y, t);
+    auto linear_control_points = dsga::mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+    return dsga::mix(linear_control_points.x, linear_control_points.y, t);
 }
 
 // given 3 control points and a t value (hopefully in the [0, 1] interval), evaluate the quadratic bezier function
@@ -199,9 +197,9 @@ constexpr auto cubic_bezier_ordinate_eval(const dsga::vector_base<W, T, 4u, D> &
     // not sure of real type of control_points, so make a basic_vector so we can swizzle
     auto cubic_control_points = dsga::basic_vector<T, 4u>(control_points);
 
-    auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
-    auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-    return mix(linear_control_points.x, linear_control_points.y, t);
+    auto quadratic_control_points = dsga::mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
+    auto linear_control_points = dsga::mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+    return dsga::mix(linear_control_points.x, linear_control_points.y, t);
 }
 
 // given 4 control points and a t value (hopefully in the [0, 1] interval), evaluate the cubic bezier function
