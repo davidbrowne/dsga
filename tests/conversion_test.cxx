@@ -7,6 +7,8 @@
 #include "dsga.hxx"
 using namespace dsga;
 
+#include <span>
+
 #if defined(__clang__)
 // clang 10.0 does not like colors on windows (link problems with isatty and fileno)
 #define DOCTEST_CONFIG_COLORS_NONE
@@ -14,6 +16,46 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+
+// fill vectors from spans
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
+constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+{
+	constexpr std::size_t count = std::min(S, E);
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<T>(rhs[i]);
+}
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
+constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+{
+	std::size_t count = std::min(S, rhs.size());
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<T>(rhs[i]);
+}
+
+// fill spans from vectors
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
+constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+{
+	constexpr std::size_t count = std::min(S, E);
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<U>(rhs[i]);
+}
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
+constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+{
+	std::size_t count = std::min(S, lhs.size());
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<U>(rhs[i]);
+}
 
 TEST_SUITE("test conversions")
 {

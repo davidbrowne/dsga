@@ -27,6 +27,9 @@
     <ClInclude Include="..\include\dsga.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\examples\span_convert.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

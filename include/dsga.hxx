@@ -12,7 +12,6 @@
 #include <array>					// underlying storage
 #include <tuple>					// tuple interface for structured bindings, matrix variadic constructor
 #include <algorithm>				// min()
-#include <span>						// external types to/from vectors
 #include <numbers>					// pi_v<>, inv_pi_v<>
 #include <version>					// feature test macros
 #include <limits>					// for cxcm
@@ -30,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 5;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -5681,46 +5680,6 @@ std::array<T, C> from_vec(const dsga::indexed_vector<T, S, C, Is...> &arg)
 	{
 		return { arg[Js]... };
 	}(std::make_index_sequence<C>{});
-}
-
-// fill vectors from spans
-
-template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
-constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
-{
-	constexpr std::size_t count = std::min(S, E);
-	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<T>(rhs[i]);
-}
-
-template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
-constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
-{
-	std::size_t count = std::min(S, rhs.size());
-	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<T>(rhs[i]);
-}
-
-// fill spans from vectors
-
-template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
-constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
-{
-	constexpr std::size_t count = std::min(S, E);
-	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<U>(rhs[i]);
-}
-
-template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
-constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
-{
-	std::size_t count = std::min(S, lhs.size());
-	for (std::size_t i = 0; i < count; ++i)
-		lhs[i] = static_cast<U>(rhs[i]);
 }
 
 // closing include guard
