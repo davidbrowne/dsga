@@ -8,6 +8,16 @@
 #include "dsga.hxx"
 #include <vector>
 
+
+//
+//
+// This file contains main(), and it is used for both running the unit tests and
+// for playing around with some example and ideas. This file doesn't have anything
+// to demonstrate beyond that.
+//
+//
+
+
 //
 // get the signed volume for connected triangular mesh
 //
