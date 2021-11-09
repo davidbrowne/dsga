@@ -154,6 +154,7 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. We o
 The tests have been run on:
 
 * **MSVC 2019 - v16.11**
+* **MSVC 2022 - v17.0**
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -166,7 +167,7 @@ The tests have been run on:
 
 The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>``` or where there is lack of support for ```std::bit_cast<>()```, and these are protected with feature test macros:
 
-* **clang 12.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
+* **clang 12.0.0, 13.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
 
 ```
 [doctest] doctest version is "2.4.6"
