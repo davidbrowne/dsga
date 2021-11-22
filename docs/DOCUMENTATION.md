@@ -396,14 +396,14 @@ The vector functions all work component-wise, except for the geometric functions
 * ```smoothstep()```
 * ```isnan()```
 * ```isinf()```
-* ```floatBitsToInt()```
-* ```floatBitsToUint()```
-* ```doubleBitsToLongLong()``` - not in GLSL
-* ```doubleBitsToUlongLong()``` - not in GLSL
-* ```intBitsToFloat()```
-* ```uintBitsToFloat()```
-* ```longLongBitsToDouble()``` - not in GLSL
-* ```ulongLongBitsToDouble()``` - not in GLSL
+* ```floatBitsToInt()``` - requires ```std::bit_cast<>```
+* ```floatBitsToUint()``` - requires ```std::bit_cast<>```
+* ```doubleBitsToLongLong()``` - not in GLSL - requires ```std::bit_cast<>```
+* ```doubleBitsToUlongLong()``` - not in GLSL - requires ```std::bit_cast<>```
+* ```intBitsToFloat()``` - requires ```std::bit_cast<>```
+* ```uintBitsToFloat()``` - requires ```std::bit_cast<>```
+* ```longLongBitsToDouble()``` - not in GLSL - requires ```std::bit_cast<>```
+* ```ulongLongBitsToDouble()``` - not in GLSL - requires ```std::bit_cast<>```
 * ```fma()```
 * ```frexp()```
 * ```ldexp()```
