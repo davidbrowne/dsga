@@ -3945,31 +3945,31 @@ namespace dsga
 			static constexpr std::size_t value = 1u;
 		};
 
-		// the make sure Size and Args... are valid together w.r.t. component count.
+		// the make sure Count and Args... are valid together w.r.t. component count.
 		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
-		template <std::size_t Size, typename ...Args>
+		template <std::size_t Count, typename ...Args>
 		struct component_match;
 
-		// can't have 0 Args unless Size is 0
-		template <std::size_t Size, typename ...Args>
+		// can't have 0 Args unless Count is 0
+		template <std::size_t Count, typename ...Args>
 		requires (sizeof...(Args) == 0u)
-		struct component_match<Size, Args...>
+		struct component_match<Count, Args...>
 		{
-			static constexpr bool valid = (Size == 0u);
+			static constexpr bool valid = (Count == 0u);
 		};
 
-		// check Size components needed with the info from variadic template Args and their component counts.
-		// make sure the component count from the Args is sufficient for Size, and that we use all the Args.
-		// if the last Arg isn't necessary to get to Size components, then the Args are invalid.
+		// check Count components needed with the info from variadic template Args and their component counts.
+		// make sure the component count from the Args is sufficient for Count, and that we use all the Args.
+		// if the last Arg isn't necessary to get to Count components, then the Args are invalid.
 		//
 		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
 		//
 		// "...there must be enough components provided in the arguments to provide an initializer for
 		// every component in the constructed value. It is a compile-time error to provide extra
 		// arguments beyond this last used argument." section 5.4.2 of the spec for constructors (use case for this).
-		template <std::size_t Size, typename ...Args>
-		requires (sizeof...(Args) > 0u) && (Size > 0u)
-		struct component_match<Size, Args...>
+		template <std::size_t Count, typename ...Args>
+		requires (sizeof...(Args) > 0u) && (Count > 0u)
+		struct component_match<Count, Args...>
 		{
 			// total number components in Args...
 			static constexpr std::size_t value = (component_size<Args>::value + ... + 0);
@@ -3982,15 +3982,15 @@ namespace dsga
 			static constexpr std::size_t previous_size = value - component_size<last_type>::value;
 
 			// check the conditions that we need exactly all those Args and that they give us enough components.
-			static constexpr bool valid = (previous_size < Size) && (value >= Size);
+			static constexpr bool valid = (previous_size < Count) && (value >= Count);
 		};
 
-		template <std::size_t Size, typename ...Args>
-		inline constexpr bool component_match_v = component_match<Size, Args...>::valid;
+		template <std::size_t Count, typename ...Args>
+		inline constexpr bool component_match_v = component_match<Count, Args...>::valid;
 
-		// do Args... supply the correct number of components for Size without having leftover Args
-		template <std::size_t Size, typename ...Args>
-		concept met_component_count = component_match_v<Size, Args...>;
+		// do Args... supply the correct number of components for Count without having leftover Args
+		template <std::size_t Count, typename ...Args>
+		concept met_component_count = component_match_v<Count, Args...>;
 
 		template <typename T>
 		struct valid_component_source : std::false_type
@@ -4845,7 +4845,7 @@ namespace dsga
 	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
 	struct basic_matrix
 	{
-		static constexpr std::size_t Size = C * R;
+		static constexpr std::size_t ComponentCount = C * R;
 
 		// number of columns
 		constexpr int length() const noexcept
@@ -4916,14 +4916,14 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<ComponentCount, Args...>
 		constexpr basic_matrix(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((value[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
-			}(std::make_index_sequence<Size>{});
+			}(std::make_index_sequence<ComponentCount>{});
 		}
 
 		// diagonal constructor for square matrices
