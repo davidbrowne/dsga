@@ -9,7 +9,7 @@ A ```basic_vector``` has data members that provide [swizzling](https://en.wikipe
 We want to use both types of vectors in the same way, for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc. Instead of duplicating this effort, ```basic_vector``` and ```indexed_vector``` derive from a [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class called **vector_base**, and this provides the generic foundation for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc:
 ![vec_base](./vec_base_uml.svg)
 
-```vector_base``` assumes that its derived structs and classes implement the **vector duck type** interface, which is not a real code interface, just more of a conceptual [duck typing](https://en.wikipedia.org/wiki/Duck_typing) idea. Both ```basic_vector``` and ```indexed_vector``` implement this conceptual interface.
+```vector_base``` assumes that its derived structs and classes implement the **vector duck type** interface, which is not a real code interface, just more of a conceptual [duck typing](https://en.wikipedia.org/wiki/Duck_typing) idea. Both ```basic_vector``` and ```indexed_vector``` implement this conceptual interface. ```storage_wrapper``` copies its interface from ```vector_base```, but there is no formal inheritance of this interface.
 
 ```vector_base``` carries the following information, via template parameters:
 * Whether it can be used as an lvalue, i.e., **is it writable**
