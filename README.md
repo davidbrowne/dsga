@@ -215,7 +215,7 @@ The libraries we use (some just occasionally):
 ```
 // cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
 //
-//          Copyright David Browne 2020-2021.
+//          Copyright David Browne 2020-2022.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
