@@ -154,10 +154,10 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. We o
 The tests have been run on:
 
 * **MSVC 2019 - v16.11**
-* **MSVC 2022 - v17.0**
+* **MSVC 2022 - v17.1**
 
 ```
-[doctest] doctest version is "2.4.6"
+[doctest] doctest version is "2.4.8"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
@@ -165,9 +165,9 @@ The tests have been run on:
 [doctest] Status: SUCCESS!
 ```
 
-The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>``` or where there is lack of support for ```std::bit_cast<>()```, and these are protected with feature test macros:
+The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
 
-* **clang 12.0.0, 13.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-12.0.0), with MSVC installed (uses MSVC standard library, so has ```std::bit_cast<>()```)
+* **clang 12.0.0, 13.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-13.0.0), with MSVC installed:
 
 ```
 [doctest] doctest version is "2.4.6"
@@ -178,14 +178,14 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 10.3** on Windows, [tdm-gcc](https://jmeubank.github.io/tdm-gcc/) distribution (no ```std::bit_cast<>()```):
+* **gcc 11.2** on Windows, [MinGW](https://nuwen.net/mingw.html) distribution:
 
 ```
-[doctest] doctest version is "2.4.6"
+[doctest] doctest version is "2.4.8"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1784 | 1784 passed | 0 failed |
+[doctest] assertions: 1792 | 1792 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
