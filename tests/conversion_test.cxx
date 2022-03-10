@@ -32,7 +32,7 @@ template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
 constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
-	std::size_t count = std::min(S, rhs.size());
+	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
 		lhs[i] = static_cast<T>(rhs[i]);
 }
@@ -52,7 +52,7 @@ template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
 constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
 {
-	std::size_t count = std::min(S, lhs.size());
+	const std::size_t count = std::min(S, lhs.size());
 	for (std::size_t i = 0; i < count; ++i)
 		lhs[i] = static_cast<U>(rhs[i]);
 }
@@ -97,8 +97,8 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(val1[2], 2);
 			CHECK_EQ(val1[3], 3);
 
-			for (int i = 0; i < 4; ++i)
-				val1[i] -= 10;
+			for (int &val : val1)
+				val -= 10;
 
 			ivec4 val2;
 			copy_to_vec(val2, std::span(val1));
@@ -124,7 +124,7 @@ TEST_SUITE("test conversions")
 				copy_to_vec(vec_arr[i], std::span(lotsa_data.data() + (i * 4), 4));
 			}
 
-			std::array<int, 16> give_me_data;
+			std::array<int, 16> give_me_data{};
 			std::array<int, 16> expected_result { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 			for (std::size_t i = 0; i < 4; ++i)
 			{
@@ -134,7 +134,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(give_me_data, expected_result);
 
 			// using operator[] and size()
-			std::array<double, 16> val1;
+			std::array<double, 16> val1{};
 			for (std::size_t i = 0; i < 4; ++i)
 				for (std::size_t j = 0; j < vec_arr[i].size(); ++j)
 					val1[4 * i + j] = vec_arr[i][j];
@@ -214,7 +214,7 @@ TEST_SUITE("test conversions")
 
 			CHECK_EQ(-10, get<0>(get_tester));
 			CHECK_EQ(105, get<0>(iscal(105)));
-			CHECK_EQ(-10, get<0>(std::move(get_tester)));
+			CHECK_EQ(-10, get<0>(get_tester));
 		}
 
 		SUBCASE("2D basic_vector primitive conversions")
@@ -274,7 +274,7 @@ TEST_SUITE("test conversions")
 
 			CHECK_EQ(-10, get<0>(get_tester));
 			CHECK_EQ(104, get<1>(ivec2(105, 104)));
-			CHECK_EQ(-20, get<1>(std::move(get_tester)));
+			CHECK_EQ(-20, get<1>(get_tester));
 		}
 
 		SUBCASE("3D basic_vector primitive conversions")
@@ -336,7 +336,7 @@ TEST_SUITE("test conversions")
 
 			CHECK_EQ(-10, get<0>(get_tester));
 			CHECK_EQ(104, get<1>(ivec3(105, 104, 103)));
-			CHECK_EQ(-30, get<2>(std::move(get_tester)));
+			CHECK_EQ(-30, get<2>(get_tester));
 		}
 
 		SUBCASE("4D basic_vector primitive conversions")
@@ -400,7 +400,7 @@ TEST_SUITE("test conversions")
 
 			CHECK_EQ(-20, get<1>(get_tester));
 			CHECK_EQ(103, get<2>(ivec4(105, 104, 103, 102)));
-			CHECK_EQ(-40, get<3>(std::move(get_tester)));
+			CHECK_EQ(-40, get<3>(get_tester));
 		}
 
 		SUBCASE("1D indexed_vector primitive conversions")
@@ -427,7 +427,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(53, get<0>(anothervec.x));
 			CHECK_EQ(-10, get<0>(get_tester.x));
 			CHECK_EQ(105, get<0>(iscal(105).x));
-			CHECK_EQ(-10, get<0>(std::move(get_tester.x)));
+			CHECK_EQ(-10, get<0>(get_tester.x));
 		}
 
 		SUBCASE("2D indexed_vector primitive conversions")
@@ -455,7 +455,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(54, get<0>(anothervec.yx));
 			CHECK_EQ(-10, get<1>(get_tester.yx));
 			CHECK_EQ(104, get<1>(ivec2(105, 104).xy));
-			CHECK_EQ(-20, get<0>(std::move(get_tester.yx)));
+			CHECK_EQ(-20, get<0>(get_tester.yx));
 		}
 
 		SUBCASE("3D indexed_vector primitive conversions")
@@ -484,7 +484,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(74, get<0>(anothervec.xyz));
 			CHECK_EQ(-10, get<1>(get_tester.yxz));
 			CHECK_EQ(104, get<2>(ivec3(105, 104, 103).xzy));
-			CHECK_EQ(-20, get<0>(std::move(get_tester.yzx)));
+			CHECK_EQ(-20, get<0>(get_tester.yzx));
 		}
 
 		SUBCASE("4D indexed_vector primitive conversions")
@@ -514,7 +514,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(75, get<0>(anothervec.xywz));
 			CHECK_EQ(-40, get<1>(get_tester.ywxz));
 			CHECK_EQ(104, get<2>(ivec4(105, 104, 103, 102).zzyw));
-			CHECK_EQ(-30, get<3>(std::move(get_tester.wxyz)));
+			CHECK_EQ(-30, get<3>(get_tester.wxyz));
 		}
 	}
 
@@ -526,7 +526,7 @@ TEST_SUITE("test conversions")
 
 			int val1 = cx_three.y;					// #1 to scalar type
 			iscal val2 = cx_three.x;				// #2 implicit conversion operator
-			fscal val3 = fscal(cx_three.z);			// #3 explicit cast needed to invoke conversion operator
+			auto val3 = fscal(cx_three.z);			// #3 explicit cast needed to invoke conversion operator
 
 			CHECK_EQ(val1, 5);
 			CHECK_NE(val1, 4);
@@ -543,7 +543,7 @@ TEST_SUITE("test conversions")
 			// the two conversion operators
 
 			ivec2 val1 = cx_three.yz;				// #1 implicit conversion
-			fvec2 val2 = fvec2(cx_three.xy);		// #2 explicit cast needed to invoke conversion operator
+			auto val2 = fvec2(cx_three.xy);		// #2 explicit cast needed to invoke conversion operator
 
 			CHECK_EQ(val1, ivec2(5, 6));
 			CHECK_NE(val1, ivec2(4, 5));
@@ -557,7 +557,7 @@ TEST_SUITE("test conversions")
 			// the two conversion operators
 
 			ivec3 val1 = cx_three.yzy;				// #1 implicit conversion
-			fvec3 val2 = fvec3(cx_three.zzx);		// #2 explicit cast needed to invoke conversion operator
+			auto val2 = fvec3(cx_three.zzx);		// #2 explicit cast needed to invoke conversion operator
 
 			CHECK_EQ(val1, ivec3(5, 6, 5));
 			CHECK_NE(val1, ivec3(4, 5, 6));
@@ -571,7 +571,7 @@ TEST_SUITE("test conversions")
 			// the two conversion operators
 
 			ivec4 val1 = cx_three.yzyx;				// #1 implicit conversion
-			fvec4 val2 = fvec4(cx_three.zxyy);		// #2 explicit cast needed to invoke conversion operator
+			auto val2 = fvec4(cx_three.zxyy);		// #2 explicit cast needed to invoke conversion operator
 
 			CHECK_EQ(val1, ivec4(5, 6, 5, 4));
 			CHECK_NE(val1, ivec4(4, 5, 6, 6));
@@ -586,11 +586,11 @@ TEST_SUITE("test conversions")
 		// the only basic_vector with conversion operators is
 		// for 1D, as we want them to mimic the scalar type.
 
-		int val1 = cx_one;							// #1 implicit conversion
+		const int val1 = cx_one;							// #1 implicit conversion
 		[[maybe_unused]] float f2 = cx_one;							// #1 implicit conversion
 
-		fscal fone = 9.9f;
-		int val2 = static_cast<int>(fone);			// #2 explicit conversion
+		const fscal fone = 9.9f;
+		const int val2 = static_cast<int>(fone);			// #2 explicit conversion
 
 		CHECK_EQ(val1, 9);
 		CHECK_NE(val1, 0);
@@ -607,7 +607,7 @@ TEST_SUITE("test conversions")
 		SUBCASE("1D conversion constructor")
 		{
 			auto i1 = iscal(22);
-			auto f1 = [](iscal &iv) -> fscal { return iv; } (i1);
+			auto f1 = [](const iscal &iv) -> fscal { return iv; } (i1);
 
 			CHECK_EQ(f1, fscal(22.0f));
 			CHECK_NE(f1, fscal(0.0f));
@@ -616,7 +616,7 @@ TEST_SUITE("test conversions")
 		SUBCASE("2D conversion constructor")
 		{
 			auto i2 = ivec2(101, 202);
-			auto f2 = [](ivec2 &iv) -> fvec2 { return iv; } (i2);
+			auto f2 = [](const ivec2 &iv) -> fvec2 { return iv; } (i2);
 
 			CHECK_EQ(f2, fvec2(101.0f, 202.0f));
 			CHECK_NE(f2, fvec2(101.0f));
@@ -625,7 +625,7 @@ TEST_SUITE("test conversions")
 		SUBCASE("3D conversion constructor")
 		{
 			auto i3 = ivec3(47, 57, 67);
-			auto f3 = [](ivec3 &iv) -> fvec3 { return iv; } (i3);
+			auto f3 = [](const ivec3 &iv) -> fvec3 { return iv; } (i3);
 
 			CHECK_EQ(f3, fvec3(47.0f, 57.0f, 67.0f));
 			CHECK_NE(f3, fvec3(47.0f));
@@ -634,7 +634,7 @@ TEST_SUITE("test conversions")
 		SUBCASE("4D conversion constructor")
 		{
 			auto i4 = cx_four;
-			auto f4 = [](ivec4 &iv) -> fvec4 { return iv; } (i4);
+			auto f4 = [](const ivec4 &iv) -> fvec4 { return iv; } (i4);
 
 			CHECK_EQ(f4, fvec4(0.0f, 1.0f, 2.0f, 3.0f));
 			CHECK_NE(f4, fvec4(0.0f));

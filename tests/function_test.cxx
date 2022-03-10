@@ -38,7 +38,7 @@ TEST_SUITE("test operators")
 {
 	TEST_CASE("vector angle and trigonometry functions")
 	{
-		const float my_pi = std::numbers::pi_v<float>;
+		constexpr float my_pi = std::numbers::pi_v<float>;
 		fvec3 degs(30, 45, 60);
 		fvec3 rads(my_pi / 6, my_pi / 4, my_pi / 3);
 
@@ -409,7 +409,7 @@ TEST_SUITE("test operators")
 			CHECK_EQ(dist, 17.f);
 
 			// dot()
-			const float my_pi = std::numbers::pi_v<float>;
+			constexpr float my_pi = std::numbers::pi_v<float>;
 			auto dot_val = dot(vec2(1, 0), vec2(cos(my_pi / 4), sin(my_pi / 4)));
 			CHECK_EQ(dot_val, std::numbers::sqrt2_v<float> / 2);
 
@@ -510,30 +510,30 @@ TEST_SUITE("test operators")
 	TEST_CASE("matrix functions")
 	{
 		// matrixCompMult() - equivalent to a component-wise "matrix/matrix binary operator *" if there was one
-		mat2x3 A(1, 2, 3, 4, 5, 6);
-		mat2x3 B(5, 10, 15, 20, 25, 30);
-		auto mcm = matrixCompMult(A, B);
+		const mat2x3 A(1, 2, 3, 4, 5, 6);
+		const mat2x3 B(5, 10, 15, 20, 25, 30);
+		const auto mcm = matrixCompMult(A, B);
 		CHECK_EQ(mcm, mat2x3(5, 20, 45, 80, 125, 180));
 
 		// outerProduct()
-		auto op = outerProduct(dvec3(3, 5, 7), dvec3(2, 4, 6));
+		const auto op = outerProduct(dvec3(3, 5, 7), dvec3(2, 4, 6));
 		CHECK_EQ(op, dmat3(6, 10, 14, 12, 20, 28, 18, 30, 42));
 
 		// transpose()
-		dmat4 nums(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-		dmat4 transposed_nums = transpose(nums);
+		const dmat4 nums(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+		const dmat4 transposed_nums = transpose(nums);
 		CHECK_EQ(transposed_nums, dmat4(0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15));
 
 		// inverse()
-		auto some4x4 = dmat4(dvec4(1, 0, 2, 2), dvec4(0, 2, 1, 0), dvec4(0, 1, 0, 1), dvec4(1, 2, 1, 4));
-		auto inverse4 = inverse(some4x4);
+		const auto some4x4 = dmat4(dvec4(1, 0, 2, 2), dvec4(0, 2, 1, 0), dvec4(0, 1, 0, 1), dvec4(1, 2, 1, 4));
+		const auto inverse4 = inverse(some4x4);
 
 		CHECK_EQ(inverse4, dmat4(dvec4(-2, 1, -8, 3), dvec4(-0.5, 0.5, -1, 0.5), dvec4(1, 0, 2, -1), dvec4(0.5, -0.5, 2, -0.5)));
 		CHECK_EQ(some4x4 * inverse4, dmat4(1));
 		CHECK_EQ(inverse4 * some4x4, dmat4(1));
 
 		// determinant()
-		auto det = determinant(some4x4);
+		const auto det = determinant(some4x4);
 		CHECK_EQ(det, 2);
 	}
 }

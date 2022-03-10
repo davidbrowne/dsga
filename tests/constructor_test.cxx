@@ -72,7 +72,7 @@ TEST_SUITE("test constructors")
 		[[ maybe_unused ]] bvec2 b2d_1(17);			// #1
 		[[ maybe_unused ]] bvec2 b2d_2(false, 75.5);	// #2
 		bvec2 b2d_3(100, cx_four);	// #3
-		fvec2 b2d_4(b2d_3);			// #5
+		[[ maybe_unused ]] fvec2 b2d_4(b2d_3);			// #5
 		[[ maybe_unused ]] bvec2 b2d_5(cx_three);		// #5
 
 		CHECK_EQ(c2d_1, ivec2(17, 17));
@@ -106,8 +106,8 @@ TEST_SUITE("test constructors")
 		[[ maybe_unused ]] bvec3 b3d_1(23);				// #1
 		[[ maybe_unused ]] bvec3 b3d_2(200, 300, 400);		// #2
 		bvec3 b3d_3(15, 25, cx_two);	// #3
-		fvec3 b3d_4(b3d_3);				// #5
-		bvec3 b3d_5(c3d_4);				// #5
+		[[ maybe_unused ]] fvec3 b3d_4(b3d_3);				// #5
+		[[ maybe_unused ]] bvec3 b3d_5(c3d_4);				// #5
 		[[ maybe_unused ]] bvec3 b3d_6(cx_two, 99);		// #6
 		[[ maybe_unused ]] bvec3 b3d_7(cx_two, cx_three);	// #7
 		[[ maybe_unused ]] bvec3 b3d_8(42, cx_four);		// #8
@@ -158,8 +158,8 @@ TEST_SUITE("test constructors")
 		[[ maybe_unused ]] bvec4 b4d_01(-8);					// #1
 		[[ maybe_unused ]] bvec4 b4d_02(11, 22, 33, 44);		// #2
 		bvec4 b4d_03(15, 25, 30, cx_two);	// #3
-		fvec4 b4d_04(b4d_03);				// #5
-		bvec4 b4d_05(c4d_04);				// #5
+		[[ maybe_unused ]] fvec4 b4d_04(b4d_03);				// #5
+		[[ maybe_unused ]] bvec4 b4d_05(c4d_04);				// #5
 		[[ maybe_unused ]] bvec4 b4d_06(cx_three, 99);			// #6
 		[[ maybe_unused ]] bvec4 b4d_07(cx_three, cx_three);	// #7
 		[[ maybe_unused ]] bvec4 b4d_08(42, cx_four);			// #8

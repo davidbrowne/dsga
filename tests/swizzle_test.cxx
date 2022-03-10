@@ -1903,7 +1903,7 @@ TEST_SUITE("test swizzling applications")
 
 			// changing structured binding references changes object destructured
 			const int old_four_copy_z = four_copy.z;
-			const int new_four_copy_z = 12345;
+			constexpr int new_four_copy_z = 12345;
 
 			CHECK_NE(new_four_copy_z, old_four_copy_z);
 			CHECK_EQ(four_copy.z, old_four_copy_z);
@@ -1963,7 +1963,7 @@ TEST_SUITE("test swizzling applications")
 			// for indexed_vector
 
 			// add index squared to whatever is accessed from the swizzle
-			for (unsigned dest_indx = 0; auto &loop_var : mutable_data)
+			for (int dest_indx = 0; auto &loop_var : mutable_data)
 			{
 				loop_var += dest_indx * dest_indx;
 				++dest_indx;
@@ -2015,7 +2015,7 @@ TEST_SUITE("test swizzling applications")
 			// for indexed_vector
 
 			// add index to whatever is accessed from the swizzle
-			for (unsigned dest_indx = 0; auto &loop_var : mutable_data.wzyx)
+			for (int dest_indx = 0; auto &loop_var : mutable_data.wzyx)
 			{
 				loop_var += dest_indx;
 				++dest_indx;
@@ -2046,7 +2046,7 @@ TEST_SUITE("test swizzling applications")
 			[[ maybe_unused ]] fvec2 asdf(fscal(33), 55);
 
 			// testing 1, 2, 1 constructor for 4 element vector type
-			fvec4 quux(3, pair, foo.z);
+			[[ maybe_unused ]] fvec4 quux(3, pair, foo.z);
 
 			// checking if different swizzles from different types (different sizes, Scalars) can compare equal
 			CHECK_EQ(foo.zy, somethingoranother.zw);

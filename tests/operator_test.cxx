@@ -252,8 +252,8 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("vector unary operator ~")
 	{
-		iscal i1(0x00ff00cc);
-		ivec2 i2(0xab00ff00, 0x00de0048);
+		const iscal i1(0x00ff00cc);
+		const ivec2 i2(0xab00ff00, 0x00de0048);
 
 		CHECK_EQ(~i1, 0xff00ff33);
 		CHECK_EQ(~i2, ivec2(0x54ff00ff, 0xff21ffb7));
@@ -427,14 +427,14 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("matrix unary operator +")
 	{
-		mat2 A(1, 2, 3, 4);
+		const mat2 A(1, 2, 3, 4);
 
 		CHECK_EQ(+A, mat2(1, 2, 3, 4));
 	}
 
 	TEST_CASE("matrix unary operator -")
 	{
-		mat2 A(1, 2, 3, 4);
+		const mat2 A(1, 2, 3, 4);
 
 		CHECK_EQ(-A, mat2(-1, -2, -3, -4));
 	}
@@ -443,7 +443,7 @@ TEST_SUITE("test operators")
 	{
 		mat2 A(1, 2, 3, 4);
 
-		auto B = ++A;
+		const auto B = ++A;
 		CHECK_EQ(A, B);
 		CHECK_EQ(A, mat2(2, 3, 4, 5));
 	}
@@ -452,7 +452,7 @@ TEST_SUITE("test operators")
 	{
 		mat2 A(1, 2, 3, 4);
 
-		auto B = A++;
+		const auto B = A++;
 		CHECK_NE(A, B);
 		CHECK_EQ(A, mat2(2, 3, 4, 5));
 		CHECK_EQ(B, mat2(1, 2, 3, 4));
@@ -462,7 +462,7 @@ TEST_SUITE("test operators")
 	{
 		mat2 A(1, 2, 3, 4);
 
-		auto B = --A;
+		const auto B = --A;
 		CHECK_EQ(A, B);
 		CHECK_EQ(A, mat2(0, 1, 2, 3));
 	}
@@ -471,7 +471,7 @@ TEST_SUITE("test operators")
 	{
 		mat2 A(1, 2, 3, 4);
 
-		auto B = A--;
+		const auto B = A--;
 		CHECK_NE(A, B);
 		CHECK_EQ(A, mat2(0, 1, 2, 3));
 		CHECK_EQ(B, mat2(1, 2, 3, 4));
@@ -479,13 +479,13 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("matrix component-wise binary operator +")
 	{
-		mat2x3 A(1, 2, 3, 4, 5, 6);
-		mat2x3 B(5, 10, 15, 20, 25, 30);
-		float x = 7.0f;
+		const mat2x3 A(1, 2, 3, 4, 5, 6);
+		const mat2x3 B(5, 10, 15, 20, 25, 30);
+		const float x = 7.0f;
 		
-		auto foo = A + x;
-		auto bar = x + A;
-		auto baz = A + B;
+		const auto foo = A + x;
+		const auto bar = x + A;
+		const auto baz = A + B;
 
 		CHECK_EQ(foo, mat2x3(8, 9, 10, 11, 12, 13));
 		CHECK_EQ(bar, mat2x3(8, 9, 10, 11, 12, 13));
@@ -494,13 +494,13 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("matrix component-wise binary operator -")
 	{
-		mat2x3 A(1, 2, 3, 4, 5, 6);
-		mat2x3 B(5, 10, 15, 20, 25, 30);
-		float x = 7.0f;
+		const mat2x3 A(1, 2, 3, 4, 5, 6);
+		const mat2x3 B(5, 10, 15, 20, 25, 30);
+		const float x = 7.0f;
 		
-		auto foo = A - x;
-		auto bar = x - A;
-		auto baz = B - A;
+		const auto foo = A - x;
+		const auto bar = x - A;
+		const auto baz = B - A;
 
 		CHECK_EQ(foo, mat2x3(-6, -5, -4, -3, -2, -1));
 		CHECK_EQ(bar, mat2x3(6, 5, 4, 3, 2, 1));
@@ -509,11 +509,11 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("matrix scalar component-wise binary operator *")
 	{
-		mat2x3 A(1, 2, 3, 4, 5, 6);
-		float x = 7.0f;
+		const mat2x3 A(1, 2, 3, 4, 5, 6);
+		const float x = 7.0f;
 		
-		auto foo = A * x;
-		auto bar = x * A;
+		const auto foo = A * x;
+		const auto bar = x * A;
 
 		CHECK_EQ(foo, mat2x3(7, 14, 21, 28, 35, 42));
 		CHECK_EQ(bar, mat2x3(7, 14, 21, 28, 35, 42));
@@ -521,14 +521,14 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("matrix component-wise binary operator /")
 	{
-		mat2x3 A(6, 12, 18, 24, 30, 36);
-		mat2x3 B(3, 6, 9, 12, 16, 18);
-		float x = 12.0f;
-		float y = 72.0f;
+		const mat2x3 A(6, 12, 18, 24, 30, 36);
+		const mat2x3 B(3, 6, 9, 12, 16, 18);
+		const float x = 12.0f;
+		const float y = 72.0f;
 		
-		auto foo = A / x;
-		auto bar = y / B;
-		auto baz = A / B;
+		const auto foo = A / x;
+		const auto bar = y / B;
+		const auto baz = A / B;
 
 		CHECK_EQ(foo, mat2x3(0.5, 1, 1.5, 2, 2.5, 3));
 		CHECK_EQ(bar, mat2x3(24, 12, 8, 6, 4.5, 4));

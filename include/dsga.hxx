@@ -1046,22 +1046,22 @@ namespace dsga
 
 		dimensional_storage_t<T, Size> value;
 
-		constexpr		int			length()						const	noexcept	{ return static_cast<int>(Count); }
-		constexpr		std::size_t	size()							const	noexcept	{ return Count; }
+		[[nodiscard]] constexpr int length() const noexcept					{ return static_cast<int>(Count); }
+		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
 
 		// physically contiguous access to data
-		constexpr		T			&operator [](std::size_t index)			noexcept	{ return value[index]; }
-		constexpr const T			&operator [](std::size_t index)	const	noexcept	{ return value[index]; }
+		constexpr T &operator [](std::size_t index) noexcept				{ return value[index]; }
+		constexpr const T &operator [](std::size_t index) const noexcept	{ return value[index]; }
 
-		constexpr			T *		data()									noexcept	{ return value.data(); }
-		constexpr	const	T * 	data()							const	noexcept	{ return value.data(); }
+		constexpr T * data() noexcept										{ return value.data(); }
+		[[nodiscard]] constexpr const T * data() const noexcept				{ return value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto		sequence()								noexcept	{ return sequence_pack{}; }
+		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-		constexpr		void		set(Args ...args)						noexcept
+		constexpr void set(Args ...args) noexcept
 		{
 			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
 			{
@@ -1070,12 +1070,12 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr		auto		begin()									noexcept	{ return value.begin(); }
-		constexpr		auto		begin()							const	noexcept	{ return value.cbegin(); }
-		constexpr		auto		cbegin()						const	noexcept	{ return value.cbegin(); }
-		constexpr		auto		end()									noexcept	{ return value.end(); }
-		constexpr		auto		end()							const	noexcept	{ return value.cend(); }
-		constexpr		auto		cend()							const	noexcept	{ return value.cend(); }
+		constexpr auto begin() noexcept							{ return value.begin(); }
+		[[nodiscard]] constexpr auto begin() const	noexcept	{ return value.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const	noexcept	{ return value.cbegin(); }
+		constexpr auto end() noexcept							{ return value.end(); }
+		[[nodiscard]] constexpr auto end() const	noexcept	{ return value.cend(); }
+		[[nodiscard]] constexpr auto cend() const	noexcept	{ return value.cend(); }
 
 	};
 
@@ -1195,30 +1195,30 @@ namespace dsga
 	struct vector_base
 	{
 		// CRTP access to Derived class
-		constexpr		Derived		&as_derived()							noexcept	requires Writable	{ return static_cast<Derived &>(*this); }
-		constexpr const Derived		&as_derived()					const	noexcept						{ return static_cast<const Derived &>(*this); }
+		constexpr Derived &as_derived() noexcept requires Writable				{ return static_cast<Derived &>(*this); }
+		[[nodiscard]] constexpr const Derived &as_derived() const noexcept		{ return static_cast<const Derived &>(*this); }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-		constexpr		void		set(Args ...args)						noexcept						{ this->as_derived().init(args...); }
+		constexpr void set(Args ...args) noexcept								{ this->as_derived().init(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
-		constexpr		T			&operator [](std::size_t index)			noexcept	requires Writable	{ return this->as_derived().at(index); }
-		constexpr const	T			&operator [](std::size_t index)	const	noexcept						{ return this->as_derived().at(index); }
+		constexpr T &operator [](std::size_t index) noexcept requires Writable	{ return this->as_derived().at(index); }
+		constexpr const T &operator [](std::size_t index) const	noexcept		{ return this->as_derived().at(index); }
 
 		// physically contiguous access via pointer
-		constexpr		T *			data()									noexcept	requires Writable	{ return this->as_derived().raw_data(); }
-		constexpr const	T *			data()							const	noexcept						{ return this->as_derived().raw_data(); }
+		constexpr T * data() noexcept requires Writable							{ return this->as_derived().raw_data(); }
+		[[nodiscard]] constexpr const T * data() const noexcept					{ return this->as_derived().raw_data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr		auto		sequence()						const	noexcept						{ return this->as_derived().make_sequence_pack(); }
+		[[nodiscard]] constexpr auto sequence() const noexcept					{ return this->as_derived().make_sequence_pack(); }
 
 		// number of accessible T elements - required by spec
-		constexpr		int			length()						const	noexcept						{ return static_cast<int>(Count); }
+		[[nodiscard]] constexpr int length() const noexcept						{ return static_cast<int>(Count); }
 
 		// not required by spec, but more c++ container-like
-		constexpr		std::size_t	size()							const	noexcept						{ return Count; }
+		[[nodiscard]] constexpr std::size_t	size() const noexcept				{ return Count; }
 	};
 
 	// basic_vector will act as the primary vector class in this library.
@@ -1294,10 +1294,11 @@ namespace dsga
 			mapper_index = (index > Count) ? Count : index;			// std::size_t, so don't need lower bound check
 		}
 
-		indexed_vector_iterator(const indexed_vector_iterator &) noexcept = default;
-		indexed_vector_iterator(indexed_vector_iterator &&) noexcept = default;
-		indexed_vector_iterator &operator =(const indexed_vector_iterator &) noexcept = default;
-		indexed_vector_iterator &operator =(indexed_vector_iterator &&) noexcept = default;
+		constexpr indexed_vector_iterator(const indexed_vector_iterator &) noexcept = default;
+		constexpr indexed_vector_iterator(indexed_vector_iterator &&) noexcept = default;
+		constexpr indexed_vector_iterator &operator =(const indexed_vector_iterator &) noexcept = default;
+		constexpr indexed_vector_iterator &operator =(indexed_vector_iterator &&) noexcept = default;
+		constexpr ~indexed_vector_iterator() = default;
 
 		constexpr reference operator *() noexcept
 		{
@@ -1357,10 +1358,11 @@ namespace dsga
 			mapper_index = (index > Count) ? Count : index;			// std::size_t, so don't need lower bound check
 		}
 
-		indexed_vector_const_iterator(const indexed_vector_const_iterator &) noexcept = default;
-		indexed_vector_const_iterator(indexed_vector_const_iterator &&) noexcept = default;
-		indexed_vector_const_iterator &operator =(const indexed_vector_const_iterator &) noexcept = default;
-		indexed_vector_const_iterator &operator =(indexed_vector_const_iterator &&) noexcept = default;
+		constexpr indexed_vector_const_iterator(const indexed_vector_const_iterator &) noexcept = default;
+		constexpr indexed_vector_const_iterator(indexed_vector_const_iterator &&) noexcept = default;
+		constexpr indexed_vector_const_iterator &operator =(const indexed_vector_const_iterator &) noexcept = default;
+		constexpr indexed_vector_const_iterator &operator =(indexed_vector_const_iterator &&) noexcept = default;
+		constexpr ~indexed_vector_const_iterator() = default;
 
 		constexpr reference operator *() noexcept
 		{
@@ -1457,7 +1459,7 @@ namespace dsga
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		constexpr const T &at(std::size_t index) const noexcept
+		[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept
 		{
 			return value[sequence_array[index]];
 		}
@@ -1469,24 +1471,24 @@ namespace dsga
 		}
 
 		// physically contiguous -- used by data() for read access to data
-		constexpr const T * raw_data() const noexcept
+		[[nodiscard]] constexpr const T * raw_data() const noexcept
 		{
 			return value.data();
 		}
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr auto make_sequence_pack() const noexcept
+		[[nodiscard]] constexpr auto make_sequence_pack() const noexcept
 		{
 			return sequence_pack{};
 		}
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
-		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
-		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
-		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
-		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
-		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
+		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
 	};
 
 	// for swizzling 1D parts of basic_vector - like a scalar accessor
@@ -1586,7 +1588,7 @@ namespace dsga
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		constexpr const T &at(std::size_t index) const noexcept
+		[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept
 		{
 			return value[sequence_array[index]];
 		}
@@ -1598,24 +1600,24 @@ namespace dsga
 		}
 
 		// physically contiguous -- used by data() for read access to data
-		constexpr const T * raw_data() const noexcept
+		[[nodiscard]] constexpr const T * raw_data() const noexcept
 		{
 			return value.data();
 		}
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr auto make_sequence_pack() const noexcept
+		[[nodiscard]] constexpr auto make_sequence_pack() const noexcept
 		{
 			return sequence_pack{};
 		}
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
-		constexpr auto begin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
-		constexpr auto cbegin()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
-		constexpr auto end()			noexcept	requires Writable	{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
-		constexpr auto end()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
-		constexpr auto cend()	const	noexcept						{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
+		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
 	};
 
 
@@ -1768,23 +1770,23 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
+		[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
-		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr T * raw_data() noexcept										{ return store.value.data(); }
+		[[nodiscard]] constexpr const T * raw_data() const noexcept				{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+		[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	{ return store.value.begin(); }
-		constexpr auto begin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto cbegin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto end()			noexcept	{ return store.value.end(); }
-		constexpr auto end()	const	noexcept	{ return store.value.cend(); }
-		constexpr auto cend()	const	noexcept	{ return store.value.cend(); }
+		constexpr auto begin() noexcept											{ return store.value.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept						{ return store.value.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept					{ return store.value.cbegin(); }
+		constexpr auto end() noexcept											{ return store.value.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept						{ return store.value.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept						{ return store.value.cend(); }
 	};
 
 	template <dimensional_scalar T>
@@ -1929,23 +1931,23 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
+		[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
-		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr T * raw_data() noexcept										{ return store.value.data(); }
+		[[nodiscard]] constexpr const T * raw_data() const noexcept				{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+		[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	{ return store.value.begin(); }
-		constexpr auto begin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto cbegin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto end()			noexcept	{ return store.value.end(); }
-		constexpr auto end()	const	noexcept	{ return store.value.cend(); }
-		constexpr auto cend()	const	noexcept	{ return store.value.cend(); }
+		constexpr auto begin() noexcept											{ return store.value.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept						{ return store.value.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept					{ return store.value.cbegin(); }
+		constexpr auto end() noexcept											{ return store.value.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept						{ return store.value.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept						{ return store.value.cend(); }
 	};
 
 	template <dimensional_scalar T>
@@ -2209,23 +2211,23 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
+		[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
-		constexpr	const	T *		raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr T * raw_data() noexcept										{ return store.value.data(); }
+		[[nodiscard]] constexpr const T * raw_data() const noexcept				{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+		[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	{ return store.value.begin(); }
-		constexpr auto begin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto cbegin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto end()			noexcept	{ return store.value.end(); }
-		constexpr auto end()	const	noexcept	{ return store.value.cend(); }
-		constexpr auto cend()	const	noexcept	{ return store.value.cend(); }
+		constexpr auto begin() noexcept											{ return store.value.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept						{ return store.value.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept					{ return store.value.cbegin(); }
+		constexpr auto end() noexcept											{ return store.value.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept						{ return store.value.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept						{ return store.value.cend(); }
 	};
 
 	template <dimensional_scalar T>
@@ -2772,23 +2774,23 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		constexpr		T	&at(std::size_t index)					noexcept	{ return store.value[index]; }
-		constexpr const	T	&at(std::size_t index)			const	noexcept	{ return store.value[index]; }
+		constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
+		[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
 
 		// physically contiguous -- used by data()
-		constexpr			T *		raw_data()						noexcept	{ return store.value.data(); }
-		constexpr	const	T * 	raw_data()				const	noexcept	{ return store.value.data(); }
+		constexpr T * raw_data() noexcept										{ return store.value.data(); }
+		[[nodiscard]] constexpr const T * raw_data() const noexcept				{ return store.value.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		constexpr			auto	make_sequence_pack()	const	noexcept	{ return sequence_pack{}; }
+		[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
 
 		// support for range-for loop
-		constexpr auto begin()			noexcept	{ return store.value.begin(); }
-		constexpr auto begin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto cbegin()	const	noexcept	{ return store.value.cbegin(); }
-		constexpr auto end()			noexcept	{ return store.value.end(); }
-		constexpr auto end()	const	noexcept	{ return store.value.cend(); }
-		constexpr auto cend()	const	noexcept	{ return store.value.cend(); }
+		constexpr auto begin() noexcept											{ return store.value.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept						{ return store.value.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept					{ return store.value.cbegin(); }
+		constexpr auto end() noexcept											{ return store.value.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept						{ return store.value.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept						{ return store.value.cend(); }
 	};
 
 	//
@@ -4848,25 +4850,25 @@ namespace dsga
 		static constexpr std::size_t ComponentCount = C * R;
 
 		// number of columns
-		constexpr int length() const noexcept
+		[[nodiscard]] constexpr int length() const noexcept
 		{
 			return C;
 		}
 
 		// number of rows
-		constexpr int column_length() const noexcept
+		[[nodiscard]] constexpr int column_length() const noexcept
 		{
 			return R;
 		}
 
 		// returns number of columns (row size), not number of elements
-		constexpr std::size_t size() const noexcept
+		[[nodiscard]] constexpr std::size_t size() const noexcept
 		{
 			return C;
 		}
 
 		// returns number of rows
-		constexpr std::size_t column_size() const noexcept
+		[[nodiscard]] constexpr std::size_t column_size() const noexcept
 		{
 			return R;
 		}
@@ -4888,7 +4890,7 @@ namespace dsga
 		}
 
 		// get a row of the matrix as a vector
-		constexpr basic_vector<T, C> row(std::size_t row_index) const noexcept
+		[[nodiscard]] constexpr basic_vector<T, C> row(std::size_t row_index) const noexcept
 		{
 			// for each column of the matrix, get a row component, and bundle
 			// these components up into a vector that represents the row
@@ -5023,16 +5025,16 @@ namespace dsga
 		}
 
 		// pointer interface
-		constexpr			basic_vector<T, R> *	data()			noexcept	{ return value.data(); }
-		constexpr	const	basic_vector<T, R> *	data()	const	noexcept	{ return value.data(); }
+		constexpr basic_vector<T, R> * data() noexcept								{ return value.data(); }
+		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return value.data(); }
 
 		// support for range-based for loop
-		constexpr auto begin()			noexcept	{ return value.begin(); }
-		constexpr auto begin()	const	noexcept	{ return value.cbegin(); }
-		constexpr auto cbegin()	const	noexcept	{ return value.cbegin(); }
-		constexpr auto end()			noexcept	{ return value.end(); }
-		constexpr auto end()	const	noexcept	{ return value.cend(); }
-		constexpr auto cend()	const	noexcept	{ return value.cend(); }
+		constexpr auto begin() noexcept												{ return value.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept							{ return value.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept						{ return value.cbegin(); }
+		constexpr auto end() noexcept												{ return value.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept							{ return value.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept							{ return value.cend(); }
 	};
 
 	//
