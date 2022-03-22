@@ -1299,6 +1299,7 @@ namespace dsga
 		constexpr indexed_vector_iterator &operator =(const indexed_vector_iterator &) noexcept = default;
 		constexpr indexed_vector_iterator &operator =(indexed_vector_iterator &&) noexcept = default;
 		constexpr ~indexed_vector_iterator() = default;
+		constexpr bool operator ==(const indexed_vector_iterator &other) const noexcept = default;
 
 		constexpr reference operator *() noexcept
 		{
@@ -1323,11 +1324,6 @@ namespace dsga
 			if (mapper_index < Count)
 				mapper_index++;
 			return temp;
-		}
-
-		constexpr bool operator ==(const indexed_vector_iterator &other) const noexcept
-		{
-			return (this->mapper_ptr == other.mapper_ptr) && (this->mapper_index == other.mapper_index);
 		}
 	};
 
@@ -1363,6 +1359,7 @@ namespace dsga
 		constexpr indexed_vector_const_iterator &operator =(const indexed_vector_const_iterator &) noexcept = default;
 		constexpr indexed_vector_const_iterator &operator =(indexed_vector_const_iterator &&) noexcept = default;
 		constexpr ~indexed_vector_const_iterator() = default;
+		constexpr bool operator ==(const indexed_vector_const_iterator &other) const noexcept = default;
 
 		constexpr reference operator *() noexcept
 		{
@@ -1387,11 +1384,6 @@ namespace dsga
 			if (mapper_index < Count)
 				mapper_index++;
 			return temp;
-		}
-
-		constexpr bool operator ==(const indexed_vector_const_iterator &other) const noexcept
-		{
-			return (this->mapper_ptr == other.mapper_ptr) && (this->mapper_index == other.mapper_index);
 		}
 	};
 
@@ -4792,10 +4784,12 @@ namespace dsga
 									   const vector_base<W2, T, C, D2> &y,
 									   T tolerance) noexcept
 		{
-//			return distance(x - y) < tolerance;
-
+#if 0
+			return distance(x - y) < tolerance;
+#else
 			auto direction_vector = x - y;
 			return dot(direction_vector, direction_vector) < (tolerance * tolerance);
+#endif
 		}
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
@@ -4919,7 +4913,7 @@ namespace dsga
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<ComponentCount, Args...>
-		constexpr basic_matrix(const Args & ...args) noexcept
+		explicit constexpr basic_matrix(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -4931,7 +4925,7 @@ namespace dsga
 		// diagonal constructor for square matrices
 		template <typename U>
 		requires std::convertible_to<U, T> && (C == R)
-		constexpr basic_matrix(U arg) noexcept
+		explicit constexpr basic_matrix(U arg) noexcept
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{

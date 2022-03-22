@@ -37,7 +37,7 @@ constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, floa
 {
     auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
     auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-    return mix(linear_control_points.x, linear_control_points.y, t);
+    return std::lerp(linear_control_points.x, linear_control_points.y, t);
 }
 
 // main cubic bezier eval function -- takes 2D control points with float values.
@@ -167,7 +167,7 @@ The tests have been run on:
 
 The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
 
-* **clang 12.0.0, 13.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-13.0.0), with MSVC installed:
+* **clang 13.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-13.0.1), with MSVC installed:
 
 ```
 [doctest] doctest version is "2.4.6"
