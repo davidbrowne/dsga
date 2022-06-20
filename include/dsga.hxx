@@ -4399,7 +4399,7 @@ namespace dsga
 			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, min_val, max_val, clamp_op);
 		}
 
-		constexpr inline auto mix1_op = []<floating_point_dimensional_scalar T>(T x, T y, T a) noexcept { return (x * (T(1.) - a)) + (y * a); };
+		constexpr inline auto mix1_op = []<floating_point_dimensional_scalar T>(T x, T y, T a) noexcept { return std::lerp(x, y, a); };
 
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		constexpr auto mix(const vector_base<W1, T, C, D1> &x,
