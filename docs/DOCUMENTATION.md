@@ -113,11 +113,11 @@ namespace dsga
 
 ## Vector Types
 
-In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), the various dimensions of the vectors and matrices are between 2 and 4, inclusive. For ```dsga```, this is true for the matrices, but for the vectors we also length 1. We don't call them "vectors", but we suffix their type with "scal" for scalar, as opposed to a suffix of "vec1".
+In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), the various dimensions of the vectors and matrices are between 2 and 4, inclusive. For ```dsga```, this is true for the matrices, but for the vectors we also can have length be 1. We don't call them "vectors", but we suffix their type with "scal" for scalar, as opposed to a suffix of "vec1".
 
 We have gone against the specification for a few reasons. Having length 1 vectors is a good way of dealing with how [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) has modifed the basic types, e.g., float, double, int. In GLSL, these basic types are not the same as they are in ```c++```. They behave as if they are vectors of length 1, including [swizzling](#swizzling). Since we can't change the basic types, we provide the "scalar" analog vector type that mimics what happens, e.g., ```bscal```, ```iscal```, ```fscal```, ```dscal```.
 
-Since these "scalar" types are really vectors of length 1, they can use the vector functions. The functions don't discriminate based on size in dsga. In the cubic bezier evaluator example, we call the vector function ```mix()``` several times, and the last time is on vectors of length 1. If we decided to not allow vector functions on "scalar" types like fscal, then in this situation we could have called ```std::lerp()``` for the length 1 vector case.
+Since these "scalar" types are really vectors of length 1, they can use the vector functions. The functions don't discriminate based on size in dsga. In the cubic bezier evaluator example, we call the vector function ```mix()``` several times, and the last time was formerly on vectors of length 1, before we decided to pretend that it was "scalar" like fscal, so instead we are calling ```std::lerp()``` for the length 1 vector case.
 
 ### Swizzling
 

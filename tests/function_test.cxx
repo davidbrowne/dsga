@@ -498,6 +498,12 @@ TEST_SUITE("test operators")
 			auto all_not_true = all(greaterThan(v0, v2));
 			CHECK_UNARY_FALSE(all_not_true);
 
+			// none()
+			auto none_of_them = none(lessThan(v1, v2));
+			CHECK_UNARY(none_of_them);
+			auto some_of_them = none(greaterThan(v0, v2));
+			CHECK_UNARY_FALSE(some_of_them);
+
 			// not() - c++ doesn't allow not(), so logicalNot()
 			auto not_true = all(logicalNot(lessThan(v1, v2)));
 			CHECK_UNARY(not_true);

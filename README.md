@@ -151,41 +151,40 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-The tests have been run on:
+The tests have been most recently run on:
 
-* **MSVC 2019 - v16.11**
-* **MSVC 2022 - v17.1**
+* **MSVC 2022 - v17.2**
 
 ```
-[doctest] doctest version is "2.4.8"
+[doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1808 | 1808 passed | 0 failed |
+[doctest] assertions: 1810 | 1810 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
 
-* **clang 13.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-13.0.1), with MSVC installed:
+* **clang 14.0.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.6), with MSVC installed:
 
 ```
-[doctest] doctest version is "2.4.6"
+[doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1792 | 1792 passed | 0 failed |
+[doctest] assertions: 1794 | 1794 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **gcc 11.2** on Windows, [MinGW](https://nuwen.net/mingw.html) distribution:
 
 ```
-[doctest] doctest version is "2.4.8"
+[doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1792 | 1792 passed | 0 failed |
+[doctest] assertions: 1794 | 1794 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

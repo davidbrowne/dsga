@@ -4759,6 +4759,16 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
+		// this is function is not in the glsl standard, same result as "!any()"
+		template <bool W, std::size_t C, typename D>
+		constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return !(x[Is] || ...);
+			}(std::make_index_sequence<C>{});
+		}
+
 		constexpr inline auto logical_not_op = [](bool x) noexcept -> bool { return !x; };
 
 		// c++ is not allowing a function named not()
