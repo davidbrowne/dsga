@@ -430,6 +430,7 @@ The geometric functions treat a vector as an entity instead of as a collection o
 * ```notEqual()```
 * ```any()``` - result relies on the components' relationship with each other
 * ```all()``` - result relies on the components' relationship with each other
+* ```none()``` - result relies on the components' relationship with each other - not in GLSL
 * ```logicalNot()``` - can't use keyword ```not``` as a function name in ```c++```, so using ```logicalNot()```
 
 Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. The unimplemented functions likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
@@ -477,7 +478,7 @@ template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Row
 constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 ```
 
-* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if a vector argument has more data than necessary to complete the matrix initialization, as long as some of the data is needed. It is an error to pass unused arguments:
+* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if a vector argument has more data than necessary to complete the matrix initialization, as long as some of the vector data is used. It is an error to pass unused arguments:
 
 ```c++
 // variadic constructor of scalar and vector arguments
@@ -492,6 +493,7 @@ These are the members that are not part of the [iterator interface](#iterators),
 * **operator =** - assignment operator. The matrix needs to be the same size and underlying types must be convertible.
 * **int length()** - returns the number of columns as an ```int```. This is part of the spec, and is the same as ```size()``` except it has a different return type.
 * **int column_length()** - like ```length()``` but for rows. Returns the number of rows as an ```int```.
+* **std::size_t size()** - returns the number of columns as as a ```std::size_t```.
 * **std::size_t column_size()** - like ```size()``` but for rows. Returns the number of rows as a ```std::size_t```.
 * **operator []** - a generic way to access matrix data. The values returned by this operator are the columns of the matrix, which are of type ```basic_vector```. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing. Along with ```operator []``` in ```basic_vector```, we can access individual matrix elements with notation such as **auto val = my_matrix[col][row];**.
 * **row()** - this returns a ```basic_vector``` that represents a row of the matrix.

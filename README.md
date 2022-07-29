@@ -126,7 +126,7 @@ This is a **single header library**, where you just need the file [dsga.hxx](inc
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
-This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2019/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
+This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
 
 ## Status
 

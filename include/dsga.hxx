@@ -4789,6 +4789,17 @@ namespace dsga
 
 		// Euclidean distance check - strictly less than comparison, boundary is false
 
+		template <std::floating_point T>
+		constexpr bool within_distance(T x, T y, T tolerance) noexcept
+		{
+#if 1
+			return cxcm::fabs(x - y) < tolerance;
+#else
+			auto delta = x - y;
+			return (delta * delta) < (tolerance * tolerance);
+#endif
+		}
+
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 									   const vector_base<W2, T, C, D2> &y,
