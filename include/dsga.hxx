@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 6;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -1289,9 +1289,8 @@ namespace dsga
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
 		constexpr indexed_vector_iterator(indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
+			: mapper_ptr(std::addressof(mapper)), mapper_index((index > Count) ? Count : index)
 		{
-			mapper_ptr = std::addressof(mapper);
-			mapper_index = (index > Count) ? Count : index;			// std::size_t, so don't need lower bound check
 		}
 
 		constexpr indexed_vector_iterator(const indexed_vector_iterator &) noexcept = default;
@@ -1349,9 +1348,8 @@ namespace dsga
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
 		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
+			: mapper_ptr(std::addressof(mapper)), mapper_index((index > Count) ? Count : index)
 		{
-			mapper_ptr = std::addressof(mapper);
-			mapper_index = (index > Count) ? Count : index;			// std::size_t, so don't need lower bound check
 		}
 
 		constexpr indexed_vector_const_iterator(const indexed_vector_const_iterator &) noexcept = default;
@@ -2894,6 +2892,10 @@ namespace dsga
 				return static_cast<ReturnType>(lambda(static_cast<ArgType>(lhs), static_cast<ArgType>(rhs[0u])));
 		}
 
+		//
+		// don't cast the arguments to the lambda
+		//
+
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
@@ -4365,7 +4367,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, min_op);
 		}
 
-		constexpr inline auto max_op = []<floating_point_dimensional_scalar T>(T x, T y) noexcept { return x > y ? x : y; };
+		constexpr inline auto max_op = []<floating_point_dimensional_scalar T>(T x, T y) noexcept { return y < x ? x : y; };
 
 		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto max(const vector_base<W1, T, C, D1> &x,
@@ -4683,7 +4685,7 @@ namespace dsga
 		// 8.7 - vector relational
 		//
 
-		constexpr inline auto less_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return x < y; };
+		constexpr inline auto less_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isless(x, y); };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires non_bool_arithmetic<T>
@@ -4693,7 +4695,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, less_op);
 		}
 
-		constexpr inline auto less_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return x <= y; };
+		constexpr inline auto less_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::islessequal(x, y); };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires non_bool_arithmetic<T>
@@ -4703,7 +4705,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, less_equal_op);
 		}
 
-		constexpr inline auto greater_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return x > y; };
+		constexpr inline auto greater_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isgreater(x, y); };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires non_bool_arithmetic<T>
@@ -4713,7 +4715,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, greater_op);
 		}
 
-		constexpr inline auto greater_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return x >= y; };
+		constexpr inline auto greater_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isgreaterequal(x, y); };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires non_bool_arithmetic<T>
@@ -4723,7 +4725,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, greater_equal_op);
 		}
 
-		constexpr inline auto equal_op = []<non_bool_arithmetic T>(T x, T y) noexcept -> bool { return x == y; };
+		constexpr inline auto equal_op = []<non_bool_arithmetic T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? false : x == y; };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto equal(const vector_base<W1, T, C, D1> &x,
@@ -4732,7 +4734,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, equal_op);
 		}
 
-		constexpr inline auto not_equal_op = []<non_bool_arithmetic T>(T x, T y) noexcept -> bool { return x != y; };
+		constexpr inline auto not_equal_op = []<non_bool_arithmetic T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? true : x != y; };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
