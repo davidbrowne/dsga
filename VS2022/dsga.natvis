@@ -9,21 +9,24 @@
 	</Type>
 	
 	<Type Name="dsga::basic_vector&lt;*,*&gt;">
-		<DisplayString >{{ {store.value} }}</DisplayString>
+		<DisplayString Condition="$T2 == 2">{{ {store.value[0]}, {store.value[1]} }}</DisplayString>
+		<DisplayString Condition="$T2 == 3">{{ {store.value[0]}, {store.value[1]}, {store.value[2]} }}</DisplayString>
+		<DisplayString Condition="$T2 == 4">{{ {store.value[0]}, {store.value[1]}, {store.value[2]}, {store.value[3]} }}</DisplayString>
+		<DisplayString >{{ {store.value} }}{{ {store.value._Elems} }}</DisplayString>
 		<Expand>
 			<ExpandedItem>store.value</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]} }} }}</DisplayString>
+		<DisplayString >{{ {value[$T4]} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]}, {value[$T5]} }} }}</DisplayString>
+		<DisplayString >{{ {value[$T4]}, {value[$T5]} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
@@ -31,7 +34,7 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]}, {value[$T5]}, {value[$T6]} }} }}</DisplayString>
+		<DisplayString >{{ {value[$T4]}, {value[$T5]}, {value[$T6]} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
@@ -40,7 +43,7 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;">
-		<DisplayString >{{ {{ count={$T3} }} {{ {value[$T4]}, {value[$T5]}, {value[$T6]}, {value[$T7]} }} }}</DisplayString>
+		<DisplayString >{{ {value[$T4]}, {value[$T5]}, {value[$T6]}, {value[$T7]} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
@@ -58,7 +61,7 @@
 	</Type>
 
 	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
-		<DisplayString >{{ {value} }}</DisplayString>
+		<DisplayString >{{ size={$T2} }}</DisplayString>
 		<Expand>
 			<ExpandedItem>value</ExpandedItem>
 		</Expand>
