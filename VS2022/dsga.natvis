@@ -9,10 +9,10 @@
 	</Type>
 	
 	<Type Name="dsga::basic_vector&lt;*,*&gt;">
+		<DisplayString Condition="$T2 == 1"> {store.value[0]} </DisplayString>
 		<DisplayString Condition="$T2 == 2">{{ {store.value[0]}, {store.value[1]} }}</DisplayString>
 		<DisplayString Condition="$T2 == 3">{{ {store.value[0]}, {store.value[1]}, {store.value[2]} }}</DisplayString>
 		<DisplayString Condition="$T2 == 4">{{ {store.value[0]}, {store.value[1]}, {store.value[2]}, {store.value[3]} }}</DisplayString>
-		<DisplayString >{{ {store.value} }}{{ {store.value._Elems} }}</DisplayString>
 		<Expand>
 			<ExpandedItem>store.value</ExpandedItem>
 		</Expand>
