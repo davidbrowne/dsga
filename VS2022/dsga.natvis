@@ -2,7 +2,7 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
 	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
-		<DisplayString >{{ {value} }}</DisplayString>
+		<DisplayString >{{ size={$T2} }}</DisplayString>
 		<Expand>
 			<ExpandedItem>value</ExpandedItem>
 		</Expand>
