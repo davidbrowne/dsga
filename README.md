@@ -130,7 +130,7 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.6.2`
+Current version: `v0.6.3`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
@@ -153,27 +153,27 @@ This project uses [doctest](https://github.com/onqtam/doctest) for testing. We o
 
 The tests have been most recently run on:
 
-* **MSVC 2022 - v17.2**
+* **MSVC 2022 - v17.3**
 
 ```
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1810 | 1810 passed | 0 failed |
+[doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
+[doctest] assertions: 1814 | 1814 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
 
-* **clang 14.0.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.6), with MSVC installed:
+* **clang 15.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.0), with MSVC installed:
 
 ```
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1794 | 1794 passed | 0 failed |
+[doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
+[doctest] assertions: 1798 | 1798 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -183,8 +183,8 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   79 |   79 passed | 0 failed | 0 skipped
-[doctest] assertions: 1794 | 1794 passed | 0 failed |
+[doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
+[doctest] assertions: 1798 | 1798 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

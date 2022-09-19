@@ -213,6 +213,18 @@ TEST_SUITE("test constructors")
 		CHECK_NE(c4d_14, ivec4(42, 24, 2, 3));
 	}
 
+	TEST_CASE("CTAD deduction guide construction")
+	{
+		auto v1 = dsga::basic_vector{1, 2, 3};
+		auto v2 = dsga::basic_vector{2.2, 3, 4, 5.5};
+		auto v3 = dsga::basic_vector{true};
+
+		CHECK_NE(v1, ivec3(1, 2, 4));
+		CHECK_EQ(v1, ivec3(1, 2, 3));
+		CHECK_EQ(v2, dvec4(2.2, 3, 4, 5.5));
+		CHECK_EQ(v3, bscal(true));
+	}
+
 	TEST_CASE("matrix constructors")
 	{
 		SUBCASE("diagonal constructor")
