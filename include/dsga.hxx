@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 6;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -2783,9 +2783,15 @@ namespace dsga
 		[[nodiscard]] constexpr auto cend() const noexcept						{ return store.value.cend(); }
 	};
 
-	// CTAD deduction guide
+	//
+	// CTAD deduction guides
+	//
+
 	template <class T, class... U>
 	basic_vector(T, U...) -> basic_vector<T, 1 + sizeof...(U)>;
+
+	template <bool W, class T, std::size_t C, class D>
+	basic_vector(vector_base<W, T, C, D>) -> basic_vector<T, C>;
 
 	//
 	// operators and compound assignment operators

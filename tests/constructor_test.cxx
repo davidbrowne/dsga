@@ -219,10 +219,15 @@ TEST_SUITE("test constructors")
 		auto v2 = dsga::basic_vector{2.2, 3, 4, 5.5};
 		auto v3 = dsga::basic_vector{true};
 
+		auto v4 = dsga::basic_vector{v1};
+		auto v5 = dsga::basic_vector{v2.zy};
+
 		CHECK_NE(v1, ivec3(1, 2, 4));
 		CHECK_EQ(v1, ivec3(1, 2, 3));
 		CHECK_EQ(v2, dvec4(2.2, 3, 4, 5.5));
 		CHECK_EQ(v3, bscal(true));
+		CHECK_EQ(v4, v1);
+		CHECK_EQ(v5, v2.zy);
 	}
 
 	TEST_CASE("matrix constructors")

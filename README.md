@@ -130,7 +130,7 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.6.3`
+Current version: `v0.6.4`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
@@ -160,7 +160,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
-[doctest] assertions: 1814 | 1814 passed | 0 failed |
+[doctest] assertions: 1816 | 1816 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -173,7 +173,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
-[doctest] assertions: 1798 | 1798 passed | 0 failed |
+[doctest] assertions: 1800 | 1800 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -184,7 +184,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
-[doctest] assertions: 1798 | 1798 passed | 0 failed |
+[doctest] assertions: 1800 | 1800 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
