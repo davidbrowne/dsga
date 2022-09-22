@@ -33,8 +33,8 @@
 			<Item Name="[size]">$T3</Item>
 			<Item Name="[0]">value[$T4],g</Item>
 			<Item Name="[writable]">Writable</Item>
-			<Item Name="[index 0]">$T4</Item>
-			<Item Name="[values]">value,g</Item>
+			<Item Name="[base]">value,g</Item>
+			<Item Name="[offset 0]">$T4</Item>
 		</Expand>
 	</Type>
 	
@@ -45,9 +45,9 @@
 			<Item Name="[0]">value[$T4],g</Item>
 			<Item Name="[1]">value[$T5],g</Item>
 			<Item Name="[writable]">Writable</Item>
-			<Item Name="[index 0]">$T4</Item>
-			<Item Name="[index 1]">$T5</Item>
-			<Item Name="[values]">value,g</Item>
+			<Item Name="[base]">value,g</Item>
+			<Item Name="[offset 0]">$T4</Item>
+			<Item Name="[offset 1]">$T5</Item>
 		</Expand>
 	</Type>
 	
@@ -59,10 +59,10 @@
 			<Item Name="[1]">value[$T5],g</Item>
 			<Item Name="[2]">value[$T6],g</Item>
 			<Item Name="[writable]">Writable</Item>
-			<Item Name="[index 0]">$T4</Item>
-			<Item Name="[index 1]">$T5</Item>
-			<Item Name="[index 2]">$T6</Item>
-			<Item Name="[values]">value,g</Item>
+			<Item Name="[base]">value,g</Item>
+			<Item Name="[offset 0]">$T4</Item>
+			<Item Name="[offset 1]">$T5</Item>
+			<Item Name="[offset 2]">$T6</Item>
 		</Expand>
 	</Type>
 	
@@ -75,11 +75,11 @@
 			<Item Name="[2]">value[$T6],g</Item>
 			<Item Name="[3]">value[$T7],g</Item>
 			<Item Name="[writable]">Writable</Item>
-			<Item Name="[index 0]">$T4</Item>
-			<Item Name="[index 1]">$T5</Item>
-			<Item Name="[index 2]">$T6</Item>
-			<Item Name="[index 3]">$T7</Item>
-			<Item Name="[values]">value,g</Item>
+			<Item Name="[base]">value,g</Item>
+			<Item Name="[offset 0]">$T4</Item>
+			<Item Name="[offset 1]">$T5</Item>
+			<Item Name="[offset 2]">$T6</Item>
+			<Item Name="[offset 3]">$T7</Item>
 		</Expand>
 	</Type>
 
