@@ -34,7 +34,10 @@
 			<Item Name="[0]">value[$T4],g</Item>
 			<Item Name="[writable]">Writable</Item>
 			<Item Name="[base]">value,g</Item>
-			<Item Name="[offset 0]">$T4</Item>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
 		</Expand>
 	</Type>
 	
@@ -46,8 +49,14 @@
 			<Item Name="[1]">value[$T5],g</Item>
 			<Item Name="[writable]">Writable</Item>
 			<Item Name="[base]">value,g</Item>
-			<Item Name="[offset 0]">$T4</Item>
-			<Item Name="[offset 1]">$T5</Item>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
 		</Expand>
 	</Type>
 	
@@ -60,9 +69,18 @@
 			<Item Name="[2]">value[$T6],g</Item>
 			<Item Name="[writable]">Writable</Item>
 			<Item Name="[base]">value,g</Item>
-			<Item Name="[offset 0]">$T4</Item>
-			<Item Name="[offset 1]">$T5</Item>
-			<Item Name="[offset 2]">$T6</Item>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
 		</Expand>
 	</Type>
 	
@@ -76,10 +94,22 @@
 			<Item Name="[3]">value[$T7],g</Item>
 			<Item Name="[writable]">Writable</Item>
 			<Item Name="[base]">value,g</Item>
-			<Item Name="[offset 0]">$T4</Item>
-			<Item Name="[offset 1]">$T5</Item>
-			<Item Name="[offset 2]">$T6</Item>
-			<Item Name="[offset 3]">$T7</Item>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 1]" Condition="$T5 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 2]" Condition="$T6 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 3]" Condition="$T7 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 3]" Condition="$T7 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 3]" Condition="$T7 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
+			<Synthetic Name="[offset 3]" Condition="$T7 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
 		</Expand>
 	</Type>
 
