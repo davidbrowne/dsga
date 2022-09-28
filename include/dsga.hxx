@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 6;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -2791,7 +2791,7 @@ namespace dsga
 	basic_vector(T, U...) -> basic_vector<T, 1 + sizeof...(U)>;
 
 	template <bool W, class T, std::size_t C, class D>
-	basic_vector(vector_base<W, T, C, D>) -> basic_vector<T, C>;
+	basic_vector(const vector_base<W, T, C, D> &) -> basic_vector<T, C>;
 
 	//
 	// operators and compound assignment operators
@@ -4966,6 +4966,17 @@ namespace dsga
 				{
 					value[i][j] = ((i == j) ? static_cast<T>(arg) : static_cast<T>(0));
 				}
+			}
+		}
+
+		// implicit constructor from a matrix
+		template <floating_point_dimensional_scalar U>
+		requires implicitly_convertible_to<U, T>
+		constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
+		{
+			for (std::size_t i = 0; i < C; ++i)
+			{
+				value[i] = arg[i];
 			}
 		}
 

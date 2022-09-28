@@ -640,4 +640,244 @@ TEST_SUITE("test conversions")
 			CHECK_NE(f4, fvec4(0.0f));
 		}
 	}
+
+	// this test case is more about compiling without warnings or errors
+	TEST_CASE("Implicit Conversions, construction and assignment, Section 4.1.10")
+	{
+		constexpr iscal i1{-5};
+		constexpr ivec2 i2{-4, 4};
+		constexpr ivec3 i3{2, -3, 0};
+		constexpr ivec4 i4{-10, -8, 16, 100};
+
+		constexpr uscal u1{3};
+		constexpr uvec2 u2{1, 12};
+		constexpr uvec3 u3{30, 20, 10};
+		constexpr uvec4 u4{9, 8, 7, 6};
+
+		constexpr llscal ll1{-5};
+		constexpr llvec2 ll2{-4, 4};
+		constexpr llvec3 ll3{2, -3, 0};
+		constexpr llvec4 ll4{-10, -8, 16, 100};
+
+		constexpr ullscal ull1{3};
+		constexpr ullvec2 ull2{1, 12};
+		constexpr ullvec3 ull3{30, 20, 10};
+		constexpr ullvec4 ull4{9, 8, 7, 6};
+
+		constexpr fscal f1{1.5f};
+		constexpr fvec2 f2{2.25f, -10.125f};
+		constexpr fvec3 f3{-1234.5, 0.0, 45.75f};
+		constexpr fvec4 f4{100.0f, 200.0f, 300.0f, 400.0f};
+
+		constexpr mat2 m2{};
+		constexpr mat3 m3{};
+		constexpr mat4 m4{};
+		constexpr mat2x3 m23{};
+		constexpr mat2x4 m24{};
+		constexpr mat3x2 m32{};
+		constexpr mat3x4 m34{};
+		constexpr mat4x2 m42{};
+		constexpr mat4x3 m43{};
+
+		SUBCASE("Implicit conversion, unsigned int")
+		{
+			uscal val1{i1};
+			val1 = i1;
+
+			uvec2 val2{i2};
+			val2 = i2;
+
+			uvec3 val3{i3};
+			val3 = i3;
+
+			uvec4 val4{i4};
+			val4 = i4;
+		}
+
+		SUBCASE("Implicit conversion, long long")
+		{
+			llscal val1{i1};
+			val1 = i1;
+
+			llvec2 val2{i2};
+			val2 = i2;
+
+			llvec3 val3{i3};
+			val3 = i3;
+
+			llvec4 val4{i4};
+			val4 = i4;
+
+			llscal val5{u1};
+			val5 = u1;
+
+			llvec2 val6{u2};
+			val6 = u2;
+
+			llvec3 val7{u3};
+			val7 = u3;
+
+			llvec4 val8{u4};
+			val8 = u4;
+		}
+
+		SUBCASE("Implicit conversion, unsigned long long")
+		{
+			ullscal val1{i1};
+			val1 = i1;
+
+			ullvec2 val2{i2};
+			val2 = i2;
+
+			ullvec3 val3{i3};
+			val3 = i3;
+
+			ullvec4 val4{i4};
+			val4 = i4;
+
+			ullscal val5{u1};
+			val5 = u1;
+
+			ullvec2 val6{u2};
+			val6 = u2;
+
+			ullvec3 val7{u3};
+			val7 = u3;
+
+			ullvec4 val8{u4};
+			val8 = u4;
+
+			ullscal val9{ll1};
+			val9 = ll1;
+
+			ullvec2 val10{ll2};
+			val10 = ll2;
+
+			ullvec3 val11{ll3};
+			val11 = ll3;
+
+			ullvec4 val12{ll4};
+			val12 = ll4;
+		}
+
+		SUBCASE("Implicit conversion, float")
+		{
+			fscal val1{i1};
+			val1 = i1;
+
+			fvec2 val2{i2};
+			val2 = i2;
+
+			fvec3 val3{i3};
+			val3 = i3;
+
+			fvec4 val4{i4};
+			val4 = i4;
+
+			fscal val5{u1};
+			val5 = u1;
+
+			fvec2 val6{u2};
+			val6 = u2;
+
+			fvec3 val7{u3};
+			val7 = u3;
+
+			fvec4 val8{u4};
+			val8 = u4;
+		}
+
+		SUBCASE("Implicit conversion, double")
+		{
+			dscal val1{i1};
+			val1 = i1;
+
+			dvec2 val2{i2};
+			val2 = i2;
+
+			dvec3 val3{i3};
+			val3 = i3;
+
+			dvec4 val4{i4};
+			val4 = i4;
+
+			dscal val5{u1};
+			val5 = u1;
+
+			dvec2 val6{u2};
+			val6 = u2;
+
+			dvec3 val7{u3};
+			val7 = u3;
+
+			dvec4 val8{u4};
+			val8 = u4;
+
+			dscal val9{f1};
+			val9 = f1;
+
+			dvec2 val10{f2};
+			val10 = f2;
+
+			dvec3 val11{f3};
+			val11 = f3;
+
+			dvec4 val12{f4};
+			val12 = f4;
+
+			dscal val13{ll1};
+			val13 = ll1;
+
+			dvec2 val14{ll2};
+			val14 = ll2;
+
+			dvec3 val15{ll3};
+			val15 = ll3;
+
+			dvec4 val16{ll4};
+			val16 = ll4;
+
+			dscal val17{ull1};
+			val17 = ull1;
+
+			dvec2 val18{ull2};
+			val18 = ull2;
+
+			dvec3 val19{ull3};
+			val19 = ull3;
+
+			dvec4 val20{ull4};
+			val20 = ull4;
+		}
+
+		SUBCASE("Implicit conversion, matrices")
+		{
+			dmat2 dm2{m2};
+			dm2 = m2;
+
+			dmat3 dm3{m3};
+			dm3 = m3;
+
+			dmat4 dm4{m4};
+			dm4 = m4;
+
+			dmat2x3 dm23{m23};
+			dm23 = m23;
+
+			dmat2x4 dm24{m24};
+			dm24 = m24;
+
+			dmat3x2 dm32{m32};
+			dm32 = m32;
+
+			dmat3x4 dm34{m34};
+			dm34 = m34;
+
+			dmat4x2 dm42{m42};
+			dm42 = m42;
+
+			dmat4x3 dm43{m43};
+			dm43 = m43;
+		}
+	}
 }

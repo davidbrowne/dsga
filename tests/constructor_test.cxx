@@ -245,7 +245,7 @@ TEST_SUITE("test constructors")
 			// make sure constructors work with length 1 vector (dscal, fscal, etc.) as if it were a scalar
 			dscal eight(8);
 			dmat2 dm2(eight);
-			dmat3 dm3(eight);
+			dmat3 dm3(eight.x);
 			dmat4 dm4(eight);
 			CHECK_EQ(dm2, dmat2(dvec2(8, 0), dvec2(0, 8)));
 			CHECK_EQ(dm3, dmat3(dvec3(8, 0, 0), dvec3(0, 8, 0), dvec3(0, 0, 8)));
@@ -270,6 +270,30 @@ TEST_SUITE("test constructors")
 			CHECK_EQ(m2, mat2x3(4, 4, 4, 4, 5, 4));
 			CHECK_EQ(m3, mat3x4(1, 3, 3, 3, 5, 2, 2, 3, 3, 3, 5, 1));
 			CHECK_EQ(m4, dmat3x3(2, 2, 3, 3, 3, 4, 4, 4, 4));
+		}
+
+		// this subcase is more about compiling without warnings or errors
+		SUBCASE("Implicitly convertible type constructor, same dimensions")
+		{
+			constexpr mat2 m2{};
+			constexpr mat3 m3{};
+			constexpr mat4 m4{};
+			constexpr mat2x3 m23{};
+			constexpr mat2x4 m24{};
+			constexpr mat3x2 m32{};
+			constexpr mat3x4 m34{};
+			constexpr mat4x2 m42{};
+			constexpr mat4x3 m43{};
+
+			[[maybe_unused]] dmat2 dm2{m2};
+			[[maybe_unused]] dmat3 dm3{m3};
+			[[maybe_unused]] dmat4 dm4{m4};
+			[[maybe_unused]] dmat2x3 dm23{m23};
+			[[maybe_unused]] dmat2x4 dm24{m24};
+			[[maybe_unused]] dmat3x2 dm32{m32};
+			[[maybe_unused]] dmat3x4 dm34{m34};
+			[[maybe_unused]] dmat4x2 dm42{m42};
+			[[maybe_unused]] dmat4x3 dm43{m43};
 		}
 
 		SUBCASE("matrix argument constructor")

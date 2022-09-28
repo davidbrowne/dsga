@@ -130,11 +130,11 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.6.4`
+Current version: `v0.6.5`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
-* [Released v0.6.0](https://github.com/davidbrowne/dsga/releases/tag/v0.6.0)
+* [Released v0.6.5](https://github.com/davidbrowne/dsga/releases/tag/v0.6.5)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
@@ -159,20 +159,20 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
+[doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
 [doctest] assertions: 1816 | 1816 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
 
-* **clang 15.0.0** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.0), with MSVC installed:
+* **clang 15.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.1), with MSVC installed:
 
 ```
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
+[doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
 [doctest] assertions: 1800 | 1800 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
@@ -183,7 +183,7 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   80 |   80 passed | 0 failed | 0 skipped
+[doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
 [doctest] assertions: 1800 | 1800 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
