@@ -7,7 +7,7 @@
 		<DisplayString Condition="$T2 == 3">{{ {value[0],g}, {value[1],g}, {value[2],g} }}</DisplayString>
 		<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
 		<Expand>
-			<Item Name="[size]">$T2</Item>
+			<Item Name="size">$T2</Item>
 			<ExpandedItem>value,g</ExpandedItem>
 		</Expand>
 	</Type>
@@ -16,7 +16,7 @@
 		<DisplayString>{*($T4 *)this}</DisplayString>
 		<Expand>
 			<ExpandedItem>*($T4 *)this</ExpandedItem>
-			<Item Name="Derived">*($T4 *)this</Item>
+			<Item Name="[Derived View]">*($T4 *)this</Item>
 		</Expand>
 	</Type>
 
@@ -30,91 +30,91 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;">
 		<DisplayString>{value[$T4],g}</DisplayString>
 		<Expand>
-			<Item Name="[size]">$T3</Item>
+			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4],g</Item>
-			<Item Name="[writable]">Writable</Item>
-			<Item Name="[base]">value,g</Item>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Item Name="base">value,g</Item>
+			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Item Name="writable">Writable</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;">
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
 		<Expand>
-			<Item Name="[size]">$T3</Item>
+			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4],g</Item>
 			<Item Name="[1]">value[$T5],g</Item>
-			<Item Name="[writable]">Writable</Item>
-			<Item Name="[base]">value,g</Item>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Item Name="base">value,g</Item>
+			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Item Name="writable">Writable</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;">
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<Expand>
-			<Item Name="[size]">$T3</Item>
+			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4],g</Item>
 			<Item Name="[1]">value[$T5],g</Item>
 			<Item Name="[2]">value[$T6],g</Item>
-			<Item Name="[writable]">Writable</Item>
-			<Item Name="[base]">value,g</Item>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Item Name="base">value,g</Item>
+			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Item Name="writable">Writable</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;">
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand>
-			<Item Name="[size]">$T3</Item>
+			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4],g</Item>
 			<Item Name="[1]">value[$T5],g</Item>
 			<Item Name="[2]">value[$T6],g</Item>
 			<Item Name="[3]">value[$T7],g</Item>
-			<Item Name="[writable]">Writable</Item>
-			<Item Name="[base]">value,g</Item>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 0]" Condition="$T4 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 1]" Condition="$T5 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 2]" Condition="$T6 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 3]" Condition="$T7 == 0"><DisplayString>0 ( x )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 3]" Condition="$T7 == 1"><DisplayString>1 ( y )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 3]" Condition="$T7 == 2"><DisplayString>2 ( z )</DisplayString></Synthetic>
-			<Synthetic Name="[offset 3]" Condition="$T7 == 3"><DisplayString>3 ( w )</DisplayString></Synthetic>
+			<Item Name="base">value,g</Item>
+			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [0]" Condition="$T4 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [1]" Condition="$T5 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [2]" Condition="$T6 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Synthetic Name="offset [3]" Condition="$T7 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
+			<Synthetic Name="offset [3]" Condition="$T7 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
+			<Synthetic Name="offset [3]" Condition="$T7 == 2"><DisplayString>2 -&gt; z</DisplayString></Synthetic>
+			<Synthetic Name="offset [3]" Condition="$T7 == 3"><DisplayString>3 -&gt; w</DisplayString></Synthetic>
+			<Item Name="writable">Writable</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
-		<DisplayString>{{ size={$T2} }}</DisplayString>
+		<DisplayString>{{ cols={$T2}, rows={$T3} }}</DisplayString>
 		<Expand>
 			<ExpandedItem>value</ExpandedItem>
 		</Expand>
