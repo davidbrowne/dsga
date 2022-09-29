@@ -151,7 +151,11 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
+Both MSVC and gcc (for Windows and on Ubuntu on WSL) pass all the tests. clang for Windows passes, but there are 2 out of 1800 that fail for clang for Ubuntu.
+
 The tests have been most recently run on:
+
+### Windows 11 Native
 
 * **MSVC 2022 - v17.3**
 
@@ -164,7 +168,18 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-The following run all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
+The following perform all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
+
+* **gcc 11.2** on Windows, [MinGW](https://nuwen.net/mingw.html) distribution:
+
+```
+[doctest] doctest version is "2.4.9"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
+[doctest] assertions: 1800 | 1800 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
 
 * **clang 15.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.1), with MSVC installed:
 
@@ -177,15 +192,48 @@ The following run all the unit tests except where there is lack of support for `
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 11.2** on Windows, [MinGW](https://nuwen.net/mingw.html) distribution:
+### Ubuntu 22.04 running in WSL for Windows 11
+
+* **gcc 12.1.0**
 
 ```
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1800 | 1800 passed | 0 failed |
+[doctest] assertions: 1816 | 1816 passed | 0 failed |
 [doctest] Status: SUCCESS!
+```
+
+* **clang 14.0.0**
+
+Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+
+```
+[doctest] doctest version is "2.4.9"
+[doctest] run with "--help" for options
+===============================================================================
+function_test.cxx:38:
+TEST SUITE: test operators
+TEST CASE:  vector angle and trigonometry functions
+  hyperbolic trig
+
+function_test.cxx:106: ERROR: CHECK_EQ( atanh(sinhs / coshs), atanhs ) is NOT correct!
+  values: CHECK_EQ( {?}, {?} )
+
+===============================================================================
+swizzle_test.cxx:1711:
+TEST SUITE: test swizzling applications
+TEST CASE:  type traits tests
+  type traits for basic_matrix
+
+swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
+  values: CHECK_UNARY( false )
+
+===============================================================================
+[doctest] test cases:   81 |   79 passed | 2 failed | 0 skipped
+[doctest] assertions: 1800 | 1798 passed | 2 failed |
+[doctest] Status: FAILURE!
 ```
 
 ## Similar Projects
