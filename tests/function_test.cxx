@@ -90,9 +90,6 @@ TEST_SUITE("test operators")
 			// cosh()
 			auto coshs = cosh(vals);
 
-			// tanh()
-			auto tanhs = tanh(vals);
-
 			// asinh()
 			auto asinhs = asinh(sinhs);
 			CHECK_EQ(vals, asinhs);
@@ -101,9 +98,10 @@ TEST_SUITE("test operators")
 			auto acoshs = acosh(coshs);
 			CHECK_EQ(dvec3(2, 0, 2), acoshs);
 
-			// atanh()
-			auto atanhs = atanh(tanhs);
-			CHECK_EQ(atanh(sinhs / coshs), atanhs);
+			// tanh(), atanh()
+			dvec3 more_vals(-1, 0, 1);
+			auto atanhs = atanh(tanh(more_vals));
+			CHECK_EQ(atanh(sinh(more_vals) / cosh(more_vals)), atanhs);
 		}
 	}
 

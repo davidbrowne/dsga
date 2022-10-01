@@ -151,7 +151,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL) pass all the tests. clang for Windows passes, but there are 2 out of 1800 that fail for clang for Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL) pass all the tests. clang for Windows passes, but there is 1 test out of 1800 that fails for clang on Ubuntu.
 
 The tests have been most recently run on:
 
@@ -213,15 +213,6 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-function_test.cxx:38:
-TEST SUITE: test operators
-TEST CASE:  vector angle and trigonometry functions
-  hyperbolic trig
-
-function_test.cxx:106: ERROR: CHECK_EQ( atanh(sinhs / coshs), atanhs ) is NOT correct!
-  values: CHECK_EQ( {?}, {?} )
-
-===============================================================================
 swizzle_test.cxx:1711:
 TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
@@ -231,8 +222,8 @@ swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT cor
   values: CHECK_UNARY( false )
 
 ===============================================================================
-[doctest] test cases:   81 |   79 passed | 2 failed | 0 skipped
-[doctest] assertions: 1800 | 1798 passed | 2 failed |
+[doctest] test cases:   81 |   80 passed | 1 failed | 0 skipped
+[doctest] assertions: 1800 | 1799 passed | 1 failed |
 [doctest] Status: FAILURE!
 ```
 
