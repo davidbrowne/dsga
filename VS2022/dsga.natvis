@@ -8,7 +8,7 @@
 		<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
 		<Expand>
 			<Item Name="size">$T2</Item>
-			<ExpandedItem>value,g</ExpandedItem>
+			<ExpandedItem>value</ExpandedItem>
 		</Expand>
 	</Type>
 
@@ -32,7 +32,7 @@
 		<DisplayString>{value[$T4],g}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
-			<Item Name="[0]">value[$T4],g</Item>
+			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[Base View]">value</Item>
 			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
 			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
@@ -46,8 +46,8 @@
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
-			<Item Name="[0]">value[$T4],g</Item>
-			<Item Name="[1]">value[$T5],g</Item>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]">value[$T5]</Item>
 			<Item Name="[Base View]">value</Item>
 			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
 			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
@@ -65,9 +65,9 @@
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
-			<Item Name="[0]">value[$T4],g</Item>
-			<Item Name="[1]">value[$T5],g</Item>
-			<Item Name="[2]">value[$T6],g</Item>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]">value[$T5]</Item>
+			<Item Name="[2]">value[$T6]</Item>
 			<Item Name="[Base View]">value</Item>
 			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
 			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
@@ -89,10 +89,10 @@
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
-			<Item Name="[0]">value[$T4],g</Item>
-			<Item Name="[1]">value[$T5],g</Item>
-			<Item Name="[2]">value[$T6],g</Item>
-			<Item Name="[3]">value[$T7],g</Item>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]">value[$T5]</Item>
+			<Item Name="[2]">value[$T6]</Item>
+			<Item Name="[3]">value[$T7]</Item>
 			<Item Name="[Base View]">value</Item>
 			<Synthetic Name="offset [0]" Condition="$T4 == 0"><DisplayString>0 -&gt; x</DisplayString></Synthetic>
 			<Synthetic Name="offset [0]" Condition="$T4 == 1"><DisplayString>1 -&gt; y</DisplayString></Synthetic>
