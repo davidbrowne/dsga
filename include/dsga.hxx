@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 6;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
@@ -3822,7 +3822,9 @@ namespace dsga
 	}
 
 	//
-	// component-wise equality operator for vectors, scalar boolean result: ==, != (thanks to c++20)
+	// component-wise equality operator for vectors, scalar boolean result: ==, != (thanks to c++20).
+	// most vector equality/inequality testing should use free functions equal()/notEqual(), but
+	// these have a scalar result and are useful for unit testing.
 	//
 
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
@@ -3833,7 +3835,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return ((first[Is] == static_cast<T1>(second[Is])) && ...);
+			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -3843,7 +3845,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return ((first[Is] == second[Is]) && ...);
+			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == second[Is])) && ...);
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -3854,7 +3856,7 @@ namespace dsga
 							   U second) noexcept
 	{
 		using CommonType = std::common_type_t<T, U>;
-		return static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second);
+		return !std::isunordered(first[0u], second) && (static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second));
 	}
 
 	//
