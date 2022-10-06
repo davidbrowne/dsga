@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
+	<Type Name="std::array&lt;*,*&gt;" IncludeView="dsga">
+		<DisplayString Condition="$T2 == 1">{{ {_Elems[0],g} }}</DisplayString>
+		<DisplayString Condition="$T2 == 2">{{ {_Elems[0],g}, {_Elems[1],g} }}</DisplayString>
+		<DisplayString Condition="$T2 == 3">{{ {_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g} }}</DisplayString>
+		<DisplayString Condition="$T2 == 4">{{ {_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g}, {_Elems[3],g} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="size">$T2</Item>
+			<ExpandedItem>_Elems</ExpandedItem>
+		</Expand>
+	</Type>
+
 	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
-		<DisplayString Condition="$T2 == 1">{value[0],g}</DisplayString>
-		<DisplayString Condition="$T2 == 2">{{ {value[0],g}, {value[1],g} }}</DisplayString>
-		<DisplayString Condition="$T2 == 3">{{ {value[0],g}, {value[1],g}, {value[2],g} }}</DisplayString>
-		<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
+		<DisplayString>{value,view(dsga)}</DisplayString>
 		<Expand>
 			<Item Name="size">$T2</Item>
 			<ExpandedItem>value</ExpandedItem>
@@ -21,7 +29,8 @@
 	</Type>
 
 	<Type Name="dsga::basic_vector&lt;*,*&gt;">
-		<DisplayString>{store}</DisplayString>
+		<DisplayString Condition="$T2 == 1">{store.value[0],g}</DisplayString>
+		<DisplayString Condition="$T2 != 1">{store}</DisplayString>
 		<Expand>
 			<ExpandedItem>store</ExpandedItem>
 		</Expand>
@@ -30,16 +39,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>{value[$T4],g}</DisplayString>
 		<Expand HideRawView="true">
-			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">{{ {value[0],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 2">{{ {value[0],g}, {value[1],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 3">{{ {value[0],g}, {value[1],g}, {value[2],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
-				<Expand>
-					<Item Name="size">$T2</Item>
-					<ExpandedItem>value</ExpandedItem>
-				</Expand>
-			</Synthetic>
+			<Item Name="base">value,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4} ]</DisplayString>
 				<Expand>
@@ -52,7 +52,7 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" ExcludeView="indexed">
-		<DisplayString>{value[$T4],g}</DisplayString>
+		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4]</Item>
@@ -63,16 +63,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">{{ {value[0],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 2">{{ {value[0],g}, {value[1],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 3">{{ {value[0],g}, {value[1],g}, {value[2],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
-				<Expand>
-					<Item Name="size">$T2</Item>
-					<ExpandedItem>value</ExpandedItem>
-				</Expand>
-			</Synthetic>
+			<Item Name="base">value,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5} ]</DisplayString>
 				<Expand>
@@ -86,7 +77,7 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" ExcludeView="indexed">
-		<DisplayString>{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
+		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4]</Item>
@@ -98,16 +89,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">{{ {value[0],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 2">{{ {value[0],g}, {value[1],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 3">{{ {value[0],g}, {value[1],g}, {value[2],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
-				<Expand>
-					<Item Name="size">$T2</Item>
-					<ExpandedItem>value</ExpandedItem>
-				</Expand>
-			</Synthetic>
+			<Item Name="base">value,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5}, {$T6} ]</DisplayString>
 				<Expand>
@@ -122,7 +104,7 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" ExcludeView="indexed">
-		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
+		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4]</Item>
@@ -135,16 +117,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">{{ {value[0],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 2">{{ {value[0],g}, {value[1],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 3">{{ {value[0],g}, {value[1],g}, {value[2],g} }}</DisplayString>
-				<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
-				<Expand>
-					<Item Name="size">$T2</Item>
-					<ExpandedItem>value</ExpandedItem>
-				</Expand>
-			</Synthetic>
+			<Item Name="base">value,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5}, {$T6}, {$T7} ]</DisplayString>
 				<Expand>
@@ -160,7 +133,7 @@
 	</Type>
 
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
-		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
+		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Item Name="size">$T3</Item>
 			<Item Name="[0]">value[$T4]</Item>
