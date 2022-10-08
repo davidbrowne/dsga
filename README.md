@@ -151,7 +151,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL) pass all the tests. clang for Windows passes, but there is 1 test out of 1800 that fails for clang on Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 test out of 1806 that fails for clang-14 on Ubuntu.
 
 The tests have been most recently run on:
 
@@ -164,7 +164,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1816 | 1816 passed | 0 failed |
+[doctest] assertions: 1822 | 1822 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -177,7 +177,7 @@ The following perform all the unit tests except where there is lack of support f
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1800 | 1800 passed | 0 failed |
+[doctest] assertions: 1806 | 1806 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -188,11 +188,11 @@ The following perform all the unit tests except where there is lack of support f
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1800 | 1800 passed | 0 failed |
+[doctest] assertions: 1806 | 1806 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 22.04 running in WSL for Windows 11
+### Ubuntu 22.04 running in WSL2 for Windows 11
 
 * **gcc 12.1.0**
 
@@ -201,7 +201,7 @@ The following perform all the unit tests except where there is lack of support f
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1816 | 1816 passed | 0 failed |
+[doctest] assertions: 1822 | 1822 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -223,7 +223,7 @@ swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT cor
 
 ===============================================================================
 [doctest] test cases:   81 |   80 passed | 1 failed | 0 skipped
-[doctest] assertions: 1800 | 1799 passed | 1 failed |
+[doctest] assertions: 1806 | 1805 passed | 1 failed |
 [doctest] Status: FAILURE!
 ```
 

@@ -33,31 +33,48 @@ TEST_SUITE("test assignment")
 		{
 			iscal v1(97);
 			ivec4 v4(17);
+			ivec3 v3(44);
+			dscal d1(88);
+			dvec3 d3(22);
+			int i = 30;
 
 			v4.y = 25;
 			v1 = v4.w;
+			d1 = 909;
+			i = static_cast<int>(d1.x);
+			d3.y = v3.z;
+			d3.x = d1.x;
 
 			CHECK_EQ(v1, iscal(17));
 			CHECK_EQ(v4, ivec4(17, 25, 17, 17));
+			CHECK_EQ(d1, 909);
+			CHECK_EQ(i, 909);
+			CHECK_EQ(d3, dvec3(909, 44, 22));
 		}
 
 		SUBCASE("2D standard assignment =")
 		{
 			ivec2 v2(83);
 			ivec4 v4(17);
+			dvec3 d3(22);
 
 			v4.yw = v2;
 			v4.xz = ivec2(10, 20);
 			v2 = v4.xy;
+			d3.yz = v2.yx;
 
 			CHECK_EQ(v2, ivec2(10, 83));
 			CHECK_EQ(v4, ivec4(10, 83, 20, 83));
+			CHECK_EQ(d3, dvec3(22, 83, 10));
 		}
 
 		SUBCASE("3D standard assignment =")
 		{
 			ivec3 v3(71);
 			ivec4 v4(17);
+			dvec4 d4(44);
+
+			d4.xwy = v4.zzy;
 
 			v4.wzx = v3;
 			CHECK_EQ(v4, ivec4(71, 17, 71, 71));
@@ -66,6 +83,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v4, ivec4(44, 33, 44, 71));
 			v3 = v4.zyw;
 			CHECK_EQ(v3, ivec3(44, 33, 71));
+			CHECK_EQ(d4, dvec4(17, 17, 44, 17));
 		}
 
 		SUBCASE("4D standard assignment =")
@@ -73,6 +91,9 @@ TEST_SUITE("test assignment")
 			ivec2 v2(83, 29);
 			ivec3 v3(71, 10, 4);
 			ivec4 v4(17, 38, 56, 95);
+			dvec4 d4(44);
+
+			d4.xyzw = v4.yzwx;
 
 			v4 = v4.wzyx;
 			CHECK_EQ(v4, ivec4(95, 56, 38, 17));
@@ -82,6 +103,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v4, ivec4(71, 10, 4, 29));
 			v4.zwyx = v4;
 			CHECK_EQ(v4, ivec4(29, 4, 71, 10));
+			CHECK_EQ(d4, dvec4(38, 56, 95, 17));
 		}
 	}
 

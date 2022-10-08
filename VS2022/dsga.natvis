@@ -8,7 +8,10 @@
 		<DisplayString Condition="$T2 == 4">{{ {_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g}, {_Elems[3],g} }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="size">$T2</Item>
-			<ExpandedItem>_Elems</ExpandedItem>
+			<ArrayItems>
+				<Size>$T2</Size>
+				<ValuePointer>_Elems</ValuePointer>
+			</ArrayItems>
 		</Expand>
 	</Type>
 
