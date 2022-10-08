@@ -179,6 +179,7 @@
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="..\CMakeLists.txt" />
     <Text Include="..\LICENSE_1_0.txt" />
   </ItemGroup>
   <ItemGroup>

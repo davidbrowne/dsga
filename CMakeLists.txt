@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.24)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(dsga VERSION 0.6.6)
+file(GLOB_RECURSE SRC_FILES src/*.cxx CONFIGURE_DEPENDS src/*.cxx)
+file(GLOB_RECURSE TEST_FILES tests/*.cxx CONFIGURE_DEPENDS tests/*.cxx)
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${TEST_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/dev_3rd)
+
