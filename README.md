@@ -168,20 +168,20 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-The following perform all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro:
-
-* **gcc 11.2** on Windows, [MinGW](https://nuwen.net/mingw.html) distribution:
+* **gcc 12.2.0** on Windows, [MinGW](https://github.com/niXman/mingw-builds-binaries) distribution:
 
 ```
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1806 | 1806 passed | 0 failed |
+[doctest] assertions: 1822 | 1822 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **clang 15.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.1), with MSVC installed:
+
+Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
 [doctest] doctest version is "2.4.9"
