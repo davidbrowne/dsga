@@ -524,25 +524,28 @@ TEST_SUITE("test conversions")
 		{
 			// the three conversion operators
 
-			int val1 = cx_three.y;					// #1 to scalar type
-			iscal val2 = cx_three.x;				// #2 implicit conversion operator
-			auto val3 = fscal(cx_three.z);			// #3 explicit cast needed to invoke conversion operator
+			int val1 = cx_three.y;							// implicit conversion
+			dscal val2{1};
+			float val3 = static_cast<float>(cx_three.z);	// explicit conversion
+			auto val4 = std::asin(val2.x);			// implicit conversion
 
 			CHECK_EQ(val1, 5);
 			CHECK_NE(val1, 4);
 
-			CHECK_EQ(val2, iscal(4));
+			CHECK_EQ(val2, 1.0);
 			CHECK_NE(val2, iscal(0));
 
 			CHECK_EQ(val3, fscal(6.0f));
 			CHECK_NE(val3, fscal(4.0f));
+
+			CHECK_EQ(val4, std::asin(1.0));
 		}
 
 		SUBCASE("2D indexed_vector conversions")
 		{
 			// the two conversion operators
 
-			ivec2 val1 = cx_three.yz;				// #1 implicit conversion
+			ivec2 val1 = cx_three.yz;						// #1 implicit conversion
 			auto val2 = fvec2(cx_three.xy);		// #2 explicit cast needed to invoke conversion operator
 
 			CHECK_EQ(val1, ivec2(5, 6));
@@ -556,7 +559,7 @@ TEST_SUITE("test conversions")
 		{
 			// the two conversion operators
 
-			ivec3 val1 = cx_three.yzy;				// #1 implicit conversion
+			ivec3 val1 = cx_three.yzy;						// #1 implicit conversion
 			auto val2 = fvec3(cx_three.zzx);		// #2 explicit cast needed to invoke conversion operator
 
 			CHECK_EQ(val1, ivec3(5, 6, 5));
@@ -570,7 +573,7 @@ TEST_SUITE("test conversions")
 		{
 			// the two conversion operators
 
-			ivec4 val1 = cx_three.yzyx;				// #1 implicit conversion
+			ivec4 val1 = cx_three.yzyx;						// #1 implicit conversion
 			auto val2 = fvec4(cx_three.zxyy);		// #2 explicit cast needed to invoke conversion operator
 
 			CHECK_EQ(val1, ivec4(5, 6, 5, 4));
@@ -586,17 +589,22 @@ TEST_SUITE("test conversions")
 		// the only basic_vector with conversion operators is
 		// for 1D, as we want them to mimic the scalar type.
 
-		const int val1 = cx_one;							// #1 implicit conversion
-		[[maybe_unused]] float f2 = cx_one;							// #1 implicit conversion
+		const int val1 = cx_one;										// implicit conversion
+		[[maybe_unused]] float f2 = static_cast<float>(cx_one);			// explicit conversion
 
 		const fscal fone = 9.9f;
-		const int val2 = static_cast<int>(fone);			// #2 explicit conversion
+		const int val2 = static_cast<int>(fone);						// explicit conversion
+
+		dscal dval = 1.0;
+		auto val3 = std::asin(dval);							// implicit conversion
 
 		CHECK_EQ(val1, 9);
 		CHECK_NE(val1, 0);
 
 		CHECK_EQ(val2, 9);
 		CHECK_NE(val2, 0);
+
+		CHECK_EQ(val3, std::asin(1.0));
 	}
 
 	TEST_CASE("basic_vector conversion constructors")

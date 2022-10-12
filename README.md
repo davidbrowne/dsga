@@ -130,11 +130,11 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.6.6`
+Current version: `v0.7.0`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
-* [Released v0.6.5](https://github.com/davidbrowne/dsga/releases/tag/v0.6.5)
+* [Released v0.7.0](https://github.com/davidbrowne/dsga/releases/tag/v0.7.0)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
@@ -151,7 +151,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 test out of 1806 that fails for clang-14 on Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 test out of 1808 that fails for clang-14 on Ubuntu.
 
 The tests have been most recently run on:
 
@@ -164,7 +164,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1822 | 1822 passed | 0 failed |
+[doctest] assertions: 1824 | 1824 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -175,7 +175,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1822 | 1822 passed | 0 failed |
+[doctest] assertions: 1824 | 1824 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -188,7 +188,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1806 | 1806 passed | 0 failed |
+[doctest] assertions: 1808 | 1808 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -201,7 +201,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   81 |   81 passed | 0 failed | 0 skipped
-[doctest] assertions: 1822 | 1822 passed | 0 failed |
+[doctest] assertions: 1824 | 1824 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -223,7 +223,7 @@ swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT cor
 
 ===============================================================================
 [doctest] test cases:   81 |   80 passed | 1 failed | 0 skipped
-[doctest] assertions: 1806 | 1805 passed | 1 failed |
+[doctest] assertions: 1808 | 1807 passed | 1 failed |
 [doctest] Status: FAILURE!
 ```
 

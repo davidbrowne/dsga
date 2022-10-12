@@ -28,8 +28,8 @@
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
-constexpr inline int DSGA_MINOR_VERSION = 6;
-constexpr inline int DSGA_PATCH_VERSION = 6;
+constexpr inline int DSGA_MINOR_VERSION = 7;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
@@ -1553,19 +1553,18 @@ namespace dsga
 			return *this;
 		}
 
-		// scalar conversion operator
+		//
+		// scalar conversion operators
+		//
+
 		// this is extremely important and is only for indexed_vector of [Count == 1]
-		template <typename U>
-		requires implicitly_convertible_to<T, U>
-		constexpr operator U() const noexcept
+		constexpr operator T() const noexcept
 		{
-			return static_cast<U>(value[I]);
+			return value[I];
 		}
 
-		// scalar conversion operator
-		// this is extremely important and is only for indexed_vector of [Count == 1]
 		template <typename U>
-		requires (!implicitly_convertible_to<T, U>) && std::convertible_to<T, U>
+		requires std::convertible_to<T, U>
 		explicit constexpr operator U() const noexcept
 		{
 			return static_cast<U>(value[I]);
@@ -1727,20 +1726,17 @@ namespace dsga
 		}
 
 		//
-		// conversion operators
+		// scalar conversion operators
 		//
 
 		// this is extremely important and is only for basic_vector of [Size == 1]
-
-		template <typename U>
-		requires implicitly_convertible_to<T, U>
-		constexpr operator U() const noexcept
+		constexpr operator T() const noexcept
 		{
-			return static_cast<U>(store.value[0u]);
+			return store.value[0u];
 		}
 
 		template <typename U>
-		requires (!implicitly_convertible_to<T, U>) && std::convertible_to<T, U>
+		requires std::convertible_to<T, U>
 		explicit constexpr operator U() const noexcept
 		{
 			return static_cast<U>(store.value[0u]);
