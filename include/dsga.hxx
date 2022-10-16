@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 7;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -1165,25 +1165,27 @@ namespace dsga
 
 	// This is a CRTP base struct for the vector structs, primarily for data access.
 	// It will help with arithmetic operators, compound assignment operators, and functions.
-	// 
+	//
 	// template parameters:
-	// 
+	//
 	//		Writable - bool value about whether struct can be modified (e.g., "foo.set(3, 4, 5);", "foo[0] = 3;")
 	//		T - the scalar type stored
 	//		Count - the number of indexes available to access ScalarType data
 	//		Derived - the CRTP struct/class that is derived from this struct
 	//
 	// It provides:
-	// 
-	// 		set() - relies on init() in Derived - access in logical order
-	// 		operator[] - relies on at() in Derived - access in logical order
-	// 		size() - relies on Count template parameter
+	//
+	//		set() - relies on init() in Derived - access in logical order
+	//		operator[] - relies on at() in Derived - access in logical order
+	//		size() - relies on Count template parameter
+	//		length() - relies on Count template parameter
 	//		data() - relies on raw_data() in Derived - access in physical order
-	// 		sequence() - relies on make_sequence_pack() in Derived - the physical order to logical order mapping
+	//		sequence() - relies on make_sequence_pack() in Derived - the physical order to logical order mapping
+	//		as_derived() - relies on Derived type - useful for returning references to Derived when you just have a vector_base
 	//
 	// https://yuml.me/diagram/scruffy/class/draw
-	// 
-	//[vector_base;set();operator_brackets();data();sequence();length();size()|Count (template parameter)]^[<<vector duck type>>basic_vector|anonymous union ]
+	//
+	//[vector_base;set();operator_brackets();data();sequence();length();size();as_derived()|Count (template parameter)]^[<<vector duck type>>basic_vector|anonymous union ]
 	//[vector_base]^[<<vector duck type>>indexed_vector]
 	//[<<vector duck type>>|init();at();raw_data();make_sequence_pack()]^-.-[basic_vector]
 	//[<<vector duck type>>]^-.-[indexed_vector]
@@ -1775,7 +1777,7 @@ namespace dsga
 		//
 
 		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Size>;
+		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
 		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
@@ -1907,7 +1909,7 @@ namespace dsga
 				[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
 				{
 					((store.value[Js] = static_cast<T>(same_args)), ...);
-				}(make_sequence_pack(), args...);
+				}(std::make_index_sequence<Count>{}, args...);
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
@@ -5694,18 +5696,17 @@ constexpr auto to_vec(const T (&arg)[S]) noexcept
 // converting from internal vector type to std::array
 
 template <dsga::dimensional_scalar T, std::size_t S>
-constexpr std::array<T, S> from_vec(const dsga::basic_vector<T, S> &arg)
+constexpr std::array<T, S> from_vec(const dsga::basic_vector<T, S> &arg) noexcept
 {
 	return arg.store.value;
 }
 
-// not constexpr --  we can't use indexed_vector in constexpr expressions because it is from a swizzle which isn't the active union member at compile time
-template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-std::array<T, C> from_vec(const dsga::indexed_vector<T, S, C, Is...> &arg)
+template <bool W, typename T, std::size_t C, typename D>
+constexpr std::array<T, C> from_vec(const dsga::vector_base<W, T, C, D> &arg) noexcept
 {
-	return [&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept -> std::array<T, C>
+	return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 	{
-		return { arg[Js]... };
+		return { arg[Is]... };
 	}(std::make_index_sequence<C>{});
 }
 

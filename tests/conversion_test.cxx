@@ -57,6 +57,19 @@ constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S>
 		lhs[i] = static_cast<U>(rhs[i]);
 }
 
+// demonstration of ability to use dsga::vector_base::sequence() and dsga::vector_base::data() to
+// get all the data out of the vector, no matter if vec is a dsga::basic_vector or dsga::indexed_vector.
+// this is a manual pointer and offset way to access data as opposed to to using dsga::vector_base::operator [].
+template <bool W, typename T, std::size_t C, typename D>
+constexpr std::array<T, C> from_vec_by_data_sequence(const dsga::vector_base<W, T, C, D> &vec) noexcept
+{
+	return[ptr = vec.data()]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
+	{
+		return { ptr[Is]... };		// equivalent to return {*(ptr + Is)...};
+	}(vec.sequence());
+}
+
+
 TEST_SUITE("test conversions")
 {
 	constexpr ivec4	cx_four		(0, 1, 2, 3);
@@ -85,6 +98,20 @@ TEST_SUITE("test conversions")
 
 			CHECK_EQ(val5, cx_two);
 			CHECK_EQ(val6, val1);
+
+			// using data() and sequence()
+
+			CHECK_EQ(from_vec_by_data_sequence(cx_one), cx_one.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_two.y), std::array{8});
+
+			CHECK_EQ(from_vec_by_data_sequence(cx_two), cx_two.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_two.xx), std::array{7, 7});
+
+			CHECK_EQ(from_vec_by_data_sequence(cx_three), cx_three.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_two.yxx), std::array{8, 7, 7});
+
+			CHECK_EQ(from_vec_by_data_sequence(cx_four), cx_four.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_two.yxyx), std::array{8, 7, 8, 7});
 		}
 
 		SUBCASE("C array")
