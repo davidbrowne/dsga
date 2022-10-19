@@ -7,7 +7,7 @@
 		<DisplayString Condition="$T2 == 3">{{ {_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g} }}</DisplayString>
 		<DisplayString Condition="$T2 == 4">{{ {_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g}, {_Elems[3],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="size">$T2</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T2} }}</DisplayString></Synthetic>
 			<ArrayItems>
 				<Size>$T2</Size>
 				<ValuePointer>_Elems</ValuePointer>
@@ -18,7 +18,7 @@
 	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
 		<DisplayString>{value,view(dsga)}</DisplayString>
 		<Expand>
-			<Item Name="size">$T2</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T2} }}</DisplayString></Synthetic>
 			<ExpandedItem>value</ExpandedItem>
 		</Expand>
 	</Type>
@@ -46,7 +46,7 @@
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4} ]</DisplayString>
 				<Expand>
-					<Item Name="size">$T3</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
 				</Expand>
 			</Synthetic>
@@ -57,7 +57,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Item Name="size">$T3</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
@@ -70,7 +70,7 @@
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5} ]</DisplayString>
 				<Expand>
-					<Item Name="size">$T3</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
 					<Item Name="[1]">$T5</Item>
 				</Expand>
@@ -82,7 +82,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Item Name="size">$T3</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
@@ -96,7 +96,7 @@
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5}, {$T6} ]</DisplayString>
 				<Expand>
-					<Item Name="size">$T3</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
 					<Item Name="[1]">$T5</Item>
 					<Item Name="[2]">$T6</Item>
@@ -109,7 +109,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Item Name="size">$T3</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
 			<Item Name="[2]">value[$T6]</Item>
@@ -124,7 +124,7 @@
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5}, {$T6}, {$T7} ]</DisplayString>
 				<Expand>
-					<Item Name="size">$T3</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
 					<Item Name="[1]">$T5</Item>
 					<Item Name="[2]">$T6</Item>
@@ -138,7 +138,7 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Item Name="size">$T3</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 			<Item Name="[0]">value[$T4]</Item>
 			<Item Name="[1]">value[$T5]</Item>
 			<Item Name="[2]">value[$T6]</Item>
