@@ -63,7 +63,7 @@ constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S>
 template <bool W, typename T, std::size_t C, typename D>
 constexpr std::array<T, C> from_vec_by_data_sequence(const dsga::vector_base<W, T, C, D> &vec) noexcept
 {
-	return[ptr = vec.data()]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
+	return [ptr = vec.data()]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 	{
 		return { ptr[Is]... };		// equivalent to return {*(ptr + Is)...};
 	}(vec.sequence());

@@ -24,6 +24,7 @@ It provides the following functions that can be used to generically manipulate a
 * **sequence()** - relies on ```make_sequence_pack()```. The physical order to logical order mapping in a parameter pack.
 *  **length()** - relies on ```Count``` template parameter, and it returns type ```int```.
 * **size()** - relies on ```Count``` template parameter, and it returns type ```std::size_t```.
+* **as_derived()** - relies on the type of the derived class - useful for returning derived references to ```this``` when you just have a ```vector_base```.
 
 ## Inside basic_vector
 
@@ -51,7 +52,7 @@ struct indexed_vector;
 
 For example, if you had a length 4 vector ```v```, and you swizzled it like ```v.yzx```, then the ```indexed_vector``` for ```yzx``` has a Size == 4 (the same size as the length 4 vector), and it has a Count == 3, since we swizzled three ordinates.
 
-The swizzle decides how to index into the storage. Continuing this example, ```yzx``` has three indices: 1, 2, 0. This is how the values are looked up in the length 4 storage. The size, count, underlying type stored in the vector, and the indices for the swizzle are all passed as template parameters to ```indexed_vector```.
+The swizzle decides how to index into the storage. Continuing this example, ```yzx``` has three indices: [1, 2, 0]. This is how the values are looked up in the length 4 storage. The size, count, underlying type stored in the vector, and the indices for the swizzle are all passed as template parameters to ```indexed_vector```.
 
 ```c++
 // some members that might be found in the basic_vector<T, 4u> anonymous union:
@@ -80,6 +81,8 @@ union
 ```
 
 ```operator []``` and ```set()``` (and of course ```at()``` and ```init()```) all take into account the indirect index access, so it manages the logical sequential nature of the vector.
+
+Only a non-const ```indexed_vector``` that has unique indices, e.g., [3, 2, 0], as opposed to repeating indices, e.g., [1, 2, 1], is **writable**, which means it can be used as an lvalue for assignment, or you can modify it via its member functions.
 
 ```indexed_vector``` is intended as a **view** on a ```basic_vector```; however, it is possible to create a stand-alone ```indexed_vector```, initialized via aggregate methods. It is hard to see why anyone would want to do that though, when ```basic_vector``` exists.
 

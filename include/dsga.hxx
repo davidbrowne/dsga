@@ -1213,7 +1213,8 @@ namespace dsga
 		constexpr T * data() noexcept requires Writable							{ return this->as_derived().raw_data(); }
 		[[nodiscard]] constexpr const T * data() const noexcept					{ return this->as_derived().raw_data(); }
 
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
+		// this is only really helpful if you use data() in your API, because operator [] already adjusts for sequencing.
 		[[nodiscard]] constexpr auto sequence() const noexcept					{ return this->as_derived().make_sequence_pack(); }
 
 		// number of accessible T elements - required by spec
@@ -1266,7 +1267,9 @@ namespace dsga
 	struct indexed_vector;
 
 	//
-	// iterators for indexed_vector so it can participate in range-for loop
+	// iterators for indexed_vector so it can participate in range-for loop.
+	// make sure that it doesn't out-live it's indexed_vector or there will be
+	// a dangling pointer.
 	//
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
@@ -1445,7 +1448,7 @@ namespace dsga
 
 		private:
 
-			friend struct vector_base < Writable , T, Count, indexed_vector<T, Size, Count, Is... >> ;
+			friend struct vector_base<Writable, T, Count, indexed_vector<T, Size, Count, Is...>>;
 
 			// logically contiguous - used by set() for write access to data
 			// allows for self-assignment without aliasing issues

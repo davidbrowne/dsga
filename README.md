@@ -213,12 +213,12 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-/home/dbrowne/dsga/tests/swizzle_test.cxx:1711:
+tests/swizzle_test.cxx:1711:
 TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
   type traits for basic_matrix
 
-/home/dbrowne/dsga/tests/swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
+tests/swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
   values: CHECK_UNARY( false )
 
 ===============================================================================
