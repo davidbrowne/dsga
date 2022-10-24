@@ -2092,3 +2092,108 @@ TEST_SUITE("test swizzling applications")
 		}
 	}
 }
+
+TEST_SUITE("test self-assignment mutate")
+{
+	ivec4 fwd{0, 1, 2, 3};
+	ivec4 rev{3, 2, 1, 0};
+
+	TEST_CASE("multiple ways to accomplish same swizzling mutation")
+	{
+		auto val1 = fwd;
+		val1.xyzw = val1.wzyx;
+		CHECK_UNARY(all(equal(val1, rev)));
+
+		auto val2 = fwd;
+		val2.xywz = val2.wzxy;
+		CHECK_UNARY(all(equal(val2, rev)));
+
+		auto val3 = fwd;
+		val3.xzyw = val3.wyzx;
+		CHECK_UNARY(all(equal(val3, rev)));
+
+		auto val4 = fwd;
+		val4.xzwy = val4.wyxz;
+		CHECK_UNARY(all(equal(val4, rev)));
+
+		auto val5 = fwd;
+		val5.xwzy = val5.wxyz;
+		CHECK_UNARY(all(equal(val5, rev)));
+
+		auto val6 = fwd;
+		val6.xwyz = val6.wxzy;
+		CHECK_UNARY(all(equal(val6, rev)));
+
+		auto val7 = fwd;
+		val7.yxzw = val7.zwyx;
+		CHECK_UNARY(all(equal(val7, rev)));
+
+		auto val8 = fwd;
+		val8.yxwz = val8.zwxy;
+		CHECK_UNARY(all(equal(val8, rev)));
+
+		auto val9 = fwd;
+		val9.yzxw = val9.zywx;
+		CHECK_UNARY(all(equal(val9, rev)));
+
+		auto val10 = fwd;
+		val10.yzwx = val10.zyxw;
+		CHECK_UNARY(all(equal(val10, rev)));
+
+		auto val11 = fwd;
+		val11.ywzx = val11.zxyw;
+		CHECK_UNARY(all(equal(val11, rev)));
+
+		auto val12 = fwd;
+		val12.ywxz = val12.zxwy;
+		CHECK_UNARY(all(equal(val12, rev)));
+
+		auto val13 = fwd;
+		val13.zxyw = val13.ywzx;
+		CHECK_UNARY(all(equal(val13, rev)));
+
+		auto val14 = fwd;
+		val14.zxwy = val14.ywxz;
+		CHECK_UNARY(all(equal(val14, rev)));
+
+		auto val15 = fwd;
+		val15.zyxw = val15.yzwx;
+		CHECK_UNARY(all(equal(val15, rev)));
+
+		auto val16 = fwd;
+		val16.zywx = val16.yzxw;
+		CHECK_UNARY(all(equal(val16, rev)));
+
+		auto val17 = fwd;
+		val17.zwxy = val17.yxwz;
+		CHECK_UNARY(all(equal(val17, rev)));
+
+		auto val18 = fwd;
+		val18.zwyx = val18.yxzw;
+		CHECK_UNARY(all(equal(val18, rev)));
+
+		auto val19 = fwd;
+		val19.wxyz = val19.xwzy;
+		CHECK_UNARY(all(equal(val19, rev)));
+
+		auto val20 = fwd;
+		val20.wxzy = val20.xwyz;
+		CHECK_UNARY(all(equal(val20, rev)));
+
+		auto val21 = fwd;
+		val21.wyzx = val21.xzyw;
+		CHECK_UNARY(all(equal(val21, rev)));
+
+		auto val22 = fwd;
+		val22.wyxz = val22.xzwy;
+		CHECK_UNARY(all(equal(val22, rev)));
+
+		auto val23 = fwd;
+		val23.wzxy = val23.xywz;
+		CHECK_UNARY(all(equal(val23, rev)));
+
+		auto val24 = fwd;
+		val24.wzyx = val24.xyzw;
+		CHECK_UNARY(all(equal(val24, rev)));
+	}
+}
