@@ -8,3 +8,6 @@
 /VS2022/Release
 /VS2022/x64
 .vs
+/.vscode
+/build
+/out

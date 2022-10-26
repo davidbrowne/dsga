@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
+		<DisplayString Condition="$T2 == 1">{value[0],g}</DisplayString>
+		<DisplayString Condition="$T2 == 2">{{ {value[0],g}, {value[1],g} }}</DisplayString>
+		<DisplayString Condition="$T2 == 3">{{ {value[0],g}, {value[1],g}, {value[2],g} }}</DisplayString>
+		<DisplayString Condition="$T2 == 4">{{ {value[0],g}, {value[1],g}, {value[2],g}, {value[3],g} }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::basic_vector&lt;*,*&gt;">
+		<DisplayString>{store}</DisplayString>
+		<Expand>
+			<ExpandedItem>store</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::vector_base&lt;*,*,*,*&gt;">
+		<DisplayString>{*($T4 *)this}</DisplayString>
+		<Expand>
+			<ExpandedItem>*($T4 *)this</ExpandedItem>
+			<Item Name="Derived">*($T4 *)this</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*,*&gt;">
+		<DisplayString Condition="$T3 == 1">{value[$T4],g}</DisplayString>
+		<DisplayString Condition="$T3 == 2">{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
+		<Expand>
+			<Item Name="base">value._M_elems</Item>
+			<Item Name="off[0]">$T4</Item>
+			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
+			<Item Name="off[2]" Condition="$T3 > 2">$T6</Item>
+			<Item Name="off[3]" Condition="$T3 > 3">$T7</Item>
+			<Item Name="writable">Writable</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;">
+		<DisplayString Condition="$T3 == 1">{value[$T4],g}</DisplayString>
+		<DisplayString Condition="$T3 == 2">{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
+		<Expand>
+			<Item Name="base">value._M_elems</Item>
+			<Item Name="off[0]">$T4</Item>
+			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
+			<Item Name="off[2]" Condition="$T3 > 2">$T6</Item>
+			<Item Name="off[3]" Condition="$T3 > 3">$T7</Item>
+			<Item Name="writable">Writable</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;">
+		<DisplayString Condition="$T3 == 1">{value[$T4],g}</DisplayString>
+		<DisplayString Condition="$T3 == 2">{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
+		<Expand>
+			<Item Name="base">value._M_elems</Item>
+			<Item Name="off[0]">$T4</Item>
+			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
+			<Item Name="off[2]" Condition="$T3 > 2">$T6</Item>
+			<Item Name="off[3]" Condition="$T3 > 3">$T7</Item>
+			<Item Name="writable">Writable</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;">
+		<DisplayString Condition="$T3 == 1">{value[$T4],g}</DisplayString>
+		<DisplayString Condition="$T3 == 2">{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
+		<Expand>
+			<Item Name="base">value._M_elems</Item>
+			<Item Name="off[0]">$T4</Item>
+			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
+			<Item Name="off[2]" Condition="$T3 > 2">$T6</Item>
+			<Item Name="off[3]" Condition="$T3 > 3">$T7</Item>
+			<Item Name="writable">Writable</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;">
+		<DisplayString Condition="$T3 == 1">{value[$T4],g}</DisplayString>
+		<DisplayString Condition="$T3 == 2">{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
+		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
+		<Expand>
+			<Item Name="base">value._M_elems</Item>
+			<Item Name="off[0]">$T4</Item>
+			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
+			<Item Name="off[2]" Condition="$T3 > 2">$T6</Item>
+			<Item Name="off[3]" Condition="$T3 > 3">$T7</Item>
+			<Item Name="writable">Writable</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
+		<DisplayString>{{ cols={$T2} rows={$T3} }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat2x2">
+		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat2x3">
+		<DisplayString>{{ cols=2 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat2x4">
+		<DisplayString>{{ cols=2 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat3x2">
+		<DisplayString>{{ cols=3 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat3x3">
+		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat3x4">
+		<DisplayString>{{ cols=3 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat4x2">
+		<DisplayString>{{ cols=4 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat4x3">
+		<DisplayString>{{ cols=4 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat4x4">
+		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat2">
+		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat3">
+		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::mat4">
+		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat2x2">
+		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat2x3">
+		<DisplayString>{{ cols=2 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat2x4">
+		<DisplayString>{{ cols=2 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat3x2">
+		<DisplayString>{{ cols=3 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat3x3">
+		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat3x4">
+		<DisplayString>{{ cols=3 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat4x2">
+		<DisplayString>{{ cols=4 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat4x3">
+		<DisplayString>{{ cols=4 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat4x4">
+		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat2">
+		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat3">
+		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::dmat4">
+		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
+		<Expand>
+			<ExpandedItem>value._M_elems</ExpandedItem>
+		</Expand>
+	</Type>
+
+</AutoVisualizer>
