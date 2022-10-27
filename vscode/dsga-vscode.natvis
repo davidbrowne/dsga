@@ -32,6 +32,10 @@
 		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]" Condition="$T3 > 1">value[$T5]</Item>
+			<Item Name="[2]" Condition="$T3 > 2">value[$T6]</Item>
+			<Item Name="[3]" Condition="$T3 > 3">value[$T7]</Item>
 			<Item Name="base">value._M_elems</Item>
 			<Item Name="off[0]">$T4</Item>
 			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
@@ -47,6 +51,10 @@
 		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]" Condition="$T3 > 1">value[$T5]</Item>
+			<Item Name="[2]" Condition="$T3 > 2">value[$T6]</Item>
+			<Item Name="[3]" Condition="$T3 > 3">value[$T7]</Item>
 			<Item Name="base">value._M_elems</Item>
 			<Item Name="off[0]">$T4</Item>
 			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
@@ -62,6 +70,10 @@
 		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]" Condition="$T3 > 1">value[$T5]</Item>
+			<Item Name="[2]" Condition="$T3 > 2">value[$T6]</Item>
+			<Item Name="[3]" Condition="$T3 > 3">value[$T7]</Item>
 			<Item Name="base">value._M_elems</Item>
 			<Item Name="off[0]">$T4</Item>
 			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
@@ -77,6 +89,10 @@
 		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]" Condition="$T3 > 1">value[$T5]</Item>
+			<Item Name="[2]" Condition="$T3 > 2">value[$T6]</Item>
+			<Item Name="[3]" Condition="$T3 > 3">value[$T7]</Item>
 			<Item Name="base">value._M_elems</Item>
 			<Item Name="off[0]">$T4</Item>
 			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
@@ -92,6 +108,10 @@
 		<DisplayString Condition="$T3 == 3">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
 		<DisplayString Condition="$T3 == 4">{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
 		<Expand>
+			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[1]" Condition="$T3 > 1">value[$T5]</Item>
+			<Item Name="[2]" Condition="$T3 > 2">value[$T6]</Item>
+			<Item Name="[3]" Condition="$T3 > 3">value[$T7]</Item>
 			<Item Name="base">value._M_elems</Item>
 			<Item Name="off[0]">$T4</Item>
 			<Item Name="off[1]" Condition="$T3 > 1">$T5</Item>
