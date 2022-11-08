@@ -165,17 +165,20 @@ TEST_SUITE("test operators")
 		SUBCASE("most common")
 		{
 			ivec3 int_data(-10, 0, 9);
+			vec4 float_data(-1.75, -0.25, 0.5, 1.0);
+			dvec4 double_data(11.5, 12.5, -11.5, -12.5);
 
 			// abs()
 			auto abs_vals = abs(int_data);
 			CHECK_EQ(abs_vals, ivec3(10, 0, 9));
+			CHECK_EQ(abs(float_data), fvec4(1.75f, 0.25f, 0.5f, 1.0f));
+			CHECK_EQ(abs(double_data), dvec4(11.5, 12.5, 11.5, 12.5));
 
 			// sign()
 			auto sign_vals = sign(int_data);
 			CHECK_EQ(sign_vals, ivec3(-1, 0, 1));
-
-			vec4 float_data(-1.75, -0.25, 0.5, 1.0);
-			dvec4 double_data(11.5, 12.5, -11.5, -12.5);
+			CHECK_EQ(sign(float_data), fvec4(-1.f, -1.f, 1.f, 1.f));
+			CHECK_EQ(sign(double_data), dvec4(1., 1., -1., -1.));
 
 			// floor()
 			auto floor_vals = floor(float_data);

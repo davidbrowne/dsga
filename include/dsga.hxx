@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 7;
-constexpr inline int DSGA_PATCH_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 3;
 
 namespace dsga
 {
@@ -4267,17 +4267,19 @@ namespace dsga
 		// 8.3 - common
 		//
 
-		constexpr inline auto abs_op = [](dimensional_scalar auto arg) noexcept { return cxcm::abs(arg); };
+		constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept -> T { return cxcm::abs(arg); };
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		requires (!std::unsigned_integral<T>)
 		constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, abs_op);
 		}
 
-		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept { return (arg > T(0)) ? T(1) : ((arg < T(0)) ? T(-1) : T(0)); };
+		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T((T(0) < arg) - (arg < T(0))); };
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		requires (!std::unsigned_integral<T>)
 		constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sign_op);

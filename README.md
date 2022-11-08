@@ -130,7 +130,7 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.7.2`
+Current version: `v0.7.3`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
@@ -151,7 +151,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1840 that fails for clang-14 on Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1844 that fails for clang-15 on Ubuntu.
 
 The tests have been most recently run on:
 
@@ -164,7 +164,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1856 | 1856 passed | 0 failed |
+[doctest] assertions: 1860 | 1860 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -175,11 +175,11 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1856 | 1856 passed | 0 failed |
+[doctest] assertions: 1860 | 1860 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 15.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.1), with MSVC installed:
+* **clang 15.0.4** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.4), with MSVC installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -188,7 +188,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1840 | 1840 passed | 0 failed |
+[doctest] assertions: 1844 | 1844 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -201,11 +201,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1856 | 1856 passed | 0 failed |
+[doctest] assertions: 1860 | 1860 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 14.0.0**
+* **clang 15.0.4**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -213,17 +213,17 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-/home/dbrowne/dsga/tests/swizzle_test.cxx:1711:
+/dsga/tests/swizzle_test.cxx:1711:
 TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
   type traits for basic_matrix
 
-/home/dbrowne/dsga/tests/swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
+/dsga/tests/swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
   values: CHECK_UNARY( false )
 
 ===============================================================================
 [doctest] test cases:   82 |   81 passed | 1 failed | 0 skipped
-[doctest] assertions: 1840 | 1839 passed | 1 failed |
+[doctest] assertions: 1844 | 1843 passed | 1 failed |
 [doctest] Status: FAILURE!
 ```
 
