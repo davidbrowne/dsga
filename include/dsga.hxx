@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 7;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -4734,22 +4734,42 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, greater_equal_op);
 		}
 
-		constexpr inline auto equal_op = []<non_bool_arithmetic T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? false : x == y; };
+		constexpr inline auto equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? false : x == y; };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr auto equal(const vector_base<W1, T, C, D1> &x,
 							 const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, equal_op);
 		}
 
-		constexpr inline auto not_equal_op = []<non_bool_arithmetic T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? true : x != y; };
+		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept -> bool { return x == y; };
+
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
+							 const vector_base<W2, bool, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, bool_equal_op);
+		}
+
+		constexpr inline auto not_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? true : x != y; };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
 								const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, not_equal_op);
+		}
+
+		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept -> bool { return x != y; };
+
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+		constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
+								const vector_base<W2, bool, C, D2> &y) noexcept
+		{
+			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, bool_not_equal_op);
 		}
 
 		template <bool W, std::size_t C, typename D>

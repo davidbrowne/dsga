@@ -130,7 +130,7 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.7.3`
+Current version: `v0.7.4`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
@@ -151,20 +151,20 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1844 that fails for clang-15 on Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1846 that fails for clang-15 on Ubuntu.
 
 The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.3**
+* **MSVC 2022 - v17.4**
 
 ```
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1860 | 1860 passed | 0 failed |
+[doctest] assertions: 1862 | 1862 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -175,7 +175,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1860 | 1860 passed | 0 failed |
+[doctest] assertions: 1862 | 1862 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -188,7 +188,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1844 | 1844 passed | 0 failed |
+[doctest] assertions: 1846 | 1846 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -201,7 +201,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1860 | 1860 passed | 0 failed |
+[doctest] assertions: 1862 | 1862 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -223,7 +223,7 @@ TEST CASE:  type traits tests
 
 ===============================================================================
 [doctest] test cases:   82 |   81 passed | 1 failed | 0 skipped
-[doctest] assertions: 1844 | 1843 passed | 1 failed |
+[doctest] assertions: 1846 | 1845 passed | 1 failed |
 [doctest] Status: FAILURE!
 ```
 

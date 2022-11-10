@@ -476,9 +476,15 @@ TEST_SUITE("test operators")
 			auto eq_vec = equal(v1, v2);
 			CHECK_EQ(eq_vec, bvec3(false, true, false));
 
+			auto bool_eq_vec = equal(bvec3(true, false, true), bvec3(true, false, false));
+			CHECK_EQ(bool_eq_vec, bvec3(true, true, false));
+
 			// notEqual()
 			auto neq_vec = notEqual(v1, v2);
 			CHECK_EQ(neq_vec, bvec3(true, false, true));
+
+			auto bool_neq_vec = notEqual(bvec3(true, false, true), bvec3(true, false, false));
+			CHECK_EQ(bool_neq_vec, bvec3(false, false, true));
 		}
 
 		SUBCASE("reduced relational functions")
