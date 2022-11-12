@@ -2914,20 +2914,6 @@ namespace dsga
 				return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[0u], rhs[0u]));
 		}
 
-		// second argument is non-const
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
-		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
-													const vector_base<W1, T1, C, D1> &lhs,
-													vector_base<W2, T2, C, D2> &rhs,
-													BinOp &lambda) noexcept
-		{
-			if constexpr (C > 1u)
-				return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
-			else
-				return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[0u], rhs[0u]));
-		}
-
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
