@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 7;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -44,7 +44,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 7;
+		constexpr inline int CXCM_PATCH_VERSION = 8;
 
 		namespace limits
 		{
@@ -270,9 +270,9 @@ namespace dsga
 
 			namespace detail
 			{
-				//	By itself, converging_sqrt() over all the 32-bit floats gives:
-				//		75% of the time gives same answer as std::sqrt()
-				//		25% of the time gives answer within 1 ulp of std::sqrt()
+				//	By itself, converging_sqrt() gives:
+				//	0 ulps : 75%
+				//	1 ulps : 25%
 				template <std::floating_point T>
 				constexpr T converging_sqrt(T arg) noexcept
 				{
@@ -288,15 +288,7 @@ namespace dsga
 					return current_value;
 				}
 
-				// 2 refinements:
-				// all floats: 71.05% same as reciprocal of std::sqrt(), 28.95% apparently within 1 ulp.
-				// a double sample of (2^52, 2^52 + 2^31-1] 62.01% exact match, 37.99% apparently within 1 ulp
-				// best for implementing rsqrt()
-				//
-				// 3 refinements:
-				// all floats: 62.65% same as reciprocal of std::sqrt(), 37.35% apparently within 1 ulp.
-				// a double sample of (2^52, 2^52 + 2^31-1] 50% exact match, 50% apparently within 1 ulp
-				// best for implementing sqrt()
+				// 3 refinements is best
 				template <std::floating_point T>
 				constexpr T inverse_sqrt(T arg) noexcept
 				{
@@ -311,16 +303,12 @@ namespace dsga
 			}
 
 			// square root
-			//	This version with inverse_sqrt(), when used over all the 32-bit floats gives:
-			//
-			//	with 3 refinements:
-			//		all floats: 76.5% same result as std::sqrt, 23.5% apparently within 1 ulp
-			//		a double sample of (2^52, 2^52 + 2^31-1] 99.99923% exact match, 0.0007717% apparently within 1 ulp
-			//
+			//	0 ulps : 75%
+			//	1 ulps : 25%
 			template <std::floating_point T>
-			constexpr T sqrt(T arg) noexcept
+			constexpr T sqrt(T value) noexcept
 			{
-				return arg * detail::inverse_sqrt(arg);
+				return detail::converging_sqrt(value);
 			}
 
 			// float specialization - uses double internally - relied upon by rsqrt<T>() when [T = float]
@@ -328,33 +316,28 @@ namespace dsga
 			template <>
 			constexpr float sqrt(float value) noexcept
 			{
-				return static_cast<float>(sqrt(static_cast<double>(value)));
+				double val = value;
+//				return static_cast<float>(val * detail::inverse_sqrt(val));
+				return static_cast<float>(detail::converging_sqrt(val));
 			}
 
 			// reciprocal of square root
-			//	all floats (no specializations): 84.75% same result as reciprocal of std::sqrt(), 15.25% apparently within 1 ulp
-			//	all floats (sqrt() specialization): 100% same result as reciprocal of std::sqrt()
-			//	a double sample starting after 2^52 for INT_MAX next values: 99.99923% exact match, 0.0007717% apparently within 1 ulp
-			//	a double sample starting after 1.25 for INT_MAX next values: 90.34% exact match, 9.66% apparently within 1 ulp
-			//	a double sample starting after 123456.789 for INT_MAX next values: 86.84% exact match, 13.16% apparently within 1 ulp
-			//	a double sample starting after 0.0 for INT_MAX next values: 86.17% exact match, 13.83% apparently within 1 ulp (11.5 hrs to calc this)
-			//	a double sample starting before std::numeric_limits<double>::max() for INT_MAX prev values: 84.81% exact match, 15.19% apparently within 1 ulp (1.5 hrs to calc this)
+			//	0 ulps : ~83.3068913%
+			//	1 ulps : ~15.8502949%
+			//	2 ulps :  ~0.8428138%
 			template <std::floating_point T>
-			constexpr T rsqrt(T arg) noexcept
+			constexpr T rsqrt(T value) noexcept
 			{
-				return T(1.0) / sqrt(arg);
+				return T(1.0) / (value * detail::inverse_sqrt(value));
 			}
 
-			// this specialization is not necessary given sqrt() float specialization and our simple generic rsqrt()
-			//
-			//// float specialization - uses double internally
-			////		100% match with (1.0f / std::sqrt) when using sqrt() float specialization
-			////		all floats (no specializations): 74.01% match with (1.0f / std::sqrt), 25.99% apparently within 1 ulp
-			//template <>
-			//constexpr float rsqrt(float value) noexcept
-			//{
-			//	return static_cast<float>(rsqrt(static_cast<double>(value)));
-			//}
+			// float specialization - uses double internally
+			//		100% match with (1.0f / std::sqrt) when using sqrt() float specialization
+			template <>
+			constexpr float rsqrt(float value) noexcept
+			{
+				return 1.0f / sqrt(value);
+			}
 
 		} // namespace relaxed
 
