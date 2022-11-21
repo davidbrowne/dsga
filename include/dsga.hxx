@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 7;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
@@ -44,7 +44,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 8;
+		constexpr inline int CXCM_PATCH_VERSION = 9;
 
 		namespace limits
 		{
@@ -599,7 +599,7 @@ namespace dsga
 					// screen out unnecessary input
 
 					// arg == +infinity or +/-0, return val unmodified
-					// arg == NaN, return Nan
+					// arg == NaN, return NaN
 					if (!isnormal_or_subnormal(value))
 						return value;
 
@@ -619,7 +619,7 @@ namespace dsga
 				{
 					// screen out unnecessary input
 
-					// arg == NaN, return Nan
+					// arg == NaN, return NaN
 					if (isnan(value))
 						return value;
 
@@ -627,7 +627,7 @@ namespace dsga
 					if (value == std::numeric_limits<T>::infinity())
 						return T(0.0);
 
-					// arg == -infinity or +/-0, return Nan
+					// arg == -infinity or +/-0, return NaN
 					if (!isnormal_or_subnormal(value))
 						return std::numeric_limits<T>::quiet_NaN();
 
@@ -675,8 +675,6 @@ namespace dsga
 			// trunc()
 			//
 
-	#if !defined(DSGA_CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
-
 			// rounds towards zero
 
 			template <std::floating_point T>
@@ -692,23 +690,9 @@ namespace dsga
 				}
 			}
 
-	#else
-
-			// rounds towards zero
-
-			template <std::floating_point T>
-			constexpr T trunc(T value) noexcept
-			{
-				return detail::constexpr_trunc(value);
-			}
-
-	#endif
-
 			//
 			// floor()
 			//
-
-	#if !defined(DSGA_CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
 
 			// rounds towards negative infinity
 
@@ -725,23 +709,9 @@ namespace dsga
 				}
 			}
 
-	#else
-
-			// rounds towards negative infinity
-
-			template <std::floating_point T>
-			constexpr T floor(T value) noexcept
-			{
-				return detail::constexpr_floor(value);
-			}
-
-	#endif
-
 			//
 			// ceil()
 			//
-
-	#if !defined(DSGA_CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
 
 			// rounds towards positive infinity
 
@@ -758,23 +728,9 @@ namespace dsga
 				}
 			}
 
-	#else
-
-			// rounds towards positive infinity
-
-			template <std::floating_point T>
-			constexpr T ceil(T value) noexcept
-			{
-				return detail::constexpr_ceil(value);
-			}
-
-	#endif
-
 			//
 			// round()
 			//
-
-	#if !defined(DSGA_CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
 
 			// rounds to nearest integral position, halfway cases away from zero
 
@@ -790,18 +746,6 @@ namespace dsga
 					return std::round(value);
 				}
 			}
-
-	#else
-
-			// rounds to nearest integral position, halfway cases away from zero
-
-			template <std::floating_point T>
-			constexpr T round(T value) noexcept
-			{
-				return detail::constexpr_round(value);
-			}
-
-	#endif
 
 			//
 			// fract()
@@ -821,8 +765,6 @@ namespace dsga
 			// fmod()
 			//
 
-	#if !defined(DSGA_CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
-
 			// the floating point remainder of division
 
 			template <std::floating_point T>
@@ -837,18 +779,6 @@ namespace dsga
 					return std::fmod(x, y);
 				}
 			}
-
-	#else
-
-			// the floating point remainder of division
-
-			template <std::floating_point T>
-			constexpr T fmod(T x, T y) noexcept
-			{
-				return detail::constexpr_fmod(x, y);
-			}
-
-	#endif
 
 			//
 			// round_even()
@@ -868,9 +798,7 @@ namespace dsga
 			// sqrt()
 			//
 
-	#if DSGA_CXCM_APPROXIMATIONS_ALLOWED
-
-		#if !defined(DSGA_CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
+	#if defined(DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED)
 
 			template <std::floating_point T>
 			constexpr T sqrt(T value) noexcept
@@ -885,23 +813,13 @@ namespace dsga
 				}
 			}
 
-		#else
-
-			template <std::floating_point T>
-			constexpr T sqrt(T value) noexcept
-			{
-				return detail::constexpr_sqrt(value);
-			}
-
-		#endif
-
 	#else
 
-		template <std::floating_point T>
-		T sqrt(T value) noexcept
-		{
-			return std::sqrt(value);
-		}
+			template <std::floating_point T>
+			T sqrt(T value) noexcept
+			{
+				return std::sqrt(value);
+			}
 
 	#endif
 
@@ -909,9 +827,7 @@ namespace dsga
 			// rsqrt() - inverse square root
 			//
 
-	#if DSGA_CXCM_APPROXIMATIONS_ALLOWED
-
-		#if !defined(DSGA_CXCM_DISABLE_RUNTIME_OPTIMIZATIONS) && (defined(_DEBUG) || defined(_M_IX86))
+	#if defined(DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED)
 
 			template <std::floating_point T>
 			constexpr T rsqrt(T value) noexcept
@@ -926,23 +842,13 @@ namespace dsga
 				}
 			}
 
-		#else
-
-			template <std::floating_point T>
-			constexpr T rsqrt(T value) noexcept
-			{
-				return detail::constexpr_rsqrt(value);
-			}
-
-		#endif
-
 	#else
 
-		template <std::floating_point T>
-		T rsqrt(T value) noexcept
-		{
-			return T(1.0) / std::sqrt(value);
-		}
+			template <std::floating_point T>
+			T rsqrt(T value) noexcept
+			{
+				return T(1.0) / std::sqrt(value);
+			}
 
 	#endif
 
