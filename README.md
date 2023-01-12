@@ -238,7 +238,7 @@ It is a common pastime for people to write these kind of vector libraries. The t
 ## License [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
 
 ```
-//          Copyright David Browne 2020-2022.
+//          Copyright David Browne 2020-2023.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -253,7 +253,7 @@ The libraries we use (some just occasionally):
 ```
 // cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
 //
-//          Copyright David Browne 2020-2022.
+//          Copyright David Browne 2020-2023.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -275,5 +275,5 @@ The libraries we use (some just occasionally):
 //
 // Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2019-2021 Martin Ankerl <martin.ankerl@gmail.com>
+// Copyright (c) 2019-2020 Martin Ankerl <martin.ankerl@gmail.com>
 ```
