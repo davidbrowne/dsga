@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 7;
-constexpr inline int DSGA_PATCH_VERSION = 6;
+constexpr inline int DSGA_PATCH_VERSION = 7;
 
 namespace dsga
 {
@@ -3995,16 +3995,16 @@ namespace dsga
 		constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept -> T { return cxcm::abs(arg); };
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		requires (!std::unsigned_integral<T>)
+		requires (!std::unsigned_integral<T>) && non_bool_arithmetic<T>
 		constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, abs_op);
 		}
 
-		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T((T(0) < arg) - (arg < T(0))); };
+		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(T(0) < arg) - T(arg < T(0))); };
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		requires (!std::unsigned_integral<T>)
+		requires (!std::unsigned_integral<T>) && non_bool_arithmetic<T>
 		constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sign_op);
@@ -4557,6 +4557,7 @@ namespace dsga
 		}
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 									   const vector_base<W2, T, C, D2> &y,
 									   T tolerance) noexcept
@@ -4570,6 +4571,7 @@ namespace dsga
 		}
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		requires non_bool_arithmetic<T>
 		constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 									   const vector_base<W2, T, C, D2> &y,
 									   const vector_base<W3, T, 1u, D3> &tolerance) noexcept
@@ -4580,6 +4582,7 @@ namespace dsga
 		// tolerance-box component check - strictly less than comparison, boundary is false
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires non_bool_arithmetic<T>
 		constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
 								  const vector_base<W2, T, C, D2> &y,
 								  T tolerance) noexcept
@@ -4591,7 +4594,7 @@ namespace dsga
 
 		template <bool W1, dimensional_scalar T, std::size_t C1, typename D1,
 			bool W2, typename D2, bool W3, std::size_t C2, typename D3>
-		requires ((C1 == C2) || (C2 == 1u))
+		requires ((C1 == C2) || (C2 == 1u)) && non_bool_arithmetic<T>
 		constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
 								  const vector_base<W2, T, C1, D2> &y,
 								  const vector_base<W3, T, C2, D3> &tolerance) noexcept
