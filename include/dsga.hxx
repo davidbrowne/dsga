@@ -110,6 +110,7 @@ namespace dsga
 				return (value < T(0)) ? -value : value;
 			}
 
+			// undefined behavior if (value == std::numeric_limits<T>::min())
 			template <std::signed_integral T>
 			constexpr T abs(T value) noexcept
 			{
@@ -4362,9 +4363,16 @@ namespace dsga
 		}
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		requires (C > 1u)
 		constexpr auto length(const vector_base<W, T, C, D> &x) noexcept
 		{
 			return cxcm::sqrt(dot(x, x));
+		}
+
+		template <bool W, floating_point_dimensional_scalar T, typename D>
+		constexpr auto length(const vector_base<W, T, 1u, D> &x) noexcept
+		{
+			return cxcm::abs(x[0u]);
 		}
 
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
@@ -4375,9 +4383,20 @@ namespace dsga
 		}
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		requires (C > 1u)
 		constexpr auto normalize(const vector_base<W, T, C, D> &x) noexcept
 		{
 			return x / length(x);
+		}
+
+		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto normalize(const vector_base<W, T, 1u, D> &x) noexcept
+		{
+			// can't normalize 0 -> 0/0
+			if (x[0u] == T(0.0))
+				return std::numeric_limits<T>::quiet_NaN();
+
+			[[likely]] return T(1.0);
 		}
 
 		//
