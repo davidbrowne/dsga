@@ -32,15 +32,14 @@
 	</Type>
 
 	<Type Name="dsga::basic_vector&lt;*,*&gt;">
-		<DisplayString Condition="$T2 == 1">{store.value[0],g}</DisplayString>
-		<DisplayString Condition="$T2 != 1">{store}</DisplayString>
+		<DisplayString>{store}</DisplayString>
 		<Expand>
 			<ExpandedItem>store</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{value[$T4],g}</DisplayString>
+		<DisplayString>{{ {value[$T4],g} }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">value,view(dsga)</Item>
 			<Synthetic Name="offsets">

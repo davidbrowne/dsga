@@ -132,11 +132,11 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.7.8`
+Current version: `v0.8.0`
 
 * **All the vector and matrix functionality is implemented.**
-* First pass at test coverage. Everything major has some tests, but code coverage is not 100%. 
-* [Released v0.7.0](https://github.com/davidbrowne/dsga/releases/tag/v0.7.0)
+* First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
+* [Released v0.8.0](https://github.com/davidbrowne/dsga/releases/tag/v0.8.0)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).

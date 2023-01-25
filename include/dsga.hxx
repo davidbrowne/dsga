@@ -28,8 +28,8 @@
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
-constexpr inline int DSGA_MINOR_VERSION = 7;
-constexpr inline int DSGA_PATCH_VERSION = 8;
+constexpr inline int DSGA_MINOR_VERSION = 8;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
@@ -2736,10 +2736,7 @@ namespace dsga
 										UnOp &lambda) noexcept
 		{
 			using ReturnType = unary_op_return_t<UnOp, T>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(arg[Is])...);
-			else
-				return static_cast<ReturnType>(lambda(arg[0u]));
+			return basic_vector<ReturnType, C>(lambda(arg[Is])...);
 		}
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
@@ -2751,10 +2748,7 @@ namespace dsga
 		{
 			using ArgType = std::common_type_t<T1, T2>;
 			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
-			else
-				return static_cast<ReturnType>(lambda(static_cast<ArgType>(lhs[0u]), static_cast<ArgType>(rhs[0u])));
+			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -2766,10 +2760,7 @@ namespace dsga
 		{
 			using ArgType = std::common_type_t<T, U>;
 			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
-			else
-				return static_cast<ReturnType>(lambda(static_cast<ArgType>(lhs[0u]), static_cast<ArgType>(rhs)));
+			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -2781,10 +2772,7 @@ namespace dsga
 		{
 			using ArgType = std::common_type_t<T, U>;
 			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs), static_cast<ArgType>(rhs[Is]))...);
-			else
-				return static_cast<ReturnType>(lambda(static_cast<ArgType>(lhs), static_cast<ArgType>(rhs[0u])));
+			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs), static_cast<ArgType>(rhs[Is]))...);
 		}
 
 		//
@@ -2798,10 +2786,7 @@ namespace dsga
 													const vector_base<W2, T2, C, D2> &rhs,
 													BinOp &lambda) noexcept
 		{
-			if constexpr (C > 1u)
-				return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
-			else
-				return static_cast<binary_op_return_t<BinOp, T1, T2>>(lambda(lhs[0u], rhs[0u]));
+			return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -2811,10 +2796,7 @@ namespace dsga
 													U rhs,
 													BinOp &lambda) noexcept
 		{
-			if constexpr (C > 1u)
-				return basic_vector<binary_op_return_t<BinOp, T, U>, C>(lambda(lhs[Is], rhs)...);
-			else
-				return static_cast<binary_op_return_t<BinOp, T, U>>(lambda(lhs[0u], rhs));
+			return basic_vector<binary_op_return_t<BinOp, T, U>, C>(lambda(lhs[Is], rhs)...);
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -2824,10 +2806,7 @@ namespace dsga
 													const vector_base<W, T, C, D> &rhs,
 													BinOp &lambda) noexcept
 		{
-			if constexpr (C > 1u)
-				return basic_vector<binary_op_return_t<BinOp, U, T>, C>(lambda(lhs, rhs[Is])...);
-			else
-				return static_cast<binary_op_return_t<BinOp, U, T>>(lambda(lhs, rhs[0u]));
+			return basic_vector<binary_op_return_t<BinOp, U, T>, C>(lambda(lhs, rhs[Is])...);
 		}
 
 		// perform the lambda action, setting the lhs vector_base to new values.
@@ -2893,10 +2872,7 @@ namespace dsga
 		{
 			using ArgType = std::common_type_t<T1, T2, T3>;
 			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z[Is]))...);
-			else
-				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x[0u]), static_cast<ArgType>(y[0u]), static_cast<ArgType>(z[0u])));
+			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z[Is]))...);
 		}
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
@@ -2909,10 +2885,7 @@ namespace dsga
 		{
 			using ArgType = std::common_type_t<T1, T2, U>;
 			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z))...);
-			else
-				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x[0u]), static_cast<ArgType>(y[0u]), static_cast<ArgType>(z)));
+			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z))...);
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -2925,10 +2898,7 @@ namespace dsga
 		{
 			using ArgType = std::common_type_t<T, U, V>;
 			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y), static_cast<ArgType>(z))...);
-			else
-				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x[0u]), static_cast<ArgType>(y), static_cast<ArgType>(z)));
+			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y), static_cast<ArgType>(z))...);
 		}
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
@@ -2941,10 +2911,7 @@ namespace dsga
 		{
 			using ArgType = std::common_type_t<T, U, V>;
 			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
-			if constexpr (C > 1u)
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x), static_cast<ArgType>(y), static_cast<ArgType>(z[Is]))...);
-			else
-				return static_cast<ReturnType>(lambda(static_cast<ArgType>(x), static_cast<ArgType>(y), static_cast<ArgType>(z[0u])));
+			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x), static_cast<ArgType>(y), static_cast<ArgType>(z[Is]))...);
 		}
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
@@ -2957,10 +2924,7 @@ namespace dsga
 													 const vector_base<W3, T3, C, D3> &z,
 													 TernOp &lambda) noexcept
 		{
-			if constexpr (C > 1u)
-				return basic_vector<ternary_op_return_t<TernOp, T1, T2, T3>, C>(lambda(x[Is], y[Is], z[Is])...);
-			else
-				return static_cast<ternary_op_return_t<TernOp, T1, T2, T3>>(lambda(x[0u], y[0u], z[0u]));
+			return basic_vector<ternary_op_return_t<TernOp, T1, T2, T3>, C>(lambda(x[Is], y[Is], z[Is])...);
 		}
 
 	}
@@ -4389,14 +4353,14 @@ namespace dsga
 			return x / length(x);
 		}
 
-		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
+		template <bool W, floating_point_dimensional_scalar T, typename D>
 		constexpr auto normalize(const vector_base<W, T, 1u, D> &x) noexcept
 		{
 			// can't normalize 0 -> 0/0
 			if (x[0u] == T(0.0))
-				return std::numeric_limits<T>::quiet_NaN();
+				return basic_vector<T, 1u>(std::numeric_limits<T>::quiet_NaN());
 
-			[[likely]] return T(1.0);
+			[[likely]] return basic_vector<T, 1u>(T(1.0));
 		}
 
 		//
