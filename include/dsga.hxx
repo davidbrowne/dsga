@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 0;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
@@ -1163,66 +1163,7 @@ namespace dsga
 	//
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
-	requires indexable<T, Size, Count, Is...>
-	struct indexed_vector_iterator
-	{
-		// publicly need these type using declarations or typedefs in iterator class,
-		// since c++17 deprecated std::iterator
-		using iterator_category = std::forward_iterator_tag;
-		using value_type = T;
-		using difference_type = int;
-		using pointer = T *;
-		using reference = T &;
-
-		constexpr static std::size_t begin_index = 0;
-		constexpr static std::size_t end_index = Count;
-
-		// the data
-		indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
-		std::size_t mapper_index;
-
-		// index == 0 is begin iterator
-		// index == Count is end iterator -- clamp index in [0, Count] range
-		constexpr indexed_vector_iterator(indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
-			: mapper_ptr(std::addressof(mapper)), mapper_index((index > Count) ? Count : index)
-		{
-		}
-
-		constexpr indexed_vector_iterator(const indexed_vector_iterator &) noexcept = default;
-		constexpr indexed_vector_iterator(indexed_vector_iterator &&) noexcept = default;
-		constexpr indexed_vector_iterator &operator =(const indexed_vector_iterator &) noexcept = default;
-		constexpr indexed_vector_iterator &operator =(indexed_vector_iterator &&) noexcept = default;
-		constexpr ~indexed_vector_iterator() = default;
-		constexpr bool operator ==(const indexed_vector_iterator &other) const noexcept = default;
-
-		constexpr reference operator *() noexcept
-		{
-			return (*mapper_ptr)[mapper_index];
-		}
-
-		constexpr value_type operator *() const noexcept
-		{
-			return (*mapper_ptr)[mapper_index];
-		}
-
-		constexpr indexed_vector_iterator& operator++() noexcept
-		{
-			if (mapper_index < Count)
-				mapper_index++;
-			return *this;
-		}
-
-		constexpr indexed_vector_iterator operator++(int) noexcept
-		{
-			indexed_vector_iterator temp = *this;
-			if (mapper_index < Count)
-				mapper_index++;
-			return temp;
-		}
-	};
-
-	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
-	requires indexable <T, Size, Count, Is...>
+		requires indexable <T, Size, Count, Is...>
 	struct indexed_vector_const_iterator
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
@@ -1247,6 +1188,7 @@ namespace dsga
 		{
 		}
 
+		constexpr indexed_vector_const_iterator() noexcept = default;
 		constexpr indexed_vector_const_iterator(const indexed_vector_const_iterator &) noexcept = default;
 		constexpr indexed_vector_const_iterator(indexed_vector_const_iterator &&) noexcept = default;
 		constexpr indexed_vector_const_iterator &operator =(const indexed_vector_const_iterator &) noexcept = default;
@@ -1254,17 +1196,12 @@ namespace dsga
 		constexpr ~indexed_vector_const_iterator() = default;
 		constexpr bool operator ==(const indexed_vector_const_iterator &other) const noexcept = default;
 
-		constexpr reference operator *() noexcept
+		constexpr reference operator *() const noexcept
 		{
 			return (*mapper_ptr)[mapper_index];
 		}
 
-		constexpr value_type operator *() const noexcept
-		{
-			return (*mapper_ptr)[mapper_index];
-		}
-
-	   constexpr indexed_vector_const_iterator& operator++() noexcept
+		constexpr indexed_vector_const_iterator &operator++() noexcept
 		{
 			if (mapper_index < Count)
 				mapper_index++;
@@ -1276,6 +1213,59 @@ namespace dsga
 			indexed_vector_const_iterator temp = *this;
 			if (mapper_index < Count)
 				mapper_index++;
+			return temp;
+		}
+	};
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
+	requires indexable <T, Size, Count, Is...>
+	struct indexed_vector_iterator : indexed_vector_const_iterator<T, Size, Count, Is...>
+	{
+		// let base class do all the work
+		using base_iter = indexed_vector_const_iterator<T, Size, Count, Is...>;
+
+		// publicly need these type using declarations or typedefs in iterator class,
+		// since c++17 deprecated std::iterator
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = T;
+		using difference_type = int;
+		using pointer = T *;
+		using reference = T &;
+		using const_reference = const T &;
+
+		constexpr static std::size_t begin_index = 0;
+		constexpr static std::size_t end_index = Count;
+
+		// index == 0 is begin iterator
+		// index == Count is end iterator -- clamp index in [0, Count] range
+		constexpr indexed_vector_iterator(indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
+			: base_iter(mapper, index)
+		{
+		}
+
+		constexpr indexed_vector_iterator() noexcept = default;
+		constexpr indexed_vector_iterator(const indexed_vector_iterator &) noexcept = default;
+		constexpr indexed_vector_iterator(indexed_vector_iterator &&) noexcept = default;
+		constexpr indexed_vector_iterator &operator =(const indexed_vector_iterator &) noexcept = default;
+		constexpr indexed_vector_iterator &operator =(indexed_vector_iterator &&) noexcept = default;
+		constexpr ~indexed_vector_iterator() = default;
+		constexpr bool operator ==(const indexed_vector_iterator &other) const noexcept = default;
+
+		constexpr reference operator *() const noexcept
+		{
+			return const_cast<reference>(base_iter::operator*());
+		}
+
+		constexpr indexed_vector_iterator &operator++() noexcept
+		{
+			base_iter::operator++();
+			return *this;
+		}
+
+		constexpr indexed_vector_iterator operator++(int) noexcept
+		{
+			indexed_vector_iterator temp = *this;
+			base_iter::operator++();
 			return temp;
 		}
 	};
@@ -4327,7 +4317,6 @@ namespace dsga
 		}
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
-		requires (C > 1u)
 		constexpr auto length(const vector_base<W, T, C, D> &x) noexcept
 		{
 			return cxcm::sqrt(dot(x, x));
@@ -4347,17 +4336,20 @@ namespace dsga
 		}
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
-		requires (C > 1u)
 		constexpr auto normalize(const vector_base<W, T, C, D> &x) noexcept
 		{
-			return x / length(x);
+			auto len = length(x);
+			if (T(0.0) == len)
+				return basic_vector<T, C>(std::numeric_limits<T>::quiet_NaN());
+
+			[[likely]] return x / length(x);
 		}
 
 		template <bool W, floating_point_dimensional_scalar T, typename D>
 		constexpr auto normalize(const vector_base<W, T, 1u, D> &x) noexcept
 		{
 			// can't normalize 0 -> 0/0
-			if (x[0u] == T(0.0))
+			if (T(0.0) == x[0u])
 				return basic_vector<T, 1u>(std::numeric_limits<T>::quiet_NaN());
 
 			[[likely]] return basic_vector<T, 1u>(T(1.0));
@@ -4498,14 +4490,15 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		// this is function is not in the glsl standard, same result as "!any()"
+		// this is function is not in the glsl standard, same result as "!any(x)"
 		template <bool W, std::size_t C, typename D>
 		constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
 		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return !(x[Is] || ...);
-			}(std::make_index_sequence<C>{});
+			return !any(x);
+//			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+//			{
+//				return !(x[Is] || ...);
+//			}(std::make_index_sequence<C>{});
 		}
 
 		constexpr inline auto logical_not_op = [](bool x) noexcept -> bool { return !x; };
