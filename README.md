@@ -153,7 +153,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1846 that fails for clang-15 on Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1848 that fails for clang-15 on Ubuntu.
 
 The tests have been most recently run on:
 
@@ -166,7 +166,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1862 | 1862 passed | 0 failed |
+[doctest] assertions: 1864 | 1864 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -177,7 +177,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1862 | 1862 passed | 0 failed |
+[doctest] assertions: 1864 | 1864 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -190,7 +190,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1846 | 1846 passed | 0 failed |
+[doctest] assertions: 1848 | 1848 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -203,7 +203,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1862 | 1862 passed | 0 failed |
+[doctest] assertions: 1864 | 1864 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -215,17 +215,17 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-/dsga/tests/swizzle_test.cxx:1711:
+dsga/tests/swizzle_test.cxx:1711:
 TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
   type traits for basic_matrix
 
-/dsga/tests/swizzle_test.cxx:1841: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
+dsga/tests/swizzle_test.cxx:1845: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
   values: CHECK_UNARY( false )
 
 ===============================================================================
 [doctest] test cases:   82 |   81 passed | 1 failed | 0 skipped
-[doctest] assertions: 1846 | 1845 passed | 1 failed |
+[doctest] assertions: 1848 | 1847 passed | 1 failed |
 [doctest] Status: FAILURE!
 ```
 

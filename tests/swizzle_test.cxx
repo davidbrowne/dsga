@@ -1770,6 +1770,10 @@ TEST_SUITE("test swizzling applications")
 
 			CHECK_UNARY(std::is_aggregate_v<dswizzle1>);
 			CHECK_UNARY(std::is_aggregate_v<dswizzle4>);
+
+			// indexed_vector iterators are forward iterators
+			CHECK_UNARY(std::forward_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
+			CHECK_UNARY(std::forward_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
 		}
 
 		SUBCASE("type traits for common initial sequence for anonymous union")
@@ -1979,8 +1983,6 @@ TEST_SUITE("test swizzling applications")
 
 			// for indexed_vector
 
-			static_assert(std::forward_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
-
 			// recreate input one at a time
 			// "int &" deduced for "auto &"
 			for (unsigned dest_indx = 0; auto & loop_var : non_const_data.zwxy)
@@ -1998,8 +2000,6 @@ TEST_SUITE("test swizzling applications")
 			ivec4 data_dest(0);
 
 			// for indexed_vector
-
-			static_assert(std::forward_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
 
 			// recreate input one at a time
 			// "const int &" deduced for "auto &"
