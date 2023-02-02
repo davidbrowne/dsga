@@ -394,11 +394,14 @@ TEST_SUITE("test operators")
 		SUBCASE("generic vector functions")
 		{
 			// length()
+			auto length_val = scal(-12.75f);
 			vec2 length_vals1 = vec2(3, 4);
 			vec2 length_vals2 = vec2(5, 12);
+			auto length0 = length(length_val);
 			auto length1 = length(length_vals1);
 			auto length2 = length(length_vals2);
 
+			CHECK_EQ(length0, 12.75f);
 			CHECK_EQ(length1, 5.f);
 			CHECK_EQ(length2, 13.f);
 
@@ -429,6 +432,17 @@ TEST_SUITE("test operators")
 			auto normed = normalize(pre_norm);
 			CHECK_EQ(normed, vec4(0.5, -0.5, 0.5, -0.5));
 
+			auto zeros = dvec4(0.0);
+			auto nan_normed = normalize(zeros);
+			CHECK_UNARY(all(isnan(nan_normed)));
+
+			auto single_val = scal(-3.5);
+			auto single_normed = normalize(single_val);
+			CHECK_EQ(single_normed, scal(1));
+
+			auto single_zero = dscal(0.0);
+			auto single_nan_normed = normalize(single_zero);
+			CHECK_UNARY(all(isnan(single_nan_normed)));
 		}
 
 		SUBCASE("'normal' vector functions")

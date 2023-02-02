@@ -9,12 +9,22 @@ using namespace dsga;
 
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
-constexpr auto get_perpendicular(const vec2 &some_vec) noexcept
+constexpr auto get_perpendicular1(const vec2 &some_vec) noexcept
 {
-    return some_vec.yx * vec2(-1, 1);
+    auto cos90 = 0.0f;
+    auto sin90 = 1.0f;
+
+    // rotation matrix -- components in column major order
+    return mat2(cos90, sin90, -sin90, cos90) * some_vec;
 }
 
-// project a point to a line in 3D - there is no coincident or collinear point checking
+// same as above, different implementation
+constexpr auto get_perpendicular2(const vec2 &some_vec) noexcept
+{
+    return vec2(-1, 1) * some_vec.yx;
+}
+
+// project a point to a line in 3D -- there is no coincident or collinear point checking
 constexpr auto project_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_in_space) noexcept
 {
     auto v1 = p1 - p0;
@@ -44,9 +54,11 @@ constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, floa
 // returns the 2D point on the curve at t
 constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t) noexcept
 {
+    // each control point is a column of the matrix.
+    // the rows represent x coords and y coords.
     auto AoS = mat4x2(p0, p1, p2, p3);
 
-    // lambda pack wrapper
+    // lambda pack wrapper -- would be better solution if vector size was generic
     return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
     {
         return vec2(single_ordinate_cubic_bezier_eval(AoS.row(Is), t)...);
@@ -153,7 +165,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1848 that fails for clang-15 on Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1852 that fails for clang-15 on Ubuntu.
 
 The tests have been most recently run on:
 
@@ -166,7 +178,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1864 | 1864 passed | 0 failed |
+[doctest] assertions: 1868 | 1868 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -177,7 +189,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1864 | 1864 passed | 0 failed |
+[doctest] assertions: 1868 | 1868 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -190,7 +202,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1848 | 1848 passed | 0 failed |
+[doctest] assertions: 1852 | 1852 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -203,7 +215,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1864 | 1864 passed | 0 failed |
+[doctest] assertions: 1868 | 1868 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -225,7 +237,7 @@ dsga/tests/swizzle_test.cxx:1845: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> )
 
 ===============================================================================
 [doctest] test cases:   82 |   81 passed | 1 failed | 0 skipped
-[doctest] assertions: 1848 | 1847 passed | 1 failed |
+[doctest] assertions: 1852 | 1851 passed | 1 failed |
 [doctest] Status: FAILURE!
 ```
 

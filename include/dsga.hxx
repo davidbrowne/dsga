@@ -1163,7 +1163,7 @@ namespace dsga
 	//
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
-		requires indexable <T, Size, Count, Is...>
+	requires indexable<T, Size, Count, Is...>
 	struct indexed_vector_const_iterator
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
@@ -1580,7 +1580,7 @@ namespace dsga
 			return *this;
 		}
 
-		template <dimensional_scalar U>
+		template <typename U>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(U value) noexcept
 		{
@@ -1615,7 +1615,7 @@ namespace dsga
 
 		private:
 
-			friend struct vector_base<true, T, 1u, basic_vector<T, 1u>>;
+			friend struct vector_base<Writable, T, 1u, basic_vector<T, 1u>>;
 
 			//
 			// data access
@@ -1777,7 +1777,7 @@ namespace dsga
 
 		private:
 
-			friend struct vector_base<true, T, 2u, basic_vector<T, 2u>>;
+			friend struct vector_base<Writable, T, 2u, basic_vector<T, 2u>>;
 
 			//
 			// data access
@@ -2023,7 +2023,7 @@ namespace dsga
 		}
 
 		template <bool W1, dimensional_scalar U1, typename D1,
-			bool W2, typename U2, std::size_t C, typename D2>
+			bool W2, dimensional_scalar U2, std::size_t C, typename D2>
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
 		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &other,
 										const vector_base<W2, U2, C, D2> &yet_another) noexcept
@@ -2061,7 +2061,7 @@ namespace dsga
 
 		private:
 
-			friend struct vector_base<true, T, 3u, basic_vector<T, 3u>>;
+			friend struct vector_base<Writable, T, 3u, basic_vector<T, 3u>>;
 
 			//
 			// data access
@@ -2628,7 +2628,7 @@ namespace dsga
 
 		private:
 
-			friend struct vector_base<true, T, 4u, basic_vector<T, 4u>>;
+			friend struct vector_base<Writable, T, 4u, basic_vector<T, 4u>>;
 
 			//
 			// data access
