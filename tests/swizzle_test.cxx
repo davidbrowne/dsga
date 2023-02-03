@@ -1814,19 +1814,19 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY_FALSE(std::is_corresponding_member(&A::i, &faux_vector::k));		// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
 			CHECK_UNARY(std::is_corresponding_member(&faux_wrapper::l, &faux_vector::k));	// analogous to using dsga::storage_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
 
-			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::value, &dsga::indexed_vector<int, 1, 1, 0>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::value, &dsga::indexed_vector<int, 2, 2, 1, 0>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 3>::value, &dsga::indexed_vector<int, 3, 3, 2, 0, 1>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 1, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 2, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::value, &dsga::indexed_vector<int, 4, 2, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::value, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::value, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
-			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 3, 3, 3, 3>::value, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::value));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::store, &dsga::indexed_vector<int, 1, 1, 0>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::store, &dsga::indexed_vector<int, 2, 2, 1, 0>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 3>::store, &dsga::indexed_vector<int, 3, 3, 2, 0, 1>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 1, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 2, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 2, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::base, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
+			CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
 
 #endif
 		}

@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -934,17 +934,17 @@ namespace dsga
 		// as an array
 		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
 
-		dimensional_storage_t<T, Size> value;
+		dimensional_storage_t<T, Size> store;
 
 		[[nodiscard]] constexpr int length() const noexcept					{ return static_cast<int>(Count); }
 		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
 
 		// physically contiguous access to data
-		constexpr T &operator [](std::size_t index) noexcept				{ return value[index]; }
-		constexpr const T &operator [](std::size_t index) const noexcept	{ return value[index]; }
+		constexpr T &operator [](std::size_t index) noexcept				{ return store[index]; }
+		constexpr const T &operator [](std::size_t index) const noexcept	{ return store[index]; }
 
-		constexpr T * data() noexcept										{ return value.data(); }
-		[[nodiscard]] constexpr const T * data() const noexcept				{ return value.data(); }
+		constexpr T * data() noexcept										{ return store.data(); }
+		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
@@ -955,17 +955,17 @@ namespace dsga
 		{
 			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
 			{
-				((value[Js] = static_cast<T>(same_args)),...);
+				((store[Js] = static_cast<T>(same_args)),...);
 			}(std::make_index_sequence<Count>{}, args...);
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return value.begin(); }
-		[[nodiscard]] constexpr auto begin() const	noexcept	{ return value.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const	noexcept	{ return value.cbegin(); }
-		constexpr auto end() noexcept							{ return value.end(); }
-		[[nodiscard]] constexpr auto end() const	noexcept	{ return value.cend(); }
-		[[nodiscard]] constexpr auto cend() const	noexcept	{ return value.cend(); }
+		constexpr auto begin() noexcept							{ return store.begin(); }
+		[[nodiscard]] constexpr auto begin() const	noexcept	{ return store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const	noexcept	{ return store.cbegin(); }
+		constexpr auto end() noexcept							{ return store.end(); }
+		[[nodiscard]] constexpr auto end() const	noexcept	{ return store.cend(); }
+		[[nodiscard]] constexpr auto cend() const	noexcept	{ return store.cend(); }
 
 	};
 
@@ -1288,10 +1288,10 @@ namespace dsga
 		using sequence_pack = std::index_sequence<Is...>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
-		dimensional_storage_t<T, Size> value;
+		dimensional_storage_t<T, Size> base;
 
 		// copy assignment
 		template <bool W, dimensional_scalar U, typename D>
@@ -1336,20 +1336,20 @@ namespace dsga
 			requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
 			constexpr void init(Args ...args) noexcept
 			{
-				((value[Is] = static_cast<T>(args)), ...);
+				((base[Is] = static_cast<T>(args)), ...);
 			}
 
 			// logically contiguous - used by operator [] for read/write access to data
-			constexpr T &at(std::size_t index) noexcept requires Writable			{ return value[sequence_array[index]]; }
+			constexpr T &at(std::size_t index) noexcept requires Writable			{ return base[offsets[index]]; }
 
 			// logically contiguous - used by operator [] for read access to data
-			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return value[sequence_array[index]]; }
+			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return base[offsets[index]]; }
 
 			// physically contiguous -- used by data() for read/write access to data
-			constexpr T *raw_data() noexcept requires Writable						{ return value.data(); }
+			constexpr T *raw_data() noexcept requires Writable						{ return base.data(); }
 
 			// physically contiguous -- used by data() for read access to data
-			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return value.data(); }
+			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return base.data(); }
 
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
@@ -1376,10 +1376,10 @@ namespace dsga
 		using sequence_pack = std::index_sequence<I>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
-		dimensional_storage_t<T, Size> value;
+		dimensional_storage_t<T, Size> base;
 
 		// copy assignment
 		template <bool W, dimensional_scalar U, typename D>
@@ -1425,14 +1425,14 @@ namespace dsga
 		// this is extremely important and is only for indexed_vector of [Count == 1]
 		constexpr operator T() const noexcept
 		{
-			return value[I];
+			return base[I];
 		}
 
 		template <typename U>
 		requires std::convertible_to<T, U>
 		explicit constexpr operator U() const noexcept
 		{
-			return static_cast<U>(value[I]);
+			return static_cast<U>(base[I]);
 		}
 
 		// support for range-for loop
@@ -1453,20 +1453,20 @@ namespace dsga
 			requires Writable &&std::convertible_to<U, T>
 			constexpr void init(U other) noexcept
 			{
-				value[I] = static_cast<T>(other);
+				base[I] = static_cast<T>(other);
 			}
 
 			// logically contiguous - used by operator [] for read/write access to data
-			constexpr T &at(std::size_t index) noexcept requires Writable			{ return value[sequence_array[index]]; }
+			constexpr T &at(std::size_t index) noexcept requires Writable			{ return base[offsets[index]]; }
 
 			// logically contiguous - used by operator [] for read access to data
-			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return value[sequence_array[index]]; }
+			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return base[offsets[index]]; }
 
 			// physically contiguous -- used by data() for read/write access to data
-			constexpr T *raw_data() noexcept requires Writable						{ return value.data(); }
+			constexpr T *raw_data() noexcept requires Writable						{ return base.data(); }
 
 			// physically contiguous -- used by data() for read access to data
-			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return value.data(); }
+			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return base.data(); }
 
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
@@ -1509,11 +1509,11 @@ namespace dsga
 		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<T, Size>			store;
+			storage_wrapper<T, Size>			base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 
@@ -1543,28 +1543,28 @@ namespace dsga
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]) }
+			: base{ static_cast<T>(other[0u]) }
 		{
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]) }
+			: base{ static_cast<T>(other[0u]) }
 		{
 		}
 
 		template <typename U>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_vector(U value) noexcept
-			: store{ static_cast<T>(value) }
+			: base{ static_cast<T>(value) }
 		{
 		}
 
 		template <typename U>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 		explicit constexpr basic_vector(U value) noexcept
-			: store{ static_cast<T>(value) }
+			: base{ static_cast<T>(value) }
 		{
 		}
 
@@ -1595,23 +1595,23 @@ namespace dsga
 		// this is extremely important and is only for basic_vector of [Size == 1]
 		constexpr operator T() const noexcept
 		{
-			return store.value[0u];
+			return base.store[0u];
 		}
 
 		template <typename U>
 		requires std::convertible_to<T, U>
 		explicit constexpr operator U() const noexcept
 		{
-			return static_cast<U>(store.value[0u]);
+			return static_cast<U>(base.store[0u]);
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return store.value.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.value.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return store.value.cbegin(); }
-		constexpr auto end() noexcept							{ return store.value.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return store.value.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return store.value.cend(); }
+		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
+		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
 
 		private:
 
@@ -1627,16 +1627,16 @@ namespace dsga
 			requires std::convertible_to<U, T>
 			constexpr void init(U value) noexcept
 			{
-				store.value[0u] = static_cast<T>(value);
+				base.store[0u] = static_cast<T>(value);
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
-			constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
-			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
+			constexpr T &at(std::size_t index) noexcept								{ return base.store[index]; }
+			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return base.store[index]; }
 
 			// physically contiguous -- used by data()
-			constexpr T *raw_data() noexcept										{ return store.value.data(); }
-			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return store.value.data(); }
+			constexpr T *raw_data() noexcept										{ return base.store.data(); }
+			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return base.store.data(); }
 
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
@@ -1663,11 +1663,11 @@ namespace dsga
 		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<T, Size>			store;
+			storage_wrapper<T, Size>			base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 			dexvec1<T, Size, 1>					y;				// Writable
@@ -1723,35 +1723,35 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, T>
 		explicit constexpr basic_vector(U value) noexcept
-			: store{ static_cast<T>(value), static_cast<T>(value) }
+			: base{ static_cast<T>(value), static_cast<T>(value) }
 		{
 		}
 
 		template <typename U1, typename U2>
 		requires std::convertible_to<U1, T> && std::convertible_to <U2, T>
 		explicit constexpr basic_vector(U1 xvalue, U2 yvalue) noexcept
-			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue) }
+			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue) }
 		{
 		}
 
 		template <typename U1, bool W, dimensional_scalar U2, std::size_t C, typename D>
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
 		explicit constexpr basic_vector(U1 xvalue, const vector_base<W, U2, C, D> &yvalue_source) noexcept
-			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue_source[0u]) }
+			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue_source[0u]) }
 		{
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T> && (C >= Count))
 		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
 		}
 
@@ -1768,12 +1768,12 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return store.value.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.value.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return store.value.cbegin(); }
-		constexpr auto end() noexcept							{ return store.value.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return store.value.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return store.value.cend(); }
+		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
+		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
 
 		private:
 
@@ -1791,17 +1791,17 @@ namespace dsga
 			{
 				[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
 				{
-					((store.value[Js] = static_cast<T>(same_args)), ...);
+					((base.store[Js] = static_cast<T>(same_args)), ...);
 				}(std::make_index_sequence<Count>{}, args...);
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
-			constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
-			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
+			constexpr T &at(std::size_t index) noexcept								{ return base.store[index]; }
+			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return base.store[index]; }
 
 			// physically contiguous -- used by data()
-			constexpr T *raw_data() noexcept										{ return store.value.data(); }
-			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return store.value.data(); }
+			constexpr T *raw_data() noexcept										{ return base.store.data(); }
+			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return base.store.data(); }
 
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
@@ -1828,11 +1828,11 @@ namespace dsga
 		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<T, Size>			store;
+			storage_wrapper<T, Size>			base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 			dexvec1<T, Size, 1>					y;				// Writable
@@ -1978,7 +1978,7 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, T>
 		explicit constexpr basic_vector(U value) noexcept
-			: store{ static_cast<T>(value), static_cast<T>(value), static_cast<T>(value) }
+			: base{ static_cast<T>(value), static_cast<T>(value), static_cast<T>(value) }
 		{
 		}
 
@@ -1987,7 +1987,7 @@ namespace dsga
 		explicit constexpr basic_vector(U1 xvalue,
 										U2 yvalue,
 										U3 zvalue) noexcept
-			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue) }
+			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue) }
 		{
 		}
 
@@ -1996,21 +1996,21 @@ namespace dsga
 		explicit constexpr basic_vector(U1 xvalue,
 										U2 yvalue,
 										const vector_base<W, U3, C, D> &zvalue_source) noexcept
-			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue_source[0u]) }
+			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue_source[0u]) }
 		{
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
 		{
 		}
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T> && (C >= Count))
 		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
 		{
 		}
 
@@ -2018,7 +2018,7 @@ namespace dsga
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
 		explicit constexpr basic_vector(const vector_base<W, U1, 2u, D> &other,
 										U2 yet_another) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another) }
 		{
 		}
 
@@ -2027,7 +2027,7 @@ namespace dsga
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
 		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &other,
 										const vector_base<W2, U2, C, D2> &yet_another) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another[0u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another[0u]) }
 		{
 		}
 
@@ -2035,7 +2035,7 @@ namespace dsga
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 2)
 		explicit constexpr basic_vector(U2 yet_another,
 										const vector_base<W, U1, C, D> &other) noexcept
-			: store{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
+			: base{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
 		}
 
@@ -2052,12 +2052,12 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return store.value.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.value.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return store.value.cbegin(); }
-		constexpr auto end() noexcept							{ return store.value.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return store.value.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return store.value.cend(); }
+		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
+		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
 
 		private:
 
@@ -2075,17 +2075,17 @@ namespace dsga
 			{
 				[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
 				{
-					((store.value[Js] = static_cast<T>(same_args)), ...);
+					((base.store[Js] = static_cast<T>(same_args)), ...);
 				}(std::make_index_sequence<Count>{}, args...);
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
-			constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
-			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
+			constexpr T &at(std::size_t index) noexcept								{ return base.store[index]; }
+			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return base.store[index]; }
 
 			// physically contiguous -- used by data()
-			constexpr T *raw_data() noexcept										{ return store.value.data(); }
-			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return store.value.data(); }
+			constexpr T *raw_data() noexcept										{ return base.store.data(); }
+			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return base.store.data(); }
 
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
@@ -2112,11 +2112,11 @@ namespace dsga
 		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		union
 		{
-			storage_wrapper<T, Size>			store;
+			storage_wrapper<T, Size>			base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 			dexvec1<T, Size, 1>					y;				// Writable
@@ -2482,7 +2482,7 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, T>
 		explicit constexpr basic_vector(U value) noexcept
-			: store{ static_cast<T>(value), static_cast<T>(value), static_cast<T>(value), static_cast<T>(value) }
+			: base{ static_cast<T>(value), static_cast<T>(value), static_cast<T>(value), static_cast<T>(value) }
 		{
 		}
 
@@ -2494,7 +2494,7 @@ namespace dsga
 										U2 yvalue,
 										U3 zvalue,
 										U4 wvalue) noexcept
-			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue), static_cast<T>(wvalue) }
+			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue), static_cast<T>(wvalue) }
 		{
 		}
 
@@ -2507,21 +2507,21 @@ namespace dsga
 										U2 yvalue,
 										U3 zvalue,
 										const vector_base<W, U4, C, D> &wvalue_source) noexcept
-			: store{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue), static_cast<T>(wvalue_source[0u]) }
+			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue), static_cast<T>(wvalue_source[0u]) }
 		{
 		}
 
 		template <bool W, dimensional_scalar U, typename D>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
 		{
 		}
 
 		template <bool W, dimensional_scalar U, typename D>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 		explicit constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
 		{
 		}
 
@@ -2529,7 +2529,7 @@ namespace dsga
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
 		explicit constexpr basic_vector(const vector_base<W, U1, 3u, D> &other,
 										U2 yet_another) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(yet_another) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(yet_another) }
 		{
 		}
 
@@ -2538,7 +2538,7 @@ namespace dsga
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
 		explicit constexpr basic_vector(const vector_base<W1, U1, 3u, D1> &other,
 										const vector_base<W2, U2, C, D2> &wvalue_source) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(wvalue_source[0u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(wvalue_source[0u]) }
 		{
 		}
 
@@ -2546,7 +2546,7 @@ namespace dsga
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 3)
 		explicit constexpr basic_vector(U2 yet_another,
 										const vector_base<W, U1, C, D> &other) noexcept
-			: store{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
+			: base{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
 		{
 		}
 
@@ -2555,7 +2555,7 @@ namespace dsga
 		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 2)
 		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &first,
 										const vector_base<W2, U2, C, D2> &second) noexcept
-			: store{ static_cast<T>(first[0u]), static_cast<T>(first[1u]), static_cast<T>(second[0u]), static_cast<T>(second[1u]) }
+			: base{ static_cast<T>(first[0u]), static_cast<T>(first[1u]), static_cast<T>(second[0u]), static_cast<T>(second[1u]) }
 		{
 		}
 
@@ -2564,7 +2564,7 @@ namespace dsga
 		explicit constexpr basic_vector(const vector_base<W, U1, 2u, D> &other,
 										U2 first,
 										U3 second) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(second) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(second) }
 		{
 		}
 
@@ -2574,7 +2574,7 @@ namespace dsga
 		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &other,
 										U2 first,
 										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
-			: store{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(wvalue_source[0u]) }
+			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(wvalue_source[0u]) }
 		{
 		}
 
@@ -2583,7 +2583,7 @@ namespace dsga
 		explicit constexpr basic_vector(U2 first,
 										const vector_base<W, U1, 2u, D> &other,
 										U3 second) noexcept
-			: store{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(second) }
+			: base{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(second) }
 		{
 		}
 
@@ -2593,7 +2593,7 @@ namespace dsga
 		explicit constexpr basic_vector(U2 first,
 										const vector_base<W1, U1, 2u, D1> &other,
 										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
-			: store{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(wvalue_source[0u]) }
+			: base{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(wvalue_source[0u]) }
 		{
 		}
 
@@ -2602,7 +2602,7 @@ namespace dsga
 		explicit constexpr basic_vector(U2 first,
 										U3 second,
 										const vector_base<W, U1, C, D> &other) noexcept
-			: store{ static_cast<T>(first), static_cast<T>(second), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
+			: base{ static_cast<T>(first), static_cast<T>(second), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
 		}
 
@@ -2619,12 +2619,12 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return store.value.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.value.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return store.value.cbegin(); }
-		constexpr auto end() noexcept							{ return store.value.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return store.value.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return store.value.cend(); }
+		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
+		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
 
 		private:
 
@@ -2642,17 +2642,17 @@ namespace dsga
 			{
 				[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
 				{
-					((store.value[Js] = static_cast<T>(same_args)), ...);
+					((base.store[Js] = static_cast<T>(same_args)), ...);
 				}(std::make_index_sequence<Count>{}, args...);
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
-			constexpr T &at(std::size_t index) noexcept								{ return store.value[index]; }
-			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return store.value[index]; }
+			constexpr T &at(std::size_t index) noexcept								{ return base.store[index]; }
+			[[nodiscard]] constexpr const T &at(std::size_t index) const noexcept	{ return base.store[index]; }
 
 			// physically contiguous -- used by data()
-			constexpr T *raw_data() noexcept										{ return store.value.data(); }
-			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return store.value.data(); }
+			constexpr T *raw_data() noexcept										{ return base.store.data(); }
+			[[nodiscard]] constexpr const T *raw_data() const noexcept				{ return base.store.data(); }
 
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
@@ -5577,7 +5577,7 @@ constexpr auto to_vec(const T (&arg)[S]) noexcept
 template <dsga::dimensional_scalar T, std::size_t S>
 constexpr std::array<T, S> from_vec(const dsga::basic_vector<T, S> &arg) noexcept
 {
-	return arg.store.value;
+	return arg.base.store;
 }
 
 template <bool W, typename T, std::size_t C, typename D>

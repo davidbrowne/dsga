@@ -16,10 +16,10 @@
 	</Type>
 
 	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
-		<DisplayString>{value,view(dsga)}</DisplayString>
+		<DisplayString>{store,view(dsga)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T2} }}</DisplayString></Synthetic>
-			<ExpandedItem>value</ExpandedItem>
+			<ExpandedItem>store</ExpandedItem>
 		</Expand>
 	</Type>
 
@@ -32,16 +32,16 @@
 	</Type>
 
 	<Type Name="dsga::basic_vector&lt;*,*&gt;">
-		<DisplayString>{store}</DisplayString>
+		<DisplayString>{base}</DisplayString>
 		<Expand>
-			<ExpandedItem>store</ExpandedItem>
+			<ExpandedItem>base</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {value[$T4],g} }}</DisplayString>
+		<DisplayString>{{ {base[$T4],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="base">value,view(dsga)</Item>
+			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4} ]</DisplayString>
 				<Expand>
@@ -57,15 +57,15 @@
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">value[$T4]</Item>
+			<Item Name="[0]">base[$T4]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {value[$T4],g}, {value[$T5],g} }}</DisplayString>
+		<DisplayString>{{ {base[$T4],g}, {base[$T5],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="base">value,view(dsga)</Item>
+			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5} ]</DisplayString>
 				<Expand>
@@ -82,16 +82,16 @@
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">value[$T4]</Item>
-			<Item Name="[1]">value[$T5]</Item>
+			<Item Name="[0]">base[$T4]</Item>
+			<Item Name="[1]">base[$T5]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g} }}</DisplayString>
+		<DisplayString>{{ {base[$T4],g}, {base[$T5],g}, {base[$T6],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="base">value,view(dsga)</Item>
+			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5}, {$T6} ]</DisplayString>
 				<Expand>
@@ -109,17 +109,17 @@
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">value[$T4]</Item>
-			<Item Name="[1]">value[$T5]</Item>
-			<Item Name="[2]">value[$T6]</Item>
+			<Item Name="[0]">base[$T4]</Item>
+			<Item Name="[1]">base[$T5]</Item>
+			<Item Name="[2]">base[$T6]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {value[$T4],g}, {value[$T5],g}, {value[$T6],g}, {value[$T7],g} }}</DisplayString>
+		<DisplayString>{{ {base[$T4],g}, {base[$T5],g}, {base[$T6],g}, {base[$T7],g} }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="base">value,view(dsga)</Item>
+			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
 				<DisplayString>[ {$T4}, {$T5}, {$T6}, {$T7} ]</DisplayString>
 				<Expand>
@@ -138,10 +138,10 @@
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">value[$T4]</Item>
-			<Item Name="[1]">value[$T5]</Item>
-			<Item Name="[2]">value[$T6]</Item>
-			<Item Name="[3]">value[$T7]</Item>
+			<Item Name="[0]">base[$T4]</Item>
+			<Item Name="[1]">base[$T5]</Item>
+			<Item Name="[2]">base[$T6]</Item>
+			<Item Name="[3]">base[$T7]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>

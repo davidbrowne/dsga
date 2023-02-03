@@ -101,16 +101,16 @@ TEST_SUITE("test conversions")
 
 			// using data() and sequence()
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_one), cx_one.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_one), cx_one.base.store);
 			CHECK_EQ(from_vec_by_data_sequence(cx_two.y), std::array{8});
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_two), cx_two.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_two), cx_two.base.store);
 			CHECK_EQ(from_vec_by_data_sequence(cx_two.xx), std::array{7, 7});
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_three), cx_three.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_three), cx_three.base.store);
 			CHECK_EQ(from_vec_by_data_sequence(cx_two.yxx), std::array{8, 7, 7});
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_four), cx_four.store.value);
+			CHECK_EQ(from_vec_by_data_sequence(cx_four), cx_four.base.store);
 			CHECK_EQ(from_vec_by_data_sequence(cx_two.yxyx), std::array{8, 7, 8, 7});
 		}
 
