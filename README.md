@@ -144,7 +144,7 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.8.3`
+Current version: `v0.8.4`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -247,7 +247,8 @@ dsga/tests/swizzle_test.cxx:1845: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> )
 ===============================================================================
 [doctest] test cases:   82 |   81 passed | 1 failed | 0 skipped
 [doctest] assertions: 1864 | 1862 passed | 2 failed |
-[doctest] Status: FAILURE!```
+[doctest] Status: FAILURE!
+```
 
 ## Similar Projects
 

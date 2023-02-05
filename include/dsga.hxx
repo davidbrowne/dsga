@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -1505,6 +1505,12 @@ namespace dsga
 		template <typename T>
 		struct component_size;
 
+		template <dimensional_scalar T>
+		struct component_size<T>
+		{
+			static constexpr std::size_t value = 1u;
+		};
+
 		template <dimensional_scalar T, std::size_t C>
 		struct component_size<basic_vector<T, C>>
 		{
@@ -1523,10 +1529,10 @@ namespace dsga
 			static constexpr std::size_t value = C;
 		};
 
-		template <dimensional_scalar T>
-		struct component_size<T>
+		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+		struct component_size<basic_matrix<T, C, R>>
 		{
-			static constexpr std::size_t value = 1u;
+			static constexpr std::size_t value = C * R;
 		};
 
 		// the make sure Count and Args... are valid together w.r.t. component count.
@@ -1575,31 +1581,6 @@ namespace dsga
 		// do Args... supply the correct number of components for Count without having leftover Args
 		template <std::size_t Count, typename ...Args>
 		concept met_component_count = component_match_v<Count, Args...>;
-
-		template <typename T>
-		struct valid_component_source : std::false_type
-		{
-		};
-
-		template <dimensional_scalar T>
-		struct valid_component_source<T> : std::true_type
-		{
-		};
-
-		template <std::size_t C, dimensional_scalar T>
-		struct valid_component_source<basic_vector<T, C>> : std::true_type
-		{
-		};
-
-		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-		struct valid_component_source<indexed_vector<T, S, C, Is...>> : std::true_type
-		{
-		};
-
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		struct valid_component_source<vector_base<W, T, C, D>> : std::true_type
-		{
-		};
 
 		// create a tuple from a scalar
 
@@ -1654,14 +1635,38 @@ namespace dsga
 			return std::tuple_cat(to_tuple(args)...);
 		}
 
-		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
-		struct component_size<basic_matrix<T, C, R>>
+		template <typename U, typename T>
+		struct valid_component : std::false_type
 		{
-			static constexpr std::size_t value = C * R;
 		};
 
-		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
-		struct valid_component_source<basic_matrix<T, C, R>> : std::true_type
+		template <dimensional_scalar U, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_component<U, T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar U, std::size_t C, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_component<basic_vector<U, C>, T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar U, std::size_t S, std::size_t C, std::size_t ...Is, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_component<indexed_vector<U, S, C, Is...>, T> : std::true_type
+		{
+		};
+
+		template <bool W, dimensional_scalar U, std::size_t C, typename D, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_component<vector_base<W, U, C, D>, T> : std::true_type
+		{
+		};
+
+		template <floating_point_dimensional_scalar U, std::size_t C, std::size_t R, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_component<basic_matrix<U, C, R>, T> : std::true_type
 		{
 		};
 	}
@@ -1741,14 +1746,14 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
-			}(std::make_index_sequence<Size>{});
+			}(std::make_index_sequence<Count>{});
 		}
 
 		//
@@ -1926,14 +1931,14 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
-			}(std::make_index_sequence<Size>{});
+			}(std::make_index_sequence<Count>{});
 		}
 
 		//
@@ -2181,14 +2186,14 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
-			}(std::make_index_sequence<Size>{});
+			}(std::make_index_sequence<Count>{});
 		}
 
 		//
@@ -2659,14 +2664,14 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
-			}(std::make_index_sequence<Size>{});
+			}(std::make_index_sequence<Count>{});
 		}
 
 		//
@@ -4686,7 +4691,7 @@ namespace dsga
 			return R;
 		}
 
-		std::array<basic_vector<T, R>, C> value;
+		std::array<basic_vector<T, R>, C> values;
 
 		//
 		// operator [] gets the column vector
@@ -4694,12 +4699,12 @@ namespace dsga
 
 		constexpr basic_vector<T, R> &operator [](std::size_t index) noexcept
 		{
-			return value[index];
+			return values[index];
 		}
 
 		constexpr const basic_vector<T, R> &operator [](std::size_t index) const noexcept
 		{
-			return value[index];
+			return values[index];
 		}
 
 		// get a row of the matrix as a vector
@@ -4709,7 +4714,7 @@ namespace dsga
 			// these components up into a vector that represents the row
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, C>(value[Is][row_index]...);
+				return basic_vector<T, C>(values[Is][row_index]...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -4731,13 +4736,13 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<ComponentCount, Args...>
+		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
 		explicit constexpr basic_matrix(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				((value[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+				((values[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<ComponentCount>{});
 		}
 
@@ -4750,7 +4755,7 @@ namespace dsga
 			{
 				for (std::size_t j = 0; j < R; ++j)
 				{
-					value[i][j] = ((i == j) ? static_cast<T>(arg) : static_cast<T>(0));
+					values[i][j] = ((i == j) ? static_cast<T>(arg) : static_cast<T>(0));
 				}
 			}
 		}
@@ -4762,7 +4767,7 @@ namespace dsga
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{
-				value[i] = arg[i];
+				values[i] = arg[i];
 			}
 		}
 
@@ -4778,7 +4783,7 @@ namespace dsga
 					// not enough columns in arg
 					for (std::size_t j = 0; j < R; ++j)
 					{
-						value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+						values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
 					}
 				}
 				else
@@ -4788,11 +4793,11 @@ namespace dsga
 						if (j >= Rows)
 						{
 							// not enough rows in arg
-							value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+							values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
 						}
 						else
 						{
-							value[i][j] = static_cast<T>(arg[i][j]);
+							values[i][j] = static_cast<T>(arg[i][j]);
 						}
 					}
 				}
@@ -4811,7 +4816,7 @@ namespace dsga
 					// not enough columns in arg
 					for (std::size_t j = 0; j < R; ++j)
 					{
-						value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+						values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
 					}
 				}
 				else
@@ -4821,11 +4826,11 @@ namespace dsga
 						if (j >= Rows)
 						{
 							// not enough rows in arg
-							value[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
+							values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
 						}
 						else
 						{
-							value[i][j] = static_cast<T>(arg[i][j]);
+							values[i][j] = static_cast<T>(arg[i][j]);
 						}
 					}
 				}
@@ -4842,23 +4847,23 @@ namespace dsga
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((value[Is] = other[Is]), ...);			// let basic_vector do any type conversion if needed
+				((values[Is] = other[Is]), ...);			// let basic_vector do any type conversion if needed
 			}(std::make_index_sequence<C>{});
 
 			return *this;
 		}
 
 		// pointer interface
-		constexpr basic_vector<T, R> * data() noexcept								{ return value.data(); }
-		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return value.data(); }
+		constexpr basic_vector<T, R> * data() noexcept								{ return values.data(); }
+		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return values.data(); }
 
 		// support for range-based for loop
-		constexpr auto begin() noexcept												{ return value.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept							{ return value.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept						{ return value.cbegin(); }
-		constexpr auto end() noexcept												{ return value.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept							{ return value.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept							{ return value.cend(); }
+		constexpr auto begin() noexcept												{ return values.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept							{ return values.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept						{ return values.cbegin(); }
+		constexpr auto end() noexcept												{ return values.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept							{ return values.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept							{ return values.cend(); }
 	};
 
 	//
