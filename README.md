@@ -1,6 +1,6 @@
 # dsga : Data Structures for Geometric Algorithms
 
-**dsga** is a **c++20 library** that implements the **vectors** and **matrices** from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). It is not intended to be used for rendering, just for sharing the **fundamental data structures** and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other **geometric and algebraic things**. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
+**dsga** is a **c++20 library** that implements the **vectors** and **matrices** from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the **fundamental data structures** and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other **geometric and algebraic things**. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## A Quick Peek At Some Examples
 
@@ -144,7 +144,7 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.8.2`
+Current version: `v0.8.3`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -165,7 +165,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there is 1 assertion out of 1852 that fails for clang-15 on Ubuntu.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1864 that fails for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
 
 The tests have been most recently run on:
 
@@ -178,7 +178,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1868 | 1868 passed | 0 failed |
+[doctest] assertions: 1880 | 1880 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -189,7 +189,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1868 | 1868 passed | 0 failed |
+[doctest] assertions: 1880 | 1880 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -202,7 +202,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1852 | 1852 passed | 0 failed |
+[doctest] assertions: 1864 | 1864 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -215,7 +215,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   82 |   82 passed | 0 failed | 0 skipped
-[doctest] assertions: 1868 | 1868 passed | 0 failed |
+[doctest] assertions: 1880 | 1880 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -230,6 +230,15 @@ Performs all the unit tests except where there is lack of support for ```std::is
 dsga/tests/swizzle_test.cxx:1711:
 TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
+  type traits for basic_vector
+
+dsga/tests/swizzle_test.cxx:1744: ERROR: CHECK_UNARY( std::is_trivial_v<dvec4> ) is NOT correct!
+  values: CHECK_UNARY( false )
+
+===============================================================================
+dsga/tests/swizzle_test.cxx:1711:
+TEST SUITE: test swizzling applications
+TEST CASE:  type traits tests
   type traits for basic_matrix
 
 dsga/tests/swizzle_test.cxx:1845: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
@@ -237,9 +246,8 @@ dsga/tests/swizzle_test.cxx:1845: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> )
 
 ===============================================================================
 [doctest] test cases:   82 |   81 passed | 1 failed | 0 skipped
-[doctest] assertions: 1852 | 1851 passed | 1 failed |
-[doctest] Status: FAILURE!
-```
+[doctest] assertions: 1864 | 1862 passed | 2 failed |
+[doctest] Status: FAILURE!```
 
 ## Similar Projects
 

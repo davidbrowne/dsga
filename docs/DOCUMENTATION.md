@@ -296,7 +296,7 @@ template <typename U>
 explicit constexpr basic_vector(U value) noexcept;
 ```
 
-* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the vector elements, and as long as the types are convertible. It is fine if a vector argument has more data than necessary to complete the vector initialization, as long as at least some of the data is needed. It is an error to pass unused arguments. For the vector structs, each of the combinations is its own constructor for efficient initialization reasons, but the following hypothetical constructor is what it would look like if they were combined into one, behaving the same way as if there were multiple constructors:
+* **Variable Arguments** - any combination of scalar values, vectors, and matrices can be arguments to the constructor, as long as there is enough data to initialize all the vector elements, and as long as the types are convertible. It is fine if an argument has more data than necessary to complete the vector initialization, as long as some of the argument data is used. It is an error to pass unused arguments:
 
 ```c++
 // variadic constructor of scalar and vector arguments
@@ -486,7 +486,7 @@ requires implicitly_convertible_to<U, T>
 constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept;
 ```
 
-* **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if a vector argument has more data than necessary to complete the matrix initialization, as long as some of the vector data is used. It is an error to pass unused arguments:
+* **Variable Arguments** - any combination of scalar values, vectors, and matrices can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if an argument has more data than necessary to complete the matrix initialization, as long as some of the argument data is used. It is an error to pass unused arguments:
 
 ```c++
 // variadic constructor of scalar and vector arguments

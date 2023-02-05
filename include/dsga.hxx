@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 3;
 
 namespace dsga
 {
@@ -1487,6 +1487,184 @@ namespace dsga
 	template <typename T, std::size_t Size, std::size_t ...Is>
 	using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4u, Is...>;
 
+	// basic_matrix will act as the primary matrix class in this library.
+	//
+	// T is the type of the elements stored in the matrix
+	// C is the number of elements in a column
+	// R is the number of elements in a row
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+	struct basic_matrix;
+
+	namespace detail
+	{
+
+		// how many components can the item supply
+
+		template <typename T>
+		struct component_size;
+
+		template <dimensional_scalar T, std::size_t C>
+		struct component_size<basic_vector<T, C>>
+		{
+			static constexpr std::size_t value = C;
+		};
+
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		struct component_size<indexed_vector<T, S, C, Is...>>
+		{
+			static constexpr std::size_t value = C;
+		};
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		struct component_size<vector_base<W, T, C, D>>
+		{
+			static constexpr std::size_t value = C;
+		};
+
+		template <dimensional_scalar T>
+		struct component_size<T>
+		{
+			static constexpr std::size_t value = 1u;
+		};
+
+		// the make sure Count and Args... are valid together w.r.t. component count.
+		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
+		template <std::size_t Count, typename ...Args>
+		struct component_match;
+
+		// can't have 0 Args unless Count is 0
+		template <std::size_t Count, typename ...Args>
+		requires (sizeof...(Args) == 0u)
+		struct component_match<Count, Args...>
+		{
+			static constexpr bool valid = (Count == 0u);
+		};
+
+		// check Count components needed with the info from variadic template Args and their component counts.
+		// make sure the component count from the Args is sufficient for Count, and that we use all the Args.
+		// if the last Arg isn't necessary to get to Count components, then the Args are invalid.
+		//
+		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
+		//
+		// "...there must be enough components provided in the arguments to provide an initializer for
+		// every component in the constructed value. It is a compile-time error to provide extra
+		// arguments beyond this last used argument." section 5.4.2 of the spec for constructors (use case for this).
+		template <std::size_t Count, typename ...Args>
+		requires (sizeof...(Args) > 0u) && (Count > 0u)
+		struct component_match<Count, Args...>
+		{
+			// total number components in Args...
+			static constexpr std::size_t value = (component_size<Args>::value + ... + 0);
+			using tuple_pack = std::tuple<Args...>;
+
+			// get the last Arg type in the pack
+			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> -1u, tuple_pack>;
+
+			// see what the component count is if we didn't use the last Arg type in pack
+			static constexpr std::size_t previous_size = value - component_size<last_type>::value;
+
+			// check the conditions that we need exactly all those Args and that they give us enough components.
+			static constexpr bool valid = (previous_size < Count) && (value >= Count);
+		};
+
+		template <std::size_t Count, typename ...Args>
+		inline constexpr bool component_match_v = component_match<Count, Args...>::valid;
+
+		// do Args... supply the correct number of components for Count without having leftover Args
+		template <std::size_t Count, typename ...Args>
+		concept met_component_count = component_match_v<Count, Args...>;
+
+		template <typename T>
+		struct valid_component_source : std::false_type
+		{
+		};
+
+		template <dimensional_scalar T>
+		struct valid_component_source<T> : std::true_type
+		{
+		};
+
+		template <std::size_t C, dimensional_scalar T>
+		struct valid_component_source<basic_vector<T, C>> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		struct valid_component_source<indexed_vector<T, S, C, Is...>> : std::true_type
+		{
+		};
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		struct valid_component_source<vector_base<W, T, C, D>> : std::true_type
+		{
+		};
+
+		// create a tuple from a scalar
+
+		auto to_tuple(dimensional_scalar auto arg) noexcept
+		{
+			return std::make_tuple(arg);
+		}
+
+		// create a tuple from a vector
+
+		template <dimensional_scalar T, std::size_t C>
+		constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return std::make_tuple(arg[Is]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		constexpr auto to_tuple(const indexed_vector<T, S, C, Is...> &arg) noexcept
+		{
+			return[&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+			{
+				return std::make_tuple(arg[Js]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D>
+		constexpr auto to_tuple(const vector_base<W, T, C, D> &arg) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return std::make_tuple(arg[Is]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+		constexpr auto to_tuple(const basic_matrix<T, C, R> &arg) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return std::tuple_cat(to_tuple(arg[Is])...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
+		// and dimensional_scalars.
+		template <typename ...Args>
+		auto flatten_args_to_tuple(const Args & ...args) noexcept
+		{
+			return std::tuple_cat(to_tuple(args)...);
+		}
+
+		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+		struct component_size<basic_matrix<T, C, R>>
+		{
+			static constexpr std::size_t value = C * R;
+		};
+
+		template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+		struct valid_component_source<basic_matrix<T, C, R>> : std::true_type
+		{
+		};
+	}
 
 	template <dimensional_scalar T>
 	struct basic_vector<T, 1u> : vector_base<true, T, 1u, basic_vector<T, 1u>>
@@ -1547,13 +1725,6 @@ namespace dsga
 		{
 		}
 
-		template <bool W, dimensional_scalar U, std::size_t C, typename D>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
-		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]) }
-		{
-		}
-
 		template <typename U>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_vector(U value) noexcept
@@ -1566,6 +1737,18 @@ namespace dsga
 		explicit constexpr basic_vector(U value) noexcept
 			: base{ static_cast<T>(value) }
 		{
+		}
+
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
+		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Size>{});
 		}
 
 		//
@@ -1734,13 +1917,6 @@ namespace dsga
 		{
 		}
 
-		template <typename U1, bool W, dimensional_scalar U2, std::size_t C, typename D>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
-		explicit constexpr basic_vector(U1 xvalue, const vector_base<W, U2, C, D> &yvalue_source) noexcept
-			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue_source[0u]) }
-		{
-		}
-
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
@@ -1748,11 +1924,16 @@ namespace dsga
 		{
 		}
 
-		template <bool W, dimensional_scalar U, std::size_t C, typename D>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T> && (C >= Count))
-		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Size>{});
 		}
 
 		//
@@ -1991,15 +2172,6 @@ namespace dsga
 		{
 		}
 
-		template <typename U1, typename U2, bool W, dimensional_scalar U3, std::size_t C, typename D>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
-		explicit constexpr basic_vector(U1 xvalue,
-										U2 yvalue,
-										const vector_base<W, U3, C, D> &zvalue_source) noexcept
-			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue_source[0u]) }
-		{
-		}
-
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
 		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
@@ -2007,36 +2179,16 @@ namespace dsga
 		{
 		}
 
-		template <bool W, dimensional_scalar U, std::size_t C, typename D>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T> && (C >= Count))
-		explicit constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
-		}
-
-		template <bool W, dimensional_scalar U1, typename D, typename U2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
-		explicit constexpr basic_vector(const vector_base<W, U1, 2u, D> &other,
-										U2 yet_another) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another) }
-		{
-		}
-
-		template <bool W1, dimensional_scalar U1, typename D1,
-			bool W2, dimensional_scalar U2, std::size_t C, typename D2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
-		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &other,
-										const vector_base<W2, U2, C, D2> &yet_another) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(yet_another[0u]) }
-		{
-		}
-
-		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 2)
-		explicit constexpr basic_vector(U2 yet_another,
-										const vector_base<W, U1, C, D> &other) noexcept
-			: base{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
-		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Size>{});
 		}
 
 		//
@@ -2498,19 +2650,6 @@ namespace dsga
 		{
 		}
 
-		template <typename U1, typename U2, typename U3,
-			bool W, dimensional_scalar U4, std::size_t C, typename D>
-		requires
-			std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
-			std::convertible_to<U3, T> && std::convertible_to<U4, T>
-		explicit constexpr basic_vector(U1 xvalue,
-										U2 yvalue,
-										U3 zvalue,
-										const vector_base<W, U4, C, D> &wvalue_source) noexcept
-			: base{ static_cast<T>(xvalue), static_cast<T>(yvalue), static_cast<T>(zvalue), static_cast<T>(wvalue_source[0u]) }
-		{
-		}
-
 		template <bool W, dimensional_scalar U, typename D>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
@@ -2518,92 +2657,16 @@ namespace dsga
 		{
 		}
 
-		template <bool W, dimensional_scalar U, typename D>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
-		explicit constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_component_source<Args>::value && ...) && detail::met_component_count<Size, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
-		}
-
-		template <bool W, dimensional_scalar U1, typename D, typename U2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
-		explicit constexpr basic_vector(const vector_base<W, U1, 3u, D> &other,
-										U2 yet_another) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(yet_another) }
-		{
-		}
-
-		template <bool W1, dimensional_scalar U1, typename D1,
-			bool W2, dimensional_scalar U2, std::size_t C, typename D2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T>
-		explicit constexpr basic_vector(const vector_base<W1, U1, 3u, D1> &other,
-										const vector_base<W2, U2, C, D2> &wvalue_source) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(wvalue_source[0u]) }
-		{
-		}
-
-		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 3)
-		explicit constexpr basic_vector(U2 yet_another,
-										const vector_base<W, U1, C, D> &other) noexcept
-			: base{ static_cast<T>(yet_another), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
-		{
-		}
-
-		template <bool W1, dimensional_scalar U1, typename D1,
-			bool W2, dimensional_scalar U2, std::size_t C, typename D2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && (C >= 2)
-		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &first,
-										const vector_base<W2, U2, C, D2> &second) noexcept
-			: base{ static_cast<T>(first[0u]), static_cast<T>(first[1u]), static_cast<T>(second[0u]), static_cast<T>(second[1u]) }
-		{
-		}
-
-		template <bool W, dimensional_scalar U1, typename D,  typename U2, typename U3>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
-		explicit constexpr basic_vector(const vector_base<W, U1, 2u, D> &other,
-										U2 first,
-										U3 second) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(second) }
-		{
-		}
-
-		template <bool W1, dimensional_scalar U1, typename D1, typename U2,
-			bool W2, dimensional_scalar U3, std::size_t C, typename D2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
-		explicit constexpr basic_vector(const vector_base<W1, U1, 2u, D1> &other,
-										U2 first,
-										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(first), static_cast<T>(wvalue_source[0u]) }
-		{
-		}
-
-		template <bool W, dimensional_scalar U1, typename D, typename U2, typename U3>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
-		explicit constexpr basic_vector(U2 first,
-										const vector_base<W, U1, 2u, D> &other,
-										U3 second) noexcept
-			: base{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(second) }
-		{
-		}
-
-		template <bool W1, dimensional_scalar U1, typename D1,
-			typename U2, bool W2, dimensional_scalar U3, std::size_t C, typename D2>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T>
-		explicit constexpr basic_vector(U2 first,
-										const vector_base<W1, U1, 2u, D1> &other,
-										const vector_base<W2, U3, C, D2> &wvalue_source) noexcept
-			: base{ static_cast<T>(first), static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(wvalue_source[0u]) }
-		{
-		}
-
-		template <bool W, dimensional_scalar U1, std::size_t C, typename D, typename U2, typename U3>
-		requires std::convertible_to<U1, T> && std::convertible_to<U2, T> && std::convertible_to<U3, T> && (C >= 2)
-		explicit constexpr basic_vector(U2 first,
-										U3 second,
-										const vector_base<W, U1, C, D> &other) noexcept
-			: base{ static_cast<T>(first), static_cast<T>(second), static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
-		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Size>{});
 		}
 
 		//
@@ -4585,156 +4648,6 @@ namespace dsga
 			{
 				return within_box(x, y, tolerance[0u]);
 			}
-		}
-
-	}
-
-	namespace detail
-	{
-
-		// how many components can the item supply
-
-		template <typename T>
-		struct component_size;
-
-		template <dimensional_scalar T, std::size_t C>
-		struct component_size<basic_vector<T, C>>
-		{
-			static constexpr std::size_t value = C;
-		};
-
-		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-		struct component_size<indexed_vector<T, S, C, Is...>>
-		{
-			static constexpr std::size_t value = C;
-		};
-
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		struct component_size<vector_base<W, T, C, D>>
-		{
-			static constexpr std::size_t value = C;
-		};
-
-		template <dimensional_scalar T>
-		struct component_size<T>
-		{
-			static constexpr std::size_t value = 1u;
-		};
-
-		// the make sure Count and Args... are valid together w.r.t. component count.
-		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
-		template <std::size_t Count, typename ...Args>
-		struct component_match;
-
-		// can't have 0 Args unless Count is 0
-		template <std::size_t Count, typename ...Args>
-		requires (sizeof...(Args) == 0u)
-		struct component_match<Count, Args...>
-		{
-			static constexpr bool valid = (Count == 0u);
-		};
-
-		// check Count components needed with the info from variadic template Args and their component counts.
-		// make sure the component count from the Args is sufficient for Count, and that we use all the Args.
-		// if the last Arg isn't necessary to get to Count components, then the Args are invalid.
-		//
-		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
-		//
-		// "...there must be enough components provided in the arguments to provide an initializer for
-		// every component in the constructed value. It is a compile-time error to provide extra
-		// arguments beyond this last used argument." section 5.4.2 of the spec for constructors (use case for this).
-		template <std::size_t Count, typename ...Args>
-		requires (sizeof...(Args) > 0u) && (Count > 0u)
-		struct component_match<Count, Args...>
-		{
-			// total number components in Args...
-			static constexpr std::size_t value = (component_size<Args>::value + ... + 0);
-			using tuple_pack = std::tuple<Args...>;
-
-			// get the last Arg type in the pack
-			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> -1u, tuple_pack>;
-
-			// see what the component count is if we didn't use the last Arg type in pack
-			static constexpr std::size_t previous_size = value - component_size<last_type>::value;
-
-			// check the conditions that we need exactly all those Args and that they give us enough components.
-			static constexpr bool valid = (previous_size < Count) && (value >= Count);
-		};
-
-		template <std::size_t Count, typename ...Args>
-		inline constexpr bool component_match_v = component_match<Count, Args...>::valid;
-
-		// do Args... supply the correct number of components for Count without having leftover Args
-		template <std::size_t Count, typename ...Args>
-		concept met_component_count = component_match_v<Count, Args...>;
-
-		template <typename T>
-		struct valid_component_source : std::false_type
-		{
-		};
-
-		template <dimensional_scalar T>
-		struct valid_component_source<T> : std::true_type
-		{
-		};
-
-		template <dimensional_scalar T, std::size_t C>
-		struct valid_component_source<basic_vector<T, C>> : std::true_type
-		{
-		};
-
-		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-		struct valid_component_source<indexed_vector<T, S, C, Is...>> : std::true_type
-		{
-		};
-
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		struct valid_component_source<vector_base<W, T, C, D>> : std::true_type
-		{
-		};
-
-		// create a tuple from a scalar
-
-		auto to_tuple(dimensional_scalar auto arg) noexcept
-		{
-			return std::make_tuple(arg);
-		}
-
-		// create a tuple from a vector
-
-		template <dimensional_scalar T, std::size_t C>
-		constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
-		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return std::make_tuple(arg[Is]...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-		constexpr auto to_tuple(const indexed_vector<T, S, C, Is...> &arg) noexcept
-		{
-			return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
-			{
-				return std::make_tuple(arg[Js]...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		constexpr auto to_tuple(const vector_base<W, T, C, D> &arg) noexcept
-		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return std::make_tuple(arg[Is]...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
-		// and dimensional_scalars.
-		template <typename ...Args>
-		auto flatten_args_to_tuple(const Args & ...args) noexcept
-		{
-			return std::tuple_cat(to_tuple(args)...);
 		}
 
 	}

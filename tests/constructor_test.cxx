@@ -38,9 +38,11 @@ TEST_SUITE("test constructors")
 	{
 		// the four non-defaulted constructors
 		fscal c1d_1(cx_four);		// #1 - implicit type conversion
-		iscal cld_2(c1d_1);			// #2
-		fscal cld_3(3);				// #3 - implicit type conversion
-		iscal cld_4(2.5);			// #4
+		iscal c1d_2(c1d_1);			// #2
+		fscal c1d_3(3);				// #3 - implicit type conversion
+		iscal c1d_4(2.5);			// #4
+		iscal c1d_5(c1d_3.x);
+		iscal c1d_6(mat2(77));
 
 		[[ maybe_unused ]] bscal b1d_1(true);					// #4
 		[[ maybe_unused ]] bscal b1d_2(bvec2(false, false));	// #2
@@ -50,14 +52,17 @@ TEST_SUITE("test constructors")
 		CHECK_EQ(c1d_1, fscal(0));
 		CHECK_NE(c1d_1, fscal(3));
 
-		CHECK_EQ(cld_2, iscal(0));
-		CHECK_NE(cld_2, iscal(3));
+		CHECK_EQ(c1d_2, iscal(0));
+		CHECK_NE(c1d_2, iscal(3));
 
-		CHECK_EQ(cld_3, fscal(3));
-		CHECK_NE(cld_3, fscal(0));
+		CHECK_EQ(c1d_3, fscal(3));
+		CHECK_NE(c1d_3, fscal(0));
 
-		CHECK_EQ(cld_4, iscal(2));
-		CHECK_NE(cld_4, iscal(3));
+		CHECK_EQ(c1d_4, iscal(2));
+		CHECK_NE(c1d_4, iscal(3));
+
+		CHECK_EQ(c1d_5, iscal(3));
+		CHECK_EQ(c1d_6, iscal(77));
 	}
 
 	TEST_CASE("vector 2D constructors")
@@ -68,6 +73,9 @@ TEST_SUITE("test constructors")
 		ivec2 c2d_3(100, c2d_2);	// #3
 		fvec2 c2d_4(c2d_3);			// #4 - implicit type conversion
 		ivec2 c2d_5(c2d_4);			// #5
+		ivec2 c2d_6(c2d_4.yx);
+		ivec2 c2d_7(mat2(77, 66, 55, 44));
+		ivec2 c2d_8(34, mat2(77, 66, 55, 44));
 
 		[[ maybe_unused ]] bvec2 b2d_1(17);			// #1
 		[[ maybe_unused ]] bvec2 b2d_2(false, 75.5);	// #2
@@ -89,6 +97,10 @@ TEST_SUITE("test constructors")
 
 		CHECK_EQ(c2d_5, ivec2(100, 50));
 		CHECK_NE(c2d_5, ivec2(100, 75));
+
+		CHECK_EQ(c2d_6, ivec2(50, 100));
+		CHECK_EQ(c2d_7, ivec2(77, 66));
+		CHECK_EQ(c2d_8, ivec2(34, 77));
 	}
 
 	TEST_CASE("vector 3D constructors")
@@ -102,6 +114,9 @@ TEST_SUITE("test constructors")
 		ivec3 c3d_6(cx_two, 99);		// #6
 		ivec3 c3d_7(cx_two, cx_three);	// #7
 		ivec3 c3d_8(42, cx_four);		// #8
+		ivec3 c3d_9(c3d_4.yzx);
+		ivec3 c3d_10(mat2(77, 66, 55, 44));
+		ivec3 c3d_11(dscal(34), mat2(77, 66, 55, 44));
 
 		[[ maybe_unused ]] bvec3 b3d_1(23);				// #1
 		[[ maybe_unused ]] bvec3 b3d_2(200, 300, 400);		// #2
@@ -135,6 +150,10 @@ TEST_SUITE("test constructors")
 
 		CHECK_EQ(c3d_8, ivec3(42, 0, 1));
 		CHECK_NE(c3d_8, ivec3(42, 2, 3));
+
+		CHECK_EQ(c3d_9, ivec3(1, 2, 0));
+		CHECK_EQ(c3d_10, ivec3(77, 66, 55));
+		CHECK_EQ(c3d_11, ivec3(34, 77, 66));
 	}
 
 	TEST_CASE("vector 4D constructors")
@@ -154,6 +173,10 @@ TEST_SUITE("test constructors")
 		ivec4 c4d_12(19, cx_two, 99);		// #12
 		ivec4 c4d_13(19, cx_two, cx_three);	// #13
 		ivec4 c4d_14(42, 24, cx_four);		// #14
+		ivec4 c4d_15(c4d_04.yzwx);
+		ivec4 c4d_16(mat2(77, 66, 55, 44));
+		ivec4 c4d_17(dscal(34), ivec2(2, 99), mat2(77, 66, 55, 44));
+		ivec4 c4d_18(dscal(34), bvec2(true, false), mat2(77, 66, 55, 44));
 
 		[[ maybe_unused ]] bvec4 b4d_01(-8);					// #1
 		[[ maybe_unused ]] bvec4 b4d_02(11, 22, 33, 44);		// #2
@@ -211,6 +234,10 @@ TEST_SUITE("test constructors")
 
 		CHECK_EQ(c4d_14, ivec4(42, 24, 0, 1));
 		CHECK_NE(c4d_14, ivec4(42, 24, 2, 3));
+
+		CHECK_EQ(c4d_15, ivec4(1, 2, 3, 0));
+		CHECK_EQ(c4d_16, ivec4(77, 66, 55, 44));
+		CHECK_EQ(c4d_17, ivec4(34, 2, 99, 77));
 	}
 
 	TEST_CASE("CTAD deduction guide construction")
@@ -258,6 +285,7 @@ TEST_SUITE("test constructors")
 			dvec2 two(2);
 			dvec3 three(3);
 			dvec4 four(4);
+			mat2  two_by_two(10, 9, 8, 7);
 
 			double rando = 5;
 
@@ -265,11 +293,13 @@ TEST_SUITE("test constructors")
 			auto m2 = mat2x3(four, rando, four);
 			auto m3 = mat3x4(one, three, rando, two, three, rando, one);
 			auto m4 = dmat3x3(two, three, four);
+			auto m5 = dmat4(two_by_two, two_by_two, two_by_two, two_by_two);
 
 			CHECK_EQ(m1, dmat4x4(4, 4, 4, 4, 5, 3, 3, 3, 5, 5, 1, 2, 2, 5, 3, 3));
 			CHECK_EQ(m2, mat2x3(4, 4, 4, 4, 5, 4));
 			CHECK_EQ(m3, mat3x4(1, 3, 3, 3, 5, 2, 2, 3, 3, 3, 5, 1));
 			CHECK_EQ(m4, dmat3x3(2, 2, 3, 3, 3, 4, 4, 4, 4));
+			CHECK_EQ(m5, dmat4(10, 9, 8, 7, 10, 9, 8, 7, 10, 9, 8, 7, 10, 9, 8, 7));
 		}
 
 		// this subcase is more about compiling without warnings or errors
