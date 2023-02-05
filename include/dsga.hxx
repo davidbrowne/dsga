@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -3637,10 +3637,7 @@ namespace dsga
 	requires non_bool_arithmetic<T>
 	constexpr auto operator +(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		if constexpr (C > 1u)
-			return basic_vector<T, C>(arg);					// no-op copy
-		else
-			return arg[0u];									// no-op scalar copy
+		return basic_vector<T, C>(arg);					// no-op copy
 	}
 
 	// unary operator -
@@ -3670,18 +3667,9 @@ namespace dsga
 	requires W && non_bool_arithmetic<T>
 	constexpr auto operator ++(vector_base<W, T, C, D> &arg, int) noexcept
 	{
-		if constexpr (C > 1u)
-		{
-			basic_vector<T, C> value(arg);
-			arg += T(1);
-			return value;
-		}
-		else
-		{
-			T value = arg[0u];
-			arg += T(1);
-			return value;
-		}
+		basic_vector<T, C> value(arg);
+		arg += T(1);
+		return value;
 	}
 
 	// unary operators --
@@ -3700,18 +3688,9 @@ namespace dsga
 	requires W && non_bool_arithmetic<T>
 	constexpr auto operator --(vector_base<W, T, C, D> &arg, int) noexcept
 	{
-		if constexpr (C > 1u)
-		{
-			basic_vector<T, C> value(arg);
-			arg -= T(1);
-			return value;
-		}
-		else
-		{
-			T value = arg[0u];
-			arg -= T(1);
-			return value;
-		}
+		basic_vector<T, C> value(arg);
+		arg -= T(1);
+		return value;
 	}
 
 	//

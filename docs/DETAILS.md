@@ -4,12 +4,12 @@
 
 There are really two vector classes: **basic_vector** and **indexed_vector**. ```basic_vector``` is what you would normally think of as a contiguously stored vector/point representation. ```indexed_vector``` is a view on ```basic_vector```, which may only be modified under certain conditions.
 
-A ```basic_vector``` has data members that provide [swizzling](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)). These data members are of type ```indexed_vector```, and this is where they are a view on the owning ```basic_vector```. Only the ```indexed_vector```s that do not have duplicate indexes in the swizzle are modifiable, e.g., ```foo.xzy``` is modifiable, while ```foo.zzy``` is not modifiable. Either way, an ```indexed_vector``` from a swizzle has a lifetime tied to the lifetime of the ```basic_vector``` it came from.
+A ```basic_vector``` has data members that provide [swizzling](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)). These swizzling data members are of type ```indexed_vector```, and this is where they are a view on the owning ```basic_vector```. Only the ```indexed_vector```s that do not have duplicate indexes in the swizzle are modifiable, e.g., ```foo.xzy``` is modifiable, while ```foo.zzy``` is not modifiable. Either way, an ```indexed_vector``` from a swizzle has a lifetime tied to the lifetime of the ```basic_vector``` it came from.
 
 We want to use both types of vectors in the same way, for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc. Instead of duplicating this effort, ```basic_vector``` and ```indexed_vector``` derive from a [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class called **vector_base**, and this provides the generic foundation for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc:
 ![vec_base](./vec_base_uml.svg)
 
-```vector_base``` assumes that its derived structs and classes implement the **vector duck type** interface, which is not a real code interface, just more of a conceptual [duck typing](https://en.wikipedia.org/wiki/Duck_typing) idea. Both ```basic_vector``` and ```indexed_vector``` implement this conceptual interface. ```storage_wrapper``` copies its interface from ```vector_base```, but there is no formal inheritance of this interface.
+```vector_base``` assumes that its derived structs and classes implement the **vector duck type** interface, which is not a real code interface, just more of a conceptual [duck typing](https://en.wikipedia.org/wiki/Duck_typing) idea (determined at compile time). Both ```basic_vector``` and ```indexed_vector``` implement this conceptual interface. ```storage_wrapper``` copies its interface from ```vector_base```, but there is no formal inheritance of this interface.
 
 ```vector_base``` carries the following information, via template parameters:
 * Whether it can be used as an lvalue, i.e., **is it writable**
@@ -59,7 +59,7 @@ The swizzle decides how to index into the storage. Continuing this example, ```y
 
 union
 {
-    storage_wrapper<T, 4u>                      store;
+    storage_wrapper<T, 4u>                      base;
 
     indexed_vector<T, 4u, 1u, 0u>               x;      // Writable
     indexed_vector<T, 4u, 1u, 1u>               y;      // Writable
@@ -84,7 +84,9 @@ union
 
 Only a non-const ```indexed_vector``` that has unique indices, e.g., [3, 2, 0], as opposed to repeating indices, e.g., [1, 2, 1], is **writable**, which means it can be used as an lvalue for assignment, or you can modify it via its member functions.
 
-```indexed_vector``` is intended as a **view** on a ```basic_vector```; however, it is possible to create a stand-alone ```indexed_vector```, initialized via aggregate methods. It is hard to see why anyone would want to do that though, when ```basic_vector``` exists.
+If you write a function that takes a ```basic_vector``` as a parameter, passing in an ```indexed_vector``` will not work. You either need to write the function to take a ```vector_base```, wrap the ```indexed_vector``` argument in a ```basic_vector``` constructor, or alternately use the unary ```operator +()``` on the ```indexed_vector``` argument, which will create a ```basic_vector``` from the ```indexed_vector```.
+
+```indexed_vector``` is intended as a **view** on a ```basic_vector```; however, it is possible to create a stand-alone ```indexed_vector```. This can be done by copying a swizzle, (e.g., ```auto some_vec = other_vec.zxy;```) or directly declaring a variable. These are zero initializable (i.e., ```{}```) or can be initialized via desginated initalizer (e.g., ```{.base = {1, 2, 3}}```, although this doesn't seem to work for gcc). It is hard to see why anyone would want to explicitly create a stand-alone ```indexed_vector``` when they could use ```basic_vector```.
 
 ## Inside vector_base
 
@@ -115,7 +117,7 @@ template <dimensional_scalar T, std::size_t Size>
 struct storage_wrapper;
 ```
 
-For the anonymous union inside ```basic_vector```, we needed a way to change values at the top level, not through a swizzle. Also, an anonymous union can and must initialize and access one and only one union member at compile time, so this is necessary for constexpr variables of ```basic_index```. We could have picked any of the swizzles (although ```xyzw``` for length 4 vectors seems most appropriate) to be the data member that is manipulated and accessed above the swizzle level, but as long as we create a variable of a type that shares a common initial sequence, it doesn't matter, as it won't grow the size of ```basic_vector``` and can share values through the common initial sequence.
+For the anonymous union inside ```basic_vector```, we needed a way to change values at the top level, not through a swizzle. Also, an anonymous union can and must initialize and access one and only one union member at compile time, so this is necessary for constexpr variables of ```basic_vector```. We could have picked any of the swizzles (although ```xyzw``` for length 4 vectors seems most appropriate) to be the data member that is manipulated and accessed above the swizzle level, but as long as we create a variable of a type that shares a common initial sequence, it doesn't matter, as it won't grow the size of ```basic_vector``` and can share values through the common initial sequence.
 
 ```storage_wrapper``` can do pretty much all the things that ```vector_base``` can, but it can also be stand-alone. If one wanted, they could create an instance of one, initializing it via aggregate methods; however, there seems to be no compelling reason to create one of these stand-alone as one can have a ```basic_vector```, which is more powerful.
 
