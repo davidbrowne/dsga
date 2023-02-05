@@ -168,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="..\dev_3rd\doctest.h" />
     <ClInclude Include="..\dev_3rd\nanobench.h" />
+    <ClInclude Include="..\examples\angle.hxx" />
     <ClInclude Include="..\examples\bezier.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />

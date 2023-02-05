@@ -70,6 +70,34 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 using namespace dsga;
 
 //
+// find the minimum positive angle between 2 vectors and/or indexed vectors (swizzles).
+// 2D or 3D only
+//
+
+template <bool W1, floating_point_dimensional_scalar T, std::size_t C,
+          class D1, bool W2, class D2>
+requires ((C > 1u) && (C < 4u))
+auto angle_between(const vector_base<W1, T, C, D1> &v1,
+                   const vector_base<W2, T, C, D2> &v2)
+{
+    auto v1_mag = length(v1);
+    auto v2_mag = length(v2);
+    auto numerator = length(v1 * v2_mag - v2 * v1_mag);
+    auto denominator = length(v1 * v2_mag + v2 * v1_mag);
+
+    if (numerator == T(0))
+        return T(0);
+    else if (denominator == T(0))
+        return std::numbers::pi_v<T>;
+
+    return T(2) * std::atan(numerator / denominator);
+}
+```
+
+``` c++
+using namespace dsga;
+
+//
 // get the signed volume for connected triangular mesh
 //
 
