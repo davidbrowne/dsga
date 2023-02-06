@@ -1774,6 +1774,8 @@ TEST_SUITE("test swizzling applications")
 			// indexed_vector iterators are forward iterators
 			CHECK_UNARY(std::forward_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
 			CHECK_UNARY(std::forward_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
+			CHECK_UNARY(std::bidirectional_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
+			CHECK_UNARY(std::bidirectional_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
 		}
 
 		SUBCASE("type traits for common initial sequence for anonymous union")
@@ -2029,6 +2031,21 @@ TEST_SUITE("test swizzling applications")
 		}
 	}
 
+	TEST_CASE("index_vector iterators")
+	{
+		SUBCASE("forward and reverse iterator")
+		{
+			auto source = dsga::ivec4(11, 22, 33, 44).xyzw;
+			dsga::ivec4 dest{};
+			auto src_iter = source.crbegin();
+			auto dest_iter = dest.yxwz.begin();
+			while (src_iter != source.crend())
+				*dest_iter++ = *src_iter++;
+
+			CHECK_EQ(dest, dsga::ivec4(33, 44, 11, 22));
+		}
+	}
+
 	TEST_CASE("typical usage but without math")
 	{
 		SUBCASE("first case")
@@ -2087,7 +2104,6 @@ TEST_SUITE("test swizzling applications")
 			pair = foo.xz;
 
 			bar.xy = pair;
-		//	bar.zw = foo.xz + bar.zw;	// <- don't currently have arithmetic operators
 			bar.zw = foo.xz;
 			pair.y = 8;
 

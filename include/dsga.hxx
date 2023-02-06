@@ -29,7 +29,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
@@ -1168,14 +1168,11 @@ namespace dsga
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
 		// since c++17 deprecated std::iterator
-		using iterator_category = std::forward_iterator_tag;
+		using iterator_category = std::bidirectional_iterator_tag;
 		using value_type = T;
 		using difference_type = int;
 		using pointer = const T *;
 		using reference = const T &;
-
-		constexpr static std::size_t begin_index = 0;
-		constexpr static std::size_t end_index = Count;
 
 		// the data
 		const indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
@@ -1204,7 +1201,7 @@ namespace dsga
 		constexpr indexed_vector_const_iterator &operator++() noexcept
 		{
 			if (mapper_index < Count)
-				mapper_index++;
+				++mapper_index;
 			return *this;
 		}
 
@@ -1212,7 +1209,22 @@ namespace dsga
 		{
 			indexed_vector_const_iterator temp = *this;
 			if (mapper_index < Count)
-				mapper_index++;
+				++mapper_index;
+			return temp;
+		}
+
+		constexpr indexed_vector_const_iterator &operator--() noexcept
+		{
+			if (mapper_index > 0)
+				--mapper_index;
+			return *this;
+		}
+
+		constexpr indexed_vector_const_iterator operator--(int) noexcept
+		{
+			indexed_vector_const_iterator temp = *this;
+			if (mapper_index > 0)
+				--mapper_index;
 			return temp;
 		}
 	};
@@ -1226,15 +1238,12 @@ namespace dsga
 
 		// publicly need these type using declarations or typedefs in iterator class,
 		// since c++17 deprecated std::iterator
-		using iterator_category = std::forward_iterator_tag;
+		using iterator_category = std::bidirectional_iterator_tag;
 		using value_type = T;
 		using difference_type = int;
 		using pointer = T *;
 		using reference = T &;
 		using const_reference = const T &;
-
-		constexpr static std::size_t begin_index = 0;
-		constexpr static std::size_t end_index = Count;
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
@@ -1266,6 +1275,19 @@ namespace dsga
 		{
 			indexed_vector_iterator temp = *this;
 			base_iter::operator++();
+			return temp;
+		}
+
+		constexpr indexed_vector_iterator &operator--() noexcept
+		{
+			base_iter::operator--();
+			return *this;
+		}
+
+		constexpr indexed_vector_iterator operator--(int) noexcept
+		{
+			indexed_vector_iterator temp = *this;
+			base_iter::operator--();
 			return temp;
 		}
 	};
@@ -1319,12 +1341,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0); }
 		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
+
+		constexpr auto rbegin() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(end()); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(end()); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(cend()); }
+		constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(begin()); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(begin()); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(cbegin()); }
 
 		private:
 
@@ -1436,12 +1465,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0); }
 		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
+
+		constexpr auto rbegin() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>(end()); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(end()); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(cend()); }
+		constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>(begin()); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(begin()); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(cbegin()); }
 
 		private:
 
@@ -1479,12 +1515,15 @@ namespace dsga
 	using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1u, I>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
+	requires (sizeof...(Is) == 2u)
 	using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2u, Is...>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
+	requires (sizeof...(Is) == 3u)
 	using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3u, Is...>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
+	requires (sizeof...(Is) == 4u)
 	using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4u, Is...>;
 
 	// basic_matrix will act as the primary matrix class in this library.
@@ -1744,17 +1783,23 @@ namespace dsga
 		{
 		}
 
+#if defined(_MSC_VER)
+#pragma warning(disable:26495)
+#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
-			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#if defined(_MSC_VER)
+#pragma warning(default:26495)
+#endif
 
 		//
 		// implicit assignment operators
@@ -1800,6 +1845,13 @@ namespace dsga
 		constexpr auto end() noexcept							{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+
+		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
+		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
 
 		private:
 
@@ -1929,17 +1981,23 @@ namespace dsga
 		{
 		}
 
+#if defined(_MSC_VER)
+#pragma warning(disable:26495)
+#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
-			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#if defined(_MSC_VER)
+#pragma warning(default:26495)
+#endif
 
 		//
 		// assignment operator
@@ -1960,6 +2018,13 @@ namespace dsga
 		constexpr auto end() noexcept							{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+
+		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
+		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
 
 		private:
 
@@ -2184,17 +2249,23 @@ namespace dsga
 		{
 		}
 
+#if defined(_MSC_VER)
+#pragma warning(disable:26495)
+#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
-			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#if defined(_MSC_VER)
+#pragma warning(default:26495)
+#endif
 
 		//
 		// assignment operators
@@ -2215,6 +2286,13 @@ namespace dsga
 		constexpr auto end() noexcept							{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+
+		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
+		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
 
 		private:
 
@@ -2662,17 +2740,23 @@ namespace dsga
 		{
 		}
 
+#if defined(_MSC_VER)
+#pragma warning(disable:26495)
+#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
-			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#if defined(_MSC_VER)
+#pragma warning(default:26495)
+#endif
 
 		//
 		// assignment operators
@@ -2693,6 +2777,13 @@ namespace dsga
 		constexpr auto end() noexcept							{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+
+		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
+		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
 
 		private:
 
@@ -4389,7 +4480,7 @@ namespace dsga
 			if (T(0.0) == len)
 				return basic_vector<T, C>(std::numeric_limits<T>::quiet_NaN());
 
-			[[likely]] return x / length(x);
+			[[likely]] return x / len;
 		}
 
 		template <bool W, floating_point_dimensional_scalar T, typename D>
@@ -4713,17 +4804,23 @@ namespace dsga
 		// constructors
 		//
 
+#if defined(_MSC_VER)
+#pragma warning(disable:26495)
+#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
 		explicit constexpr basic_matrix(const Args & ...args) noexcept
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
-			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((values[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<ComponentCount>{});
 		}
+#if defined(_MSC_VER)
+#pragma warning(default:26495)
+#endif
 
 		// diagonal constructor for square matrices
 		template <typename U>
