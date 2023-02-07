@@ -1776,6 +1776,8 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::forward_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
 			CHECK_UNARY(std::bidirectional_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
 			CHECK_UNARY(std::bidirectional_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
+			CHECK_UNARY(std::random_access_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
+			CHECK_UNARY(std::random_access_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
 		}
 
 		SUBCASE("type traits for common initial sequence for anonymous union")
@@ -1935,7 +1937,7 @@ TEST_SUITE("test swizzling applications")
 
 			// recreate input one at a time
 			// "int &" deduced for "auto &"
-			for (unsigned dest_indx = 0; auto & loop_var : four)
+			for (std::size_t dest_indx = 0; auto & loop_var : four)
 			{
 				four_dest[dest_indx] = loop_var;
 				++dest_indx;
@@ -1953,7 +1955,7 @@ TEST_SUITE("test swizzling applications")
 
 			// recreate input one at a time
 			// "const int &" deduced for "auto &"
-			for (unsigned dest_indx = 0; auto & loop_var : const_data)
+			for (std::size_t dest_indx = 0; auto & loop_var : const_data)
 			{
 				data_dest[dest_indx] = loop_var;
 				++dest_indx;
@@ -1987,7 +1989,7 @@ TEST_SUITE("test swizzling applications")
 
 			// recreate input one at a time
 			// "int &" deduced for "auto &"
-			for (unsigned dest_indx = 0; auto & loop_var : non_const_data.zwxy)
+			for (std::size_t dest_indx = 0; auto & loop_var : non_const_data.zwxy)
 			{
 				data_dest[dest_indx] = loop_var;
 				++dest_indx;
@@ -2005,7 +2007,7 @@ TEST_SUITE("test swizzling applications")
 
 			// recreate input one at a time
 			// "const int &" deduced for "auto &"
-			for (unsigned dest_indx = 0; auto & loop_var : const_data.zwxy)
+			for (std::size_t dest_indx = 0; auto & loop_var : const_data.zwxy)
 			{
 				data_dest[dest_indx] = loop_var;
 				++dest_indx;

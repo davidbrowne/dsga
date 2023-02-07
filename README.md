@@ -168,11 +168,13 @@ Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) pro
 
 Since the constexpr versions of ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) do not have identical results with std::sqrt(), if you want the approximate but constexpr version of those or ```dsga::sqrt()``` or ```dsga::rsqrt()```, you have to opt-in by defining the macro ```DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED```.
 
+There are asserts in the codebase, especially in the indexed_vector iterator structs, that can be disabled by defining the macro ```DSGA_DISABLE_ASSERTS```.
+
 This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
 
 ## Status
 
-Current version: `v0.8.6`
+Current version: `v0.8.7`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -193,7 +195,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1867 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1869 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
 
 The tests have been most recently run on:
 
@@ -206,7 +208,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   83 |   83 passed | 0 failed | 0 skipped
-[doctest] assertions: 1883 | 1883 passed | 0 failed |
+[doctest] assertions: 1885 | 1885 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -217,7 +219,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   83 |   83 passed | 0 failed | 0 skipped
-[doctest] assertions: 1883 | 1883 passed | 0 failed |
+[doctest] assertions: 1885 | 1885 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -230,7 +232,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   83 |   83 passed | 0 failed | 0 skipped
-[doctest] assertions: 1867 | 1867 passed | 0 failed |
+[doctest] assertions: 1869 | 1869 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -243,7 +245,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   83 |   83 passed | 0 failed | 0 skipped
-[doctest] assertions: 1883 | 1883 passed | 0 failed |
+[doctest] assertions: 1885 | 1885 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -269,12 +271,12 @@ TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
   type traits for basic_matrix
 
-dsga/tests/swizzle_test.cxx:1847: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
+dsga/tests/swizzle_test.cxx:1849: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
   values: CHECK_UNARY( false )
 
 ===============================================================================
 [doctest] test cases:   83 |   82 passed | 1 failed | 0 skipped
-[doctest] assertions: 1867 | 1865 passed | 2 failed |
+[doctest] assertions: 1869 | 1867 passed | 2 failed |
 [doctest] Status: FAILURE!
 ```
 

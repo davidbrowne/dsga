@@ -77,6 +77,70 @@
 		</Expand>
 	</Type>
 
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt;">
+		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="iterator index">mapper_index</Item>
+			<Item Name="vector base">*mapper_ptr</Item>
+		</Expand>
+	</Type>
+
 	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
 		<DisplayString>{{ cols={$T2} rows={$T3} }}</DisplayString>
 		<Expand>

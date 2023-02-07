@@ -223,7 +223,7 @@ Please look at what is in the [GLSL spec](https://www.khronos.org/registry/OpenG
 
 ### Iterators
 
-Both the vector and matrix structs support **begin()/cbegin()** and **end()/cend()** in order to provide basic ```iterator``` support through non-const and const iterators. This gives us access to:
+Both the vector and matrix structs support **begin/cbegin/rbegin/crbegin** and **end/cend/rend/crend** iterator creation functions in order to provide non-const and const iterators. The ```indexed_vector``` iterators pass the ```std::random_access_iterator``` concept. This gives us access to:
 
 * Standard Library Algorithms
 * [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for)

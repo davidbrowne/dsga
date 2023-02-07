@@ -16,6 +16,13 @@
 #include <version>					// feature test macros
 #include <limits>					// for cxcm
 #include <cmath>					// for cxcm
+#include <cassert>
+
+#if defined(DSGA_DISABLE_ASSERTS)
+#define assertm(exp, msg) ((void)0)
+#else
+#define assertm(exp, msg) assert(((void)msg, exp))
+#endif
 
 #if defined(__cpp_lib_bit_cast)
 #include <bit>						// bit_cast
@@ -29,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 6;
+constexpr inline int DSGA_PATCH_VERSION = 7;
 
 namespace dsga
 {
@@ -44,7 +51,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 9;
+		constexpr inline int CXCM_PATCH_VERSION = 10;
 
 		namespace limits
 		{
@@ -662,6 +669,8 @@ namespace dsga
 			template <std::integral T>
 			constexpr T abs(T value) noexcept
 			{
+				assertm(value != std::numeric_limits<T>::min(), "undefined behavior in abs()");
+
 				return relaxed::abs(value);
 			}
 
@@ -1168,11 +1177,15 @@ namespace dsga
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
 		// since c++17 deprecated std::iterator
-		using iterator_category = std::bidirectional_iterator_tag;
+		using iterator_category = std::random_access_iterator_tag;
 		using value_type = T;
 		using difference_type = int;
 		using pointer = const T *;
 		using reference = const T &;
+
+		// range of valid values for mapper_index
+		constexpr static std::size_t begin_index = 0u;
+		constexpr static std::size_t end_index = Count;
 
 		// the data
 		const indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
@@ -1181,8 +1194,9 @@ namespace dsga
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
 		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
-			: mapper_ptr(std::addressof(mapper)), mapper_index((index > Count) ? Count : index)
+			: mapper_ptr(std::addressof(mapper)), mapper_index(index)
 		{
+			assertm((mapper_index >= begin_index) && (mapper_index <= end_index), "index not in range");
 		}
 
 		constexpr indexed_vector_const_iterator() noexcept = default;
@@ -1191,41 +1205,120 @@ namespace dsga
 		constexpr indexed_vector_const_iterator &operator =(const indexed_vector_const_iterator &) noexcept = default;
 		constexpr indexed_vector_const_iterator &operator =(indexed_vector_const_iterator &&) noexcept = default;
 		constexpr ~indexed_vector_const_iterator() = default;
-		constexpr bool operator ==(const indexed_vector_const_iterator &other) const noexcept = default;
 
-		constexpr reference operator *() const noexcept
+		[[nodiscard]] constexpr reference operator *() const noexcept
 		{
+			assertm(nullptr != mapper_ptr, "can't deref nullptr");
+			assertm((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+
 			return (*mapper_ptr)[mapper_index];
+		}
+
+		[[nodiscard]] constexpr pointer operator ->() const noexcept
+		{
+			assertm(nullptr != mapper_ptr, "can't deref nullptr");
+			assertm((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+
+			return std::addressof((*mapper_ptr)[mapper_index]);
 		}
 
 		constexpr indexed_vector_const_iterator &operator++() noexcept
 		{
-			if (mapper_index < Count)
-				++mapper_index;
+			assertm(mapper_index < end_index, "don't increment past end_index");
+
+			++mapper_index;
 			return *this;
 		}
 
 		constexpr indexed_vector_const_iterator operator++(int) noexcept
 		{
+			assertm(mapper_index < end_index, "don't increment past end_index");
+
 			indexed_vector_const_iterator temp = *this;
-			if (mapper_index < Count)
-				++mapper_index;
+			++mapper_index;
 			return temp;
 		}
 
 		constexpr indexed_vector_const_iterator &operator--() noexcept
 		{
-			if (mapper_index > 0)
-				--mapper_index;
+			assertm(mapper_index > begin_index, "don't decrement past begin_index");
+
+			--mapper_index;
 			return *this;
 		}
 
 		constexpr indexed_vector_const_iterator operator--(int) noexcept
 		{
+			assertm(mapper_index > begin_index, "don't decrement past begin_index");
+
 			indexed_vector_const_iterator temp = *this;
-			if (mapper_index > 0)
-				--mapper_index;
+			--mapper_index;
 			return temp;
+		}
+
+		constexpr indexed_vector_const_iterator &operator +=(int offset) noexcept
+		{
+			assertm(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+
+			mapper_index += offset;
+			return *this;
+		}
+
+		constexpr indexed_vector_const_iterator &operator -=(int offset) noexcept
+		{
+			assertm(((mapper_index - offset) >= begin_index) && ((mapper_index - offset) < end_index), "offset not in range");
+
+			mapper_index -= offset;
+			return *this;
+		}
+
+		[[nodiscard]] constexpr int operator -(const indexed_vector_const_iterator &iter) const noexcept
+		{
+			assertm(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+
+			return static_cast<int>(mapper_index) - static_cast<int>(iter.mapper_index);
+		}
+
+		[[nodiscard]] constexpr bool operator ==(const indexed_vector_const_iterator &iter) const noexcept
+		{
+			assertm(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+
+			return ((mapper_ptr == iter.mapper_ptr) && (mapper_index == iter.mapper_index));
+		}
+
+		[[nodiscard]] constexpr std::strong_ordering operator <=>(const indexed_vector_const_iterator &iter) const noexcept
+		{
+			assertm(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+
+			return mapper_index <=> iter.mapper_index;
+		}
+
+		[[nodiscard]] constexpr reference operator [](int offset) const noexcept
+		{
+			assertm(nullptr != mapper_ptr, "can't deref nullptr");
+			assertm(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+
+			return (*mapper_ptr)[mapper_index + offset];
+		}
+
+		[[nodiscard]] constexpr indexed_vector_const_iterator operator+(const int offset) const noexcept
+		{
+			indexed_vector_const_iterator temp = *this;
+			temp += offset;
+			return temp;
+		}
+
+		[[nodiscard]] constexpr indexed_vector_const_iterator operator-(const int offset) const noexcept
+		{
+			indexed_vector_const_iterator temp = *this;
+			temp -= offset;
+			return temp;
+		}
+
+		[[nodiscard]] friend constexpr indexed_vector_const_iterator operator +(const int offset, indexed_vector_const_iterator iter) noexcept
+		{
+			iter += offset;
+			return iter;
 		}
 	};
 
@@ -1238,7 +1331,7 @@ namespace dsga
 
 		// publicly need these type using declarations or typedefs in iterator class,
 		// since c++17 deprecated std::iterator
-		using iterator_category = std::bidirectional_iterator_tag;
+		using iterator_category = std::random_access_iterator_tag;
 		using value_type = T;
 		using difference_type = int;
 		using pointer = T *;
@@ -1258,11 +1351,15 @@ namespace dsga
 		constexpr indexed_vector_iterator &operator =(const indexed_vector_iterator &) noexcept = default;
 		constexpr indexed_vector_iterator &operator =(indexed_vector_iterator &&) noexcept = default;
 		constexpr ~indexed_vector_iterator() = default;
-		constexpr bool operator ==(const indexed_vector_iterator &other) const noexcept = default;
 
-		constexpr reference operator *() const noexcept
+		[[nodiscard]] constexpr reference operator *() const noexcept
 		{
 			return const_cast<reference>(base_iter::operator*());
+		}
+
+		[[nodiscard]] constexpr pointer operator ->() const noexcept
+		{
+			return const_cast<pointer>(base_iter::operator->());
 		}
 
 		constexpr indexed_vector_iterator &operator++() noexcept
@@ -1289,6 +1386,45 @@ namespace dsga
 			indexed_vector_iterator temp = *this;
 			base_iter::operator--();
 			return temp;
+		}
+
+		constexpr indexed_vector_iterator &operator +=(int offset) noexcept
+		{
+			base_iter::operator+=(offset);
+			return *this;
+		}
+
+		constexpr indexed_vector_iterator &operator -=(int offset) noexcept
+		{
+			base_iter::operator-=(offset);
+			return *this;
+		}
+
+		[[nodiscard]] constexpr indexed_vector_iterator operator+(const int offset) const noexcept
+		{
+			indexed_vector_iterator temp = *this;
+			temp += offset;
+			return temp;
+		}
+
+		[[nodiscard]] friend constexpr indexed_vector_iterator operator +(const int offset, indexed_vector_iterator iter) noexcept
+		{
+			iter += offset;
+			return iter;
+		}
+
+		using base_iter::operator-;
+
+		[[nodiscard]] constexpr indexed_vector_iterator operator-(const int offset) const noexcept
+		{
+			indexed_vector_iterator temp = *this;
+			temp -= offset;
+			return temp;
+		}
+
+		[[nodiscard]] constexpr reference operator [](int offset) const noexcept
+		{
+			return const_cast<reference>(base_iter::operator[](offset));
 		}
 	};
 
@@ -1341,9 +1477,9 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0); }
+		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
 		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
@@ -1465,9 +1601,9 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0); }
+		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
 		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
