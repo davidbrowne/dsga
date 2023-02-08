@@ -10,7 +10,7 @@
 #include <type_traits>				// requirements
 #include <concepts>					// requirements
 #include <array>					// underlying storage
-#include <tuple>					// tuple interface for structured bindings, matrix variadic constructor
+#include <tuple>					// tuple interface for structured bindings, variadic constructors
 #include <algorithm>				// min()
 #include <numbers>					// pi_v<>, inv_pi_v<>
 #include <version>					// feature test macros
@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 7;
+constexpr inline int DSGA_PATCH_VERSION = 8;
 
 namespace dsga
 {
@@ -945,7 +945,7 @@ namespace dsga
 
 		dimensional_storage_t<T, Size> store;
 
-		[[nodiscard]] constexpr int length() const noexcept					{ return static_cast<int>(Count); }
+		[[nodiscard]] constexpr int length() const noexcept					{ return Count; }
 		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
 
 		// physically contiguous access to data
@@ -1117,7 +1117,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto sequence() const noexcept					{ return this->as_derived().make_sequence_pack(); }
 
 		// number of accessible T elements - required by spec
-		[[nodiscard]] constexpr int length() const noexcept						{ return static_cast<int>(Count); }
+		[[nodiscard]] constexpr int length() const noexcept						{ return Count; }
 
 		// not required by spec, but more c++ container-like
 		[[nodiscard]] constexpr std::size_t	size() const noexcept				{ return Count; }
@@ -5132,8 +5132,8 @@ namespace dsga
 		}
 
 		// outerProduct() - matrix from a column vector times a row vector
-		template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1,
-			bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+		template <bool W1, non_bool_arithmetic T1, std::size_t C1, typename D1,
+			bool W2, non_bool_arithmetic T2, std::size_t C2, typename D2>
 		requires (floating_point_dimensional_scalar<T1> || floating_point_dimensional_scalar<T2>) && ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
 		constexpr auto outerProduct(const vector_base<W1, T1, C1, D1> &lhs,
 									const vector_base<W2, T2, C2, D2> &rhs) noexcept
@@ -5370,7 +5370,7 @@ namespace dsga
 
 	// operator + with scalar
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
 							  U rhs) noexcept
 	{
@@ -5380,7 +5380,7 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator +(U lhs,
 							  const basic_matrix<T, C, R> &rhs) noexcept
 	{
@@ -5392,7 +5392,7 @@ namespace dsga
 
 	// operator - with scalar
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator -(const basic_matrix<T, C, R> &lhs,
 							  U rhs) noexcept
 	{
@@ -5402,7 +5402,7 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator -(U lhs,
 							  const basic_matrix<T, C, R> &rhs) noexcept
 	{
@@ -5414,7 +5414,7 @@ namespace dsga
 
 	// operator * with scalar
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
 							  U rhs) noexcept
 	{
@@ -5424,7 +5424,7 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator *(U lhs,
 							  const basic_matrix<T, C, R> &rhs) noexcept
 	{
@@ -5436,7 +5436,7 @@ namespace dsga
 
 	// operator / with scalar
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator /(const basic_matrix<T, C, R> &lhs,
 							  U rhs) noexcept
 	{
@@ -5446,7 +5446,7 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, floating_point_dimensional_scalar U>
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R, non_bool_arithmetic U>
 	constexpr auto operator /(U lhs,
 							  const basic_matrix<T, C, R> &rhs) noexcept
 	{
@@ -5499,7 +5499,7 @@ namespace dsga
 	// matrix * (column) vector => (column) vector
 
 	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R,
-		bool W, dimensional_scalar U, typename D>
+		bool W, non_bool_arithmetic U, typename D>
 	constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
 							  const vector_base<W, U, C, D> &rhs) noexcept
 	{
@@ -5512,7 +5512,7 @@ namespace dsga
 	// (row) vector * matrix => (row) vector
 
 	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R,
-		bool W, dimensional_scalar U, typename D>
+		bool W, non_bool_arithmetic U, typename D>
 	constexpr auto operator *(const vector_base<W, U, R, D> &lhs,
 							  const basic_matrix<T, C, R> &rhs) noexcept
 	{

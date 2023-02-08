@@ -77,67 +77,171 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
-		</Expand>
-	</Type>
-
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt;">
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 4">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt;">
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*&gt;">
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 4">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[3]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+		<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt;">
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 4">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt;">
-		<DisplayString>{{ index = {mapper_index}, vec = {*mapper_ptr} }}</DisplayString>
-		<Expand>
-			<Item Name="iterator index">mapper_index</Item>
-			<Item Name="vector base">*mapper_ptr</Item>
+	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt;">
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt;">
+		<DisplayString Condition="mapper_index == 0">{{ iter offset = {mapper_index}, value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ iter offset = end/cend }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*mapper_ptr</Item>
+			<Item Name="iter index">mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 4">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[3]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt; &gt;">
+		<DisplayString Condition="current.mapper_index == 0">{{ iter offset = rend/crend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ iter offset = {current.mapper_index - 1}, value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="iter base">*current.mapper_ptr</Item>
+			<Item Name="iter index">current.mapper_index</Item>
 		</Expand>
 	</Type>
 
