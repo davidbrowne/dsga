@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 9;
+constexpr inline int DSGA_PATCH_VERSION = 10;
 
 namespace dsga
 {
@@ -968,6 +968,8 @@ namespace dsga
 			}(std::make_index_sequence<Count>{}, args...);
 		}
 
+		constexpr void swap(storage_wrapper &sw) noexcept		{ store.swap(sw.store); 	}
+
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept			{ return store.begin(); }
 		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.cbegin(); }
@@ -1483,6 +1485,8 @@ namespace dsga
 			return *this;
 		}
 
+		constexpr void swap(indexed_vector &iv) noexcept					{ base.swap(iv.base); 	}
+
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
 		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
@@ -1606,6 +1610,8 @@ namespace dsga
 		{
 			return static_cast<U>(base[I]);
 		}
+
+		constexpr void swap(indexed_vector &iv) noexcept					{ base.swap(iv.base); 	}
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
@@ -1980,6 +1986,8 @@ namespace dsga
 			return static_cast<U>(base.store[0u]);
 		}
 
+		constexpr void swap(basic_vector &bv) noexcept			{ base.store.swap(bv.base.store); }
+
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
 		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
@@ -2152,6 +2160,8 @@ namespace dsga
 			init(other[0u], other[1u]);
 			return *this;
 		}
+
+		constexpr void swap(basic_vector &bv) noexcept			{ base.store.swap(bv.base.store); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
@@ -2420,6 +2430,8 @@ namespace dsga
 			init(other[0u], other[1u], other[2u]);
 			return *this;
 		}
+
+		constexpr void swap(basic_vector &bv) noexcept			{ base.store.swap(bv.base.store); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
@@ -2911,6 +2923,8 @@ namespace dsga
 			init(other[0u], other[1u], other[2u], other[3u]);
 			return *this;
 		}
+
+		constexpr void swap(basic_vector &bv) noexcept			{ base.store.swap(bv.base.store); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
@@ -5075,13 +5089,22 @@ namespace dsga
 		constexpr basic_vector<T, R> * data() noexcept								{ return values.data(); }
 		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return values.data(); }
 
-		// support for range-based for loop
-		constexpr auto begin() noexcept												{ return values.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept							{ return values.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept						{ return values.cbegin(); }
-		constexpr auto end() noexcept												{ return values.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept							{ return values.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept							{ return values.cend(); }
+		constexpr void swap(basic_matrix &bm) noexcept			{ values.swap(bm.values); }
+
+		// support for range-based for loop -- gives column vectors
+		[[nodiscard]] constexpr auto begin() noexcept			{ return values.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return values.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return values.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return values.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return values.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return values.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return values.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return values.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 	};
 
 	//
