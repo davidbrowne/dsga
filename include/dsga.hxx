@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 10;
+constexpr inline int DSGA_PATCH_VERSION = 11;
 
 namespace dsga
 {
@@ -987,6 +987,13 @@ namespace dsga
 
 	};
 
+	template <dimensional_scalar T, std::size_t Size>
+	constexpr void swap(storage_wrapper<T, Size> &lhs, storage_wrapper<T, Size> &rhs) noexcept
+	{
+		lhs.swap(rhs);
+	}
+
+
 	namespace detail
 	{
 		// the concepts will help indexed_vector determine if it can be assigned to, like an lvalue reference,
@@ -1655,6 +1662,12 @@ namespace dsga
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
 	};
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	constexpr void swap(indexed_vector<T, Size, Count, Is...> &lhs, indexed_vector<T, Size, Count, Is...> &rhs) noexcept
+	{
+		lhs.swap(rhs);
+	}
 
 
 	// convenience using types for indexed_vector as members of basic_vector
@@ -2972,6 +2985,13 @@ namespace dsga
 			// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 			[[nodiscard]] constexpr auto make_sequence_pack() const noexcept		{ return sequence_pack{}; }
 	};
+
+	template <dimensional_scalar T, std::size_t Size>
+	constexpr void swap(basic_vector<T, Size> &lhs, basic_vector<T, Size> &rhs) noexcept
+	{
+		lhs.swap(rhs);
+	}
+
 
 	//
 	// CTAD deduction guides
@@ -5106,6 +5126,13 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return values.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 	};
+
+	template <floating_point_dimensional_scalar T, std::size_t C, std::size_t R>
+	constexpr void swap(basic_matrix<T, C, R> &lhs, basic_matrix<T, C, R> &rhs) noexcept
+	{
+		lhs.swap(rhs);
+	}
+
 
 	//
 	// get<> part of tuple interface -- needed for structured bindings
