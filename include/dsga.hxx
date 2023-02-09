@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 8;
+constexpr inline int DSGA_PATCH_VERSION = 9;
 
 namespace dsga
 {
@@ -969,12 +969,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return store.begin(); }
-		[[nodiscard]] constexpr auto begin() const	noexcept	{ return store.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const	noexcept	{ return store.cbegin(); }
-		constexpr auto end() noexcept							{ return store.end(); }
-		[[nodiscard]] constexpr auto end() const	noexcept	{ return store.cend(); }
-		[[nodiscard]] constexpr auto cend() const	noexcept	{ return store.cend(); }
+		[[nodiscard]] constexpr auto begin() noexcept			{ return store.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return store.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return store.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return store.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
 	};
 
@@ -1477,19 +1484,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
-		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
 
-		constexpr auto rbegin() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(end()); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(end()); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(cend()); }
-		constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(begin()); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(begin()); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(cbegin()); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(end()); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(end()); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(begin()); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(begin()); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 
 		private:
 
@@ -1601,20 +1608,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
-		constexpr auto end() noexcept requires Writable			{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, Count); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, Count); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
 
-		constexpr auto rbegin() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>(end()); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(end()); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(cend()); }
-		constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>(begin()); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(begin()); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(cbegin()); }
-
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>(end()); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(end()); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>(begin()); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(begin()); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 		private:
 
 			friend struct vector_base<Writable, T, 1u, indexed_vector<T, Size, 1u, I>>;
@@ -1975,19 +1981,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
 		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
-		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
 
-		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.store.rbegin(); }
 		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
-		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return base.store.rend(); }
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
 		private:
 
@@ -2148,19 +2154,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
 		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
-		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
 
-		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.store.rbegin(); }
 		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
-		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return base.store.rend(); }
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
 		private:
 
@@ -2416,19 +2422,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
 		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
-		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
 
-		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.store.rbegin(); }
 		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
-		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return base.store.rend(); }
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
 		private:
 
@@ -2907,19 +2913,19 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		constexpr auto begin() noexcept							{ return base.store.begin(); }
+		[[nodiscard]] constexpr auto begin() noexcept			{ return base.store.begin(); }
 		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.store.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return base.store.cbegin(); }
-		constexpr auto end() noexcept							{ return base.store.end(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return base.store.end(); }
 		[[nodiscard]] constexpr auto end() const noexcept		{ return base.store.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return base.store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
 
-		constexpr auto rbegin() noexcept						{ return base.store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.store.rbegin(); }
 		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.store.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return base.store.crbegin(); }
-		constexpr auto rend() noexcept							{ return base.store.rend(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return base.store.rend(); }
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.store.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return base.store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
 		private:
 
