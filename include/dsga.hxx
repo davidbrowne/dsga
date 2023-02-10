@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 12;
+constexpr inline int DSGA_PATCH_VERSION = 13;
 
 namespace dsga
 {
@@ -5687,14 +5687,14 @@ namespace dsga
 
 	template <dsga::dimensional_scalar T, std::size_t S>
 	requires dsga::dimensional_storage<T, S>
-	constexpr basic_vector<T, S> to_vec(const std::array<T, S> &arg) noexcept
+	constexpr basic_vector<T, S> to_vector(const std::array<T, S> &arg) noexcept
 	{
 		return detail::passthru_execute(std::make_index_sequence<S>{}, arg);
 	}
 
 	template <dsga::dimensional_scalar T, std::size_t S>
 	requires dsga::dimensional_storage<T, S>
-	constexpr basic_vector<T, S> to_vec(const T(&arg)[S]) noexcept
+	constexpr basic_vector<T, S> to_vector(const T(&arg)[S]) noexcept
 	{
 		return detail::passthru_execute(std::make_index_sequence<S>{}, arg);
 	}
@@ -5702,7 +5702,7 @@ namespace dsga
 	// converting from internal vector type to std::array
 
 	template <bool W, typename T, std::size_t C, typename D>
-	constexpr std::array<T, C> from_vec(const dsga::vector_base<W, T, C, D> &arg) noexcept
+	constexpr std::array<T, C> to_array(const dsga::vector_base<W, T, C, D> &arg) noexcept
 	{
 		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 		{

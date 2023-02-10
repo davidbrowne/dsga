@@ -17,11 +17,22 @@ using namespace dsga;
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
+// WARNING: undefined behavior!!
+namespace std
+{
+	template <class T, size_t S>
+	span(dsga::basic_vector<T, S> &) -> span<T, S>;
+
+	template <class T, size_t S>
+	span(const dsga::basic_vector<T, S> &) -> span<const T, S>;
+}
+
+
 // fill vectors from spans
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
-constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -30,7 +41,7 @@ constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
-constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -41,7 +52,7 @@ constexpr void copy_to_vec(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
-constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -50,7 +61,7 @@ constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S>
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
-constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
 {
 	const std::size_t count = std::min(S, lhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -61,7 +72,7 @@ constexpr void copy_from_vec(std::span<U, E> lhs, const dsga::basic_vector<T, S>
 // get all the data out of the vector, no matter if vec is a dsga::basic_vector or dsga::indexed_vector.
 // this is a manual pointer and offset way to access data as opposed to to using dsga::vector_base::operator [].
 template <bool W, typename T, std::size_t C, typename D>
-constexpr std::array<T, C> from_vec_by_data_sequence(const dsga::vector_base<W, T, C, D> &vec) noexcept
+constexpr std::array<T, C> from_vector_by_data_sequence(const dsga::vector_base<W, T, C, D> &vec) noexcept
 {
 	return [ptr = vec.data()]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 	{
@@ -81,14 +92,14 @@ TEST_SUITE("test conversions")
 	{
 		SUBCASE("std::array")
 		{
-			auto val1 = from_vec(cx_three);
+			auto val1 = to_array(cx_three);
 			auto val2 = std::array<int, 3>{4, 5, 6};
 			auto val3 = std::array<int, 3>{5, 6, 4};
 
-			auto val4 = to_vec(val3);
+			auto val4 = to_vector(val3);
 
-			auto val5 = to_vec(from_vec(cx_two));
-			auto val6 = from_vec(to_vec(val1));
+			auto val5 = to_vector(to_array(cx_two));
+			auto val6 = to_array(to_vector(val1));
 
 			CHECK_EQ(val1, val2);
 			CHECK_NE(val1, val3);
@@ -101,24 +112,24 @@ TEST_SUITE("test conversions")
 
 			// using data() and sequence()
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_one), cx_one.base.store);
-			CHECK_EQ(from_vec_by_data_sequence(cx_two.y), std::array{8});
+			CHECK_EQ(from_vector_by_data_sequence(cx_one), cx_one.base.store);
+			CHECK_EQ(from_vector_by_data_sequence(cx_two.y), std::array{8});
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_two), cx_two.base.store);
-			CHECK_EQ(from_vec_by_data_sequence(cx_two.xx), std::array{7, 7});
+			CHECK_EQ(from_vector_by_data_sequence(cx_two), cx_two.base.store);
+			CHECK_EQ(from_vector_by_data_sequence(cx_two.xx), std::array{7, 7});
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_three), cx_three.base.store);
-			CHECK_EQ(from_vec_by_data_sequence(cx_two.yxx), std::array{8, 7, 7});
+			CHECK_EQ(from_vector_by_data_sequence(cx_three), cx_three.base.store);
+			CHECK_EQ(from_vector_by_data_sequence(cx_two.yxx), std::array{8, 7, 7});
 
-			CHECK_EQ(from_vec_by_data_sequence(cx_four), cx_four.base.store);
-			CHECK_EQ(from_vec_by_data_sequence(cx_two.yxyx), std::array{8, 7, 8, 7});
+			CHECK_EQ(from_vector_by_data_sequence(cx_four), cx_four.base.store);
+			CHECK_EQ(from_vector_by_data_sequence(cx_two.yxyx), std::array{8, 7, 8, 7});
 		}
 
 		SUBCASE("C array")
 		{
 			int val1[4];
 
-			copy_from_vec(std::span(val1), cx_four);
+			copy_from_vector(std::span(val1), cx_four);
 			CHECK_EQ(val1[0], 0);
 			CHECK_EQ(val1[1], 1);
 			CHECK_EQ(val1[2], 2);
@@ -128,10 +139,10 @@ TEST_SUITE("test conversions")
 				val -= 10;
 
 			ivec4 val2;
-			copy_to_vec(val2, std::span(val1));
+			copy_to_vector(val2, std::span(val1));
 			CHECK_EQ(val2, ivec4(-10, -9, -8, -7));
 
-			auto val3 = to_vec(val1);
+			auto val3 = to_vector(val1);
 			CHECK_EQ(val3, ivec4(-10, -9, -8, -7));
 		}
 
@@ -148,14 +159,14 @@ TEST_SUITE("test conversions")
 
 			for (std::size_t i = 0; i < 4; ++i)
 			{
-				copy_to_vec(vec_arr[i], std::span(lotsa_data.data() + (i * 4), 4));
+				copy_to_vector(vec_arr[i], std::span(lotsa_data.data() + (i * 4), 4));
 			}
 
 			std::array<int, 16> give_me_data{};
 			std::array<int, 16> expected_result { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 			for (std::size_t i = 0; i < 4; ++i)
 			{
-				copy_from_vec(std::span(give_me_data.data() + (i * 4), 4), vec_arr[i]);
+				copy_from_vector(std::span(give_me_data.data() + (i * 4), 4), vec_arr[i]);
 			}
 
 			CHECK_EQ(give_me_data, expected_result);
@@ -178,6 +189,20 @@ TEST_SUITE("test conversions")
 			}
 
 			CHECK_EQ(val2, vec_arr[3]);
+
+			//
+			// wrap a span around a basic_vector
+			//
+
+			ivec4 dest{};
+			const ivec4 src(100, 200, 300, 400);
+			auto dest_iter = dest.begin();
+			auto span_src = std::span(src);
+			auto src_iter = span_src.rbegin();
+			while (src_iter != span_src.rend())
+				*dest_iter++ = *src_iter++;
+
+			CHECK_EQ(dest, ivec4(400, 300, 200, 100));
 		}
 	}
 
