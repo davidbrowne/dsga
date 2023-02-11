@@ -17,16 +17,6 @@ using namespace dsga;
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
-// WARNING: undefined behavior!!
-namespace std
-{
-	template <class T, size_t S>
-	span(dsga::basic_vector<T, S> &) -> span<T, S>;
-
-	template <class T, size_t S>
-	span(const dsga::basic_vector<T, S> &) -> span<const T, S>;
-}
-
 
 // fill vectors from spans
 
