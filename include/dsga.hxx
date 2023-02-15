@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 8;
-constexpr inline int DSGA_PATCH_VERSION = 13;
+constexpr inline int DSGA_PATCH_VERSION = 14;
 
 namespace dsga
 {
@@ -941,7 +941,7 @@ namespace dsga
 		using sequence_pack = std::make_index_sequence<Count>;
 
 		// as an array
-		static constexpr std::array<std::size_t, Count> sequence_array = make_sequence_array(sequence_pack{});
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		dimensional_storage_t<T, Size> store;
 
@@ -1474,19 +1474,7 @@ namespace dsga
 		{
 			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
 			{
-				init( other[Js]... );
-			}(std::make_index_sequence<Count>{});
-
-			return *this;
-		}
-
-		template <bool W, typename D>
-		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
-		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
-			{
-				init( other[Js]... );
+				init(other[Js]...);
 			}(std::make_index_sequence<Count>{});
 
 			return *this;
@@ -1569,16 +1557,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			init( other[0u] );
-
-			return *this;
-		}
-
-		template <bool W, typename D>
-		requires Writable
-		constexpr indexed_vector &operator =(const vector_base<W, T, Count, D> &other) noexcept
-		{
-			init( other[0u] );
+			init(other[0u]);
 
 			return *this;
 		}
@@ -1588,13 +1567,6 @@ namespace dsga
 		template <dimensional_scalar U>
 		requires implicitly_convertible_to<U, T>
 		constexpr indexed_vector &operator =(U other) noexcept
-		{
-			init(other);
-
-			return *this;
-		}
-
-		constexpr indexed_vector &operator =(T other) noexcept
 		{
 			init(other);
 
@@ -2205,10 +2177,10 @@ namespace dsga
 			requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 			constexpr void init(Args ...args) noexcept
 			{
-				[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
+				[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
 				{
-					((base[Js] = static_cast<T>(same_args)), ...);
-				}(std::make_index_sequence<Count>{}, args...);
+					((base[Js] = static_cast<T>(args)), ...);
+				}(std::make_index_sequence<Count>{});
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
@@ -2475,10 +2447,10 @@ namespace dsga
 			requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 			constexpr void init(Args ...args) noexcept
 			{
-				[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
+				[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
 				{
-					((base[Js] = static_cast<T>(same_args)), ...);
-				}(std::make_index_sequence<Count>{}, args...);
+					((base[Js] = static_cast<T>(args)), ...);
+				}(std::make_index_sequence<Count>{});
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
@@ -2968,10 +2940,10 @@ namespace dsga
 			requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 			constexpr void init(Args ...args) noexcept
 			{
-				[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
+				[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
 				{
-					((base[Js] = static_cast<T>(same_args)), ...);
-				}(std::make_index_sequence<Count>{}, args...);
+					((base[Js] = static_cast<T>(args)), ...);
+				}(std::make_index_sequence<Count>{});
 			}
 
 			// logically and physically contiguous - used by operator [] for access to data
