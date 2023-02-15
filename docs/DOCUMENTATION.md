@@ -130,7 +130,7 @@ vec4 big_vec;
 vec3 smaller_vec(big_vec.zyx);
 ```
 
-Swizzling uses dot notation, e.g., ```foo.xy, bar.zw, baz.xxyy```. This gives you a type of vector that is a view on the data of the original vector. The swizzles are part of the original vector, and they have the same lifetime. The "x" index means the first value in the vector, "y" means the second, "z" means the third, and "w" means the fourth, so "xyzw" are the possible values in a swizzle, depending on the size of the original vector. In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), there are 3 different domains for swizzling: ```xyzw```, ```rgba```, and ```stpq```. We use "xyzw" when talking about spatial coordinates, "rgba" when talking about color coordinates, and "stpq" when talking about texture coordinates. Since dsga is intended for geometry and algebra, we only bothered supporting **xyzw** for swizzling.
+Swizzling uses dot notation, e.g., ```foo.xy, bar.zw, baz.xxyy```. This gives you a type of vector that is a view on the data of the original vector. The swizzles are part of the original vector, and they have the same lifetime. The "x" index means the first value in the vector, "y" means the second, "z" means the third, and "w" means the fourth, so "xyzw" are the possible values in a swizzle, depending on the size of the original vector. In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), there are 3 different domains for swizzling: ```xyzw```, ```rgba```, and ```stpq```. We use "xyzw" when talking about spatial coordinates, "rgba" when talking about color coordinates, and "stpq" when talking about texture coordinates. Since dsga is intended for geometry and algebra, we only felt the need to support the "xyzw" set for swizzling.
 
 A length 1 vector can only refer to "x", but it can do so up to 4 times in a swizzle:
 ```c++
@@ -194,6 +194,7 @@ The matrix types are very generic. One can pre-mulitply (matrix on left, vector 
 # API
 
 * Matrices and Vectors
+   * [Index Interface](#index-interface)
    * [Iterators](#iterators)
    * [Tuple Interface](#tuple-interface)
    * [Low Level Pointer Access](#low-level-pointer-access)
@@ -221,16 +222,22 @@ We have [enumerated all the specific classes](#types-and-functions) we support i
 
 Please look at what is in the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), especially Section 5 and Section 8, for a thorough look at the API. We will summarize what was implemented and how we supplemented matrix and vector.
 
+### Index Interface
+
+The vector structs closely model short versions of ```std::array```, including using ```operator []``` for access to scalar components. Matrix also has "operator []", but it is for accessing column vectors.
+
+For vector swizzles, only *writable* swizzles can use ```operator []``` for write access to the vector.
+
 ### Iterators
 
-Both the vector and matrix structs support **begin/cbegin/rbegin/crbegin** and **end/cend/rend/crend** iterator creation functions in order to provide non-const and const iterators. The ```indexed_vector``` iterators pass the ```std::random_access_iterator``` concept. This gives us access to:
+Both the vector and matrix structs support ```begin()/cbegin()/rbegin()/crbegin()``` and ```end()/cend()/rend()/crend()``` iterator creation functions in order to provide non-const and const iterators. The ```indexed_vector``` iterators pass the ```std::random_access_iterator``` concept. This gives us access to:
 
 * Standard Library Algorithms
 * [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for)
 
 ### Tuple Interface
 
-Both the vector and matrix structs support **std::tuple_element<>**, **std::tuple_size<>** and **get<>** in order to provide basic ```std::tuple``` support. This gives us access to:
+Both the vector and matrix structs support ```std::tuple_element<>```, ```std::tuple_size<>``` and ```get<>``` in order to provide basic ```std::tuple``` support. This gives us access to:
 
 * Data structures in same manner as ```tuple```
 * [Structured Binding](https://en.cppreference.com/w/cpp/language/structured_binding)
@@ -239,9 +246,9 @@ Both the vector and matrix structs support **std::tuple_element<>**, **std::tupl
 
 Both the vector and matrix structs support ```data()``` and ```size()``` in order to provide pointer access to the underlying data. The parameter pack returned by ```sequence()``` can also be helpful here to map the physical order from ```data()``` to the logical order (only useful for generic vector situations or when using ```indexed_vector```). *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this approach exists if it is deemed appropriate:
 
-* **T \*data()** gives a pointer to the underlying vector elements or matrix columns, in physical order.
-* **std::size_t size()** gives the number of elements in the vector or number of columns in the matrix.
-* **std::index_sequence<Is...> sequence()** (only for vectors) gives a parameter pack that maps the physical order to the logical order. For a ```basic_vector``` those are the same, but for an ```indexed_vector``` they are mostly not the same. Pack expansion and folding are tools that might help with the low-level pointer access for vectors.
+* ```T *data()``` gives a pointer to the underlying vector elements or matrix columns, in physical order.
+* ```std::size_t size()``` gives the number of elements in the vector or number of columns in the matrix.
+* ```std::index_sequence<Is...> sequence()``` (only for vectors) gives a parameter pack that maps the physical order to the logical order. For a ```basic_vector``` those are the same, but for an ```indexed_vector``` they are mostly not the same. Pack expansion and folding are tools that might help with the low-level pointer access for vectors.
 
 ## Vector
 
@@ -308,12 +315,10 @@ This approach is exactly what ```basic_matrix``` does.
 
 ### Vector Member Functions
 
-These are the members that are not part of the [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
+These are the members that are not part of the [index interface](#index-interface), [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
 
-* **operator =** - assignment operator. The vector needs to be the same length and underlying types must be convertible.
-* **int length()** - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
-* **operator []** - a generic way to access vector data. the ```x``` value is index 0, the ```y``` value is index 1, the ```z``` value is index 2, and the ```w``` value is index 3, assuming the vector is long enough to access those index values. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing.
-* **set()** - this is the way of setting all the values for the vector at the same time. It takes the same number of scalar arguments as there are vector elements. This function is helpful at preventing trouble when there are potential aliasing problems.
+* ```operator =``` - assignment operator. The vector needs to be the same length and underlying types must be convertible.
+* ```int length()``` - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
 
 ### Vector Operators
 The vector operators all work component-wise.

@@ -26,6 +26,16 @@ constexpr void pointer_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, con
 	}(dest.sequence(), src.sequence());
 }
 
+template <bool W1, dsga::dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+requires W1
+constexpr void iterator_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, const dsga::vector_base<W2, T, C, D2> &src) noexcept
+{
+	auto dest_iter = dest.begin();
+	auto src_iter = src.cbegin();
+	while (src_iter != src.cend())
+		*dest_iter++ = *src_iter++;
+}
+
 // compund assignments are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test assignment")
 {
@@ -53,6 +63,25 @@ TEST_SUITE("test assignment")
 		CHECK_EQ(dest, vec4(400, 300, 200, 100));
 
 		pointer_interface_copy(dest.xzwy, src.wyxz);
+		CHECK_EQ(dest, vec4(400, 300, 200, 100));
+	}
+
+	// use iterators from vector_base to perform assignment
+	TEST_CASE("iterator interface assignment")
+	{
+		const auto src = vec4(100, 200, 300, 400);
+		auto dest = vec4(0);
+
+		iterator_interface_copy(dest, src);
+		CHECK_EQ(dest, src);
+
+		iterator_interface_copy(dest.wzyx, src);
+		CHECK_EQ(dest, vec4(400, 300, 200, 100));
+
+		iterator_interface_copy(dest, src.wzyx);
+		CHECK_EQ(dest, vec4(400, 300, 200, 100));
+
+		iterator_interface_copy(dest.xzwy, src.wyxz);
 		CHECK_EQ(dest, vec4(400, 300, 200, 100));
 	}
 

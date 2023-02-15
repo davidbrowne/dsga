@@ -174,11 +174,11 @@ This may be a single header library, but if Visual Studio is being used, we reco
 
 ## Status
 
-Current version: `v0.8.14`
+Current version: `v0.9.0`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
-* [Released v0.8.0](https://github.com/davidbrowne/dsga/releases/tag/v0.8.0)
+* [Released v0.9.0](https://github.com/davidbrowne/dsga/releases/tag/v0.9.0)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
@@ -195,7 +195,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1874 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1878 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
 
 The tests have been most recently run on:
 
@@ -207,8 +207,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   84 |   84 passed | 0 failed | 0 skipped
-[doctest] assertions: 1890 | 1890 passed | 0 failed |
+[doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
+[doctest] assertions: 1894 | 1894 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -218,8 +218,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   84 |   84 passed | 0 failed | 0 skipped
-[doctest] assertions: 1890 | 1890 passed | 0 failed |
+[doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
+[doctest] assertions: 1894 | 1894 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -231,8 +231,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   84 |   84 passed | 0 failed | 0 skipped
-[doctest] assertions: 1874 | 1874 passed | 0 failed |
+[doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
+[doctest] assertions: 1878 | 1878 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -244,8 +244,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.9"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   84 |   84 passed | 0 failed | 0 skipped
-[doctest] assertions: 1890 | 1890 passed | 0 failed |
+[doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
+[doctest] assertions: 1894 | 1894 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -275,8 +275,8 @@ dsga/tests/swizzle_test.cxx:1849: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> )
   values: CHECK_UNARY( false )
 
 ===============================================================================
-[doctest] test cases:   84 |   83 passed | 1 failed | 0 skipped
-[doctest] assertions: 1874 | 1872 passed | 2 failed |
+[doctest] test cases:   85 |   84 passed | 1 failed | 0 skipped
+[doctest] assertions: 1878 | 1876 passed | 2 failed |
 [doctest] Status: FAILURE!
 ```
 
