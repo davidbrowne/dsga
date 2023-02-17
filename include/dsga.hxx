@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 0;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
@@ -51,7 +51,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 10;
+		constexpr inline int CXCM_PATCH_VERSION = 11;
 
 		namespace limits
 		{
@@ -359,17 +359,20 @@ namespace dsga
 		// microsoft is in the process of making this stuff constexpr, and they need to have a compiler
 		// intrinsic to do it. https://github.com/microsoft/STL/issues/65#issuecomment-563886838
 
-	#if defined(_MSC_VER)
+	#if defined(_MSC_VER) || defined(__clang__)
 	#pragma float_control(precise, on, push)
 	#endif
 
 		template <std::floating_point T>
-		constexpr bool isnan(T value) noexcept
+		#if defined(__GNUC__) && !defined(__clang__)
+			__attribute__((optimize("-fno-fast-math")))
+		#endif
+			constexpr bool isnan(T value) noexcept
 		{
 			return (value != value);
 		}
 
-	#if defined(_MSC_VER)
+	#if defined(_MSC_VER) || defined(__clang__)
 	#pragma float_control(pop)
 	#endif
 
@@ -949,10 +952,10 @@ namespace dsga
 		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
 
 		// physically contiguous access to data
-		constexpr T &operator [](std::size_t index) noexcept				{ return store[index]; }
-		constexpr const T &operator [](std::size_t index) const noexcept	{ return store[index]; }
+		[[nodiscard]] constexpr T &operator [](std::size_t index) noexcept				{ return store[index]; }
+		[[nodiscard]] constexpr const T &operator [](std::size_t index) const noexcept	{ return store[index]; }
 
-		constexpr T * data() noexcept										{ return store.data(); }
+		[[nodiscard]] constexpr T * data() noexcept							{ return store.data(); }
 		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
@@ -1112,8 +1115,8 @@ namespace dsga
 	struct vector_base
 	{
 		// CRTP access to Derived class
-		constexpr Derived &as_derived() noexcept requires Writable				{ return static_cast<Derived &>(*this); }
-		[[nodiscard]] constexpr const Derived &as_derived() const noexcept		{ return static_cast<const Derived &>(*this); }
+		[[nodiscard]] constexpr Derived &as_derived() noexcept requires Writable	{ return static_cast<Derived &>(*this); }
+		[[nodiscard]] constexpr const Derived &as_derived() const noexcept			{ return static_cast<const Derived &>(*this); }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
@@ -1121,11 +1124,11 @@ namespace dsga
 		constexpr void set(Args ...args) noexcept								{ this->as_derived().set(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
-		constexpr T &operator [](std::size_t index) noexcept requires Writable	{ return this->as_derived()[index]; }
-		constexpr const T &operator [](std::size_t index) const	noexcept		{ return this->as_derived()[index]; }
+		[[nodiscard]] constexpr T &operator [](std::size_t index) noexcept requires Writable	{ return this->as_derived()[index]; }
+		[[nodiscard]] constexpr const T &operator [](std::size_t index) const	noexcept		{ return this->as_derived()[index]; }
 
 		// physically contiguous access via pointer
-		constexpr T * data() noexcept requires Writable							{ return this->as_derived().data(); }
+		[[nodiscard]] constexpr T * data() noexcept requires Writable			{ return this->as_derived().data(); }
 		[[nodiscard]] constexpr const T * data() const noexcept					{ return this->as_derived().data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
@@ -1931,13 +1934,11 @@ namespace dsga
 		{
 		}
 
-#if defined(_MSC_VER)
-#pragma warning(disable:26495)
-#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -1945,9 +1946,6 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
-#if defined(_MSC_VER)
-#pragma warning(default:26495)
-#endif
 
 		//
 		// implicit assignment operators
@@ -2135,13 +2133,11 @@ namespace dsga
 		{
 		}
 
-#if defined(_MSC_VER)
-#pragma warning(disable:26495)
-#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -2149,9 +2145,6 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
-#if defined(_MSC_VER)
-#pragma warning(default:26495)
-#endif
 
 		//
 		// assignment operator
@@ -2409,13 +2402,11 @@ namespace dsga
 		{
 		}
 
-#if defined(_MSC_VER)
-#pragma warning(disable:26495)
-#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -2423,9 +2414,6 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
-#if defined(_MSC_VER)
-#pragma warning(default:26495)
-#endif
 
 		//
 		// assignment operators
@@ -2906,13 +2894,11 @@ namespace dsga
 		{
 		}
 
-#if defined(_MSC_VER)
-#pragma warning(disable:26495)
-#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -2920,9 +2906,6 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
-#if defined(_MSC_VER)
-#pragma warning(default:26495)
-#endif
 
 		//
 		// assignment operators
@@ -4946,12 +4929,12 @@ namespace dsga
 		// operator [] gets the column vector
 		//
 
-		constexpr basic_vector<T, R> &operator [](std::size_t index) noexcept
+		[[nodiscard]] constexpr basic_vector<T, R> &operator [](std::size_t index) noexcept
 		{
 			return values[index];
 		}
 
-		constexpr const basic_vector<T, R> &operator [](std::size_t index) const noexcept
+		[[nodiscard]] constexpr const basic_vector<T, R> &operator [](std::size_t index) const noexcept
 		{
 			return values[index];
 		}
@@ -4990,6 +4973,7 @@ namespace dsga
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
 		explicit constexpr basic_matrix(const Args & ...args) noexcept
+			: values{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[this, &arg_tuple]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -5005,6 +4989,7 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, T> && (C == R)
 		explicit constexpr basic_matrix(U arg) noexcept
+			: values{}
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{
@@ -5019,6 +5004,7 @@ namespace dsga
 		template <floating_point_dimensional_scalar U>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
+			: values{}
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{
@@ -5030,6 +5016,7 @@ namespace dsga
 		template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
 		requires implicitly_convertible_to<U, T> && (Cols != C || Rows != R)
 		constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+			: values{}
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{
@@ -5063,6 +5050,7 @@ namespace dsga
 		template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>) && (Cols != C || Rows != R)
 		explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+			: values{}
 		{
 			for (std::size_t i = 0; i < C; ++i)
 			{
@@ -5109,7 +5097,7 @@ namespace dsga
 		}
 
 		// pointer interface
-		constexpr basic_vector<T, R> * data() noexcept								{ return values.data(); }
+		[[nodiscard]] constexpr basic_vector<T, R> * data() noexcept				{ return values.data(); }
 		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return values.data(); }
 
 		constexpr void swap(basic_matrix &bm) noexcept			{ values.swap(bm.values); }
