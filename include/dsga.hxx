@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -51,7 +51,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 11;
+		constexpr inline int CXCM_PATCH_VERSION = 12;
 
 		namespace limits
 		{
@@ -117,7 +117,7 @@ namespace dsga
 				return (value < T(0)) ? -value : value;
 			}
 
-			// undefined behavior if (value == std::numeric_limits<T>::min())
+			// undefined behavior if value is std::numeric_limits<T>::min()
 			template <std::signed_integral T>
 			constexpr T abs(T value) noexcept
 			{
@@ -258,8 +258,7 @@ namespace dsga
 				bool is_halfway = (fract(value) == T(0.5));
 
 				// the special case
-				if (is_halfway)
-					if (is_even)
+				if (is_halfway && is_even)
 						return trunc_value;
 
 				// zero could be handled either place, but here it is with the negative values.
@@ -325,8 +324,11 @@ namespace dsga
 			constexpr float sqrt(float value) noexcept
 			{
 				double val = value;
-//				return static_cast<float>(val * detail::inverse_sqrt(val));
+#if 0
+				return static_cast<float>(val * detail::inverse_sqrt(val));
+#else
 				return static_cast<float>(detail::converging_sqrt(val));
+#endif
 			}
 
 			// reciprocal of square root
@@ -630,19 +632,19 @@ namespace dsga
 				{
 					// screen out unnecessary input
 
-					// arg == NaN, return NaN
+					// if arg is NaN, return NaN
 					if (isnan(value))
 						return value;
 
-					// arg == +infinity , return 0
+					// if arg is +infinity , return 0
 					if (value == std::numeric_limits<T>::infinity())
 						return T(0.0);
 
-					// arg == -infinity or +/-0, return NaN
+					// if arg is -infinity or +/-0, return NaN
 					if (!isnormal_or_subnormal(value))
 						return std::numeric_limits<T>::quiet_NaN();
 
-					// arg <= 0, return NaN
+					// if arg <= 0, return NaN
 					if (value <= T(0.0))
 						return std::numeric_limits<T>::quiet_NaN();
 
@@ -4744,7 +4746,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, equal_op);
 		}
 
-		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept -> bool { return x == y; };
+		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept { return x == y; };
 
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
@@ -4763,7 +4765,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, not_equal_op);
 		}
 
-		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept -> bool { return x != y; };
+		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept { return x != y; };
 
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
@@ -4790,18 +4792,14 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		// this is function is not in the glsl standard, same result as "!any(x)"
+		// this is function is not in the glsl standard
 		template <bool W, std::size_t C, typename D>
 		constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
 		{
 			return !any(x);
-//			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-//			{
-//				return !(x[Is] || ...);
-//			}(std::make_index_sequence<C>{});
 		}
 
-		constexpr inline auto logical_not_op = [](bool x) noexcept -> bool { return !x; };
+		constexpr inline auto logical_not_op = [](bool x) noexcept { return !x; };
 
 		// c++ is not allowing a function named not()
 		template <bool W, std::size_t C, typename D>
@@ -4966,9 +4964,6 @@ namespace dsga
 		// constructors
 		//
 
-#if defined(_MSC_VER)
-#pragma warning(disable:26495)
-#endif
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
 		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
@@ -4981,9 +4976,6 @@ namespace dsga
 				((values[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<ComponentCount>{});
 		}
-#if defined(_MSC_VER)
-#pragma warning(default:26495)
-#endif
 
 		// diagonal constructor for square matrices
 		template <typename U>
