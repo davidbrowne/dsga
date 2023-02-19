@@ -6,6 +6,7 @@
 		<DisplayString Condition="$T2 == 2">{{ {store[0],g}, {store[1],g} }}</DisplayString>
 		<DisplayString Condition="$T2 == 3">{{ {store[0],g}, {store[1],g}, {store[2],g} }}</DisplayString>
 		<DisplayString Condition="$T2 == 4">{{ {store[0],g}, {store[1],g}, {store[2],g}, {store[3],g} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand>
 			<ExpandedItem>store._M_elems</ExpandedItem>
 		</Expand>
@@ -83,7 +84,7 @@
 		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 3">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 4">{{ end }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -96,7 +97,7 @@
 		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 3">{{ end }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 3">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -108,7 +109,7 @@
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 2">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -119,7 +120,7 @@
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*&gt;">
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 1">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -133,7 +134,7 @@
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 4">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[3]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
@@ -146,7 +147,7 @@
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
@@ -158,7 +159,7 @@
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
@@ -169,7 +170,7 @@
 		<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*&gt; &gt;">
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
@@ -183,7 +184,7 @@
 		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 3">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 4">{{ cend }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -196,7 +197,7 @@
 		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 3">{{ cend }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 3">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -208,7 +209,7 @@
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ cend }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 2">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -219,7 +220,7 @@
 	<Type Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt;">
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ cend }}</DisplayString>
-		<DisplayString>{{ mapper_index = {mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="mapper_index != 1">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
@@ -233,7 +234,7 @@
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 4">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[3]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
@@ -246,7 +247,7 @@
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[2]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
@@ -258,7 +259,7 @@
 		<DisplayString Condition="current.mapper_index == 0">{{ crend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[1]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
@@ -269,7 +270,7 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt; &gt;">
 		<DisplayString Condition="current.mapper_index == 0">{{ crend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[(*current.mapper_ptr).offsets[0]]} }}</DisplayString>
-		<DisplayString>{{ mapper_index = {current.mapper_index} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
