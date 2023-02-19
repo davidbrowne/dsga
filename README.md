@@ -166,11 +166,13 @@ This is a **single header library**, where you just need the file [dsga.hxx](inc
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
-Since the constexpr versions of ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) do not have identical results with std::sqrt(), if you want the approximate but constexpr version of those or ```dsga::sqrt()``` or ```dsga::rsqrt()```, you have to opt-in by defining the macro ```DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED```.
+Since the constexpr versions of ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) do not have identical results with ```std::sqrt()``` with ```double``` arguments, if you want the approximate but constexpr version of those or ```dsga::sqrt()``` or ```dsga::rsqrt()```, you have to opt-in by defining the macro ```DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED```. The approximation for ```sqrt(double)``` is not more than 1 ulp away from ```std::sqrt(double)```, and ```rsqrt(double)``` is not more than 2 ulps away from ```1.0 / std::sqrt(double)```.
 
 There are asserts in the codebase, especially in the indexed_vector iterator structs, that can be disabled by defining the macro ```DSGA_DISABLE_ASSERTS```.
 
 This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
+
+Remember, this is a c++20 library, so that needs to be the minimum standard that you tell the compiler to use.
 
 ## Status
 
@@ -195,7 +197,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1878 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1923 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
 
 The tests have been most recently run on:
 
@@ -208,7 +210,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1894 | 1894 passed | 0 failed |
+[doctest] assertions: 1939 | 1939 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -219,7 +221,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1894 | 1894 passed | 0 failed |
+[doctest] assertions: 1939 | 1939 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -232,7 +234,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1878 | 1878 passed | 0 failed |
+[doctest] assertions: 1923 | 1923 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -245,7 +247,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1894 | 1894 passed | 0 failed |
+[doctest] assertions: 1939 | 1939 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -262,7 +264,7 @@ TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
   type traits for basic_vector
 
-dsga/tests/swizzle_test.cxx:1744: ERROR: CHECK_UNARY( std::is_trivial_v<dvec4> ) is NOT correct!
+dsga/tests/swizzle_test.cxx:1785: ERROR: CHECK_UNARY( std::is_trivial_v<dvec4> ) is NOT correct!
   values: CHECK_UNARY( false )
 
 ===============================================================================
@@ -271,12 +273,12 @@ TEST SUITE: test swizzling applications
 TEST CASE:  type traits tests
   type traits for basic_matrix
 
-dsga/tests/swizzle_test.cxx:1849: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
+dsga/tests/swizzle_test.cxx:1910: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> ) is NOT correct!
   values: CHECK_UNARY( false )
 
 ===============================================================================
 [doctest] test cases:   85 |   84 passed | 1 failed | 0 skipped
-[doctest] assertions: 1878 | 1876 passed | 2 failed |
+[doctest] assertions: 1923 | 1921 passed | 2 failed |
 [doctest] Status: FAILURE!
 ```
 

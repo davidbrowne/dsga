@@ -1713,6 +1713,7 @@ TEST_SUITE("test swizzling applications")
 		SUBCASE("type traits for storage_wrapper")
 		{
 			using dwrap4 = dsga::storage_wrapper<double, 4u>;
+			auto dwrap4_var = dwrap4{};
 
 			CHECK_UNARY(std::is_standard_layout_v<dwrap4>);
 			CHECK_UNARY(std::is_default_constructible_v<dwrap4>);
@@ -1728,11 +1729,51 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_trivially_destructible_v<dwrap4>);
 
 			CHECK_UNARY(std::is_aggregate_v<dwrap4>);
+
+			// iterator concepts
+			CHECK_UNARY(std::contiguous_iterator<decltype(dwrap4_var.begin())>);
+			CHECK_UNARY(std::contiguous_iterator<decltype(dwrap4_var.cbegin())>);
+
+			// ranges concepts
+			CHECK_UNARY(std::ranges::range<dwrap4>);
+			CHECK_UNARY_FALSE(std::ranges::borrowed_range<dwrap4>);
+			CHECK_UNARY(std::ranges::sized_range<dwrap4>);
+			CHECK_UNARY_FALSE(std::ranges::view<dwrap4>);
+			CHECK_UNARY(std::ranges::contiguous_range<dwrap4>);
+			CHECK_UNARY(std::ranges::common_range<dwrap4>);
+		}
+
+		SUBCASE("type traits for vector_base")
+		{
+			using vb1 = vector_base<true, double, 4, dsga::basic_vector<double, 4>>;
+			using vb2 = vector_base<true, double, 4, dsga::indexed_vector<double, 4, 4, 0, 1, 2, 3>>;
+
+			// iterator concepts
+			CHECK_UNARY(std::contiguous_iterator<decltype(std::declval<vb1>().begin())>);
+			CHECK_UNARY_FALSE(std::contiguous_iterator<decltype(std::declval<vb2>().cbegin())>);
+			CHECK_UNARY(std::random_access_iterator<decltype(std::declval<vb2>().cbegin())>);
+
+			// ranges concepts
+			CHECK_UNARY(std::ranges::range<vb1>);
+			CHECK_UNARY_FALSE(std::ranges::borrowed_range<vb1>);
+			CHECK_UNARY(std::ranges::sized_range<vb1>);
+			CHECK_UNARY_FALSE(std::ranges::view<vb1>);
+			CHECK_UNARY(std::ranges::contiguous_range<vb1>);
+			CHECK_UNARY(std::ranges::common_range<vb1>);
+
+			CHECK_UNARY(std::ranges::range<vb2>);
+			CHECK_UNARY_FALSE(std::ranges::borrowed_range<vb2>);
+			CHECK_UNARY(std::ranges::sized_range<vb2>);
+			CHECK_UNARY_FALSE(std::ranges::view<vb2>);
+			CHECK_UNARY(std::ranges::random_access_range<vb2>);
+			CHECK_UNARY_FALSE(std::ranges::contiguous_range<vb2>);
+			CHECK_UNARY(std::ranges::common_range<vb2>);
 		}
 
 		SUBCASE("type traits for basic_vector")
 		{
 			using dvec4 = dsga::basic_vector<double, 4u>;
+			auto dvec4_var = dvec4{};
 
 			CHECK_UNARY(std::is_standard_layout_v<dvec4>);
 			CHECK_UNARY(std::is_default_constructible_v<dvec4>);
@@ -1748,6 +1789,18 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_trivially_destructible_v<dvec4>);
 
 			CHECK_UNARY_FALSE(std::is_aggregate_v<dvec4>);
+
+			// iterator concepts
+			CHECK_UNARY(std::contiguous_iterator<decltype(dvec4_var.begin())>);
+			CHECK_UNARY(std::contiguous_iterator<decltype(dvec4_var.cbegin())>);
+
+			// ranges concepts
+			CHECK_UNARY(std::ranges::range<dvec4>);
+			CHECK_UNARY_FALSE(std::ranges::borrowed_range<dvec4>);
+			CHECK_UNARY(std::ranges::sized_range<dvec4>);
+			CHECK_UNARY_FALSE(std::ranges::view<dvec4>);
+			CHECK_UNARY(std::ranges::contiguous_range<dvec4>);
+			CHECK_UNARY(std::ranges::common_range<dvec4>);
 		}
 
 		SUBCASE("type traits for indexed_vector")
@@ -1771,13 +1824,20 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_aggregate_v<dswizzle1>);
 			CHECK_UNARY(std::is_aggregate_v<dswizzle4>);
 
-			// indexed_vector iterators are forward iterators
-			CHECK_UNARY(std::forward_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
-			CHECK_UNARY(std::forward_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
-			CHECK_UNARY(std::bidirectional_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
-			CHECK_UNARY(std::bidirectional_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
+			// iterator concepts
 			CHECK_UNARY(std::random_access_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
 			CHECK_UNARY(std::random_access_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
+			CHECK_UNARY_FALSE(std::contiguous_iterator<indexed_vector_iterator<double, 4, 2, 0, 1>>);
+			CHECK_UNARY_FALSE(std::contiguous_iterator<indexed_vector_const_iterator<double, 4, 2, 0, 1>>);
+
+			// ranges concepts
+			CHECK_UNARY(std::ranges::range<dswizzle4>);
+			CHECK_UNARY_FALSE(std::ranges::borrowed_range<dswizzle4>);
+			CHECK_UNARY(std::ranges::sized_range<dswizzle4>);
+			CHECK_UNARY_FALSE(std::ranges::view<dswizzle4>);
+			CHECK_UNARY(std::ranges::random_access_range<dswizzle4>);
+			CHECK_UNARY_FALSE(std::ranges::contiguous_range<dswizzle4>);
+			CHECK_UNARY(std::ranges::common_range<dswizzle4>);
 		}
 
 		SUBCASE("type traits for common initial sequence for anonymous union")
@@ -1838,6 +1898,7 @@ TEST_SUITE("test swizzling applications")
 		SUBCASE("type traits for basic_matrix")
 		{
 			using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
+			auto dmat4_var = dmat4{};
 
 			CHECK_UNARY(std::is_standard_layout_v<dmat4>);
 			CHECK_UNARY(std::is_default_constructible_v<dmat4>);
@@ -1853,8 +1914,19 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_trivially_destructible_v<dmat4>);
 
 			CHECK_UNARY_FALSE(std::is_aggregate_v<dmat4>);
-		}
 
+			// iterator concepts
+			CHECK_UNARY(std::contiguous_iterator<decltype(dmat4_var.begin())>);
+			CHECK_UNARY(std::contiguous_iterator<decltype(dmat4_var.cbegin())>);
+
+			// ranges concepts
+			CHECK_UNARY(std::ranges::range<dmat4>);
+			CHECK_UNARY_FALSE(std::ranges::borrowed_range<dmat4>);
+			CHECK_UNARY(std::ranges::sized_range<dmat4>);
+			CHECK_UNARY_FALSE(std::ranges::view<dmat4>);
+			CHECK_UNARY(std::ranges::contiguous_range<dmat4>);
+			CHECK_UNARY(std::ranges::common_range<dmat4>);
+		}
 	}
 
 	TEST_CASE("structured binding (which requires) tuple interface (tuple_size, tuple_element, get)")
