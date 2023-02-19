@@ -293,13 +293,13 @@ TEST_SUITE("test constructors")
 			auto m2 = mat2x3(four, rando, four);
 			auto m3 = mat3x4(one, three, rando, two, three, rando, one);
 			auto m4 = dmat3x3(two, three, four);
-			auto m5 = dmat4(two_by_two, two_by_two, two_by_two, two_by_two);
+			auto m5 = dmat4(two_by_two);
 
 			CHECK_EQ(m1, dmat4x4(4, 4, 4, 4, 5, 3, 3, 3, 5, 5, 1, 2, 2, 5, 3, 3));
 			CHECK_EQ(m2, mat2x3(4, 4, 4, 4, 5, 4));
 			CHECK_EQ(m3, mat3x4(1, 3, 3, 3, 5, 2, 2, 3, 3, 3, 5, 1));
 			CHECK_EQ(m4, dmat3x3(2, 2, 3, 3, 3, 4, 4, 4, 4));
-			CHECK_EQ(m5, dmat4(10, 9, 8, 7, 10, 9, 8, 7, 10, 9, 8, 7, 10, 9, 8, 7));
+			CHECK_EQ(m5, dmat4(10, 9, 0, 0, 8, 7, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
 		}
 
 		// this subcase is more about compiling without warnings or errors

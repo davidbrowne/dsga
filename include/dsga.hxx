@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 3;
 
 namespace dsga
 {
@@ -1824,37 +1824,66 @@ namespace dsga
 		}
 
 		template <typename U, typename T>
-		struct valid_component : std::false_type
+		struct valid_matrix_component : std::false_type
 		{
 		};
 
 		template <dimensional_scalar U, dimensional_scalar T>
 		requires std::convertible_to<U, T>
-		struct valid_component<U, T> : std::true_type
+		struct valid_matrix_component<U, T> : std::true_type
 		{
 		};
 
 		template <dimensional_scalar U, std::size_t C, dimensional_scalar T>
 		requires std::convertible_to<U, T>
-		struct valid_component<basic_vector<U, C>, T> : std::true_type
+		struct valid_matrix_component<basic_vector<U, C>, T> : std::true_type
 		{
 		};
 
 		template <dimensional_scalar U, std::size_t S, std::size_t C, std::size_t ...Is, dimensional_scalar T>
 		requires std::convertible_to<U, T>
-		struct valid_component<indexed_vector<U, S, C, Is...>, T> : std::true_type
+		struct valid_matrix_component<indexed_vector<U, S, C, Is...>, T> : std::true_type
 		{
 		};
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D, dimensional_scalar T>
 		requires std::convertible_to<U, T>
-		struct valid_component<vector_base<W, U, C, D>, T> : std::true_type
+		struct valid_matrix_component<vector_base<W, U, C, D>, T> : std::true_type
+		{
+		};
+
+		template <typename U, typename T>
+		struct valid_vector_component : std::false_type
+		{
+		};
+
+		template <dimensional_scalar U, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_vector_component<U, T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar U, std::size_t C, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_vector_component<basic_vector<U, C>, T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar U, std::size_t S, std::size_t C, std::size_t ...Is, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_vector_component<indexed_vector<U, S, C, Is...>, T> : std::true_type
+		{
+		};
+
+		template <bool W, dimensional_scalar U, std::size_t C, typename D, dimensional_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_vector_component<vector_base<W, U, C, D>, T> : std::true_type
 		{
 		};
 
 		template <floating_point_dimensional_scalar U, std::size_t C, std::size_t R, dimensional_scalar T>
 		requires std::convertible_to<U, T>
-		struct valid_component<basic_matrix<U, C, R>, T> : std::true_type
+		struct valid_vector_component<basic_matrix<U, C, R>, T> : std::true_type
 		{
 		};
 	}
@@ -1934,7 +1963,7 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 			: base{}
 		{
@@ -2133,7 +2162,7 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 			: base{}
 		{
@@ -2402,7 +2431,7 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 			: base{}
 		{
@@ -2894,7 +2923,7 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
 		explicit constexpr basic_vector(const Args & ...args) noexcept
 			: base{}
 		{
@@ -4962,7 +4991,7 @@ namespace dsga
 
 		// variadic constructor of scalar and vector arguments
 		template <typename ... Args>
-		requires (detail::valid_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
+		requires (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
 		explicit constexpr basic_matrix(const Args & ...args) noexcept
 			: values{}
 		{
