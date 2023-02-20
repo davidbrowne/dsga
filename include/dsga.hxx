@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -922,79 +922,6 @@ namespace dsga
 	requires dimensional_storage<T, Size>
 	using dimensional_storage_t = std::array<T, Size>;
 
-	// common initial sequence wrapper with basic storage access -- forwards function calls to wrapped storage.
-	// this struct is an aggregate
-	template <dimensional_scalar T, std::size_t Size>
-	requires dimensional_storage<T, Size>
-	struct storage_wrapper
-	{
-		// number of indexable elements
-		static constexpr std::size_t Count = Size;
-
-		// this can be used as an lvalue
-		static constexpr bool Writable = true;
-
-		//
-		// the underlying ordered storage sequence for this physical storage - indirection is same as physical contiguous order.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Count>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
-
-		dimensional_storage_t<T, Size> store;
-
-		[[nodiscard]] constexpr int length() const noexcept					{ return Count; }
-		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
-
-		// physically contiguous access to data
-		[[nodiscard]] constexpr T &operator [](std::size_t index) noexcept				{ return store[index]; }
-		[[nodiscard]] constexpr const T &operator [](std::size_t index) const noexcept	{ return store[index]; }
-
-		[[nodiscard]] constexpr T * data() noexcept							{ return store.data(); }
-		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
-
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
-
-		template <typename ...Args>
-		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-		constexpr void set(Args ...args) noexcept
-		{
-			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
-			{
-				((store[Js] = static_cast<T>(same_args)),...);
-			}(std::make_index_sequence<Count>{}, args...);
-		}
-
-		constexpr void swap(storage_wrapper &sw) noexcept		{ store.swap(sw.store); 	}
-
-		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept			{ return store.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return store.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return store.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
-
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return store.rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return store.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return store.rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return store.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
-
-	};
-
-	template <dimensional_scalar T, std::size_t Size>
-	constexpr void swap(storage_wrapper<T, Size> &lhs, storage_wrapper<T, Size> &rhs) noexcept
-	{
-		lhs.swap(rhs);
-	}
-
-
 	namespace detail
 	{
 		// the concepts will help indexed_vector determine if it can be assigned to, like an lvalue reference,
@@ -1091,6 +1018,97 @@ namespace dsga
 		rgba,						// colors
 		stpq						// texture coordinates
 	};
+
+
+	// common initial sequence wrapper with basic storage access -- forwards function calls to wrapped storage.
+	// this struct is an aggregate
+	template <dimensional_scalar T, std::size_t Size>
+	requires dimensional_storage<T, Size>
+	struct storage_wrapper
+	{
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		//
+		// the underlying ordered storage sequence for this physical storage - indirection is same as physical contiguous order.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Count>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
+
+		dimensional_storage_t<T, Size> store;
+
+		[[nodiscard]] constexpr int length() const noexcept					{ return Count; }
+		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
+
+		// physically contiguous access to data
+		[[nodiscard]] constexpr T &operator [](std::size_t index) noexcept				{ return store[index]; }
+		[[nodiscard]] constexpr const T &operator [](std::size_t index) const noexcept	{ return store[index]; }
+
+		[[nodiscard]] constexpr T * data() noexcept							{ return store.data(); }
+		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
+
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
+
+		template <typename ...Args>
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
+			{
+				((store[Js] = static_cast<T>(same_args)),...);
+			}(std::make_index_sequence<Count>{}, args...);
+		}
+
+		constexpr void swap(storage_wrapper &sw) noexcept		{ store.swap(sw.store); 	}
+
+		// support for range-for loop
+		[[nodiscard]] constexpr auto begin() noexcept			{ return store.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return store.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return store.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return store.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+	};
+
+	template <dimensional_scalar T, std::size_t Size>
+	constexpr void swap(storage_wrapper<T, Size> &lhs, storage_wrapper<T, Size> &rhs) noexcept
+	{
+		lhs.swap(rhs);
+	}
+
+	template <dimensional_scalar T1, std::size_t C, dimensional_scalar T2>
+	requires implicitly_convertible_to<T2, T1>
+	constexpr bool operator ==(const storage_wrapper<T1, C> &first,
+							   const storage_wrapper<T2, C> &second) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	//
+	// CTAD deduction guide
+	//
+
+	template <class T, class... U>
+	storage_wrapper(T, U...) -> storage_wrapper<T, 1 + sizeof...(U)>;
+
 
 	// This is a CRTP base struct for the vector structs, primarily for data access.
 	// It will help with arithmetic operators, compound assignment operators, and functions.

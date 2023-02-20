@@ -242,6 +242,7 @@ TEST_SUITE("test constructors")
 
 	TEST_CASE("CTAD deduction guide construction")
 	{
+		// CTAD for dsga::basic_vector
 		auto v1 = dsga::basic_vector{1, 2, 3};
 		auto v2 = dsga::basic_vector{2.2, 3, 4, 5.5};
 		auto v3 = dsga::basic_vector{true};
@@ -255,6 +256,10 @@ TEST_SUITE("test constructors")
 		CHECK_EQ(v3, bscal(true));
 		CHECK_EQ(v4, v1);
 		CHECK_EQ(v5, v2.zy);
+
+		// CTAD for dsga::storage_wrapper
+		auto s1 = dsga::storage_wrapper{1.1, 2.2, 3, true};
+		CHECK_EQ(s1, dsga::storage_wrapper<double, 4>{1.1, 2.2, 3.0, 1.0});
 	}
 
 	TEST_CASE("matrix constructors")

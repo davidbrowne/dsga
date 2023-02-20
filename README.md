@@ -176,7 +176,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.9.4`
+Current version: `v0.9.5`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -197,7 +197,7 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1933 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
+Both MSVC and gcc (for Windows and on Ubuntu on WSL2) pass all the tests. clang for Windows passes, but there are 2 assertions out of 1934 that fail for clang-15 on Ubuntu, which appears to have a problem with ```std::is_trivial_v<>```.
 
 The tests have been most recently run on:
 
@@ -210,7 +210,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1949 | 1949 passed | 0 failed |
+[doctest] assertions: 1950 | 1950 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -221,7 +221,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1949 | 1949 passed | 0 failed |
+[doctest] assertions: 1950 | 1950 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -234,7 +234,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1933 | 1933 passed | 0 failed |
+[doctest] assertions: 1934 | 1934 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -247,7 +247,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1949 | 1949 passed | 0 failed |
+[doctest] assertions: 1950 | 1950 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -278,7 +278,7 @@ dsga/tests/swizzle_test.cxx:1910: ERROR: CHECK_UNARY( std::is_trivial_v<dmat4> )
 
 ===============================================================================
 [doctest] test cases:   85 |   84 passed | 1 failed | 0 skipped
-[doctest] assertions: 1933 | 1931 passed | 2 failed |
+[doctest] assertions: 1934 | 1932 passed | 2 failed |
 [doctest] Status: FAILURE!
 ```
 
