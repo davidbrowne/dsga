@@ -517,6 +517,33 @@ TEST_SUITE("test constructors")
 			CHECK_EQ(m44_42, mat4x4(8, 8, 0, 0, 8, 8, 0, 0, 8, 8, 1, 0, 8, 8, 0, 1));
 			CHECK_EQ(m44_43, mat4x4(9, 9, 9, 0, 9, 9, 9, 0, 9, 9, 9, 0, 9, 9, 9, 1));
 			CHECK_EQ(m44_44, m44);
+
+			auto cmat1 = mat3(dmat4(5));
+			auto cmat2 = dmat4(mat4(5));
+			CHECK_EQ(cmat1, mat3(5));
+			CHECK_EQ(cmat2, dmat4(5));
+
+			// random constructor tests
+			auto tm1 = mat4(9);
+			auto tm2 = mat3(tm1);
+			auto tm3 = mat4(tm2);
+
+			auto tm4 = mat4x2(1, 2, 3, 4, 5, 6, 7, 8);
+			auto tm5 = mat2x3(tm4);
+			auto tm6 = mat2x3{};
+			auto tm7 = mat3(tm6);
+			auto tm8 = mat4(tm4);
+			auto tm9 = mat4(dmat4(4));
+			auto tm10 = mat4(dmat2(9));
+
+			CHECK_EQ(tm1, mat4x4(9,0,0,0,  0,9,0,0,  0,0,9,0,  0,0,0,9));
+			CHECK_EQ(tm2, mat3x3(9, 0, 0,  0, 9, 0,  0, 0, 9));
+			CHECK_EQ(tm3, mat4x4(9, 0, 0, 0,  0, 9, 0, 0,  0, 0, 9, 0,  0, 0, 0, 1));
+			CHECK_EQ(tm5, mat2x3(1, 2, 0,  3, 4, 0));
+			CHECK_EQ(tm7, mat3x3(0,0,0,  0,0,0,  0,0,1));
+			CHECK_EQ(tm8, mat4x4(1, 2, 0, 0,  3, 4, 0, 0,  5, 6, 1, 0,  7, 8, 0, 1));
+			CHECK_EQ(tm9, mat4x4(4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4));
+			CHECK_EQ(tm10, mat4x4(9, 0, 0, 0, 0, 9, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
 		}
 	}
 }

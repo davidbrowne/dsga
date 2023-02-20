@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -1029,6 +1029,19 @@ namespace dsga
 			static constexpr bool value = ((Is < Size) && ...);
 		};
 
+		consteval std::size_t min_helper(std::size_t first, std::size_t second) { return first <= second ? first : second; };
+		consteval std::size_t max_helper(std::size_t first, std::size_t second) { return first <= second ? second : first; };
+
+		//
+		// https://stackoverflow.com/questions/40617854/implement-c-template-for-generating-an-index-sequence-with-a-given-range
+		//
+
+		template<std::size_t N, std::size_t... Seq>
+		constexpr std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) { return {}; }
+
+		template<std::size_t Min, std::size_t Max>
+		requires (Min <= Max)
+		using make_index_range = decltype(add<Min>(std::make_index_sequence<Max - Min>()));
 	}
 
 	// concepts required to build concept for testing for writable swizzle indexes
@@ -1528,18 +1541,14 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() const noexcept					{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(begin()); }
 		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 
-		private:
-
-			friend struct vector_base<Writable, T, Count, indexed_vector<T, Size, Count, Is...>>;
-
-			// logically contiguous - used by set() for write access to data
-			// allows for self-assignment without aliasing issues
-			template <typename ... Args>
-			requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
-			constexpr void set(Args ...args) noexcept
-			{
-				((base[Is] = static_cast<T>(args)), ...);
-			}
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ... Args>
+		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
+		constexpr void set(Args ...args) noexcept
+		{
+			((base[Is] = static_cast<T>(args)), ...);
+		}
 	};
 
 	// for swizzling 1D parts of basic_vector - like a scalar accessor
@@ -1637,18 +1646,15 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>(begin()); }
 		[[nodiscard]] constexpr auto rend() const noexcept					{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>(begin()); }
 		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
-		private:
 
-			friend struct vector_base<Writable, T, 1u, indexed_vector<T, Size, 1u, I>>;
-
-			// logically contiguous - used by set() for write access to data
-			// allows for self-assignment without aliasing issues
-			template <typename U>
-			requires Writable &&std::convertible_to<U, T>
-			constexpr void set(U other) noexcept
-			{
-				base[I] = static_cast<T>(other);
-			}
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename U>
+		requires Writable &&std::convertible_to<U, T>
+		constexpr void set(U other) noexcept
+		{
+			base[I] = static_cast<T>(other);
+		}
 	};
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
@@ -2043,22 +2049,18 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
-		private:
+		//
+		// data access
+		//
 
-			friend struct vector_base<Writable, T, 1u, basic_vector<T, 1u>>;
-
-			//
-			// data access
-			//
-
-			// logically and physically contiguous - used by set() for write access to data
-			// allows for self-assignment without aliasing issues
-			template <typename U>
-			requires std::convertible_to<U, T>
-			constexpr void set(U value) noexcept
-			{
-				base[0u] = static_cast<T>(value);
-			}
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename U>
+		requires std::convertible_to<U, T>
+		constexpr void set(U value) noexcept
+		{
+			base[0u] = static_cast<T>(value);
+		}
 	};
 
 	template <dimensional_scalar T>
@@ -2217,25 +2219,21 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
-		private:
+		//
+		// data access
+		//
 
-			friend struct vector_base<Writable, T, 2u, basic_vector<T, 2u>>;
-
-			//
-			// data access
-			//
-
-			// logically and physically contiguous - used by set() for write access to data
-			// allows for self-assignment without aliasing issues
-			template <typename ...Args>
-			requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-			constexpr void set(Args ...args) noexcept
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ...Args>
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
 			{
-				[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
-				{
-					((base[Js] = static_cast<T>(args)), ...);
-				}(std::make_index_sequence<Count>{});
-			}
+				((base[Js] = static_cast<T>(args)), ...);
+			}(std::make_index_sequence<Count>{});
+		}
 	};
 
 	template <dimensional_scalar T>
@@ -2486,25 +2484,21 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
-		private:
+		//
+		// data access
+		//
 
-			friend struct vector_base<Writable, T, 3u, basic_vector<T, 3u>>;
-
-			//
-			// data access
-			//
-
-			// logically and physically contiguous - used by set() for write access to data
-			// allows for self-assignment without aliasing issues
-			template <typename ...Args>
-			requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-			constexpr void set(Args ...args) noexcept
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ...Args>
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
 			{
-				[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
-				{
-					((base[Js] = static_cast<T>(args)), ...);
-				}(std::make_index_sequence<Count>{});
-			}
+				((base[Js] = static_cast<T>(args)), ...);
+			}(std::make_index_sequence<Count>{});
+		}
 	};
 
 	template <dimensional_scalar T>
@@ -2978,25 +2972,21 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 
-		private:
+		//
+		// data access
+		//
 
-			friend struct vector_base<Writable, T, 4u, basic_vector<T, 4u>>;
-
-			//
-			// data access
-			//
-
-			// logically and physically contiguous - used by set() for write access to data
-			// allows for self-assignment without aliasing issues
-			template <typename ...Args>
-			requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-			constexpr void set(Args ...args) noexcept
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ...Args>
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
 			{
-				[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
-				{
-					((base[Js] = static_cast<T>(args)), ...);
-				}(std::make_index_sequence<Count>{});
-			}
+				((base[Js] = static_cast<T>(args)), ...);
+			}(std::make_index_sequence<Count>{});
+		}
 	};
 
 	template <dimensional_scalar T, std::size_t Size>
@@ -4996,10 +4986,14 @@ namespace dsga
 			: values{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
-			[this, &arg_tuple]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				((values[Is / R][Is % R] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
-			}(std::make_index_sequence<ComponentCount>{});
+				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+				{
+					constexpr std::size_t Col = Is;
+					values[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
+				}(std::make_index_sequence<R>{})), ...);
+			}(std::make_index_sequence<C>{});
 		}
 
 		// diagonal constructor for square matrices
@@ -5008,13 +5002,10 @@ namespace dsga
 		explicit constexpr basic_matrix(U arg) noexcept
 			: values{}
 		{
-			for (std::size_t i = 0; i < C; ++i)
+			[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				for (std::size_t j = 0; j < R; ++j)
-				{
-					values[i][j] = ((i == j) ? static_cast<T>(arg) : static_cast<T>(0));
-				}
-			}
+				((values[Is][Is] = static_cast<T>(arg)), ...);
+			}(std::make_index_sequence<C>());
 		}
 
 		// implicit constructor from a matrix
@@ -5023,10 +5014,10 @@ namespace dsga
 		constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
 			: values{}
 		{
-			for (std::size_t i = 0; i < C; ++i)
+			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				values[i] = arg[i];
-			}
+				((values[Is] = arg[Is]), ...);
+			}(std::make_index_sequence<C>());
 		}
 
 		// implicit constructor from a matrix
@@ -5035,65 +5026,47 @@ namespace dsga
 		constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 			: values{}
 		{
-			for (std::size_t i = 0; i < C; ++i)
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				if (i >= Cols)
+				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
-					// not enough columns in arg
-					for (std::size_t j = 0; j < R; ++j)
-					{
-						values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
-					}
-				}
-				else
+					constexpr std::size_t Col = Is;
+					((values[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
+				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
+			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
+
+			// for square matrix, extend identity diagonal as needed   make_index_range
+			if constexpr (C == R)
+			{
+				[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 				{
-					for (std::size_t j = 0; j < R; ++j)
-					{
-						if (j >= Rows)
-						{
-							// not enough rows in arg
-							values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
-						}
-						else
-						{
-							values[i][j] = static_cast<T>(arg[i][j]);
-						}
-					}
-				}
+					((values[Is][Is] = T(1.0)), ...);
+				}(detail::make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
 			}
 		}
 
 		// explicit constructor from a matrix
 		template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>) && (Cols != C || Rows != R)
+		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 		explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 			: values{}
 		{
-			for (std::size_t i = 0; i < C; ++i)
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				if (i >= Cols)
+				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
-					// not enough columns in arg
-					for (std::size_t j = 0; j < R; ++j)
-					{
-						values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
-					}
-				}
-				else
+					constexpr std::size_t Col = Is;
+					((values[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
+				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
+			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
+
+			// for square matrix, extend identity diagonal as needed   make_index_range
+			if constexpr (C == R)
+			{
+				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 				{
-					for (std::size_t j = 0; j < R; ++j)
-					{
-						if (j >= Rows)
-						{
-							// not enough rows in arg
-							values[i][j] = (((i == j) && (C == R)) ? static_cast<T>(1) : static_cast<T>(0));
-						}
-						else
-						{
-							values[i][j] = static_cast<T>(arg[i][j]);
-						}
-					}
-				}
+					((values[Is][Is] = T(1.0)), ...);
+				}(detail::make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
 			}
 		}
 
