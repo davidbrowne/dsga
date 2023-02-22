@@ -355,6 +355,7 @@ The vector operators all work component-wise.
 
 ### Vector Free Functions
 The vector functions all work component-wise, except for the geometric functions and the two vector relational functions ```any()``` and ```all()```.
+There are scalar versions of these vector functions where it makes sense, i.e., angle and trignometry, exponential, and common functions.
 
 
 #### Angle and Trigonometry Functions

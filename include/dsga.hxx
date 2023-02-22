@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
@@ -956,8 +956,8 @@ namespace dsga
 			static constexpr bool value = ((Is < Size) && ...);
 		};
 
-		consteval std::size_t min_helper(std::size_t first, std::size_t second) { return first <= second ? first : second; };
-		consteval std::size_t max_helper(std::size_t first, std::size_t second) { return first <= second ? second : first; };
+		consteval std::size_t min_helper(std::size_t first, std::size_t second) { return second < first ? second : first; };
+		consteval std::size_t max_helper(std::size_t first, std::size_t second) { return second < first ? first : second; };
 
 		//
 		// https://stackoverflow.com/questions/40617854/implement-c-template-for-generating-an-index-sequence-with-a-given-range
@@ -4105,8 +4105,20 @@ namespace dsga
 			return deg * radians_per_degree_v<T>;
 		}
 
+		template <std::floating_point T>
+		constexpr auto radians(T deg) noexcept
+		{
+			return deg * radians_per_degree_v<T>;
+		}
+
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		constexpr auto degrees(const vector_base<W, T, C, D> &rad) noexcept
+		{
+			return rad * degrees_per_radian_v<T>;
+		}
+
+		template <std::floating_point T>
+		constexpr auto degrees(T rad) noexcept
 		{
 			return rad * degrees_per_radian_v<T>;
 		}
@@ -4119,12 +4131,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sin_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto sin(T arg) noexcept
+		{
+			return sin_op(arg);
+		}
+
 		constexpr inline auto cos_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::cos(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto cos(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, cos_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto cos(T arg) noexcept
+		{
+			return cos_op(arg);
 		}
 
 		constexpr inline auto tan_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::tan(arg); };
@@ -4135,12 +4159,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, tan_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto tan(T arg) noexcept
+		{
+			return tan_op(arg);
+		}
+
 		constexpr inline auto asin_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::asin(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto asin(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, asin_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto asin(T arg) noexcept
+		{
+			return asin_op(arg);
 		}
 
 		constexpr inline auto acos_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::acos(arg); };
@@ -4151,12 +4187,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, acos_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto acos(T arg) noexcept
+		{
+			return acos_op(arg);
+		}
+
 		constexpr inline auto atan_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::atan(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto atan(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, atan_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto atan(T arg) noexcept
+		{
+			return atan_op(arg);
 		}
 
 		constexpr inline auto atan2_op = []<floating_point_dimensional_scalar U>(U arg_y, U arg_x) noexcept { return std::atan2(arg_y, arg_x); };
@@ -4169,12 +4217,25 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, y, x, atan2_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto atan(T y,
+				  T x) noexcept
+		{
+			return atan2_op(y, x);
+		}
+
 		constexpr inline auto sinh_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::sinh(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto sinh(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sinh_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto sinh(T arg) noexcept
+		{
+			return sinh_op(arg);
 		}
 
 		constexpr inline auto cosh_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::cosh(arg); };
@@ -4185,12 +4246,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, cosh_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto cosh(T arg) noexcept
+		{
+			return cosh_op(arg);
+		}
+
 		constexpr inline auto tanh_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::tanh(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto tanh(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, tanh_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto tanh(T arg) noexcept
+		{
+			return tanh_op(arg);
 		}
 
 		constexpr inline auto asinh_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::asinh(arg); };
@@ -4201,6 +4274,12 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, asinh_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto asinh(T arg) noexcept
+		{
+			return asinh_op(arg);
+		}
+
 		constexpr inline auto acosh_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::acosh(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
@@ -4209,12 +4288,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, acosh_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto acosh(T arg) noexcept
+		{
+			return acosh_op(arg);
+		}
+
 		constexpr inline auto atanh_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::atanh(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto atanh(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, atanh_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto atanh(T arg) noexcept
+		{
+			return atanh_op(arg);
 		}
 
 		//
@@ -4230,12 +4321,25 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, base, exp, pow_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto pow(T base,
+				 T exp) noexcept
+		{
+			return pow_op(base, exp);
+		}
+
 		constexpr inline auto exp_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::exp(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto exp(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, exp_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto exp(T arg) noexcept
+		{
+			return exp_op(arg);
 		}
 
 		constexpr inline auto log_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::log(arg); };
@@ -4246,12 +4350,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, log_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto log(T arg) noexcept
+		{
+			return log_op(arg);
+		}
+
 		constexpr inline auto exp2_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::exp2(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		auto exp2(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, exp2_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto exp2(T arg) noexcept
+		{
+			return exp2_op(arg);
 		}
 
 		constexpr inline auto log2_op = [](floating_point_dimensional_scalar auto arg) noexcept { return std::log2(arg); };
@@ -4262,6 +4378,12 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, log2_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		auto log2(T arg) noexcept
+		{
+			return log2_op(arg);
+		}
+
 		constexpr inline auto sqrt_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::sqrt(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
@@ -4270,12 +4392,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sqrt_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto sqrt(T arg) noexcept
+		{
+			return sqrt_op(arg);
+		}
+
 		constexpr inline auto rsqrt_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::rsqrt(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		constexpr auto inversesqrt(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, rsqrt_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		constexpr auto inversesqrt(T arg) noexcept
+		{
+			return rsqrt_op(arg);
 		}
 
 		//
@@ -4291,6 +4425,13 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, abs_op);
 		}
 
+		template <dimensional_scalar T>
+		requires (!std::unsigned_integral<T>) && non_bool_arithmetic<T>
+		constexpr auto abs(T arg) noexcept
+		{
+			return abs_op(arg);
+		}
+
 		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(T(0) < arg) - T(arg < T(0))); };
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
@@ -4298,6 +4439,13 @@ namespace dsga
 		constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sign_op);
+		}
+
+		template <dimensional_scalar T>
+		requires (!std::unsigned_integral<T>) && non_bool_arithmetic<T>
+		constexpr auto sign(T arg) noexcept
+		{
+			return sign_op(arg);
 		}
 
 		constexpr inline auto floor_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::floor(arg); };
@@ -4308,12 +4456,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, floor_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto floor(T arg) noexcept
+		{
+			return floor_op(arg);
+		}
+
 		constexpr inline auto trunc_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::trunc(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		constexpr auto trunc(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, trunc_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		constexpr auto trunc(T arg) noexcept
+		{
+			return trunc_op(arg);
 		}
 
 		constexpr inline auto round_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::round(arg); };
@@ -4324,12 +4484,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, round_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto round(T arg) noexcept
+		{
+			return round_op(arg);
+		}
+
 		constexpr inline auto round_even_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::round_even(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		constexpr auto roundEven(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, round_even_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		constexpr auto roundEven(T arg) noexcept
+		{
+			return round_even_op(arg);
 		}
 
 		constexpr inline auto ceil_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::ceil(arg); };
@@ -4340,12 +4512,24 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, ceil_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto ceil(T arg) noexcept
+		{
+			return ceil_op(arg);
+		}
+
 		constexpr inline auto fract_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::fract(arg); };
 
 		template <bool W, floating_point_dimensional_scalar T, std::size_t C, typename D>
 		constexpr auto fract(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, fract_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		constexpr auto fract(T arg) noexcept
+		{
+			return fract_op(arg);
 		}
 
 		constexpr inline auto mod_op = []<floating_point_dimensional_scalar T>(T x, T y) noexcept { return x - y * cxcm::floor(x / y); };
@@ -4364,6 +4548,13 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, mod_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto mod(T x,
+						   T y) noexcept
+		{
+			return mod_op(x, y);
+		}
+
 		constexpr inline auto modf_op = []<floating_point_dimensional_scalar T>(T x, T y) noexcept { return x - y; };
 
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
@@ -4373,6 +4564,14 @@ namespace dsga
 		{
 			(*static_cast<D2 *>(&i)) = trunc(arg);
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, arg, i, modf_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		constexpr auto modf(T arg,
+							T &i) noexcept
+		{
+			i = trunc(arg);
+			return modf_op(arg, i);
 		}
 
 		constexpr inline auto min_op = []<floating_point_dimensional_scalar T>(T x, T y) noexcept { return y < x ? y : x; };
@@ -4391,6 +4590,13 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, min_op);
 		}
 
+		template <non_bool_arithmetic T>
+		constexpr auto min(T x,
+						   T y) noexcept
+		{
+			return min_op(x, y);
+		}
+
 		constexpr inline auto max_op = []<floating_point_dimensional_scalar T>(T x, T y) noexcept { return y < x ? x : y; };
 
 		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2>
@@ -4407,7 +4613,14 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, x, y, max_op);
 		}
 
-		constexpr inline auto clamp_op = []<dimensional_scalar T>(T x, T min_val, T max_val) noexcept { return std::min(std::max(x, min_val), max_val); };
+		template <non_bool_arithmetic T>
+		constexpr auto max(T x,
+						   T y) noexcept
+		{
+			return max_op(x, y);
+		}
+
+		constexpr inline auto clamp_op = []<dimensional_scalar T>(T x, T min_val, T max_val) noexcept -> T { return std::clamp(x, min_val, max_val); };
 
 		template <bool W1, non_bool_arithmetic T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		constexpr auto clamp(const vector_base<W1, T, C, D1> &x,
@@ -4423,6 +4636,14 @@ namespace dsga
 							 T max_val) noexcept
 		{
 			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, min_val, max_val, clamp_op);
+		}
+
+		template <bool W, non_bool_arithmetic T, std::size_t C, typename D>
+		constexpr auto clamp(T x,
+							 T min_val,
+							 T max_val) noexcept
+		{
+			return clamp_op(x, min_val, max_val);
 		}
 
 		constexpr inline auto mix1_op = []<floating_point_dimensional_scalar T>(T x, T y, T a) noexcept { return std::lerp(x, y, a); };
@@ -4443,6 +4664,14 @@ namespace dsga
 			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, y, a, mix1_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto mix(T x,
+						   T y,
+						   T a) noexcept
+		{
+			return mix1_op(x, y, a);
+		}
+
 		constexpr inline auto mix2_op = []<dimensional_scalar T, boolean_dimensional_scalar B>(T x, T y, B a) noexcept -> T { return a ? y : x; };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1,
@@ -4452,6 +4681,14 @@ namespace dsga
 						   const vector_base<W3, B, C, D3> &a) noexcept
 		{
 			return detail::ternary_op_execute_no_convert(std::make_index_sequence<C>{}, x, y, a, mix2_op);
+		}
+
+		template <dimensional_scalar T, boolean_dimensional_scalar B>
+		constexpr auto mix(T x,
+						   T y,
+						   B a) noexcept
+		{
+			return mix2_op(x, y, a);
 		}
 
 		constexpr inline auto step_op = []<floating_point_dimensional_scalar T>(T edge, T x) noexcept { return ((x < edge) ? T(0) : T(1)); };
@@ -4468,6 +4705,13 @@ namespace dsga
 							const vector_base<W, T, C, D> &x) noexcept
 		{
 			return detail::binary_op_execute(std::make_index_sequence<C>{}, edge, x, step_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		constexpr auto step(T edge,
+							T x) noexcept
+		{
+			return step_op(edge, x);
 		}
 
 		constexpr inline auto smoothstep_op = []<floating_point_dimensional_scalar T>(T edge0, T edge1, T x) noexcept
@@ -4492,9 +4736,17 @@ namespace dsga
 			return detail::ternary_op_execute(std::make_index_sequence<C>{}, edge0, edge1, x, smoothstep_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto smoothstep(T edge0,
+								  T edge1,
+								  T x) noexcept
+		{
+			return smoothstep_op(edge0, edge1, x);
+		}
+
 		constexpr inline auto isnan_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::isnan(arg); };
 
-		// isnan() is defined for each derived type due to the way MSVC implemented their isnan() in <cmath>
+		// MSVC has a problem when I try to implement this with vector_base -- don't know about gcc or clang
 
 		template <floating_point_dimensional_scalar T, std::size_t C>
 		constexpr auto isnan(const basic_vector<T, C> &arg) noexcept
@@ -4508,9 +4760,15 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isnan_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto isnan(T arg) noexcept
+		{
+			return isnan_op(arg);
+		}
+
 		constexpr inline auto isinf_op = [](floating_point_dimensional_scalar auto arg) noexcept { return cxcm::isinf(arg); };
 
-		// isinf() is defined for each derived type due to the way MSVC implemented their isinf() in <cmath>
+		// MSVC has a problem when I try to implement this with vector_base -- don't know about gcc or clang
 
 		template <floating_point_dimensional_scalar T, std::size_t C>
 		constexpr auto isinf(const basic_vector<T, C> &arg) noexcept
@@ -4524,6 +4782,12 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, isinf_op);
 		}
 
+		template <floating_point_dimensional_scalar T>
+		constexpr auto isinf(T arg) noexcept
+		{
+			return isinf_op(arg);
+		}
+
 #if defined(__cpp_lib_bit_cast)
 
 		constexpr inline auto float_bits_to_int_op = [](float arg) noexcept { return std::bit_cast<int>(arg); };
@@ -4534,12 +4798,22 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, float_bits_to_int_op);
 		}
 
+		constexpr int floatBitsToInt(float arg) noexcept
+		{
+			return float_bits_to_int_op(arg);
+		}
+
 		constexpr inline auto float_bits_to_uint_op = [](float arg) noexcept { return std::bit_cast<unsigned int>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		constexpr auto floatBitsToUint(const vector_base<W, float, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, float_bits_to_uint_op);
+		}
+
+		constexpr unsigned int floatBitsToUint(float arg) noexcept
+		{
+			return float_bits_to_uint_op(arg);
 		}
 
 		constexpr inline auto double_bits_to_long_long_op = [](double arg) noexcept { return std::bit_cast<long long>(arg); };
@@ -4550,12 +4824,22 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, double_bits_to_long_long_op);
 		}
 
+		constexpr long long doubleBitsToLongLong(double arg) noexcept
+		{
+			return double_bits_to_long_long_op(arg);
+		}
+
 		constexpr inline auto double_bits_to_ulong_long_op = [](double arg) noexcept { return std::bit_cast<unsigned long long>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		constexpr auto doubleBitsToUlongLong(const vector_base<W, double, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, double_bits_to_ulong_long_op);
+		}
+
+		constexpr unsigned long long doubleBitsToUlongLong(double arg) noexcept
+		{
+			return double_bits_to_ulong_long_op(arg);
 		}
 
 		constexpr inline auto int_bits_to_float_op = [](int arg) noexcept { return std::bit_cast<float>(arg); };
@@ -4566,12 +4850,22 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, int_bits_to_float_op);
 		}
 
+		constexpr float intBitsToFloat(int arg) noexcept
+		{
+			return int_bits_to_float_op(arg);
+		}
+
 		constexpr inline auto uint_bits_to_float_op = [](unsigned int arg) noexcept { return std::bit_cast<float>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		constexpr auto uintBitsToFloat(const vector_base<W, unsigned int, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, uint_bits_to_float_op);
+		}
+
+		constexpr float uintBitsToFloat(unsigned int arg) noexcept
+		{
+			return uint_bits_to_float_op(arg);
 		}
 
 		constexpr inline auto long_long_bits_to_double_op = [](long long arg) noexcept { return std::bit_cast<double>(arg); };
@@ -4582,6 +4876,11 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, long_long_bits_to_double_op);
 		}
 
+		constexpr double longLongBitsToDouble(long long arg) noexcept
+		{
+			return long_long_bits_to_double_op(arg);
+		}
+
 		constexpr inline auto ulong_long_bits_to_double_op = [](unsigned long long arg) noexcept { return std::bit_cast<double>(arg); };
 
 		template <bool W, std::size_t C, typename D>
@@ -4590,9 +4889,14 @@ namespace dsga
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, ulong_long_bits_to_double_op);
 		}
 
+		constexpr double ulongLongBitsToDouble(unsigned long long arg) noexcept
+		{
+			return ulong_long_bits_to_double_op(arg);
+		}
+
 #endif
 
-		constexpr inline auto fma_op = []<floating_point_dimensional_scalar T>(T a, T b, T c) noexcept { return std::fma(a, b, c); };
+		inline auto fma_op = []<floating_point_dimensional_scalar T>(T a, T b, T c) noexcept { return std::fma(a, b, c); };
 
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		auto fma(const vector_base<W1, T, C, D1> &a,
@@ -4602,7 +4906,15 @@ namespace dsga
 			return detail::ternary_op_execute(std::make_index_sequence<C>{}, a, b, c, fma_op);
 		}
 
-		constexpr inline auto frexp_op = []<floating_point_dimensional_scalar T>(T x, int &exp) noexcept { return std::frexp(x, &exp); };
+		template <floating_point_dimensional_scalar T>
+		auto fma(T a,
+				 T b,
+				 T c) noexcept
+		{
+			return fma_op(a, b, c);
+		}
+
+		inline auto frexp_op = []<floating_point_dimensional_scalar T>(T x, int &exp) noexcept { return std::frexp(x, &exp); };
 
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires W2
@@ -4615,13 +4927,27 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		constexpr inline auto ldexp_op = []<floating_point_dimensional_scalar T>(T x, int exp) noexcept { return std::ldexp(x, exp); };
+		template <floating_point_dimensional_scalar T>
+		auto frexp(T x,
+				   int &exp) noexcept
+		{
+			return frexp_op(x, exp);
+		}
+
+		inline auto ldexp_op = []<floating_point_dimensional_scalar T>(T x, int exp) noexcept { return std::ldexp(x, exp); };
 
 		template <bool W1, floating_point_dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		auto ldexp(const vector_base<W1, T, C, D1> &x,
 				   const vector_base<W2, int, C, D2> &exp) noexcept
 		{
 			return detail::binary_op_execute_no_convert(std::make_index_sequence<C>{}, x, exp, ldexp_op);
+		}
+
+		template <floating_point_dimensional_scalar T>
+		auto ldexp(T x,
+				   int exp) noexcept
+		{
+			return ldexp_op(x, exp);
 		}
 
 		//
