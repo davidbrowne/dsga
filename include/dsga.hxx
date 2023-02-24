@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 7;
+constexpr inline int DSGA_PATCH_VERSION = 8;
 
 namespace dsga
 {
@@ -1985,6 +1985,7 @@ namespace dsga
 		{
 		}
 
+#if defined(__clang__) && !defined(_MSC_VER)
 		// variadic constructor of scalar and vector arguments
 		template <typename U, typename ... Args>
 		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
@@ -1997,6 +1998,20 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#else
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
+		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+#endif
 
 		//
 		// implicit assignment operators
@@ -2180,6 +2195,7 @@ namespace dsga
 		{
 		}
 
+#if defined(__clang__) && !defined(_MSC_VER)
 		// variadic constructor of scalar and vector arguments
 		template <typename U, typename ... Args>
 		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
@@ -2192,6 +2208,20 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#else
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
+		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+#endif
 
 		//
 		// assignment operator
@@ -2445,6 +2475,7 @@ namespace dsga
 		{
 		}
 
+#if defined(__clang__) && !defined(_MSC_VER)
 		// variadic constructor of scalar and vector arguments
 		template <typename U, typename ... Args>
 		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
@@ -2457,6 +2488,20 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#else
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
+		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+#endif
 
 		//
 		// assignment operators
@@ -2933,6 +2978,7 @@ namespace dsga
 		{
 		}
 
+#if defined(__clang__) && !defined(_MSC_VER)
 		// variadic constructor of scalar and vector arguments
 		template <typename U, typename ... Args>
 		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
@@ -2945,6 +2991,20 @@ namespace dsga
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
 		}
+#else
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
+		explicit constexpr basic_vector(const Args & ...args) noexcept
+			: base{}
+		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+#endif
 
 		//
 		// assignment operators
@@ -5323,6 +5383,7 @@ namespace dsga
 		// constructors
 		//
 
+#if defined(__clang__) && !defined(_MSC_VER)
 		// variadic constructor of scalar and vector arguments
 		template <typename U, typename ... Args>
 		requires (detail::valid_matrix_component<U, T>::value) && (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, U, Args...>
@@ -5339,6 +5400,24 @@ namespace dsga
 				}(std::make_index_sequence<R>{})), ...);
 			}(std::make_index_sequence<C>{});
 		}
+#else
+		// variadic constructor of scalar and vector arguments
+		template <typename ... Args>
+		requires (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
+		explicit constexpr basic_matrix(const Args & ...args) noexcept
+			: values{}
+		{
+			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+				{
+					constexpr std::size_t Col = Is;
+					values[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
+				}(std::make_index_sequence<R>{})), ...);
+			}(std::make_index_sequence<C>{});
+		}
+#endif
 
 		// diagonal constructor for square matrices
 		template <typename U>
