@@ -1782,6 +1782,9 @@ TEST_SUITE("test swizzling applications")
 			CHECK_UNARY(std::is_trivially_copy_constructible_v<dvec4>);
 			CHECK_UNARY(std::is_trivially_move_constructible_v<dvec4>);
 			CHECK_UNARY(std::is_trivially_copyable_v<dvec4>);
+			CHECK_UNARY(std::is_trivial_v<dscal>);
+			CHECK_UNARY(std::is_trivial_v<dvec2>);
+			CHECK_UNARY(std::is_trivial_v<dvec3>);
 			CHECK_UNARY(std::is_trivial_v<dvec4>);
 			CHECK_UNARY(std::is_copy_assignable_v<dvec4>);
 			CHECK_UNARY(std::is_trivially_copy_assignable_v<dvec4>);

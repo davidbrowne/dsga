@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 6;
+constexpr inline int DSGA_PATCH_VERSION = 7;
 
 namespace dsga
 {
@@ -51,7 +51,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 12;
+		constexpr inline int CXCM_PATCH_VERSION = 13;
 
 		namespace limits
 		{
@@ -259,7 +259,7 @@ namespace dsga
 
 				// the special case
 				if (is_halfway && is_even)
-						return trunc_value;
+					return trunc_value;
 
 				// zero could be handled either place, but here it is with the negative values.
 
@@ -278,15 +278,15 @@ namespace dsga
 			namespace detail
 			{
 				//	By itself, converging_sqrt() gives:
-				//	0 ulps : 75%
-				//	1 ulps : 25%
+				//	0 ulps : ~75.26%
+				//	1 ulps : ~24.74%
 				template <std::floating_point T>
 				constexpr T converging_sqrt(T arg) noexcept
 				{
 					T current_value = arg;
 					T previous_value = T(0);
 
-					while (current_value != previous_value)
+					while ((current_value * current_value != arg) && (current_value != previous_value))
 					{
 						previous_value = current_value;
 						current_value = (T(0.5) * current_value) + (T(0.5) * (arg / current_value));
@@ -309,9 +309,9 @@ namespace dsga
 				}
 			}
 
-			// square root
-			//	0 ulps : 75%
-			//	1 ulps : 25%
+			// square root - double
+			//	0 ulps : ~75.26%
+			//	1 ulps : ~24.74%
 			template <std::floating_point T>
 			constexpr T sqrt(T value) noexcept
 			{
@@ -331,10 +331,10 @@ namespace dsga
 #endif
 			}
 
-			// reciprocal of square root
-			//	0 ulps : ~83.3068913%
-			//	1 ulps : ~15.8502949%
-			//	2 ulps :  ~0.8428138%
+			// reciprocal of square root - double
+			//	0 ulps : ~85.6978931%
+			//	1 ulps : ~12.4255190%
+			//	2 ulps :  ~1.8765879%
 			template <std::floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
@@ -1986,12 +1986,12 @@ namespace dsga
 		}
 
 		// variadic constructor of scalar and vector arguments
-		template <typename ... Args>
-		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
-		explicit constexpr basic_vector(const Args & ...args) noexcept
+		template <typename U, typename ... Args>
+		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
+		explicit constexpr basic_vector(const U &u, const Args & ...args) noexcept
 			: base{}
 		{
-			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
@@ -2181,12 +2181,12 @@ namespace dsga
 		}
 
 		// variadic constructor of scalar and vector arguments
-		template <typename ... Args>
-		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
-		explicit constexpr basic_vector(const Args & ...args) noexcept
+		template <typename U, typename ... Args>
+		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
+		explicit constexpr basic_vector(const U &u, const Args & ...args) noexcept
 			: base{}
 		{
-			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
@@ -2446,12 +2446,12 @@ namespace dsga
 		}
 
 		// variadic constructor of scalar and vector arguments
-		template <typename ... Args>
-		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
-		explicit constexpr basic_vector(const Args & ...args) noexcept
+		template <typename U, typename ... Args>
+		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
+		explicit constexpr basic_vector(const U &u, const Args & ...args) noexcept
 			: base{}
 		{
-			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
@@ -2934,12 +2934,12 @@ namespace dsga
 		}
 
 		// variadic constructor of scalar and vector arguments
-		template <typename ... Args>
-		requires (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, Args...>
-		explicit constexpr basic_vector(const Args & ...args) noexcept
+		template <typename U, typename ... Args>
+		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
+		explicit constexpr basic_vector(const U &u, const Args & ...args) noexcept
 			: base{}
 		{
-			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
 			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
@@ -5324,12 +5324,12 @@ namespace dsga
 		//
 
 		// variadic constructor of scalar and vector arguments
-		template <typename ... Args>
-		requires (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
-		explicit constexpr basic_matrix(const Args & ...args) noexcept
+		template <typename U, typename ... Args>
+		requires (detail::valid_matrix_component<U, T>::value) && (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, U, Args...>
+		explicit constexpr basic_matrix(const U &u, const Args & ...args) noexcept
 			: values{}
 		{
-			auto arg_tuple = detail::flatten_args_to_tuple(args...);
+			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
