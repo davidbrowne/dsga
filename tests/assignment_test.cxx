@@ -36,6 +36,100 @@ constexpr void iterator_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, co
 		*dest_iter++ = *src_iter++;
 }
 
+// test swap() for basic_vector. basic_Vector swap() uses storage_wrapper.swap() under the hood
+// swap() doesn't work as well conceptually for indexed_vector
+TEST_SUITE("vector swap")
+{
+	TEST_CASE("1d swap")
+	{
+		auto i1 = dsga::iscal{11};
+		auto i2 = dsga::iscal{100};
+
+		i1.swap(i2);
+		CHECK_EQ(i1, dsga::iscal{100});
+		CHECK_EQ(i2, dsga::iscal{11});
+
+		swap(i1, i2);
+		CHECK_EQ(i1, dsga::iscal{11});
+		CHECK_EQ(i2, dsga::iscal{100});
+
+		std::ranges::swap(i1, i2);
+		CHECK_EQ(i1, dsga::iscal{100});
+		CHECK_EQ(i2, dsga::iscal{11});
+
+		std::swap(i1, i2);
+		CHECK_EQ(i1, dsga::iscal{11});
+		CHECK_EQ(i2, dsga::iscal{100});
+	}
+
+	TEST_CASE("2d swap")
+	{
+		auto i1 = dsga::ivec2{11, 22};
+		auto i2 = dsga::ivec2{100, 200};
+
+		i1.swap(i2);
+		CHECK_EQ(i1, dsga::ivec2{100, 200});
+		CHECK_EQ(i2, dsga::ivec2{11, 22});
+
+		swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec2{11, 22});
+		CHECK_EQ(i2, dsga::ivec2{100, 200});
+
+		std::ranges::swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec2{100, 200});
+		CHECK_EQ(i2, dsga::ivec2{11, 22});
+
+		std::swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec2{11, 22});
+		CHECK_EQ(i2, dsga::ivec2{100, 200});
+	}
+
+	TEST_CASE("3d swap")
+	{
+		auto i1 = dsga::ivec3{11, 22, 33};
+		auto i2 = dsga::ivec3{100, 200, 300};
+
+		i1.swap(i2);
+		CHECK_EQ(i1, dsga::ivec3{100, 200, 300});
+		CHECK_EQ(i2, dsga::ivec3{11, 22, 33});
+
+		swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec3{11, 22, 33});
+		CHECK_EQ(i2, dsga::ivec3{100, 200, 300});
+
+		std::ranges::swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec3{100, 200, 300});
+		CHECK_EQ(i2, dsga::ivec3{11, 22, 33});
+
+		std::swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec3{11, 22, 33});
+		CHECK_EQ(i2, dsga::ivec3{100, 200, 300});
+	}
+
+	TEST_CASE("4d swap")
+	{
+		auto i1 = dsga::ivec4{11, 22, 33, 44};
+		auto i2 = dsga::ivec4{100, 200, 300, 400};
+
+		i1.swap(i2);
+		CHECK_EQ(i1, dsga::ivec4{100, 200, 300, 400});
+		CHECK_EQ(i2, dsga::ivec4{11, 22, 33, 44});
+
+		swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec4{11, 22, 33, 44});
+		CHECK_EQ(i2, dsga::ivec4{100, 200, 300, 400});
+
+		std::ranges::swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec4{100, 200, 300, 400});
+		CHECK_EQ(i2, dsga::ivec4{11, 22, 33, 44});
+
+		std::swap(i1, i2);
+		CHECK_EQ(i1, dsga::ivec4{11, 22, 33, 44});
+		CHECK_EQ(i2, dsga::ivec4{100, 200, 300, 400});
+	}
+}
+
+
 // compund assignments are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test assignment")
 {

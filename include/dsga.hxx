@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 9;
+constexpr inline int DSGA_PATCH_VERSION = 10;
 
 namespace dsga
 {
@@ -1542,8 +1542,6 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
-		constexpr void swap(indexed_vector &iv) noexcept					{ base.swap(iv.base); 	}
-
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
 		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
@@ -1648,8 +1646,6 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
-		constexpr void swap(indexed_vector &iv) noexcept					{ base.swap(iv.base); 	}
-
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, I>(*this, 0u); }
 		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, I>(*this, 0u); }
@@ -1674,12 +1670,6 @@ namespace dsga
 			base[I] = static_cast<T>(other);
 		}
 	};
-
-	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-	constexpr void swap(indexed_vector<T, Size, Count, Is...> &lhs, indexed_vector<T, Size, Count, Is...> &rhs) noexcept
-	{
-		lhs.swap(rhs);
-	}
 
 
 	// convenience using types for indexed_vector as members of basic_vector
