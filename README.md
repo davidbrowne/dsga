@@ -208,7 +208,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2039 | 2039 passed | 0 failed |
+[doctest] assertions: 2040 | 2040 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -219,7 +219,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2039 | 2039 passed | 0 failed |
+[doctest] assertions: 2040 | 2040 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -232,7 +232,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2023 | 2023 passed | 0 failed |
+[doctest] assertions: 2024 | 2024 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -245,7 +245,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2039 | 2039 passed | 0 failed |
+[doctest] assertions: 2040 | 2040 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -258,7 +258,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2023 | 2023 passed | 0 failed |
+[doctest] assertions: 2024 | 2024 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

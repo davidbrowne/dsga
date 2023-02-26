@@ -19,7 +19,7 @@ constexpr auto quadratic_bezier_ordinate_eval(const dsga::vector_base<W, T, 3u, 
 	auto quadratic_control_points = dsga::basic_vector<T, 3u>(control_points);
 
 	auto linear_control_points = dsga::mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-	return std::lerp(linear_control_points.x, linear_control_points.y, t);
+	return dsga::mix(linear_control_points.x, linear_control_points.y, t);
 }
 
 // given 3 control points and a t value (hopefully in the [0, 1] interval), evaluate the quadratic bezier function
@@ -68,7 +68,7 @@ constexpr auto cubic_bezier_ordinate_eval(const dsga::vector_base<W, T, 4u, D> &
 
 	auto quadratic_control_points = dsga::mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
 	auto linear_control_points = dsga::mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-	return std::lerp(linear_control_points.x, linear_control_points.y, t);
+	return dsga::mix(linear_control_points.x, linear_control_points.y, t);
 }
 
 // given 4 control points and a t value (hopefully in the [0, 1] interval), evaluate the cubic bezier function

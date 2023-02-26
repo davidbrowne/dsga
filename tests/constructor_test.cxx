@@ -540,6 +540,7 @@ TEST_SUITE("test constructors")
 			auto tm8 = mat4(tm4);
 			auto tm9 = mat4(dmat4(4));
 			auto tm10 = mat4(dmat2(9));
+			auto tm11 = dmat4(tm8);
 
 			CHECK_EQ(tm1, mat4x4(9,0,0,0,  0,9,0,0,  0,0,9,0,  0,0,0,9));
 			CHECK_EQ(tm2, mat3x3(9, 0, 0,  0, 9, 0,  0, 0, 9));
@@ -549,6 +550,7 @@ TEST_SUITE("test constructors")
 			CHECK_EQ(tm8, mat4x4(1, 2, 0, 0,  3, 4, 0, 0,  5, 6, 1, 0,  7, 8, 0, 1));
 			CHECK_EQ(tm9, mat4x4(4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4));
 			CHECK_EQ(tm10, mat4x4(9, 0, 0, 0, 0, 9, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
+			CHECK_EQ(tm11, dmat4x4(1, 2, 0, 0, 3, 4, 0, 0, 5, 6, 1, 0, 7, 8, 0, 1));
 		}
 	}
 }
