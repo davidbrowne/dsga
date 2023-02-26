@@ -36,7 +36,7 @@
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 8;
+constexpr inline int DSGA_PATCH_VERSION = 9;
 
 namespace dsga
 {
@@ -4698,7 +4698,7 @@ namespace dsga
 			return detail::ternary_op_execute(std::make_index_sequence<C>{}, x, min_val, max_val, clamp_op);
 		}
 
-		template <bool W, non_bool_arithmetic T, std::size_t C, typename D>
+		template <non_bool_arithmetic T>
 		constexpr auto clamp(T x,
 							 T min_val,
 							 T max_val) noexcept

@@ -47,7 +47,7 @@ constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, floa
 {
     auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
     auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-    return std::lerp(linear_control_points.x, linear_control_points.y, t);
+    return mix(linear_control_points.x, linear_control_points.y, t);
 }
 
 // main cubic bezier eval function -- takes 2D control points with float values.
@@ -176,7 +176,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.9.8`
+Current version: `v0.9.9`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -208,7 +208,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1953 | 1953 passed | 0 failed |
+[doctest] assertions: 2007 | 2007 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -219,7 +219,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1953 | 1953 passed | 0 failed |
+[doctest] assertions: 2007 | 2007 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -232,7 +232,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1937 | 1937 passed | 0 failed |
+[doctest] assertions: 1991 | 1991 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -245,7 +245,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1953 | 1953 passed | 0 failed |
+[doctest] assertions: 2007 | 2007 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -258,7 +258,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   85 |   85 passed | 0 failed | 0 skipped
-[doctest] assertions: 1937 | 1937 passed | 0 failed |
+[doctest] assertions: 1991 | 1991 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
