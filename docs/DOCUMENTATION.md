@@ -249,6 +249,9 @@ Both the vector and matrix structs support ```data()``` and ```size()``` in orde
 * ```T *data()``` gives a pointer to the underlying vector elements or matrix columns, in physical order.
 * ```std::size_t size()``` gives the number of elements in the vector or number of columns in the matrix.
 * ```std::index_sequence<Is...> sequence()``` (only for vectors) gives a parameter pack that maps the physical order to the logical order. For a ```basic_vector``` those are the same, but for an ```indexed_vector``` they are mostly not the same. Pack expansion and folding are tools that might help with the low-level pointer access for vectors.
+* ```std::array<std::size_t, Count> offsets``` is an array with same data that is in ```sequence()```, just in another data structure. Each vector class has this static member variable.
+
+The value returned by ```size()``` is not the length of the underlying ```data()```, but it is the size of the ```sequence()```/```offsets``` view of the data. ```dsga::basic_vector<>``` is contiguous, and the ```data()``` is in order, but for ```dsga::indexed_vector<>``` it definitely mostly is not in order, which is the whole point of the struct.
 
 ## Vector
 
