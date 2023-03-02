@@ -74,8 +74,7 @@ using namespace dsga;
 // 2D or 3D only
 //
 
-template <bool W1, floating_point_dimensional_scalar T, std::size_t C,
-          class D1, bool W2, class D2>
+template <bool W1, floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
 requires ((C > 1u) && (C < 4u))
 auto angle_between(const vector_base<W1, T, C, D1> &v1,
                    const vector_base<W2, T, C, D2> &v2)
@@ -176,7 +175,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.9.11`
+Current version: `v0.9.12`
 
 * **All the vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -208,7 +207,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2040 | 2040 passed | 0 failed |
+[doctest] assertions: 2066 | 2066 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -219,7 +218,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2040 | 2040 passed | 0 failed |
+[doctest] assertions: 2066 | 2066 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -232,7 +231,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2024 | 2024 passed | 0 failed |
+[doctest] assertions: 2050 | 2050 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -245,7 +244,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2040 | 2040 passed | 0 failed |
+[doctest] assertions: 2066 | 2066 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -258,7 +257,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2024 | 2024 passed | 0 failed |
+[doctest] assertions: 2050 | 2050 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

@@ -21,7 +21,7 @@ using namespace dsga;
 // fill vectors from spans
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
@@ -30,8 +30,26 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 }
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<U, T>
+	requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
+{
+	constexpr std::size_t count = std::min(S, E);
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<T>(rhs[i]);
+}
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+{
+	const std::size_t count = std::min(S, rhs.size());
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<T>(rhs[i]);
+}
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
+	requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -41,7 +59,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 // fill spans from vectors
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<T, U>
 constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
@@ -50,7 +68,7 @@ constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T,
 }
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_arithmetic<U> && std::convertible_to<T, U>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<T, U>
 constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
 {
 	const std::size_t count = std::min(S, lhs.size());

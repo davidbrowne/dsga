@@ -12,7 +12,7 @@ using namespace dsga;
 //
 
 // recursive interpolation approach to show off vector functions and swizzling
-template <bool W, dsga::floating_point_dimensional_scalar T, typename D>
+template <bool W, dsga::floating_point_scalar T, typename D>
 constexpr auto quadratic_bezier_ordinate_eval(const dsga::vector_base<W, T, 3u, D> &control_points, T t) noexcept
 {
 	// not sure of real type of control_points, so make a basic_vector so we can swizzle
@@ -23,7 +23,7 @@ constexpr auto quadratic_bezier_ordinate_eval(const dsga::vector_base<W, T, 3u, 
 }
 
 // given 3 control points and a t value (hopefully in the [0, 1] interval), evaluate the quadratic bezier function
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3>
 requires (C > 1u)
 constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
@@ -43,7 +43,7 @@ constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 }
 
 // same as previous function, but specializing for length 1 vector case
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3>
 constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
 									 const dsga::vector_base<W2, T, 1u, D2> &p1,
@@ -60,7 +60,7 @@ constexpr auto quadratic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
 //
 
 // recursive interpolation approach to show off vector functions and swizzling
-template <bool W, dsga::floating_point_dimensional_scalar T, typename D>
+template <bool W, dsga::floating_point_scalar T, typename D>
 constexpr auto cubic_bezier_ordinate_eval(const dsga::vector_base<W, T, 4u, D> &control_points, T t) noexcept
 {
 	// not sure of real type of control_points, so make a basic_vector so we can swizzle
@@ -72,7 +72,7 @@ constexpr auto cubic_bezier_ordinate_eval(const dsga::vector_base<W, T, 4u, D> &
 }
 
 // given 4 control points and a t value (hopefully in the [0, 1] interval), evaluate the cubic bezier function
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
 requires (C > 1u)
 constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
@@ -93,7 +93,7 @@ constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, C, D1> &p0,
 }
 
 // same as previous function, but specializing for length 1 vector case
-template <bool W1, dsga::floating_point_dimensional_scalar T, std::size_t C, typename D1,
+template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
 constexpr auto cubic_bezier_eval(const dsga::vector_base<W1, T, 1u, D1> &p0,
 								 const dsga::vector_base<W2, T, 1u, D2> &p1,

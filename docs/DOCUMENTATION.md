@@ -18,7 +18,7 @@ namespace dsga
     struct basic_vector;
     // ...
 
-    template <floating_point_dimensional_scalar T, std::size_t Columns, std::size_t Rows>
+    template <floating_point_scalar T, std::size_t Columns, std::size_t Rows>
     struct basic_matrix;
     // ...
 
@@ -483,14 +483,14 @@ constexpr basic_matrix(U arg) noexcept;
 * **Single Matrix Argument, same type** - any matrix can be used to create another matrix, regardless of any size differences. If they are the same size, then the defaulted copy/move constructor will be called. If they are different sizes, then this constructor intializes what it can of the matrix as if the rows and columns were intersected with the argument's rows and columns. If there are matrix elements that are not initialized by the matrix argument, they will be set to 0. If it is a square matrix, and a diagonal element has not been initialized, it will be set to 1.
 
 ```c++
-template <floating_point_dimensional_scalar U, std::size_t Cols, std::size_t Rows>
+template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
 constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept;
 ```
 
 * **Single Matrix Argument, different type** - for matrices of the same dimensions, where the matrix type is implicitly convertible to the type of matrix you are trying to construct.
 
 ```c++
-template <floating_point_dimensional_scalar U>
+template <floating_point_scalar U>
 requires implicitly_convertible_to<U, T>
 constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept;
 ```
