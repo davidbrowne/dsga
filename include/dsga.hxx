@@ -18,14 +18,35 @@
 #include <cmath>					// for cxcm
 #include <cassert>
 
-#if defined(DSGA_DISABLE_ASSERTS)
-#define assertm(exp, msg) ((void)0)
-#else
-#define assertm(exp, msg) assert(((void)msg, exp))
-#endif
-
 #if defined(__cpp_lib_bit_cast)
 #include <bit>						// bit_cast
+#endif
+
+//
+// dsga_constexpr_assert() derived from https://gist.github.com/oliora/928424f7675d58fadf49c70fdba70d2f
+//
+
+#if defined(DSGA_DISABLE_ASSERTS)
+
+#define dsga_assertm(exp, msg) ((void)0)
+#define dsga_constexpr_assert(cond, msg) ((void)0)
+
+#else
+
+#define dsga_assertm(exp, msg) assert(((void)msg, exp))
+
+// this needs to be NOT constexpr, so attempted use of this function stops constexpr evaluation
+template<class Assert>
+inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
+{
+	std::forward<Assert>(a)();
+}
+
+// When evaluated at compile time emits a compilation error if condition is not true.
+// Invokes the standard assert at run time.
+#define dsga_constexpr_assert(cond, msg) \
+	((void)(!!(cond) ? 0 : (dsga_constexpr_assert_failed([](){ assert(((void)msg, !#cond));}), 0)))
+
 #endif
 
 //
@@ -670,7 +691,7 @@ namespace dsga
 			template <std::integral T>
 			constexpr T abs(T value) noexcept
 			{
-				assertm(value != std::numeric_limits<T>::min(), "undefined behavior in abs()");
+				dsga_constexpr_assert(value != std::numeric_limits<T>::min(), "undefined behavior in abs()");
 
 				return relaxed::abs(value);
 			}
@@ -1049,13 +1070,13 @@ namespace dsga
 		// logical and physically contiguous access to data
 		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept
 		{
-			assertm(index >= 0 && index < Count, "index out of bounds");
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return store[static_cast<std::size_t>(index)];
 		}
 
 		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept
 		{
-			assertm(index >= 0 && index < Count, "index out of bounds");
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return store[static_cast<std::size_t>(index)];
 		}
 
@@ -1271,7 +1292,7 @@ namespace dsga
 		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
 			: mapper_ptr(std::addressof(mapper)), mapper_index(index)
 		{
-			assertm((mapper_index >= begin_index) && (mapper_index <= end_index), "index not in range");
+			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index <= end_index), "index not in range");
 		}
 
 		constexpr indexed_vector_const_iterator() noexcept = default;
@@ -1283,23 +1304,23 @@ namespace dsga
 
 		[[nodiscard]] constexpr reference operator *() const noexcept
 		{
-			assertm(nullptr != mapper_ptr, "can't deref nullptr");
-			assertm((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
+			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
 
 			return (*mapper_ptr)[mapper_index];
 		}
 
 		[[nodiscard]] constexpr pointer operator ->() const noexcept
 		{
-			assertm(nullptr != mapper_ptr, "can't deref nullptr");
-			assertm((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
+			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
 
 			return std::addressof((*mapper_ptr)[mapper_index]);
 		}
 
 		constexpr indexed_vector_const_iterator &operator ++() noexcept
 		{
-			assertm(mapper_index < end_index, "don't increment past end_index");
+			dsga_constexpr_assert(mapper_index < end_index, "don't increment past end_index");
 
 			++mapper_index;
 			return *this;
@@ -1307,7 +1328,7 @@ namespace dsga
 
 		constexpr indexed_vector_const_iterator operator ++(int) noexcept
 		{
-			assertm(mapper_index < end_index, "don't increment past end_index");
+			dsga_constexpr_assert(mapper_index < end_index, "don't increment past end_index");
 
 			indexed_vector_const_iterator temp = *this;
 			++mapper_index;
@@ -1316,7 +1337,7 @@ namespace dsga
 
 		constexpr indexed_vector_const_iterator &operator --() noexcept
 		{
-			assertm(mapper_index > begin_index, "don't decrement past begin_index");
+			dsga_constexpr_assert(mapper_index > begin_index, "don't decrement past begin_index");
 
 			--mapper_index;
 			return *this;
@@ -1324,7 +1345,7 @@ namespace dsga
 
 		constexpr indexed_vector_const_iterator operator --(int) noexcept
 		{
-			assertm(mapper_index > begin_index, "don't decrement past begin_index");
+			dsga_constexpr_assert(mapper_index > begin_index, "don't decrement past begin_index");
 
 			indexed_vector_const_iterator temp = *this;
 			--mapper_index;
@@ -1333,7 +1354,7 @@ namespace dsga
 
 		constexpr indexed_vector_const_iterator &operator +=(int offset) noexcept
 		{
-			assertm(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
 
 			mapper_index += offset;
 			return *this;
@@ -1341,7 +1362,7 @@ namespace dsga
 
 		constexpr indexed_vector_const_iterator &operator -=(int offset) noexcept
 		{
-			assertm(((mapper_index - offset) >= begin_index) && ((mapper_index - offset) < end_index), "offset not in range");
+			dsga_constexpr_assert(((mapper_index - offset) >= begin_index) && ((mapper_index - offset) < end_index), "offset not in range");
 
 			mapper_index -= offset;
 			return *this;
@@ -1349,29 +1370,29 @@ namespace dsga
 
 		[[nodiscard]] constexpr int operator -(const indexed_vector_const_iterator &iter) const noexcept
 		{
-			assertm(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
 
 			return static_cast<int>(mapper_index) - static_cast<int>(iter.mapper_index);
 		}
 
 		[[nodiscard]] constexpr bool operator ==(const indexed_vector_const_iterator &iter) const noexcept
 		{
-			assertm(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
 
 			return ((mapper_ptr == iter.mapper_ptr) && (mapper_index == iter.mapper_index));
 		}
 
 		[[nodiscard]] constexpr std::strong_ordering operator <=>(const indexed_vector_const_iterator &iter) const noexcept
 		{
-			assertm(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
 
 			return mapper_index <=> iter.mapper_index;
 		}
 
 		[[nodiscard]] constexpr reference operator [](int offset) const noexcept
 		{
-			assertm(nullptr != mapper_ptr, "can't deref nullptr");
-			assertm(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
+			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
 
 			return (*mapper_ptr)[mapper_index + offset];
 		}
@@ -1546,14 +1567,14 @@ namespace dsga
 		// logically contiguous - used by operator [] for read/write access to data
 		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable
 		{
-			assertm(index >= 0 && index < Count, "index out of bounds");
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
 		// logically contiguous - used by operator [] for read access to data
 		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept
 		{
-			assertm(index >= 0 && index < Count, "index out of bounds");
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
@@ -1658,14 +1679,14 @@ namespace dsga
 		// logically contiguous - used by operator [] for read/write access to data
 		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable
 		{
-			assertm(index >= 0 && index < Count, "index out of bounds");
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
 		// logically contiguous - used by operator [] for read access to data
 		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept
 		{
-			assertm(index >= 0 && index < Count, "index out of bounds");
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
@@ -3614,7 +3635,7 @@ namespace dsga
 	// binary operators %=, % -- uses c++ modulus operator rules
 
 	constexpr inline auto modulus_op = [](integral_scalar auto lhs, integral_scalar auto rhs) noexcept
-	{ assertm(rhs != 0, "(lhs % 0) is undefined"); return lhs % rhs; };
+	{ dsga_constexpr_assert(rhs != 0, "(lhs % 0) is undefined"); return lhs % rhs; };
 
 	template <bool W1, integral_scalar T1, std::size_t C, typename D1, bool W2, integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>

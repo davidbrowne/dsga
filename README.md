@@ -1,8 +1,19 @@
 # dsga : Data Structures for Geometric Algorithms
 
-**dsga** is a **c++20 library** that implements the **vectors** and **matrices** from the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
+**dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
-## A Quick Peek At Some Examples
+## Contents
+* [Some Quick Examples](#some-quick-examples)
+* [Relevant GLSL Overview](#relevant-glsl-overview)
+* [Installation](#installation)
+* [Status](#status)
+* [Usage](#usage)
+* [Testing](#testing)
+* [Similar Projects](#similar-projects)
+* [License](#license)
+* [Third Party Attribution](#third-party-attribution)
+
+## Some Quick Examples
 
 ``` c++
 using namespace dsga;
@@ -71,7 +82,8 @@ using namespace dsga;
 
 //
 // find the minimum positive angle between 2 vectors and/or indexed vectors (swizzles).
-// 2D or 3D only
+// Uses base class for vector types to be inclusive to both types.
+// 2D or 3D only.
 //
 
 template <bool W1, floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
@@ -93,71 +105,70 @@ auto angle_between(const vector_base<W1, T, C, D1> &v1,
 }
 ```
 
-``` c++
-using namespace dsga;
+## Relevant GLSL Overview
 
-//
-// get the signed volume for connected triangular mesh
-//
+Our programming environment is ```c++20```, not a GLSL shader program, so the entire GLSL Shading language specification is a super-set of what we are trying to achieve. We really just want the vector and matrix data structures (and their corresponding functions and behavior) to be usable in a ```c++20``` environment.
 
-// for a watertight connected triangular mesh, get the signed volume.
-// vertices are 3d points, triangles have the indices to the vertices.
-// follows right-hand rule for the sign of the volume.
-//
-// preconditions: watertight mesh, non-degenerate triangles
-double signed_volume_watertight_mesh(const std::vector<dvec3> &vertices,
-                                     const std::vector<uvec3> &triangles)
-{
-    double volume_times_six{ 0 };
+The following links to the shading specification should help with understanding what we are trying to implement with this header-only library.
 
-    // each triangle contributes a tetrahedronal volume using the origin as the 4th "vertex"
-    for (const auto &tri : triangles)
-        volume_times_six += determinant(mat3(vertices[tri[0]], vertices[tri[1]], vertices[tri[2]]));
+* [Variables and Types](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#variables-and-types)
+    * [Basic Types](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#basic-types): we have added support for vectors to also hold values of type ```std::size_t```, ```unsigned long long``` (which is what ```std::size_t``` really is for x64), and ```signed long long```.
+    * [Vectors](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vectors): GLSL does not have 1-dimensional vectors, but we do, which we have using directives to give them names that describe them as scalars and not as vectors, e.g., ```dsga::iscal```, ```dsga::dscal```, ```dsga::bscal```. We support 1-dimensional vectors because GLSL does something special with the fundamental types, allowing them to be swizzled. We use the 1-dimensional vectors to mimic that ability.
+      ```glsl
+      // glsl
+      double value = 10.0;
+      dvec3 swizzled_value = value.xxx; 
 
-    return volume_times_six / 6.0;
-}
+      // dsga
+      // dscal is an alias for dsga::basic_vector<double, 1>
+      dsga::dscal value = 10.0;
+      dsga::dvec3 swizzled_value = value.xxx; 
+      ```
 
-// triangular mesh of a cube with sides length 2.
-// not worried about topology, e.g., adjacent triangles, for this example.
-void cube_mesh(std::vector<dvec3> &vertices,
-               std::vector<uvec3> &triangles)
-{
-    vertices.clear();
-    vertices.reserve(8);
-    vertices.emplace_back(1, 1, 1);
-    vertices.emplace_back(-1, 1, 1);
-    vertices.emplace_back(-1, 1, -1);
-    vertices.emplace_back(1, 1, -1);
-    vertices.emplace_back(1, -1, 1);
-    vertices.emplace_back(-1, -1, 1);
-    vertices.emplace_back(-1, -1, -1);
-    vertices.emplace_back(1, -1, -1);
+      1-dimensional vectors types are also the return type for single component swizzles, e.g., ```val.x```, ```val.y```, ```val.z```, ```val.w```. They are designed to be easily convertible to the underlying type of the vector.
+    * [Matrices](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrices)
+* [Operators and Expressions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#operators-and-expressions)
+    * [Vector and Matrix Constructors](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-and-matrix-constructors)
+    * [Vector and Scalar Components and Length](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-components): we only allow swizzling with the ```{ x, y, z, w }``` compnent names. Support for ```{r, g, b, a}``` and ```{s, t, p , q}``` has not been implemented.
 
-    triangles.clear();
-    triangles.reserve(12);
-    triangles.emplace_back(1, 0, 2);
-    triangles.emplace_back(3, 2, 0);
-    triangles.emplace_back(0, 1, 4);
-    triangles.emplace_back(1, 2, 5);
-    triangles.emplace_back(2, 3, 6);
-    triangles.emplace_back(3, 0, 7);
-    triangles.emplace_back(5, 4, 1);
-    triangles.emplace_back(6, 5, 2);
-    triangles.emplace_back(7, 6, 3);
-    triangles.emplace_back(4, 7, 0);
-    triangles.emplace_back(6, 7, 5);
-    triangles.emplace_back(4, 5, 7);
-}
+      In addition, you cannot swizzle a swizzle. I am currently unclear if this is a constraint of the specification, but it is a constraint of the implementation:
+      ```c++
+      auto my_vec = dsga::vec3(10, 20, 30);
+      auto double_swiz = my_vec.zxy.x;           // error: no such data member x
+      auto swiz = my_vec.zxy;                    // swizzle type is not vec3
+      auto swiz_again = swiz.x;                  // error: no such data member x
+      auto try_swiz_again = dsga::vec3(swiz).x;  // wrapping with vec3 works
+      dsga::vec3 swiz_reborn = my_vec.zxy;       // vec3 constructor from swizzle
+      auto and_swiz_again = swiz_reborn.x;       // works
+      ```
+    * [Matrix Components](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrix-components)
+    * [Assignments](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#assignments)
+    * [Expressions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#expressions)
+    * [Vector and Matrix Operations](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-and-matrix-operations)
+    * [Out-of-Bounds Accesses](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#out-of-bounds-accesses): we have asserts for operator[] vectors and matrices, which help with debug runtimes and constexpr variable validity. These asserts (and others in the library) can be disabled by adding the following prior to including the header ```dsga.hxx```:
+      ```c++
+      #define DSGA_DISABLE_ASSERTS
+      #include "dsga.hxx"
+      ```
+ 
+* [Built-In Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#built-in-functions): we support the additional types ```std::size_t```, ```unsigned long long```, and ```signed long long``` in the functions where appropriate. We also added bit conversion functions between these 64-bit integral types and ```double```.
 
-double get_cube_volume()
-{
-    std::vector<dvec3> vertices;
-    std::vector<uvec3> triangles;
-    cube_mesh(vertices, triangles);
+  We also support using ```double``` for all the functions where ```float``` is supported, with the exception of the bit conversion functions for ```float``` with 32-bit integral types, and ```double``` with the 64-bit integral types.
+    * [Angle and Trigonometry Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#angle-and-trigonometry-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
+    * [Exponential Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#exponential-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
 
-    return signed_volume_watertight_mesh(vertices, triangles);
-}
-```
+      ```dsga::sqrt()``` and ```dsga::inversesqrt()``` for ```double``` scalars and vectors have constexpr versions that are not exact matches for the output of ```std::sqrt()```. They are both very close, where most cases are exact, and they are off by 1 or 2 ulps at most when not exact. To be able to use these for constexpr purposes, you must opt-in with the following define:
+        ```c++
+        #define DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED
+        #include "dsga.hxx"
+        ```
+
+    * [Common Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#common-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
+    * [Geometric Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#geometric-functions): ```ftransform()``` is not implemented as it is only for GLSL vertex shader programs.
+    * [Matrix Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrix-functions)
+    * [Vector Relational Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-relational-functions): GLSL has a vector function ```not()```, but ```not``` is a c++ keyword. Instead of naming this function ```not()```, we name it ```logicalNot()```.
+
+      In addtion, we have added the non-GLSL convenience function ```none()```, which returns ```!any()```.
 
 ## Installation
 
@@ -165,11 +176,11 @@ This is a **single header library**, where you just need the file [dsga.hxx](inc
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
-Since the constexpr versions of ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) do not have identical results with ```std::sqrt()``` with ```double``` arguments, if you want the approximate but constexpr version of those or ```dsga::sqrt()``` or ```dsga::rsqrt()```, you have to opt-in by defining the macro ```DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED```. The approximation for ```sqrt(double)``` is not more than 1 ulp away from ```std::sqrt(double)```, and ```rsqrt(double)``` is not more than 2 ulps away from ```1.0 / std::sqrt(double)```.
+Since the constexpr versions of ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) have mostly identical results but sometimes differs with ```std::sqrt()``` with ```double``` arguments, if you want the approximate but constexpr version of those or ```dsga::sqrt()``` or ```dsga::rsqrt()```, you have to opt-in by defining the macro ```DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED```. The approximation for ```sqrt(double)``` in the worst case is at most 1 ulp away from ```std::sqrt(double)```, and ```rsqrt(double)``` in the worst case is at most 2 ulps away from ```1.0 / std::sqrt(double)```.
 
-There are asserts in the codebase, especially in the indexed_vector iterator structs, that can be disabled by defining the macro ```DSGA_DISABLE_ASSERTS```.
+There are asserts in the codebase that can be disabled by defining the macro ```DSGA_DISABLE_ASSERTS```.
 
-This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
+This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE. While debugging this on Linux (WSL2: Windows Subsystem for Linux) with gcc in Visual Studio Code, we created a [.natvis](vscode/dsga-vscode.natvis) file for that too.
 
 Remember, this is a c++20 library, so that needs to be the minimum standard that you tell the compiler to use.
 
@@ -195,6 +206,8 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 ## Testing
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
+
+All tests are currently 100% PASSING on all the testing platforms and compilers.
 
 The tests have been most recently run on:
 
@@ -269,7 +282,8 @@ It is a common pastime for people to write these kind of vector libraries. The t
 * [DirectXMath](https://github.com/microsoft/DirectXMath) - this is from Microsoft and basically performs the same role as glm, but with DirectX instead of OpenGL. It is also long lived and much more mature than dsga.
 * mango (repo has been removed by owner) - this is the project that I read the blog about for vector component access and swizzling, so it is nice to have as another example. Again, more mature than dsga.
 
-## License [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
+## License
+[![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
 
 ```
 //          Copyright David Browne 2020-2023.
