@@ -16,6 +16,7 @@
 #include <version>					// feature test macros
 #include <limits>					// for cxcm
 #include <cmath>					// for cxcm
+#include <numeric>
 #include <cassert>
 
 #if defined(__cpp_lib_bit_cast)
@@ -57,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 13;
+constexpr inline int DSGA_PATCH_VERSION = 14;
 
 namespace dsga
 {
@@ -1846,9 +1847,9 @@ namespace dsga
 
 		// create a tuple from a scalar
 
-		auto to_tuple(dimensional_scalar auto arg) noexcept
+		constexpr auto to_tuple(dimensional_scalar auto arg) noexcept
 		{
-			return std::make_tuple(arg);
+			return std::tuple(arg);
 		}
 
 		// create a tuple from a vector
@@ -1858,7 +1859,7 @@ namespace dsga
 		{
 			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return std::make_tuple(arg[Is]...);
+				return std::tuple(arg[Is]...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -1867,7 +1868,7 @@ namespace dsga
 		{
 			return[&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
 			{
-				return std::make_tuple(arg[Js]...);
+				return std::tuple(arg[Js]...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -1876,7 +1877,7 @@ namespace dsga
 		{
 			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return std::make_tuple(arg[Is]...);
+				return std::tuple(arg[Is]...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -1892,7 +1893,7 @@ namespace dsga
 		// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
 		// and dimensional_scalars.
 		template <typename ...Args>
-		auto flatten_args_to_tuple(const Args & ...args) noexcept
+		constexpr auto flatten_args_to_tuple(const Args & ...args) noexcept
 		{
 			return std::tuple_cat(to_tuple(args)...);
 		}
@@ -5036,6 +5037,16 @@ namespace dsga
 		// 8.4 is omitted
 		//
 
+		// not in GLSL -- dot() is just for floating point, innerProduct() will work with everything but bool
+		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
+		[[nodiscard]] constexpr auto innerProduct(const vector_base<W1, T1, C, D1> &x,
+												  const vector_base<W2, T2, C, D2> &y) noexcept
+		{
+			using ProductType = decltype(std::declval<T1>() * std::declval<T2>());
+			using SumType = decltype(std::declval<ProductType>() + std::declval<ProductType>());
+			return std::inner_product(x.begin(), x.end(), y.begin(), SumType(0));
+		}
+
 		//
 		// 8.5 - geometric
 		//
@@ -5232,13 +5243,6 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		// this is function is not in the glsl standard
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
-		{
-			return !any(x);
-		}
-
 		constexpr inline auto logical_not_op = [](bool x) noexcept { return !x; };
 
 		// c++ is not allowing a function named not()
@@ -5252,6 +5256,43 @@ namespace dsga
 		// 8.8 - 8.19 are omitted
 		//
 
+		// not in GLSL
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return !any(x);
+		}
+
+		// not in GLSL
+		template <std::size_t C>
+		[[nodiscard]] constexpr auto default_comparison_weights() noexcept
+		{
+			constexpr auto weights = basic_vector<int, 4>(1, 3, 9, 27);				// reverse order
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return basic_vector<int, C>(weights[C - Is - 1] ...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		// not in GLSL
+		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, std::signed_integral T3, typename D3>
+		requires (!std::unsigned_integral<T1> && !std::unsigned_integral<T2>)
+		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
+											 const vector_base<W2, T2, C, D2> &y,
+											 const vector_base<true, T3, C, D3> &weights) noexcept
+		{
+			return innerProduct(weights, basic_vector<T3, C>(sign(x - y)));
+		}
+
+		// not in GLSL
+		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
+		requires (!std::unsigned_integral<T1> && !std::unsigned_integral<T2>)
+		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
+											 const vector_base<W2, T2, C, D2> &y) noexcept
+		{
+			constexpr auto weights = default_comparison_weights<C>();
+			return compare(x, y, weights);
+		}
 
 		//
 		// basic tolerance comparisons

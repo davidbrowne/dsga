@@ -418,7 +418,13 @@ There are scalar versions of these vector functions where it makes sense, i.e., 
 * ```ldexp()```
 
 #### Geometric Functions
-The geometric functions treat a vector as an entity instead of as a collection of components. The vector component type must be floating-point.
+The geometric functions treat a vector as an entity instead of as a collection of components.
+
+The vector component type may be of the vector types except bool.
+
+* ```innerProduct()``` - not in GLSL -  similar to ```dot()```
+
+The vector component type must be floating-point.
 
 * ```length()```
 * ```distance()```
@@ -441,6 +447,8 @@ The geometric functions treat a vector as an entity instead of as a collection o
 * ```all()``` - result relies on the components' relationship with each other
 * ```none()``` - result relies on the components' relationship with each other - not in GLSL
 * ```logicalNot()``` - can't use keyword ```not``` as a function name in ```c++```, so using ```logicalNot()```
+* ```default_comparison_weights<std::size_t>()``` - not in GLSL - helper for ```compare()```
+* ```compare()``` - not in GLSL
 
 Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. The unimplemented functions likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
 

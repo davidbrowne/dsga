@@ -176,7 +176,7 @@ TEST_SUITE("test constructors")
 		ivec4 c4d_15(c4d_04.yzwx);
 		ivec4 c4d_16(mat2(77, 66, 55, 44));
 		ivec4 c4d_17(dscal(34), ivec2(2, 99), mat2(77, 66, 55, 44));
-		ivec4 c4d_18(dscal(34), bvec2(true, false), mat2(77, 66, 55, 44));
+		[[ maybe_unused ]] ivec4 c4d_18(dscal(34), bvec2(true, false), mat2(77, 66, 55, 44));
 
 		[[ maybe_unused ]] bvec4 b4d_01(-8);					// #1
 		[[ maybe_unused ]] bvec4 b4d_02(11, 22, 33, 44);		// #2
