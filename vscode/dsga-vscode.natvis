@@ -2,7 +2,7 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
 	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
-		<DisplayString Condition="$T2 == 1">{store[0],g}</DisplayString>
+		<DisplayString Condition="$T2 == 1">{{ {store[0],g} }}</DisplayString>
 		<DisplayString Condition="$T2 == 2">{{ {store[0],g}, {store[1],g} }}</DisplayString>
 		<DisplayString Condition="$T2 == 3">{{ {store[0],g}, {store[1],g}, {store[2],g} }}</DisplayString>
 		<DisplayString Condition="$T2 == 4">{{ {store[0],g}, {store[1],g}, {store[2],g}, {store[3],g} }}</DisplayString>
@@ -69,7 +69,7 @@
 	</Type>
 
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;">
-		<DisplayString>{base[$T4],g}</DisplayString>
+		<DisplayString>{{ {base[$T4],g} }}</DisplayString>
 		<Expand>
 			<Item Name="[0]">base[$T4]</Item>
 			<Item Name="base">base._M_elems</Item>
