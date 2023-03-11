@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 14;
+constexpr inline int DSGA_PATCH_VERSION = 15;
 
 namespace dsga
 {
@@ -2027,15 +2027,8 @@ namespace dsga
 		}
 
 		template <typename U>
-		requires implicitly_convertible_to<U, T>
-		constexpr basic_vector(U value) noexcept
-			: base{ static_cast<T>(value) }
-		{
-		}
-
-		template <typename U>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
-		explicit constexpr basic_vector(U value) noexcept
+		requires std::convertible_to<U, T>
+		explicit(!implicitly_convertible_to<U, T>) constexpr basic_vector(U value) noexcept
 			: base{ static_cast<T>(value) }
 		{
 		}
@@ -4067,43 +4060,6 @@ namespace dsga
 	}
 
 	//
-	// component-wise equality operator for vectors, scalar boolean result: ==, != (thanks to c++20).
-	// most vector equality/inequality testing should use free functions equal()/notEqual(), but
-	// these have a scalar result and are useful for unit testing.
-	//
-
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1>
-	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
-							   const vector_base<W2, T2, C, D2> &second) noexcept
-	{
-		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-		{
-			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
-		}(std::make_index_sequence<C>{});
-	}
-
-	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
-							   const vector_base<W2, T, C, D2> &second) noexcept
-	{
-		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-		{
-			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == second[Is])) && ...);
-		}(std::make_index_sequence<C>{});
-	}
-
-	// when Count == 1, treat it like a scalar value
-	template <bool W, dimensional_scalar T, typename D, dimensional_scalar U>
-	requires (std::same_as<T, bool> == std::same_as<U, bool>)
-	constexpr bool operator ==(const vector_base<W, T, 1u, D> &first,
-							   U second) noexcept
-	{
-		using CommonType = std::common_type_t<T, U>;
-		return !std::isunordered(first[0u], second) && (static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second));
-	}
-
-	//
 	// get<> part of tuple interface -- needed for structured bindings
 	//
 
@@ -5263,37 +5219,6 @@ namespace dsga
 			return !any(x);
 		}
 
-		// not in GLSL
-		template <std::size_t C>
-		[[nodiscard]] constexpr auto default_comparison_weights() noexcept
-		{
-			constexpr auto weights = basic_vector<int, 4>(1, 3, 9, 27);				// reverse order
-			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return basic_vector<int, C>(weights[C - Is - 1] ...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		// not in GLSL
-		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, std::signed_integral T3, typename D3>
-		requires (!std::unsigned_integral<T1> && !std::unsigned_integral<T2>)
-		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
-											 const vector_base<W2, T2, C, D2> &y,
-											 const vector_base<true, T3, C, D3> &weights) noexcept
-		{
-			return innerProduct(weights, basic_vector<T3, C>(sign(x - y)));
-		}
-
-		// not in GLSL
-		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-		requires (!std::unsigned_integral<T1> && !std::unsigned_integral<T2>)
-		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
-											 const vector_base<W2, T2, C, D2> &y) noexcept
-		{
-			constexpr auto weights = default_comparison_weights<C>();
-			return compare(x, y, weights);
-		}
-
 		//
 		// basic tolerance comparisons
 		//
@@ -5366,6 +5291,205 @@ namespace dsga
 				return within_box(x, y, tolerance[0u]);
 			}
 		}
+	}
+
+	// default weights for comparison - x has priority over y, which is over z, which is over w
+	template <std::size_t C>
+	requires (C >= 1 && C <= 4)
+	[[nodiscard]] constexpr auto default_comparison_weights() noexcept
+	{
+		constexpr auto weights = basic_vector<int, 4>(1, 3, 9, 27);				// reverse order
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return basic_vector<int, C>(weights[C - Is - 1] ...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	namespace detail
+	{
+		// helper that evaluates a binary operation lambda
+		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, typename BinOp>
+		[[nodiscard]] constexpr auto binary_op(BinOp lambda,
+											   const vector_base<W1, T, C, D1> &lhs,
+											   const vector_base<W2, T, C, D2> &rhs) noexcept
+		{
+			return binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lambda);
+		}
+
+		// comparison lambdas that return -1 for less than, 0 for equal, and 1 for greater than.
+		// these are for the types that don't work with the sign() function
+		constexpr inline auto unsigned_compare_op = [](std::unsigned_integral auto lhs, std::unsigned_integral auto rhs) noexcept -> int { return (lhs < rhs) ? -1 : ((lhs > rhs) ? 1 : 0); };
+		constexpr inline auto bool_compare_op = [](bool lhs, bool rhs) noexcept -> int { return static_cast<int>(lhs) - static_cast<int>(rhs); };
+
+		// signed integral comparison
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
+		requires (std::signed_integral<T1> && std::signed_integral<T2>)
+		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
+												  const vector_base<W2, T2, C, D2> &y,
+												  const vector_base<W3, T3, C, D3> &weights) noexcept
+		{
+			return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
+		}
+
+		// unsigned integral comparison
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
+		requires (std::unsigned_integral<T1>)
+		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
+												  const vector_base<W2, T2, C, D2> &y,
+												  const vector_base<W3, T3, C, D3> &weights) noexcept
+		{
+			return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(unsigned_compare_op, x, y)));
+		}
+
+		// bool comparison
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2, bool W3, std::signed_integral T3, typename D3>
+		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, bool, C, D1> &x,
+												  const vector_base<W2, bool, C, D2> &y,
+												  const vector_base<W3, T3, C, D3> &weights) noexcept
+		{
+			return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(bool_compare_op, x, y)));
+		}
+
+		// floating point comparison
+		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
+		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
+												  const vector_base<W2, T2, C, D2> &y,
+												  const vector_base<W3, T3, C, D3> &weights) noexcept
+		{
+			return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
+		}
+
+		// interface function for three-way comparison operator for vectors, using default weighting
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
+											 const vector_base<W2, T2, C, D2> &y) noexcept
+		{
+			constexpr auto weights = default_comparison_weights<C>();
+			return compare_impl(x, y, weights);
+		}
+
+		// interface function for three-way comparison operator for vectors, using user-defined weighting
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
+		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
+											 const vector_base<W2, T2, C, D2> &y,
+											 const vector_base<W3, T3, C, D3> &weights) noexcept
+		{
+			return compare_impl(x, y, weights);
+		}
+	}
+
+	//
+	// non-operator weighted comparison for vectors - suggest using default_comparison_weights() or a swizzle
+	// of it that uses all the components. the weights show the priority of the dimensions in the comparison.
+	// 
+	// returns the ordering of the the arguments based on a signed integral value, calculated using the weights
+	// applied to the differences between the pair-wise components via compare_impl(). It is similar but different
+	// than std::lexicographical_compare_three_way(), where that function iterates over the components, and this
+	// function operates on all the components at once to arrive at values to compare. It is lexicographical
+	// if the absolute value of the weights is in decreasing order, such as using default_comparison_weights<>().
+	// 
+	// this custom weighted comparison or the default operator <=> comparisons are important for sorting
+	// vectors for algorithms, .e.g., convex hull, min-max, etc. Using the default_comparison_weights<>()
+	// (or a swizzle of them where every component is used once) will give you a total ordering in the sort
+	// (assuming no comparison is std::unordered()).
+	// 
+	// This comparison uses exact data, not fuzzy equality within a tolerance.
+	//
+
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
+	[[nodiscard]] constexpr auto weighted_compare(const vector_base<W1, T1, C, D1> &first,
+												  const vector_base<W2, T2, C, D2> &second,
+												  const vector_base<W3, T3, C, D3> &weights) noexcept
+	{
+		if constexpr (std::integral<T1> && std::integral<T2>)
+		{
+			if (auto comp = detail::compare(first, second, weights); comp < 0)
+			{
+				return std::strong_ordering::less;
+			}
+			else if (comp > 0)
+			{
+				return std::strong_ordering::greater;
+			}
+			else
+			{
+				return std::strong_ordering::equal;
+			}
+		}
+		else if constexpr (std::floating_point<T1> && std::floating_point<T2>)
+		{
+			// if any component of either inputs is a NaN, then it is unordered
+			if (functions::any(functions::isnan(first.as_derived())) || functions::any(functions::isnan(second.as_derived())))
+				return std::partial_ordering::unordered;
+
+			if (auto comp = detail::compare(first, second, weights); comp < 0)
+			{
+				return std::partial_ordering::less;
+			}
+			else if (comp > 0)
+			{
+				return std::partial_ordering::greater;
+			}
+			else
+			{
+				return std::partial_ordering::equivalent;
+			}
+		}
+		else
+		{
+			dsga_constexpr_assert(false, "comparison types must be same class of scalar");
+		}
+	}
+
+	//
+	// lexicographic-like comparisons for vectors -- x has highest priority, then y, then z, then w.
+	// all components are compared up front though, so it doesn't just stop checking when it finds the
+	// first component that compares as not equal/equivalent.
+	//
+
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	constexpr auto operator <=>(const vector_base<W1, T1, C, D1> &first,
+								const vector_base<W2, T2, C, D2> &second) noexcept
+	{
+		constexpr auto weights = default_comparison_weights<C>();
+		return weighted_compare(first, second, weights);
+	}
+
+	//
+	// component-wise equality operator for vectors, scalar boolean result: ==, != (thanks to c++20).
+	// most vector equality/inequality testing should use free functions equal()/notEqual(), but
+	// these have a scalar result and are useful for unit testing.
+	//
+
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	requires implicitly_convertible_to<T2, T1>
+	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
+							   const vector_base<W2, T2, C, D2> &second) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
+							   const vector_base<W2, T, C, D2> &second) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == second[Is])) && ...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// when Count == 1, treat it like a scalar value
+	template <bool W, dimensional_scalar T, typename D, dimensional_scalar U>
+	requires (std::same_as<T, bool> == std::same_as<U, bool>)
+	constexpr bool operator ==(const vector_base<W, T, 1u, D> &first,
+							   U second) noexcept
+	{
+		using CommonType = std::common_type_t<T, U>;
+		return !std::isunordered(first[0u], second) && (static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second));
 	}
 
 	//
@@ -5493,7 +5617,7 @@ namespace dsga
 			}(std::make_index_sequence<C>());
 		}
 
-		// implicit constructor from a matrix
+		// implicit constructor from a matrix - uses implicitly convertible vector assignment
 		template <floating_point_scalar U>
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
@@ -5520,7 +5644,7 @@ namespace dsga
 				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
 			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
 
-			// for square matrix, extend identity diagonal as needed   make_index_range
+			// for square matrix, extend identity diagonal as needed
 			if constexpr (C == R)
 			{
 				[&]<std::size_t ...Is>(std::index_sequence<Is...>)
@@ -5530,7 +5654,7 @@ namespace dsga
 			}
 		}
 
-		// explicit constructor from a matrix
+		// explicit constructor from a matrix - doesn't matter if (C == Cols) or (R == Rows)
 		template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 		explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
@@ -5545,7 +5669,7 @@ namespace dsga
 				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
 			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
 
-			// for square matrix, extend identity diagonal as needed   make_index_range
+			// for square matrix, extend identity diagonal as needed
 			if constexpr (C == R)
 			{
 				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
@@ -5811,6 +5935,21 @@ namespace dsga
 	//
 	// matrix operators
 	//
+
+	//
+	// lexicographic comparisons of vectors in matrices.
+	// it will stop checking after first vector comparison that is not equal/equivalent.
+	//
+
+	constexpr auto mat_vec_comp_op =
+		[]<floating_point_scalar T1, std::size_t C, floating_point_scalar T2>(const basic_vector<T1, C> &v1, const basic_vector<T2, C> &v2) { return v1 <=> v2; };
+
+	template <floating_point_scalar T1, std::size_t C, std::size_t R, floating_point_scalar T2>
+	constexpr auto operator <=>(const basic_matrix<T1, C, R> &lhs,
+								const basic_matrix<T2, C, R> &rhs) noexcept
+	{
+		return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), mat_vec_comp_op);
+	}
 
 	// component-wise equality operator for matrices, scalar boolean result: ==, != (thanks to c++20)
 	template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
