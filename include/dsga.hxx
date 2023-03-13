@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 16;
+constexpr inline int DSGA_PATCH_VERSION = 17;
 
 namespace dsga
 {
@@ -899,9 +899,17 @@ namespace dsga
 	template <typename T>
 	concept bool_scalar = std::same_as<bool, T>;
 
+	// plain undecorated signed types
+	template <typename T>
+	concept signed_scalar = (std::same_as<int, T> || std::same_as<long long, T>);
+
+	// plain undecorated unsigned types
+	template <typename T>
+	concept unsigned_scalar = (std::same_as<unsigned int, T> || std::same_as<unsigned long long, T> || std::same_as<std::size_t, T>);
+
 	// plain undecorated integral types
 	template <typename T>
-	concept numeric_integral_scalar = (std::same_as<int, T> || std::same_as<unsigned int, T> || std::same_as<long long, T> || std::same_as<unsigned long long, T> || std::same_as<std::size_t, T>);
+	concept numeric_integral_scalar = (signed_scalar<T> || unsigned_scalar<T>);
 
 	// plain undecorated floating point types
 	template <typename T>
@@ -913,7 +921,7 @@ namespace dsga
 
 	// plain undecorated arithmetic types
 	template <typename T>
-	concept dimensional_scalar = (numeric_integral_scalar<T> || floating_point_scalar<T> || bool_scalar<T>);
+	concept dimensional_scalar = (non_bool_scalar<T> || bool_scalar<T>);
 
 	// want the size to be between 1 and 4, inclusive
 	template <std::size_t Size>
@@ -4459,14 +4467,14 @@ namespace dsga
 		constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept -> T { return cxcm::abs(arg); };
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		requires (!std::unsigned_integral<T>) && non_bool_scalar<T>
+		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
 		[[nodiscard]] constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, abs_op);
 		}
 
 		template <dimensional_scalar T>
-		requires (!std::unsigned_integral<T>) && non_bool_scalar<T>
+		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
 		[[nodiscard]] constexpr auto abs(T arg) noexcept
 		{
 			return abs_op(arg);
@@ -4475,14 +4483,14 @@ namespace dsga
 		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(T(0) < arg) - T(arg < T(0))); };
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		requires (!std::unsigned_integral<T>) && non_bool_scalar<T>
+		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
 		[[nodiscard]] constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, sign_op);
 		}
 
 		template <dimensional_scalar T>
-		requires (!std::unsigned_integral<T>) && non_bool_scalar<T>
+		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
 		[[nodiscard]] constexpr auto sign(T arg) noexcept
 		{
 			return sign_op(arg);
@@ -5318,17 +5326,17 @@ namespace dsga
 
 		// comparison lambdas that return -1 for less than, 0 for equal, and 1 for greater than.
 		// these are for the types that don't work with the sign() function
-		constexpr inline auto unsigned_compare_op = [](std::unsigned_integral auto lhs, std::unsigned_integral auto rhs) noexcept -> int
+		constexpr inline auto unsigned_compare_op = [](unsigned_scalar auto lhs, unsigned_scalar auto rhs) noexcept -> int
 		{ return (lhs < rhs) ? -1 : ((lhs > rhs) ? 1 : 0); };
-		constexpr inline auto signed_unsigned_compare_op = []<std::signed_integral T1, std::unsigned_integral T2>(T1 lhs, T2 rhs) noexcept -> int
+		constexpr inline auto signed_unsigned_compare_op = []<signed_scalar T1, unsigned_scalar T2>(T1 lhs, T2 rhs) noexcept -> int
 		{ return (lhs < 0) ? -1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0)); };
-		constexpr inline auto unsigned_signed_compare_op = []<std::unsigned_integral T1, std::signed_integral T2>(T1 lhs, T2 rhs) noexcept -> int
+		constexpr inline auto unsigned_signed_compare_op = []<unsigned_scalar T1, signed_scalar T2>(T1 lhs, T2 rhs) noexcept -> int
 		{ return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0)); };
 		constexpr inline auto bool_compare_op = [](bool lhs, bool rhs) noexcept -> int
 		{ return static_cast<int>(lhs) - static_cast<int>(rhs); };
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
-		requires (std::signed_integral<T3>)
+		requires (signed_scalar<T3>)
 		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
 												  const vector_base<W2, T2, C, D2> &y,
 												  const vector_base<W3, T3, C, D3> &weights) noexcept
@@ -5341,19 +5349,19 @@ namespace dsga
 			{
 				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(bool_compare_op, x, y)));
 			}
-			else if constexpr (std::signed_integral<T1> && std::signed_integral<T2>)
+			else if constexpr (signed_scalar<T1> && signed_scalar<T2>)
 			{
 				return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
 			}
-			else if constexpr (std::unsigned_integral<T1> && std::unsigned_integral<T2>)
+			else if constexpr (unsigned_scalar<T1> && unsigned_scalar<T2>)
 			{
 				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(unsigned_compare_op, x, y)));
 			}
-			else if constexpr (std::signed_integral<T1> && std::unsigned_integral<T2>)
+			else if constexpr (signed_scalar<T1> && unsigned_scalar<T2>)
 			{
 				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(signed_unsigned_compare_op, x, y)));
 			}
-			else if constexpr (std::unsigned_integral<T1> && std::signed_integral<T2>)
+			else if constexpr (unsigned_scalar<T1> && signed_scalar<T2>)
 			{
 				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(unsigned_signed_compare_op, x, y)));
 			}
@@ -5376,7 +5384,7 @@ namespace dsga
 
 		// interface function for three-way comparison operator for vectors, using user-defined weighting
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
-		requires std::signed_integral<T3>
+		requires signed_scalar<T3>
 		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
 											 const vector_base<W2, T2, C, D2> &y,
 											 const vector_base<W3, T3, C, D3> &weights) noexcept
@@ -5404,7 +5412,7 @@ namespace dsga
 	//
 
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
-	requires std::signed_integral<T3>
+	requires signed_scalar<T3>
 	[[nodiscard]] constexpr auto weighted_compare(const vector_base<W1, T1, C, D1> &first,
 												  const vector_base<W2, T2, C, D2> &second,
 												  const vector_base<W3, T3, C, D3> &weights) noexcept
