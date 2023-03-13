@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 15;
+constexpr inline int DSGA_PATCH_VERSION = 16;
 
 namespace dsga
 {
@@ -3168,13 +3168,13 @@ namespace dsga
 		// return types from executing lambdas on arguments of various types
 
 		template <typename UnOp, dsga::dimensional_scalar T>
-		using unary_op_return_t = decltype(UnOp()(std::declval<T>()));
+		using unary_op_return_t = decltype(std::declval<UnOp>()(std::declval<T>()));
 
 		template <typename BinOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U>
-		using binary_op_return_t = decltype(BinOp()(std::declval<T>(), std::declval<U>()));
+		using binary_op_return_t = decltype(std::declval<BinOp>()(std::declval<T>(), std::declval<U>()));
 
 		template <typename TernOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U, dsga::dimensional_scalar V>
-		using ternary_op_return_t = decltype(TernOp()(std::declval<T>(), std::declval<U>(), std::declval<V>()));
+		using ternary_op_return_t = decltype(std::declval<TernOp>()(std::declval<T>(), std::declval<U>(), std::declval<V>()));
 
 		//
 		// these rely on vector_base::operator[] to have dealt with indirection, if any, of derived vector types.
@@ -5308,55 +5308,61 @@ namespace dsga
 	namespace detail
 	{
 		// helper that evaluates a binary operation lambda
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, typename BinOp>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		[[nodiscard]] constexpr auto binary_op(BinOp lambda,
-											   const vector_base<W1, T, C, D1> &lhs,
-											   const vector_base<W2, T, C, D2> &rhs) noexcept
+											   const vector_base<W1, T1, C, D1> &lhs,
+											   const vector_base<W2, T2, C, D2> &rhs) noexcept
 		{
-			return binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, lambda);
+			return binary_op_execute_no_convert(std::make_index_sequence<C>{}, lhs, rhs, lambda);
 		}
 
 		// comparison lambdas that return -1 for less than, 0 for equal, and 1 for greater than.
 		// these are for the types that don't work with the sign() function
-		constexpr inline auto unsigned_compare_op = [](std::unsigned_integral auto lhs, std::unsigned_integral auto rhs) noexcept -> int { return (lhs < rhs) ? -1 : ((lhs > rhs) ? 1 : 0); };
-		constexpr inline auto bool_compare_op = [](bool lhs, bool rhs) noexcept -> int { return static_cast<int>(lhs) - static_cast<int>(rhs); };
+		constexpr inline auto unsigned_compare_op = [](std::unsigned_integral auto lhs, std::unsigned_integral auto rhs) noexcept -> int
+		{ return (lhs < rhs) ? -1 : ((lhs > rhs) ? 1 : 0); };
+		constexpr inline auto signed_unsigned_compare_op = []<std::signed_integral T1, std::unsigned_integral T2>(T1 lhs, T2 rhs) noexcept -> int
+		{ return (lhs < 0) ? -1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0)); };
+		constexpr inline auto unsigned_signed_compare_op = []<std::unsigned_integral T1, std::signed_integral T2>(T1 lhs, T2 rhs) noexcept -> int
+		{ return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0)); };
+		constexpr inline auto bool_compare_op = [](bool lhs, bool rhs) noexcept -> int
+		{ return static_cast<int>(lhs) - static_cast<int>(rhs); };
 
-		// signed integral comparison
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
-		requires (std::signed_integral<T1> && std::signed_integral<T2>)
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
+		requires (std::signed_integral<T3>)
 		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
 												  const vector_base<W2, T2, C, D2> &y,
 												  const vector_base<W3, T3, C, D3> &weights) noexcept
 		{
-			return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
-		}
+			if constexpr (floating_point_scalar<T1> && floating_point_scalar<T2>)
+			{
+				return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
+			}
+			else if constexpr (std::same_as<bool, T1> && std::same_as<bool, T2>)
+			{
+				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(bool_compare_op, x, y)));
+			}
+			else if constexpr (std::signed_integral<T1> && std::signed_integral<T2>)
+			{
+				return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
+			}
+			else if constexpr (std::unsigned_integral<T1> && std::unsigned_integral<T2>)
+			{
+				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(unsigned_compare_op, x, y)));
+			}
+			else if constexpr (std::signed_integral<T1> && std::unsigned_integral<T2>)
+			{
+				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(signed_unsigned_compare_op, x, y)));
+			}
+			else if constexpr (std::unsigned_integral<T1> && std::signed_integral<T2>)
+			{
+				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(unsigned_signed_compare_op, x, y)));
+			}
+			else
+			{
+				using commontype = std::common_type_t<T1, T2>;
 
-		// unsigned integral comparison
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
-		requires (std::unsigned_integral<T1>)
-		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
-												  const vector_base<W2, T2, C, D2> &y,
-												  const vector_base<W3, T3, C, D3> &weights) noexcept
-		{
-			return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(unsigned_compare_op, x, y)));
-		}
-
-		// bool comparison
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2, bool W3, std::signed_integral T3, typename D3>
-		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, bool, C, D1> &x,
-												  const vector_base<W2, bool, C, D2> &y,
-												  const vector_base<W3, T3, C, D3> &weights) noexcept
-		{
-			return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(bool_compare_op, x, y)));
-		}
-
-		// floating point comparison
-		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
-		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
-												  const vector_base<W2, T2, C, D2> &y,
-												  const vector_base<W3, T3, C, D3> &weights) noexcept
-		{
-			return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
+				return compare_impl(static_cast<dsga::basic_vector<commontype, C>>(x.as_derived()), static_cast<dsga::basic_vector<commontype, C>>(y.as_derived()), weights);
+			}
 		}
 
 		// interface function for three-way comparison operator for vectors, using default weighting
@@ -5369,7 +5375,8 @@ namespace dsga
 		}
 
 		// interface function for three-way comparison operator for vectors, using user-defined weighting
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
+		requires std::signed_integral<T3>
 		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
 											 const vector_base<W2, T2, C, D2> &y,
 											 const vector_base<W3, T3, C, D3> &weights) noexcept
@@ -5396,7 +5403,8 @@ namespace dsga
 	// This comparison uses exact data, not fuzzy equality within a tolerance.
 	//
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, std::signed_integral T3, typename D3>
+	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
+	requires std::signed_integral<T3>
 	[[nodiscard]] constexpr auto weighted_compare(const vector_base<W1, T1, C, D1> &first,
 												  const vector_base<W2, T2, C, D2> &second,
 												  const vector_base<W3, T3, C, D3> &weights) noexcept
@@ -5437,7 +5445,8 @@ namespace dsga
 		}
 		else
 		{
-			dsga_constexpr_assert(false, "comparison types must be same class of scalar");
+			using commontype = std::common_type_t<T1, T2>;
+			return weighted_compare(static_cast<basic_vector<commontype, C>>(first), static_cast<basic_vector<commontype, C>>(second), weights);
 		}
 	}
 
@@ -5461,6 +5470,7 @@ namespace dsga
 	// these have a scalar result and are useful for unit testing.
 	//
 
+	// implicitly_convertible_to does not work with bool, so need another function for that case
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
 	requires implicitly_convertible_to<T2, T1>
 	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
@@ -5470,6 +5480,15 @@ namespace dsga
 		{
 			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
 		}(std::make_index_sequence<C>{});
+	}
+
+	// implicitly_convertible_to does not work with bool, so we need this version
+	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+	requires (!std::same_as<bool, T>)
+	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
+							   const vector_base<W2, bool, C, D2> &second) noexcept
+	{
+		return first == static_cast<basic_vector<T, C>>(second);
 	}
 
 	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
@@ -5482,14 +5501,14 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
-	// when Count == 1, treat it like a scalar value
+	// when Count == 1, treat it like a scalar value for equality comparison
 	template <bool W, dimensional_scalar T, typename D, dimensional_scalar U>
-	requires (std::same_as<T, bool> == std::same_as<U, bool>)
+	requires std::convertible_to<U, T> || std::convertible_to<T, U>
 	constexpr bool operator ==(const vector_base<W, T, 1u, D> &first,
 							   U second) noexcept
 	{
-		using CommonType = std::common_type_t<T, U>;
-		return !std::isunordered(first[0u], second) && (static_cast<CommonType>(first[0u]) == static_cast<CommonType>(second));
+		using commontype = std::common_type_t<T, U>;
+		return (static_cast<commontype>(first[0u]) == static_cast<commontype>(second));
 	}
 
 	//

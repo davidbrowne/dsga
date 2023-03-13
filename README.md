@@ -186,9 +186,9 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.9.15`
+Current version: `v0.9.16`
 
-* **All the vector and matrix functionality is implemented.**
+* **All the intended vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
 * [Released v0.9.0](https://github.com/davidbrowne/dsga/releases/tag/v0.9.0)
 
@@ -216,22 +216,22 @@ The tests have been most recently run on:
 * **MSVC 2022 - v17.5**
 
 ```
-[doctest] doctest version is "2.4.9"
+[doctest] doctest version is "2.4.10"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2066 | 2066 passed | 0 failed |
+[doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
+[doctest] assertions: 2440 | 2440 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **gcc 12.2.0** on Windows, [MinGW](https://github.com/niXman/mingw-builds-binaries) distribution:
 
 ```
-[doctest] doctest version is "2.4.9"
+[doctest] doctest version is "2.4.10"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2066 | 2066 passed | 0 failed |
+[doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
+[doctest] assertions: 2440 | 2440 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -240,11 +240,11 @@ The tests have been most recently run on:
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.9"
+[doctest] doctest version is "2.4.10"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2050 | 2050 passed | 0 failed |
+[doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
+[doctest] assertions: 2424 | 2424 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -253,11 +253,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 12.1.0**
 
 ```
-[doctest] doctest version is "2.4.9"
+[doctest] doctest version is "2.4.10"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2066 | 2066 passed | 0 failed |
+[doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
+[doctest] assertions: 2440 | 2440 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -266,11 +266,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.9"
+[doctest] doctest version is "2.4.10"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:   89 |   89 passed | 0 failed | 0 skipped
-[doctest] assertions: 2050 | 2050 passed | 0 failed |
+[doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
+[doctest] assertions: 2424 | 2424 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

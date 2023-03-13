@@ -355,6 +355,7 @@ The vector operators all work component-wise.
 * ```operator ^=```
 
 #### Comparison Operators - not in GLSL
+The comparisons are not very strict. They also work when comparing types where one is convertible to the other. The component count must be the same, except when comparing a length 1 vector with a scalar.
 * ```operator ==```
 * ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
 * ```operator <=>``` - lexicographic comparison of x, y, z, w components in that order (assuming vectors of length 4)
