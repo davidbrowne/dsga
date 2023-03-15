@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 17;
+constexpr inline int DSGA_PATCH_VERSION = 18;
 
 namespace dsga
 {
@@ -5327,13 +5327,24 @@ namespace dsga
 		// comparison lambdas that return -1 for less than, 0 for equal, and 1 for greater than.
 		// these are for the types that don't work with the sign() function
 		constexpr inline auto unsigned_compare_op = [](unsigned_scalar auto lhs, unsigned_scalar auto rhs) noexcept -> int
-		{ return (lhs < rhs) ? -1 : ((lhs > rhs) ? 1 : 0); };
+		{
+			return (lhs < rhs) ? -1 : ((lhs > rhs) ? 1 : 0);
+		};
+
 		constexpr inline auto signed_unsigned_compare_op = []<signed_scalar T1, unsigned_scalar T2>(T1 lhs, T2 rhs) noexcept -> int
-		{ return (lhs < 0) ? -1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0)); };
+		{
+			return (lhs < 0) ? -1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
+		};
+
 		constexpr inline auto unsigned_signed_compare_op = []<unsigned_scalar T1, signed_scalar T2>(T1 lhs, T2 rhs) noexcept -> int
-		{ return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0)); };
+		{
+			return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
+		};
+
 		constexpr inline auto bool_compare_op = [](bool lhs, bool rhs) noexcept -> int
-		{ return static_cast<int>(lhs) - static_cast<int>(rhs); };
+		{
+			return static_cast<int>(lhs) - static_cast<int>(rhs);
+		};
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
 		requires (signed_scalar<T3>)
@@ -5367,8 +5378,10 @@ namespace dsga
 			}
 			else
 			{
-				using commontype = std::common_type_t<T1, T2>;
+				// bool shouldn't compare with the numeric types
+				static_assert(!(std::same_as<bool, T1> || std::same_as<bool, T2>), "bad comparison types");
 
+				using commontype = std::common_type_t<T1, T2>;
 				return compare_impl(static_cast<dsga::basic_vector<commontype, C>>(x.as_derived()), static_cast<dsga::basic_vector<commontype, C>>(y.as_derived()), weights);
 			}
 		}
@@ -5432,6 +5445,10 @@ namespace dsga
 				return std::strong_ordering::equal;
 			}
 		}
+		else if constexpr (std::same_as<bool, T1> || std::same_as<bool, T2>)
+		{
+			static_assert(!(std::same_as<bool, T1> || std::same_as<bool, T2>), "bad comparison types");
+		}
 		else if constexpr (std::floating_point<T1> && std::floating_point<T2>)
 		{
 			// if any component of either inputs is a NaN, then it is unordered
@@ -5478,7 +5495,7 @@ namespace dsga
 	// these have a scalar result and are useful for unit testing.
 	//
 
-	// implicitly_convertible_to does not work with bool, so need another function for that case
+	// implicitly_convertible_to does not work with bool, so need another function for that case if we want to support that (which we don't)
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
 	requires implicitly_convertible_to<T2, T1>
 	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
@@ -5488,15 +5505,6 @@ namespace dsga
 		{
 			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
 		}(std::make_index_sequence<C>{});
-	}
-
-	// implicitly_convertible_to does not work with bool, so we need this version
-	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-	requires (!std::same_as<bool, T>)
-	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
-							   const vector_base<W2, bool, C, D2> &second) noexcept
-	{
-		return first == static_cast<basic_vector<T, C>>(second);
 	}
 
 	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>

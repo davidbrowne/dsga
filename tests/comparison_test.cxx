@@ -299,12 +299,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1, is2);
 			CHECK_LE(is1, is1);
 			CHECK_GE(is1, is1);
+			CHECK_LE(bs1, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1, us1);
 			CHECK_EQ(is1, fs1);
-			CHECK_EQ(is1, bs1);
-			CHECK_EQ(bs1, fs1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1, us2);
@@ -317,12 +316,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1, fs3);
 			CHECK_GT(is1, fs2);
 			CHECK_GE(is1, fs2);
-
-			CHECK_LT(is1, bs2);
-			CHECK_LE(is1, bs2);
-			CHECK_GT(bs2, is1);
-			CHECK_GE(is3, bs1);
-			CHECK_LE(is1, bs1);
 		}
 
 		SUBCASE("2D basic_vector <=> comparisons")
@@ -345,12 +338,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(iv1, iv2);
 			CHECK_LE(iv1, iv1);
 			CHECK_GE(iv1, iv1);
+			CHECK_LE(bv1, bv2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(iv1, uv1);
 			CHECK_EQ(iv1, fv1);
-			CHECK_EQ(iv1, bv1);
-			CHECK_EQ(bv1, fv1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(iv1, uv2);
@@ -363,12 +355,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(iv1, fv3);
 			CHECK_GT(iv1, fv2);
 			CHECK_GE(iv1, fv2);
-
-			CHECK_LT(iv1, bv2);
-			CHECK_LE(iv1, bv2);
-			CHECK_GT(bv2, iv1);
-			CHECK_GE(iv3, bv1);
-			CHECK_LE(iv1, bv1);
 		}
 
 		SUBCASE("3D basic_vector <=> comparisons")
@@ -391,12 +377,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(iv1, iv2);
 			CHECK_LE(iv1, iv1);
 			CHECK_GE(iv1, iv1);
+			CHECK_LE(bv1, bv2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(iv1, uv1);
 			CHECK_EQ(iv1, fv1);
-			CHECK_EQ(iv1, bv1);
-			CHECK_EQ(bv1, fv1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(iv1, uv2);
@@ -409,12 +394,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(iv1, fv3);
 			CHECK_GT(iv1, fv2);
 			CHECK_GE(iv1, fv2);
-
-			CHECK_LT(iv1, bv2);
-			CHECK_LE(iv1, bv2);
-			CHECK_GT(bv2, iv1);
-			CHECK_GE(iv3, bv1);
-			CHECK_LE(iv1, bv1);
 		}
 
 		SUBCASE("4D basic_vector <=> comparisons")
@@ -437,12 +416,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(iv1, iv2);
 			CHECK_LE(iv1, iv1);
 			CHECK_GE(iv1, iv1);
+			CHECK_LE(bv1, bv2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(iv1, uv1);
 			CHECK_EQ(iv1, fv1);
-			CHECK_EQ(iv1, bv1);
-			CHECK_EQ(bv1, fv1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(iv1, uv2);
@@ -455,12 +433,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(iv1, fv3);
 			CHECK_GT(iv1, fv2);
 			CHECK_GE(iv1, fv2);
-
-			CHECK_LT(iv1, bv2);
-			CHECK_LE(iv1, bv2);
-			CHECK_GT(bv2, iv1);
-			CHECK_GE(iv3, bv1);
-			CHECK_LE(iv1, bv1);
 		}
 	}
 
@@ -486,12 +458,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.x, is2.x);
 			CHECK_LE(is1.x, is1.x);
 			CHECK_GE(is1.x, is1.x);
+			CHECK_LE(bs1.x, bs2.x);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.x, us1.x);
 			CHECK_EQ(is1.x, fs1.x);
-			CHECK_EQ(is1.x, bs1.x);
-			CHECK_EQ(bs1.x, fs1.x);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.x, us2.x);
@@ -504,12 +475,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.x, fs3.x);
 			CHECK_GT(is1.x, fs2.x);
 			CHECK_GE(is1.x, fs2.x);
-
-			CHECK_LT(is1.x, bs2.x);
-			CHECK_LE(is1.x, bs2.x);
-			CHECK_GT(bs2.x, is1.x);
-			CHECK_GE(is3.x, bs1.x);
-			CHECK_LE(is1.x, bs1.x);
 		}
 
 		SUBCASE("2D indexed_vector <=> comparison")
@@ -532,12 +497,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xx, is2.xx);
 			CHECK_LE(is1.xx, is1.xx);
 			CHECK_GE(is1.xx, is1.xx);
+			CHECK_LE(bs1.xx, bs2.xx);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xx, us1.xx);
 			CHECK_EQ(is1.xx, fs1.xx);
-			CHECK_EQ(is1.xx, bs1.xx);
-			CHECK_EQ(bs1.xx, fs1.xx);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.xx, us2.xx);
@@ -550,12 +514,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.xx, fs3.xx);
 			CHECK_GT(is1.xx, fs2.xx);
 			CHECK_GE(is1.xx, fs2.xx);
-
-			CHECK_LT(is1.xx, bs2.xx);
-			CHECK_LE(is1.xx, bs2.xx);
-			CHECK_GT(bs2.xx, is1.xx);
-			CHECK_GE(is3.xx, bs1.xx);
-			CHECK_LE(is1.xx, bs1.xx);
 		}
 
 		SUBCASE("3D indexed_vector <=> comparison")
@@ -578,12 +536,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxx, is2.xxx);
 			CHECK_LE(is1.xxx, is1.xxx);
 			CHECK_GE(is1.xxx, is1.xxx);
+			CHECK_LE(bs1.xxx, bs2.xxx);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxx, us1.xxx);
 			CHECK_EQ(is1.xxx, fs1.xxx);
-			CHECK_EQ(is1.xxx, bs1.xxx);
-			CHECK_EQ(bs1.xxx, fs1.xxx);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.xxx, us2.xxx);
@@ -596,12 +553,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.xxx, fs3.xxx);
 			CHECK_GT(is1.xxx, fs2.xxx);
 			CHECK_GE(is1.xxx, fs2.xxx);
-
-			CHECK_LT(is1.xxx, bs2.xxx);
-			CHECK_LE(is1.xxx, bs2.xxx);
-			CHECK_GT(bs2.xxx, is1.xxx);
-			CHECK_GE(is3.xxx, bs1.xxx);
-			CHECK_LE(is1.xxx, bs1.xxx);
 		}
 
 		SUBCASE("4D indexed_vector <=> comparison")
@@ -624,12 +575,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxxx, is2.xxxx);
 			CHECK_LE(is1.xxxx, is1.xxxx);
 			CHECK_GE(is1.xxxx, is1.xxxx);
+			CHECK_LE(bs1.xxxx, bs2.xxxx);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxxx, us1.xxxx);
 			CHECK_EQ(is1.xxxx, fs1.xxxx);
-			CHECK_EQ(is1.xxxx, bs1.xxxx);
-			CHECK_EQ(bs1.xxxx, fs1.xxxx);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.xxxx, us2.xxxx);
@@ -642,12 +592,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.xxxx, fs3.xxxx);
 			CHECK_GT(is1.xxxx, fs2.xxxx);
 			CHECK_GE(is1.xxxx, fs2.xxxx);
-
-			CHECK_LT(is1.xxxx, bs2.xxxx);
-			CHECK_LE(is1.xxxx, bs2.xxxx);
-			CHECK_GT(bs2.xxxx, is1.xxxx);
-			CHECK_GE(is3.xxxx, bs1.xxxx);
-			CHECK_LE(is1.xxxx, bs1.xxxx);
 		}
 	}
 
@@ -673,12 +617,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.x, is2);
 			CHECK_LE(is1.x, is1);
 			CHECK_GE(is1.x, is1);
+			CHECK_LE(bs1.x, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.x, us1);
 			CHECK_EQ(is1.x, fs1);
-			CHECK_EQ(is1.x, bs1);
-			CHECK_EQ(bs1.x, fs1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.x, us2);
@@ -691,12 +634,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.x, fs3);
 			CHECK_GT(is1.x, fs2);
 			CHECK_GE(is1.x, fs2);
-
-			CHECK_LT(is1.x, bs2);
-			CHECK_LE(is1.x, bs2);
-			CHECK_GT(bs2.x, is1);
-			CHECK_GE(is3.x, bs1);
-			CHECK_LE(is1.x, bs1);
 		}
 
 		SUBCASE("2D basic_vector with indexed_vector <=> comparisons")
@@ -719,12 +656,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xx, is2);
 			CHECK_LE(is1.xx, is1);
 			CHECK_GE(is1.xx, is1);
+			CHECK_LE(bs1.xx, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xx, us1);
 			CHECK_EQ(is1.xx, fs1);
-			CHECK_EQ(is1.xx, bs1);
-			CHECK_EQ(bs1.xx, fs1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.xx, us2);
@@ -737,12 +673,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.xx, fs3);
 			CHECK_GT(is1.xx, fs2);
 			CHECK_GE(is1.xx, fs2);
-
-			CHECK_LT(is1.xx, bs2);
-			CHECK_LE(is1.xx, bs2);
-			CHECK_GT(bs2.xx, is1);
-			CHECK_GE(is3.xx, bs1);
-			CHECK_LE(is1.xx, bs1);
 		}
 
 		SUBCASE("3D basic_vector with indexed_vector <=> comparisons")
@@ -765,12 +695,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxx, is2);
 			CHECK_LE(is1.xxx, is1);
 			CHECK_GE(is1.xxx, is1);
+			CHECK_LE(bs1.xxx, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxx, us1);
 			CHECK_EQ(is1.xxx, fs1);
-			CHECK_EQ(is1.xxx, bs1);
-			CHECK_EQ(bs1.xxx, fs1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.xxx, us2);
@@ -783,12 +712,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.xxx, fs3);
 			CHECK_GT(is1.xxx, fs2);
 			CHECK_GE(is1.xxx, fs2);
-
-			CHECK_LT(is1.xxx, bs2);
-			CHECK_LE(is1.xxx, bs2);
-			CHECK_GT(bs2.xxx, is1);
-			CHECK_GE(is3.xxx, bs1);
-			CHECK_LE(is1.xxx, bs1);
 		}
 
 		SUBCASE("4D basic_vector with indexed_vector <=> comparisons")
@@ -811,12 +734,11 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxxx, is2);
 			CHECK_LE(is1.xxxx, is1);
 			CHECK_GE(is1.xxxx, is1);
+			CHECK_LE(bs1.xxxx, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxxx, us1);
 			CHECK_EQ(is1.xxxx, fs1);
-			CHECK_EQ(is1.xxxx, bs1);
-			CHECK_EQ(bs1.xxxx, fs1);
 
 			// <=> across different vector type classifications
 			CHECK_LT(is1.xxxx, us2);
@@ -829,12 +751,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_LE(is1.xxxx, fs3);
 			CHECK_GT(is1.xxxx, fs2);
 			CHECK_GE(is1.xxxx, fs2);
-
-			CHECK_LT(is1.xxxx, bs2);
-			CHECK_LE(is1.xxxx, bs2);
-			CHECK_GT(bs2.xxxx, is1);
-			CHECK_GE(is3.xxxx, bs1);
-			CHECK_LE(is1.xxxx, bs1);
 		}
 	}
 
