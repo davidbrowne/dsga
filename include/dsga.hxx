@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 19;
+constexpr inline int DSGA_PATCH_VERSION = 20;
 
 namespace dsga
 {
@@ -994,7 +994,11 @@ namespace dsga
 		template <std::size_t Size, std::size_t ...Is>
 		constexpr inline bool valid_range_indexes = valid_indexes_impl<Size, Is...>::value;
 
-			// compile time min and max functions for std::size_t -- didn't want to overload min() and max() yet again
+		// are types the same size
+		template <typename T, typename U>
+		concept same_sizeof = (sizeof(T) == sizeof(U));
+
+		// compile time min and max functions for std::size_t -- didn't want to overload min() and max() yet again
 		consteval std::size_t min_helper(std::size_t first, std::size_t second) { return second < first ? second : first; };
 		consteval std::size_t max_helper(std::size_t first, std::size_t second) { return second < first ? first : second; };
 
@@ -3707,7 +3711,8 @@ namespace dsga
 
 	// binary operators <<=, <<
 
-	constexpr inline auto lshift_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs << rhs; };
+	constexpr inline auto lshift_op =
+		[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs << rhs); };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
@@ -3767,7 +3772,8 @@ namespace dsga
 
 	// binary operators >>=, >>
 
-	constexpr inline auto rshift_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs >> rhs; };
+	constexpr inline auto rshift_op =
+		[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs >> rhs); };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
@@ -3830,7 +3836,7 @@ namespace dsga
 	constexpr inline auto and_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs & rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
+	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
 	constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
@@ -3839,7 +3845,7 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 	constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
@@ -3848,7 +3854,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T>
+	requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
 	constexpr auto &operator &=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
@@ -3857,7 +3863,7 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
 	[[nodiscard]] constexpr auto operator &(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
@@ -3870,7 +3876,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 	[[nodiscard]] constexpr auto operator &(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
@@ -3878,7 +3884,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 	[[nodiscard]] constexpr auto operator &(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
@@ -3890,7 +3896,7 @@ namespace dsga
 	constexpr inline auto or_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs | rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
+	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
 	constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
@@ -3899,7 +3905,7 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 	constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
@@ -3908,7 +3914,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T>
+	requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
 	constexpr auto &operator |=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
@@ -3917,7 +3923,7 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
 	[[nodiscard]] constexpr auto operator |(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
@@ -3930,7 +3936,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 	[[nodiscard]] constexpr auto operator |(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
@@ -3938,7 +3944,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 	[[nodiscard]] constexpr auto operator |(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
@@ -3950,7 +3956,7 @@ namespace dsga
 	constexpr inline auto xor_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs ^ rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
+	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
 	constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
@@ -3959,7 +3965,7 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
+	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 	constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
 	{
@@ -3968,7 +3974,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T>
+	requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
 	constexpr auto &operator ^=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
@@ -3977,7 +3983,7 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
 	[[nodiscard]] constexpr auto operator ^(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
@@ -3990,7 +3996,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 	[[nodiscard]] constexpr auto operator ^(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
@@ -3998,7 +4004,7 @@ namespace dsga
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 	[[nodiscard]] constexpr auto operator ^(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{

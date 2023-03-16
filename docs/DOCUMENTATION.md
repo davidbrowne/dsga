@@ -326,7 +326,7 @@ These are the members that are not part of the [index interface](#index-interfac
 ### Vector Operators
 The vector operators all work component-wise.
 
-* unary ```operator +```
+* unary ```operator +``` - not in GLSL
 * unary ```operator -```
 * unary ```operator ++``` (pre-increment)
 * unary ```operator ++``` (post-increment)
@@ -534,7 +534,7 @@ These are the members that are not part of the [iterator interface](#iterators),
 ### Matrix Operators
 The matrix operators all work component-wise, except for ```operator *```, which performs linear algebraic functions with vectors and other matrices.
 
-* unary ```operator +```
+* unary ```operator +``` - not in GLSL
 * unary ```operator -```
 * unary ```operator ++``` (pre-increment)
 * unary ```operator ++``` (post-increment)
@@ -547,10 +547,10 @@ The matrix operators all work component-wise, except for ```operator *```, which
    * matrix * vector
    * matrix * matrix
 * binary ```operator /```
-
-#### Comparison Operators - not in GLSL
 * ```operator ==```
 * ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
+
+#### Relational Comparison Operators - not in GLSL
 * ```operator <=>``` - lexicographic comparison of the vectors
 * ```operator <``` - created automatically from ```operator <=>``` in ```c++20```
 * ```operator <=``` - created automatically from ```operator <=>``` in ```c++20```
