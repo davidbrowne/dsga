@@ -186,7 +186,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.9.18`
+Current version: `v0.9.19`
 
 * **All the intended vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -220,7 +220,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
-[doctest] assertions: 2368 | 2368 passed | 0 failed |
+[doctest] assertions: 2356 | 2356 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -231,7 +231,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
-[doctest] assertions: 2368 | 2368 passed | 0 failed |
+[doctest] assertions: 2356 | 2356 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -244,7 +244,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
-[doctest] assertions: 2352 | 2352 passed | 0 failed |
+[doctest] assertions: 2340 | 2340 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -257,7 +257,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
-[doctest] assertions: 2368 | 2368 passed | 0 failed |
+[doctest] assertions: 2356 | 2356 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -270,7 +270,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:   94 |   94 passed | 0 failed | 0 skipped
-[doctest] assertions: 2352 | 2352 passed | 0 failed |
+[doctest] assertions: 2340 | 2340 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

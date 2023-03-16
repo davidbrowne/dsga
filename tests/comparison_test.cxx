@@ -289,8 +289,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fscal	fs1(0);
 			constexpr fscal	fs2(-1);
 			constexpr fscal	fs3(1);
-			constexpr bscal	bs1(false);
-			constexpr bscal	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1, is3);
@@ -299,7 +297,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1, is2);
 			CHECK_LE(is1, is1);
 			CHECK_GE(is1, is1);
-			CHECK_LE(bs1, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1, us1);
@@ -328,8 +325,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr vec2	fv1(0);
 			constexpr vec2	fv2(-1);
 			constexpr vec2	fv3(1);
-			constexpr bvec2	bv1(false);
-			constexpr bvec2	bv2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(iv1, iv3);
@@ -338,7 +333,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(iv1, iv2);
 			CHECK_LE(iv1, iv1);
 			CHECK_GE(iv1, iv1);
-			CHECK_LE(bv1, bv2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(iv1, uv1);
@@ -367,8 +361,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr vec3	fv1(0);
 			constexpr vec3	fv2(-1);
 			constexpr vec3	fv3(1);
-			constexpr bvec3	bv1(false);
-			constexpr bvec3	bv2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(iv1, iv3);
@@ -377,7 +369,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(iv1, iv2);
 			CHECK_LE(iv1, iv1);
 			CHECK_GE(iv1, iv1);
-			CHECK_LE(bv1, bv2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(iv1, uv1);
@@ -406,8 +397,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr vec4	fv1(0);
 			constexpr vec4	fv2(-1);
 			constexpr vec4	fv3(1);
-			constexpr bvec4	bv1(false);
-			constexpr bvec4	bv2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(iv1, iv3);
@@ -416,7 +405,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(iv1, iv2);
 			CHECK_LE(iv1, iv1);
 			CHECK_GE(iv1, iv1);
-			CHECK_LE(bv1, bv2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(iv1, uv1);
@@ -448,8 +436,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fscal	fs1(0);
 			constexpr fscal	fs2(-1);
 			constexpr fscal	fs3(1);
-			constexpr bscal	bs1(false);
-			constexpr bscal	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.x, is3.x);
@@ -458,7 +444,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.x, is2.x);
 			CHECK_LE(is1.x, is1.x);
 			CHECK_GE(is1.x, is1.x);
-			CHECK_LE(bs1.x, bs2.x);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.x, us1.x);
@@ -487,8 +472,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fscal	fs1(0);
 			constexpr fscal	fs2(-1);
 			constexpr fscal	fs3(1);
-			constexpr bscal	bs1(false);
-			constexpr bscal	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.xx, is3.xx);
@@ -497,7 +480,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xx, is2.xx);
 			CHECK_LE(is1.xx, is1.xx);
 			CHECK_GE(is1.xx, is1.xx);
-			CHECK_LE(bs1.xx, bs2.xx);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xx, us1.xx);
@@ -526,8 +508,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fscal	fs1(0);
 			constexpr fscal	fs2(-1);
 			constexpr fscal	fs3(1);
-			constexpr bscal	bs1(false);
-			constexpr bscal	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.xxx, is3.xxx);
@@ -536,7 +516,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxx, is2.xxx);
 			CHECK_LE(is1.xxx, is1.xxx);
 			CHECK_GE(is1.xxx, is1.xxx);
-			CHECK_LE(bs1.xxx, bs2.xxx);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxx, us1.xxx);
@@ -565,8 +544,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fscal	fs1(0);
 			constexpr fscal	fs2(-1);
 			constexpr fscal	fs3(1);
-			constexpr bscal	bs1(false);
-			constexpr bscal	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.xxxx, is3.xxxx);
@@ -575,7 +552,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxxx, is2.xxxx);
 			CHECK_LE(is1.xxxx, is1.xxxx);
 			CHECK_GE(is1.xxxx, is1.xxxx);
-			CHECK_LE(bs1.xxxx, bs2.xxxx);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxxx, us1.xxxx);
@@ -607,8 +583,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fscal	fs1(0);
 			constexpr fscal	fs2(-1);
 			constexpr fscal	fs3(1);
-			constexpr bscal	bs1(false);
-			constexpr bscal	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.x, is3);
@@ -617,7 +591,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.x, is2);
 			CHECK_LE(is1.x, is1);
 			CHECK_GE(is1.x, is1);
-			CHECK_LE(bs1.x, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.x, us1);
@@ -646,8 +619,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fvec2	fs1(0);
 			constexpr fvec2	fs2(-1);
 			constexpr fvec2	fs3(1);
-			constexpr bvec2	bs1(false);
-			constexpr bvec2	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.xx, is3);
@@ -656,7 +627,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xx, is2);
 			CHECK_LE(is1.xx, is1);
 			CHECK_GE(is1.xx, is1);
-			CHECK_LE(bs1.xx, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xx, us1);
@@ -685,8 +655,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fvec3	fs1(0);
 			constexpr fvec3	fs2(-1);
 			constexpr fvec3	fs3(1);
-			constexpr bvec3	bs1(false);
-			constexpr bvec3	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.xxx, is3);
@@ -695,7 +663,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxx, is2);
 			CHECK_LE(is1.xxx, is1);
 			CHECK_GE(is1.xxx, is1);
-			CHECK_LE(bs1.xxx, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxx, us1);
@@ -724,8 +691,6 @@ TEST_SUITE("test <=> comparisons")
 			constexpr fvec4	fs1(0);
 			constexpr fvec4	fs2(-1);
 			constexpr fvec4	fs3(1);
-			constexpr bvec4	bs1(false);
-			constexpr bvec4	bs2(true);
 
 			// <=> within a vector type classification
 			CHECK_LT(is1.xxxx, is3);
@@ -734,7 +699,6 @@ TEST_SUITE("test <=> comparisons")
 			CHECK_GE(is1.xxxx, is2);
 			CHECK_LE(is1.xxxx, is1);
 			CHECK_GE(is1.xxxx, is1);
-			CHECK_LE(bs1.xxxx, bs2);
 
 			// equality across different vector type classifications
 			CHECK_EQ(is1.xxxx, us1);

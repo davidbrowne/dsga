@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 18;
+constexpr inline int DSGA_PATCH_VERSION = 19;
 
 namespace dsga
 {
@@ -3396,9 +3396,9 @@ namespace dsga
 
 	// binary operators +=, +
 
-	constexpr inline auto plus_op = [](auto lhs, auto rhs) noexcept { return lhs + rhs; };
+	constexpr inline auto plus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs + rhs; };
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
@@ -3407,7 +3407,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
@@ -3416,7 +3416,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator +=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
@@ -3425,7 +3425,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1, bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
 	[[nodiscard]] constexpr auto operator +(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
@@ -3438,7 +3438,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], plus_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator +(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
@@ -3446,7 +3446,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, plus_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator +(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
@@ -3456,9 +3456,9 @@ namespace dsga
 
 	// binary operators -=, -
 
-	constexpr inline auto minus_op = [](auto lhs, auto rhs) noexcept { return lhs - rhs; };
+	constexpr inline auto minus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs - rhs; };
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
@@ -3467,7 +3467,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
@@ -3476,7 +3476,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator -=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
@@ -3485,7 +3485,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1, bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
 	[[nodiscard]] constexpr auto operator -(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
@@ -3498,7 +3498,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], minus_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
@@ -3506,7 +3506,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, minus_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator -(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
@@ -3516,9 +3516,9 @@ namespace dsga
 
 	// binary operators *=, *
 
-	constexpr inline auto times_op = [](auto lhs, auto rhs) noexcept { return lhs * rhs; };
+	constexpr inline auto times_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs * rhs; };
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
@@ -3527,7 +3527,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
@@ -3536,7 +3536,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator *=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
@@ -3545,7 +3545,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1, bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
 	[[nodiscard]] constexpr auto operator *(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
@@ -3558,7 +3558,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], times_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator *(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
@@ -3566,7 +3566,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, times_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator *(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
@@ -3576,9 +3576,9 @@ namespace dsga
 
 	// binary operators /=, /
 
-	constexpr inline auto div_op = [](auto lhs, auto rhs) noexcept { return lhs / rhs; };
+	constexpr inline auto div_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs / rhs; };
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
@@ -3587,7 +3587,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
@@ -3596,7 +3596,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator /=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
@@ -3605,7 +3605,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W1, dimensional_scalar T1, std::size_t C1, typename D1, bool W2, dimensional_scalar T2, std::size_t C2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
 	[[nodiscard]] constexpr auto operator /(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
@@ -3618,7 +3618,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], div_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator /(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
@@ -3626,7 +3626,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, div_op);
 	}
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D, typename U>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator /(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
@@ -3697,7 +3697,7 @@ namespace dsga
 
 	// unary operator ~
 
-	constexpr inline auto bit_not_op = [](auto arg) noexcept { return ~arg; };
+	constexpr inline auto bit_not_op = [](numeric_integral_scalar auto arg) noexcept { return ~arg; };
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator ~(const vector_base<W, T, C, D> &arg) noexcept
@@ -3707,7 +3707,7 @@ namespace dsga
 
 	// binary operators <<=, <<
 
-	constexpr inline auto lshift_op = [](auto lhs, auto rhs) noexcept { return lhs << rhs; };
+	constexpr inline auto lshift_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs << rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
@@ -3727,7 +3727,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator <<=(vector_base<W, T, C, D> &lhs,
 								 U rhs) noexcept
@@ -3749,7 +3749,7 @@ namespace dsga
 			return detail::binary_op_execute_no_convert(std::make_index_sequence<C1>{}, lhs, rhs[0u], lshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator <<(const vector_base<W, T, C, D> &lhs,
 											 U rhs) noexcept
@@ -3757,7 +3757,7 @@ namespace dsga
 		return detail::binary_op_execute_no_convert(std::make_index_sequence<C>{}, lhs, rhs, lshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator <<(U lhs,
 											 const vector_base<W, T, C, D> &rhs) noexcept
@@ -3767,7 +3767,7 @@ namespace dsga
 
 	// binary operators >>=, >>
 
-	constexpr inline auto rshift_op = [](auto lhs, auto rhs) noexcept { return lhs >> rhs; };
+	constexpr inline auto rshift_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs >> rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
@@ -3787,7 +3787,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator >>=(vector_base<W, T, C, D> &lhs,
 								 U rhs) noexcept
@@ -3809,7 +3809,7 @@ namespace dsga
 			return detail::binary_op_execute_no_convert(std::make_index_sequence<C1>{}, lhs, rhs[0u], rshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator >>(const vector_base<W, T, C, D> &lhs,
 											 U rhs) noexcept
@@ -3817,7 +3817,7 @@ namespace dsga
 		return detail::binary_op_execute_no_convert(std::make_index_sequence<C>{}, lhs, rhs, rshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator >>(U lhs,
 											 const vector_base<W, T, C, D> &rhs) noexcept
@@ -3827,7 +3827,7 @@ namespace dsga
 
 	// binary operators &=, &
 
-	constexpr inline auto and_op = [](auto lhs, auto rhs) noexcept { return lhs & rhs; };
+	constexpr inline auto and_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs & rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
@@ -3847,7 +3847,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator &=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
@@ -3869,7 +3869,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], and_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator &(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
@@ -3877,7 +3877,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, and_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator &(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
@@ -3887,7 +3887,7 @@ namespace dsga
 
 	// binary operators |=, |
 
-	constexpr inline auto or_op = [](auto lhs, auto rhs) noexcept { return lhs | rhs; };
+	constexpr inline auto or_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs | rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
@@ -3907,7 +3907,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator |=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
@@ -3929,7 +3929,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], or_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator |(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
@@ -3937,7 +3937,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, or_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator |(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
@@ -3947,7 +3947,7 @@ namespace dsga
 
 	// binary operators ^=, ^
 
-	constexpr inline auto xor_op = [](auto lhs, auto rhs) noexcept { return lhs ^ rhs; };
+	constexpr inline auto xor_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs ^ rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
@@ -3967,7 +3967,7 @@ namespace dsga
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator ^=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
@@ -3989,7 +3989,7 @@ namespace dsga
 			return detail::binary_op_execute(std::make_index_sequence<C1>{}, lhs, rhs[0u], xor_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator ^(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
@@ -3997,7 +3997,7 @@ namespace dsga
 		return detail::binary_op_execute(std::make_index_sequence<C>{}, lhs, rhs, xor_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, std::integral U>
+	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator ^(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
@@ -4007,8 +4007,7 @@ namespace dsga
 
 	// unary operator +
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires non_bool_scalar<T>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator +(const vector_base<W, T, C, D> &arg) noexcept
 	{
 		return basic_vector<T, C>(arg);					// no-op copy
@@ -4016,10 +4015,9 @@ namespace dsga
 
 	// unary operator -
 
-	constexpr inline auto neg_op = [](auto arg) noexcept { return -arg; };
+	constexpr inline auto neg_op = [](non_bool_scalar auto arg) noexcept { return -arg; };
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires non_bool_scalar<T>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &arg) noexcept
 	{
 		return detail::unary_op_execute(std::make_index_sequence<C>{}, arg, neg_op);
@@ -4028,8 +4026,8 @@ namespace dsga
 	// unary operators ++
 
 	// pre-increment
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires W && non_bool_scalar<T>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D>
+	requires W
 	constexpr auto &operator ++(vector_base<W, T, C, D> &arg) noexcept
 	{
 		arg += T(1);
@@ -4037,8 +4035,8 @@ namespace dsga
 	}
 
 	// post-increment
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires W && non_bool_scalar<T>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D>
+	requires W
 	constexpr auto operator ++(vector_base<W, T, C, D> &arg, int) noexcept
 	{
 		basic_vector<T, C> value(arg);
@@ -4049,8 +4047,8 @@ namespace dsga
 	// unary operators --
 
 	// pre-decrement
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires W && non_bool_scalar<T>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D>
+	requires W
 	constexpr auto &operator --(vector_base<W, T, C, D> &arg) noexcept
 	{
 		arg -= T(1);
@@ -4058,8 +4056,8 @@ namespace dsga
 	}
 
 	// post-decrement
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires W && non_bool_scalar<T>
+	template <bool W, non_bool_scalar T, std::size_t C, typename D>
+	requires W
 	constexpr auto operator --(vector_base<W, T, C, D> &arg, int) noexcept
 	{
 		basic_vector<T, C> value(arg);
@@ -5341,12 +5339,7 @@ namespace dsga
 			return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
 		};
 
-		constexpr inline auto bool_compare_op = [](bool lhs, bool rhs) noexcept -> int
-		{
-			return static_cast<int>(lhs) - static_cast<int>(rhs);
-		};
-
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
+		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
 		requires (signed_scalar<T3>)
 		[[nodiscard]] constexpr auto compare_impl(const vector_base<W1, T1, C, D1> &x,
 												  const vector_base<W2, T2, C, D2> &y,
@@ -5355,10 +5348,6 @@ namespace dsga
 			if constexpr (floating_point_scalar<T1> && floating_point_scalar<T2>)
 			{
 				return functions::innerProduct(weights, basic_vector<T3, C>(functions::sign(x - y)));
-			}
-			else if constexpr (std::same_as<bool, T1> && std::same_as<bool, T2>)
-			{
-				return functions::innerProduct(weights, basic_vector<T3, C>(binary_op(bool_compare_op, x, y)));
 			}
 			else if constexpr (signed_scalar<T1> && signed_scalar<T2>)
 			{
@@ -5378,16 +5367,13 @@ namespace dsga
 			}
 			else
 			{
-				// bool shouldn't compare with the numeric types
-				static_assert(!(std::same_as<bool, T1> || std::same_as<bool, T2>), "bad comparison types");
-
 				using commontype = std::common_type_t<T1, T2>;
 				return compare_impl(static_cast<dsga::basic_vector<commontype, C>>(x.as_derived()), static_cast<dsga::basic_vector<commontype, C>>(y.as_derived()), weights);
 			}
 		}
 
 		// interface function for three-way comparison operator for vectors, using default weighting
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
 											 const vector_base<W2, T2, C, D2> &y) noexcept
 		{
@@ -5396,7 +5382,7 @@ namespace dsga
 		}
 
 		// interface function for three-way comparison operator for vectors, using user-defined weighting
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
+		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
 		requires signed_scalar<T3>
 		[[nodiscard]] constexpr auto compare(const vector_base<W1, T1, C, D1> &x,
 											 const vector_base<W2, T2, C, D2> &y,
@@ -5424,7 +5410,7 @@ namespace dsga
 	// This comparison uses exact data, not fuzzy equality within a tolerance.
 	//
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
 	requires signed_scalar<T3>
 	[[nodiscard]] constexpr auto weighted_compare(const vector_base<W1, T1, C, D1> &first,
 												  const vector_base<W2, T2, C, D2> &second,
@@ -5444,10 +5430,6 @@ namespace dsga
 			{
 				return std::strong_ordering::equal;
 			}
-		}
-		else if constexpr (std::same_as<bool, T1> || std::same_as<bool, T2>)
-		{
-			static_assert(!(std::same_as<bool, T1> || std::same_as<bool, T2>), "bad comparison types");
 		}
 		else if constexpr (std::floating_point<T1> && std::floating_point<T2>)
 		{
@@ -5480,8 +5462,10 @@ namespace dsga
 	// all components are compared up front though, so it doesn't just stop checking when it finds the
 	// first component that compares as not equal/equivalent.
 	//
+	// not in GLSL
+	//
 
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
+	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	constexpr auto operator <=>(const vector_base<W1, T1, C, D1> &first,
 								const vector_base<W2, T2, C, D2> &second) noexcept
 	{
