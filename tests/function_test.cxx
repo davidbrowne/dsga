@@ -32,8 +32,8 @@ constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, floa
 	}(std::make_index_sequence<2u>{});
 }
 
-// operators are implemented without regard to any specific dimension, so we can test generically
-TEST_SUITE("test operators")
+// functions are implemented without regard to any specific dimension (except geometric functions), so we can test generically
+TEST_SUITE("test functions")
 {
 	TEST_CASE("vector angle and trigonometry functions")
 	{
@@ -612,5 +612,85 @@ TEST_SUITE("test operators")
 		// determinant()
 		const auto det = determinant(some4x4);
 		CHECK_EQ(det, 2);
+	}
+}
+
+// T func(const T&)
+double apply_test_func(const double &val)
+{
+	return val * 25;
+}
+
+TEST_SUITE("valarray-style vector member functions")
+{
+	TEST_CASE("vector apply()")
+	{
+		auto apply_input = dsga::dvec4(0, 1, 2, 3);
+
+		// T func(T)
+		CHECK_EQ(apply_input.apply([](double val) -> double { return val * 5; }), dsga::dvec4(0, 5, 10, 15));
+		CHECK_EQ(apply_input.xwyz.apply([](double val) -> double { return val * 5; }), dsga::dvec4(0, 15, 5, 10));
+		CHECK_EQ(apply_input.apply([](double val) -> double { return std::sin(val); }), dsga::sin(apply_input));
+
+		// T func(const T&)
+		CHECK_EQ(apply_input.apply([](const double &val) -> double { return val * 25; }), dsga::dvec4(0, 25, 50, 75));
+		CHECK_EQ(apply_input.apply(apply_test_func), dsga::dvec4(0, 25, 50, 75));
+	}
+
+	TEST_CASE("vector shift()")
+	{
+		auto shift_input = dsga::ivec4(1, 2, 3, 4);
+
+		CHECK_EQ(shift_input.shift(13), dsga::ivec4(0));
+		CHECK_EQ(shift_input.shift(11), dsga::ivec4(0));
+		CHECK_EQ(shift_input.shift(3), dsga::ivec4(4, 0, 0, 0));
+		CHECK_EQ(shift_input.shift(1), dsga::ivec4(2, 3, 4, 0));
+		CHECK_EQ(shift_input.shift(0), shift_input);
+		CHECK_EQ(shift_input.shift(-1), dsga::ivec4(0, 1, 2, 3));
+		CHECK_EQ(shift_input.shift(-3), dsga::ivec4(0, 0, 0, 1));
+		CHECK_EQ(shift_input.shift(-11), dsga::ivec4(0));
+		CHECK_EQ(shift_input.shift(-13), dsga::ivec4(0));
+	}
+
+	TEST_CASE("vector cshift()")
+	{
+		auto cshift_input = dsga::ivec4(1, 2, 3, 4);
+
+		CHECK_EQ(cshift_input.cshift(13), dsga::ivec4(2, 3, 4, 1));
+		CHECK_EQ(cshift_input.cshift(11), dsga::ivec4(4, 1, 2, 3));
+		CHECK_EQ(cshift_input.cshift(3), dsga::ivec4(4, 1, 2, 3));
+		CHECK_EQ(cshift_input.cshift(1), dsga::ivec4(2, 3, 4, 1));
+		CHECK_EQ(cshift_input.cshift(0), cshift_input);
+		CHECK_EQ(cshift_input.cshift(-1), dsga::ivec4(4, 1, 2, 3));
+		CHECK_EQ(cshift_input.cshift(-3), dsga::ivec4(2, 3, 4, 1));
+		CHECK_EQ(cshift_input.cshift(-11), dsga::ivec4(2, 3, 4, 1));
+		CHECK_EQ(cshift_input.cshift(-13), dsga::ivec4(4, 1, 2, 3));
+	}
+
+	TEST_CASE("vector min()")
+	{
+		CHECK_EQ(dsga::ivec4(-1, 10, 2, -8).min(), -8);
+
+		CHECK_UNARY(std::isnan(dsga::basic_vector{std::numeric_limits<double>::quiet_NaN(), 2., 3., 4.}.min()));
+		CHECK_EQ(dsga::basic_vector{1., std::numeric_limits<double>::quiet_NaN(), 3., 4.}.min(), 1.);
+		CHECK_EQ(dsga::basic_vector{1., 2., 3., std::numeric_limits<double>::quiet_NaN()}.min(), 1.);
+	}
+
+	TEST_CASE("vector max()")
+	{
+		CHECK_EQ(dsga::ivec4(-1, 10, 2, -8).max(), 10);
+
+		CHECK_UNARY(std::isnan(dsga::basic_vector{std::numeric_limits<double>::quiet_NaN(), 2., 3., 4.}.max()));
+		CHECK_EQ(dsga::basic_vector{1., std::numeric_limits<double>::quiet_NaN(), 3., 4.}.max(), 4.);
+		CHECK_EQ(dsga::basic_vector{1., 2., 3., std::numeric_limits<double>::quiet_NaN()}.max(), 3.);
+	}
+
+	TEST_CASE("vector sum()")
+	{
+		CHECK_EQ(dsga::ivec4(-1, 10, 2, -8).sum(), 3);
+
+		CHECK_UNARY(std::isnan(dsga::basic_vector{std::numeric_limits<double>::quiet_NaN(), 2., 3.}.sum()));
+		CHECK_UNARY(std::isnan(dsga::basic_vector{1., std::numeric_limits<double>::quiet_NaN(), 3.}.sum()));
+		CHECK_UNARY(std::isnan(dsga::basic_vector{1., 2., std::numeric_limits<double>::quiet_NaN()}.sum()));
 	}
 }

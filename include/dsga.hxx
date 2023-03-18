@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 9;
-constexpr inline int DSGA_PATCH_VERSION = 20;
+constexpr inline int DSGA_PATCH_VERSION = 21;
 
 namespace dsga
 {
@@ -1152,6 +1152,22 @@ namespace dsga
 	template <dimensional_scalar T, dimensional_scalar ...U>
 	storage_wrapper(T, U...) -> storage_wrapper<T, 1 + sizeof...(U)>;
 
+	// basic_vector will act as the primary vector class in this library.
+	//
+	// T is the type of the elements stored in the vector/storage
+	// Size is number of elements referencable in vector/storage
+
+	// the foundational vector type for dsga
+	// 
+	// template parameters:
+	//
+	//		T - the scalar type stored
+	//		Size - the number of actual elements in storage
+	//
+	template <dimensional_scalar T, std::size_t Size>
+	requires dimensional_storage<T, Size>
+	struct basic_vector;
+
 	//
 	// This is a CRTP base struct for the vector structs, primarily for data access.
 	// It will help with arithmetic operators, compound assignment operators, and functions.
@@ -1175,13 +1191,71 @@ namespace dsga
 	//
 	// https://yuml.me/diagram/scruffy/class/draw
 	//
-	//[vector_base; set(); operator_brackets(); data(); sequence(); length(); size(); as_derived(); iterators | Count(template parameter)] ^ [<< vector duck type >> basic_vector | anonymous union]
-	//[vector_base] ^ [<< vector duck type >> indexed_vector]
-	//[<< vector duck type>>|set(); operator_brackets(); data(); sequence(); iterators] ^ -. - [basic_vector]
-	//[<< vector duck type >> ] ^ -. - [indexed_vector]
-	//[basic_vector]++ - * > [indexed_vector]
-	//[basic_vector]++ - 1 > [storage_wrapper]
+	//[vector_base; set(); operator_brackets(); data(); sequence(); length(); size(); as_derived(); apply(); shift(); cshift(); min(); max(); sum(); iterators | Count(template parameter)] ^ [<< vector duck type >> basic_vector | anonymous union][vector_base] ^ [<< vector duck type >> indexed_vector]
+	//	[<< vector duck type>>|set(); operator_brackets(); data(); sequence(); iterators] ^ -. - [basic_vector]
+	//	[<< vector duck type >> ] ^ -. - [indexed_vector]
+	//	[basic_vector]++ - * > [indexed_vector]
+	//	[basic_vector]++ - 1 > [storage_wrapper]
 	//
+
+	// https://www.planttext.com/
+	//@startuml
+	//	skin rose
+	//	title Relationships - Class Diagram
+	//interface vector_duck_type
+	//{
+	//	+set()
+	//		+ operator[]()
+	//		+ data()
+	//		+ sequence()
+	//		+ iterators()
+	//}
+	//interface vector_base
+	//{
+	//	+set()
+	//		+ operator[]()
+	//		+ data()
+	//		+ sequence()
+	//		+ length()
+	//		+ size()
+	//		+ as_derived()
+	//		+ iterators()
+	//		+ apply()
+	//		+ shift()
+	//		+ cshift()
+	//		+ min()
+	//		+ max()
+	//		+ sum()
+	//}
+	//class basic_vector
+	//{
+	//	+swizzles
+	//		+ set()
+	//		+ operator[]()
+	//		+ data()
+	//		+ sequence()
+	//		+ iterators()
+	//}
+	//class storage_wrapper
+	//{
+	//	+store
+	//}
+	//class indexed_vector
+	//{
+	//	+base
+	//		+ set()
+	//		+ operator[]()
+	//		+ data()
+	//		+ sequence()
+	//		+ iterators()
+	//}
+	//vector_base < | -down - basic_vector: inherits
+	//	vector_base < | -down - indexed_vector : inherits
+	//	vector_duck_type ^ ..  basic_vector : implements
+	//	vector_duck_type ^ ..  indexed_vector : implements
+	//	basic_vector "many" * -down - "1" storage_wrapper : has
+	//	basic_vector "many" * -down - "*" indexed_vector : has
+	//@enduml
 
 	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 	requires dimensional_storage<T, Count>
@@ -1230,23 +1304,72 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() noexcept			{ return this->as_derived().rend(); }
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return this->as_derived().crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+
+		//
+		// functions similar to std::valarray
+		//
+
+		// UnOp is a lambda or callable that takes either a "T" or a "const T &", and it returns a T
+		template <typename UnOp>
+		requires (std::same_as<T, decltype(std::declval<UnOp>()(std::declval<T>()))> || std::same_as<T, decltype(std::declval<UnOp>()(std::declval<const T &>()))>)
+		[[nodiscard]] basic_vector<T, Count> apply(UnOp op) const
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return basic_vector<T, Count>(op((*this)[Is]) ...);
+			}(std::make_index_sequence<Count>());
+		}
+
+		// positive count is left shift, negative count is right shift
+		[[nodiscard]] constexpr basic_vector<T, Count> shift(int by) const noexcept
+		{
+			constexpr auto max_val = static_cast<int>(Count);
+			auto copy = basic_vector<T, Count>(*this);
+			if (by > 0)
+			{
+				int count = by > max_val ? max_val : by;
+				auto shifted_end = std::shift_left(copy.begin(), copy.end(), count);
+				std::fill_n(shifted_end, count, T(0));
+			}
+			else if (by < 0)
+			{
+				int count = -by > max_val ? max_val : -by;
+				std::shift_right(copy.begin(), copy.end(), count);
+				std::fill_n(copy.begin(), count, T(0));
+			}
+
+			return copy;
+		}
+
+		// positive count is left shift, negative count is right shift
+		[[nodiscard]] constexpr basic_vector<T, Count> cshift(int by) const noexcept
+		{
+			constexpr auto max_val = static_cast<int>(Count);
+			by %= max_val;
+			auto copy = basic_vector<T, Count>(*this);
+			if (by > 0)
+			{
+				int count = by > max_val ? max_val : by;
+				std::rotate(copy.begin(), copy.begin() + count, copy.end());
+			}
+			else if (by < 0)
+			{
+				int count = -by > max_val ? max_val : -by;
+				std::rotate(copy.begin(), copy.begin() + max_val - count, copy.end());
+			}
+
+			return copy;
+		}
+
+		// min value in vector
+		constexpr T min() const requires non_bool_scalar<T>		{ return *std::min_element(begin(), end()); }
+
+		// max value in vector
+		constexpr T max() const requires non_bool_scalar<T>		{ return *std::max_element(begin(), end()); }
+
+		// sum of values in vector
+		constexpr T sum() const requires non_bool_scalar<T>		{ return std::accumulate(begin(), end(), T(0)); }
 	};
-
-	// basic_vector will act as the primary vector class in this library.
-	//
-	// T is the type of the elements stored in the vector/storage
-	// Size is number of elements referencable in vector/storage
-
-	// the foundational vector type for dsga
-	// 
-	// template parameters:
-	//
-	//		T - the scalar type stored
-	//		Size - the number of actual elements in storage
-	//
-	template <dimensional_scalar T, std::size_t Size>
-	requires dimensional_storage<T, Size>
-	struct basic_vector;
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
 	//
@@ -1677,7 +1800,7 @@ namespace dsga
 		//
 
 		// this is extremely important and is only for indexed_vector of [Count == 1]
-		constexpr operator T() const noexcept
+		explicit(false) constexpr operator T() const noexcept
 		{
 			return base[I];
 		}
@@ -2033,7 +2156,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T>
-		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
+		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: base{ static_cast<T>(other[0u]) }
 		{
 		}
@@ -2098,7 +2221,7 @@ namespace dsga
 		//
 
 		// this is extremely important and is only for basic_vector of [Size == 1]
-		constexpr operator T() const noexcept
+		explicit(false) constexpr operator T() const noexcept
 		{
 			return base[0u];
 		}
@@ -2250,7 +2373,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
-		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
+		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
 		{
 		}
@@ -2530,7 +2653,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
-		constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
+		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
 			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
 		{
 		}
@@ -3033,7 +3156,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, typename D>
 		requires implicitly_convertible_to<U, T>
-		constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
+		explicit(false) constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
 			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
 		{
 		}
@@ -5645,7 +5768,7 @@ namespace dsga
 		// implicit constructor from a matrix - uses implicitly convertible vector assignment
 		template <floating_point_scalar U>
 		requires implicitly_convertible_to<U, T>
-		constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
+		explicit(false) constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
 			: values{}
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
@@ -5657,7 +5780,7 @@ namespace dsga
 		// implicit constructor from a matrix
 		template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
 		requires implicitly_convertible_to<U, T> && (Cols != C || Rows != R)
-		constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
+		explicit(false) constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 			: values{}
 		{
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept

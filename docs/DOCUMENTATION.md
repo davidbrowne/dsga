@@ -323,6 +323,17 @@ These are the members that are not part of the [index interface](#index-interfac
 * ```operator =``` - assignment operator. The vector needs to be the same length and underlying types must be convertible.
 * ```int length()``` - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
 
+#### Valarray Functions
+
+There is conceptual overlap between the vector structs and ```std::valarray```. Much of this conceptual overlap is implemented in ```dsga``` in terms of operators and vector free functions. The following functions have been implemented as vector member functions. These functions are part of the ```std::valarray``` [API](https://en.cppreference.com/w/cpp/numeric/valarray).
+
+* ```apply()```
+* ```shift()```
+* ```cshift()```
+* ```min()```
+* ```max()```
+* ```sum()```
+
 ### Vector Operators
 The vector operators all work component-wise.
 
@@ -457,6 +468,8 @@ The vector component type must be floating-point.
 * ```logicalNot()``` - can't use keyword ```not``` as a function name in ```c++```, so using ```logicalNot()```
 * ```default_comparison_weights()``` - not in GLSL - default weights for ```weighted_compare()```, showing dimensional priority
 * ```weighted_compare()``` - not in GLSL - called by ```operator <=>``` with ```default_comparison_weights()```. The underlying comparison has each dimension weighted separately and summed up to a signed integral comparison result, where negative means ```<```, positive means ```>```, 0 means equal. It takes a vector of weights, which should be either ```default_comparison_weights()``` or a swizzle of it that uses all the dimensions. Changing the signs of some or all of the weighted components could be an option as well. Returns the ordering relation of the arguments. This function allows customization for comparing vectors if the default comparisons from ```operator <=>``` are insufficient.
+
+#### The Rest of the Specification
 
 Functions from the [GLSL spec](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) not mentioned here were not implemented. The unimplemented functions likely had to do with rendering or textures or something that is not related to the vector and matrix geometric uses that this library aims for.
 
