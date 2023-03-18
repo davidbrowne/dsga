@@ -10,7 +10,7 @@
 // fill vectors from spans
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-	requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
@@ -19,7 +19,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 }
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-	requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
@@ -28,7 +28,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, 
 }
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-	requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
@@ -37,7 +37,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 }
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-	requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());

@@ -186,11 +186,11 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.9.21`
+Current version: `v0.10.0`
 
 * **All the intended vector and matrix functionality is implemented.**
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
-* [Released v0.9.0](https://github.com/davidbrowne/dsga/releases/tag/v0.9.0)
+* [Released v0.10.0](https://github.com/davidbrowne/dsga/releases/tag/v0.10.0)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
@@ -220,7 +220,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2391 | 2391 passed | 0 failed |
+[doctest] assertions: 2394 | 2394 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -231,7 +231,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2391 | 2391 passed | 0 failed |
+[doctest] assertions: 2394 | 2394 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -244,7 +244,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2375 | 2375 passed | 0 failed |
+[doctest] assertions: 2378 | 2378 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -257,7 +257,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2391 | 2391 passed | 0 failed |
+[doctest] assertions: 2394 | 2394 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -270,7 +270,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2375 | 2375 passed | 0 failed |
+[doctest] assertions: 2378 | 2378 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

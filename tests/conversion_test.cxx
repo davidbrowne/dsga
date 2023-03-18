@@ -8,6 +8,7 @@
 using namespace dsga;
 
 #include <span>
+#include <valarray>
 
 #if defined(__clang__)
 // clang 10.0 does not like colors on windows (link problems with isatty and fileno)
@@ -30,7 +31,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 }
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-	requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
@@ -48,7 +49,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 }
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
-	requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> &&std::convertible_to<U, T>
+requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
 constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
@@ -88,6 +89,38 @@ constexpr std::array<T, C> from_vector_by_data_sequence(const dsga::vector_base<
 	}(vec.sequence());
 }
 
+// fill vector from valarray
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U>
+requires std::convertible_to<U, T>
+void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::valarray<U> rhs)
+{
+	const std::size_t count = std::min(S, rhs.size());
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<T>(rhs[i]);
+}
+
+// fill valarray from vector
+
+template <dsga::dimensional_scalar T, std::size_t S, typename U>
+requires std::convertible_to<T, U>
+void copy_from_vector(std::valarray<U> &lhs, const dsga::basic_vector<T, S> &rhs)
+{
+	const std::size_t count = std::min(S, lhs.size());
+	for (std::size_t i = 0; i < count; ++i)
+		lhs[i] = static_cast<U>(rhs[i]);
+}
+
+// create a valarray from a vector
+
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_valarray(const dsga::basic_vector<T, S> &v)
+{
+	return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+	{
+		return std::valarray<T>{v[Is] ...};
+	}(std::make_index_sequence<S>());
+}
 
 TEST_SUITE("test conversions")
 {
@@ -152,6 +185,26 @@ TEST_SUITE("test conversions")
 
 			auto val3 = to_vector(val1);
 			CHECK_EQ(val3, ivec4(-10, -9, -8, -7));
+		}
+
+		SUBCASE("valarray")
+		{
+			auto test_vec = dsga::bvec4(true, true, false, false);
+			auto test_varr = std::valarray<double>(4u);
+			copy_from_vector(test_varr, test_vec);
+
+			auto double_vec = dsga::dvec4(0);
+			copy_to_vector(double_vec, test_varr);
+			CHECK_EQ(double_vec, dsga::dvec4{1, 1, 0, 0});
+
+			auto cshift_varr = test_varr.cshift(2);
+			copy_to_vector(test_vec, cshift_varr);
+			CHECK_EQ(test_vec, dsga::bvec4(false, false, true, true));
+
+			auto new_varr = to_valarray(test_vec);
+			new_varr = new_varr.shift(-1);
+			copy_to_vector(test_vec, new_varr);
+			CHECK_EQ(test_vec, dsga::bvec4(false, false, false, true));
 		}
 
 		SUBCASE("ad hoc")
