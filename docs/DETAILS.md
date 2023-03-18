@@ -97,16 +97,26 @@ struct vector_base;
 
 ```vector_base``` is fairly well described above. It relies on derived classes implementing the "vector duck type" interface, but the only enforcement there would be compile errors if they didn't. A ```c++20``` concept was attempted to check for the "vector duck type" interface, but not much time was spent on making it work, so it was abandoned. We may try again to create such a concept.
 
-We want operations and functions to work the same on a ```basic_vector``` or a swizzle of one of these vectors (```indexed_vector```), and ```vector_base``` was created to give a common type for all the functions and operators to work with. This cuts our code in half, eliminating that redundancy. There are situations where we need to be explicit with ```basic_vector``` and ```indexed_vector```, supplying functions aimed specifically at the derived vector classes, but that is not the norm.
+We want operations and functions to work the same on a ```basic_vector``` or a swizzle of one of these vectors (```indexed_vector```), and ```vector_base``` was created to give a common type for all the functions and operators to work with. This cuts our code in half, eliminating that redundancy. There are situations where we need to be explicit with ```basic_vector``` and ```indexed_vector```, supplying functions aimed specifically at the derived vector classes, i.e., ```isnan()``` and ```isinf()```, but that is not the norm.
+
+We have also added some of the member functions found in the ```std::valarray``` API. We want these to work with both vector types, and since we can use the functions already in ```vector_base```, they are implemented here instead of the derived vector structs:
+
+* ```apply()```
+* ```shift()```
+* ```cshift()```
+* ```min()```
+* ```max()```
+* ```sum()```
 
 ## Inside "vector duck type"
 
 Since ```vector_base``` is a CRTP base class, this imaginary interface provides functionality by directly invoking the derived class's versions of some interface functions:
 
-* ```init()``` - used by ```set()```
-* ```at()``` - used by ```operator []```
-* ```raw_data()``` - used by ```data()```
-* ```make_sequence_pack()``` - used by ```sequence()```
+* ```set()``` - used by ```set()```
+* ```operator []``` - used by ```operator []```
+* ```data()``` - used by ```data()```
+* ```sequence()``` - used by ```sequence()```
+* all the iterator variations, e.g., ```begin()```, ```end()```, ```crbegin()```, etc.
 
 This interface is what allows the CRTP nature of this class/struct relationship to work.
 

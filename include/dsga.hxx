@@ -1189,37 +1189,33 @@ namespace dsga
 	//		sequence() - relies on sequence() in Derived - the physical order to logical order mapping
 	//		as_derived() - relies on Derived template parameter - useful for returning references to Derived when you just have a vector_base
 	//
-	// https://yuml.me/diagram/scruffy/class/draw
-	//
-	//[vector_base; set(); operator_brackets(); data(); sequence(); length(); size(); as_derived(); apply(); shift(); cshift(); min(); max(); sum(); iterators | Count(template parameter)] ^ [<< vector duck type >> basic_vector | anonymous union][vector_base] ^ [<< vector duck type >> indexed_vector]
-	//	[<< vector duck type>>|set(); operator_brackets(); data(); sequence(); iterators] ^ -. - [basic_vector]
-	//	[<< vector duck type >> ] ^ -. - [indexed_vector]
-	//	[basic_vector]++ - * > [indexed_vector]
-	//	[basic_vector]++ - 1 > [storage_wrapper]
-	//
 
 	// https://www.planttext.com/
 	//@startuml
 	//	skin rose
 	//	title Relationships - Class Diagram
-	//interface vector_duck_type
+	//	interface CRTP_duck_type
 	//{
 	//	+set()
 	//		+ operator[]()
 	//		+ data()
 	//		+ sequence()
-	//		+ iterators()
+	//		+ iterator functions()
 	//}
-	//interface vector_base
+	//note top of CRTP_duck_type
+	//	Conceptual interface, not real :
+	//	Could be made into a Concept
+	//	end note
+	//	abstract vector_base <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 	//{
-	//	+set()
-	//		+ operator[]()
-	//		+ data()
-	//		+ sequence()
+	//	+CRTP set()
+	//		+ CRTP operator[]()
+	//		+ CRTP data()
+	//		+ CRTP sequence()
+	//		+ CRTP iterator functions()
 	//		+ length()
 	//		+ size()
 	//		+ as_derived()
-	//		+ iterators()
 	//		+ apply()
 	//		+ shift()
 	//		+ cshift()
@@ -1227,35 +1223,53 @@ namespace dsga
 	//		+ max()
 	//		+ sum()
 	//}
-	//class basic_vector
+	//struct basic_vector<dimensional_scalar T, std::size_t Size>
 	//{
-	//	+swizzles
+	//	+base_and_swizzles
 	//		+ set()
 	//		+ operator[]()
 	//		+ data()
 	//		+ sequence()
-	//		+ iterators()
+	//		+ iterator functions()
+	//		+ swap()
 	//}
-	//class storage_wrapper
+	//note left of basic_vector::base_and_swizzles
+	//	The base in the anonymous
+	//	union is a storage_wrapper
+	//	end note
+	//	note right of basic_vector::base_and_swizzles
+	//	The swizzles in the anonymous
+	//	union are all indexed_vector
+	//	end note
+	//	struct storage_wrapper
 	//{
 	//	+store
+	//		+ set()
+	//		+ operator[]()
+	//		+ data()
+	//		+ sequence()
+	//		+ iterator functions()
+	//		+ length()
+	//		+ size()
+	//		+ swap()
 	//}
-	//class indexed_vector
+	//struct indexed_vector<dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 	//{
 	//	+base
 	//		+ set()
 	//		+ operator[]()
 	//		+ data()
 	//		+ sequence()
-	//		+ iterators()
+	//		+ iterator functions()
 	//}
-	//vector_base < | -down - basic_vector: inherits
-	//	vector_base < | -down - indexed_vector : inherits
-	//	vector_duck_type ^ ..  basic_vector : implements
-	//	vector_duck_type ^ ..  indexed_vector : implements
-	//	basic_vector "many" * -down - "1" storage_wrapper : has
-	//	basic_vector "many" * -down - "*" indexed_vector : has
-	//@enduml
+	//vector_base <|-down- basic_vector: CRTP inherits
+	//	vector_base <|-down- indexed_vector : CRTP inherits
+	//	CRTP_duck_type ^..basic_vector : duck implements
+	//	CRTP_duck_type ^..indexed_vector : duck implements
+	//	basic_vector "1" *-down- "1" storage_wrapper : unioned
+	//	basic_vector "1" *-down- "many" indexed_vector : unioned
+	//	CRTP_duck_type <.left. vector_base : requires from Derived
+	//	@enduml
 
 	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 	requires dimensional_storage<T, Count>

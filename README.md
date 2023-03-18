@@ -129,7 +129,7 @@ The following links to the shading specification should help with understanding 
     * [Matrices](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrices)
 * [Operators and Expressions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#operators-and-expressions)
     * [Vector and Matrix Constructors](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-and-matrix-constructors)
-    * [Vector and Scalar Components and Length](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-components): we only allow swizzling with the ```{ x, y, z, w }``` compnent names. Support for ```{r, g, b, a}``` and ```{s, t, p , q}``` has not been implemented.
+    * [Vector and Scalar Components and Length](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-components): we only allow swizzling with the ```{ x, y, z, w }``` component names. Support for ```{r, g, b, a}``` and ```{s, t, p , q}``` has not been implemented.
 
       In addition, you cannot swizzle a swizzle. I am currently unclear if this is a constraint of the specification, but it is a constraint of the implementation:
       ```c++
@@ -188,12 +188,18 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 Current version: `v0.10.0`
 
-* **All the intended vector and matrix functionality is implemented.**
+* **All the intended vector and matrix functionality from the GLSL specification is implemented.** We keep refining the implementation, and we keep expanding the API to better support ```c++20``` idioms and usage as we go.
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
+* We need much better API documentation, including examples.
+* We need better ```cmake``` support.
 * [Released v0.10.0](https://github.com/davidbrowne/dsga/releases/tag/v0.10.0)
 
 ### The next steps
 * Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
+* Detailed API documentation.
+* Extend ```cmake``` support. Separate the out the testing aspect, and add support declaring a header-only library.
+
+Once we have detailed API documentation and better ```cmake``` support, we can think about releasing a v1.0 version.
 
 ## Usage
 
