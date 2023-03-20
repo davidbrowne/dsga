@@ -1,0 +1,98 @@
+	@startuml
+		'skin rose
+		title Relationships - Class Diagram
+		interface CRTP_duck_type
+	{
+		+set()
+			+ operator[]()
+			+ data()
+			+ sequence()
+			+ iterator functions()
+	}
+	note left of CRTP_duck_type
+		Conceptual interface, not real :
+		Could be made into a Concept
+		end note
+		abstract vector_base <Writable, T, Count, Derived>
+	{
+		+CRTP set()
+			+ CRTP operator[]()
+			+ CRTP data()
+			+ CRTP sequence()
+			+ CRTP iterator functions()
+			+ length()
+			+ size()
+			+ as_derived()
+			+ apply()
+			+ shift()
+			+ cshift()
+			+ min()
+			+ max()
+			+ sum()
+	}
+	struct basic_vector<T, Size>
+	{
+		+base_and_swizzles
+			+ {static} offsets
+			+ set()
+			+ operator[]()
+			+ operator=()
+			+ data()
+			+ sequence()
+			+ iterator functions()
+			+ swap()
+	}
+	entity anonymous_union
+	{
+	+base
+	+ swizzles
+	}
+		struct storage_wrapper<T, Size>
+	{
+		+store
+			+ {static} offsets
+			+ set()
+			+ operator[]()
+			+ operator=()
+			+ data()
+			+ sequence()
+			+ iterator functions()
+			+ length()
+			+ size()
+			+ swap()
+	}
+	struct indexed_vector<T, Size, Count, ...Is>
+	{
+		+base
+			+ {static} offsets
+			+ set()
+			+ operator[]()
+			+ operator=()
+			+ data()
+			+ sequence()
+			+ iterator functions()
+	}
+	struct basic_matrix<T, Cols, Rows>
+	{
+		+columns
+			+ row()
+			+ operator[]()
+			+ operator=()
+			+ data()
+			+ iterator functions()
+			+ length()
+			+ column_length()
+			+ size()
+			+ column_size()
+			+ swap()
+	}
+	vector_base <|-down- basic_vector: CRTP inherits
+		vector_base <|-down- indexed_vector : CRTP inherits
+		CRTP_duck_type ^.. basic_vector : duck implements
+		CRTP_duck_type ^.. indexed_vector : duck implements
+		anonymous_union "1" *-left- "1" storage_wrapper : base
+		anonymous_union "1" *-right- "many" indexed_vector : swizzles
+		basic_vector "1" *-- "1" anonymous_union : nested union
+		CRTP_duck_type <.right. vector_base : Derived CRTP
+		basic_matrix "1" *-right- "many" basic_vector
+		@enduml
