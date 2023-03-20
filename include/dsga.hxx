@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 10;
-constexpr inline int DSGA_PATCH_VERSION = 0;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
@@ -1202,11 +1202,11 @@ namespace dsga
 	//		+ sequence()
 	//		+ iterator functions()
 	//}
-	//note top of CRTP_duck_type
+	//note left of CRTP_duck_type
 	//	Conceptual interface, not real :
 	//	Could be made into a Concept
 	//	end note
-	//	abstract vector_base <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
+	//	abstract vector_base <Writable, T, Count, Derived>
 	//{
 	//	+CRTP set()
 	//		+ CRTP operator[]()
@@ -1223,29 +1223,30 @@ namespace dsga
 	//		+ max()
 	//		+ sum()
 	//}
-	//struct basic_vector<dimensional_scalar T, std::size_t Size>
+	//struct basic_vector<T, Size>
 	//{
 	//	+base_and_swizzles
+	//		+ {static} offsets
 	//		+ set()
 	//		+ operator[]()
+	//		+ operator=()
 	//		+ data()
 	//		+ sequence()
 	//		+ iterator functions()
 	//		+ swap()
 	//}
-	//note left of basic_vector::base_and_swizzles
-	//	The base in the anonymous
-	//	union is a storage_wrapper
-	//	end note
-	//	note right of basic_vector::base_and_swizzles
-	//	The swizzles in the anonymous
-	//	union are all indexed_vector
-	//	end note
-	//	struct storage_wrapper
+	//entity anonymous_union
+	//{
+	//+base
+	//+ swizzles
+	//}
+	//	struct storage_wrapper<T, Size>
 	//{
 	//	+store
+	//		+ {static} offsets
 	//		+ set()
 	//		+ operator[]()
+	//		+ operator=()
 	//		+ data()
 	//		+ sequence()
 	//		+ iterator functions()
@@ -1253,22 +1254,40 @@ namespace dsga
 	//		+ size()
 	//		+ swap()
 	//}
-	//struct indexed_vector<dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	//struct indexed_vector<T, Size, Count, ...Is>
 	//{
 	//	+base
+	//		+ {static} offsets
 	//		+ set()
 	//		+ operator[]()
+	//		+ operator=()
 	//		+ data()
 	//		+ sequence()
 	//		+ iterator functions()
 	//}
+	//struct basic_matrix<T, Cols, Rows>
+	//{
+	//	+columns
+	//		+ row()
+	//		+ operator[]()
+	//		+ operator=()
+	//		+ data()
+	//		+ iterator functions()
+	//		+ length()
+	//		+ column_length()
+	//		+ size()
+	//		+ column_size()
+	//		+ swap()
+	//}
 	//vector_base <|-down- basic_vector: CRTP inherits
 	//	vector_base <|-down- indexed_vector : CRTP inherits
-	//	CRTP_duck_type ^..basic_vector : duck implements
-	//	CRTP_duck_type ^..indexed_vector : duck implements
-	//	basic_vector "1" *-down- "1" storage_wrapper : unioned
-	//	basic_vector "1" *-down- "many" indexed_vector : unioned
-	//	CRTP_duck_type <.left. vector_base : requires from Derived
+	//	CRTP_duck_type ^.. basic_vector : duck implements
+	//	CRTP_duck_type ^.. indexed_vector : duck implements
+	//	anonymous_union "1" *-left- "1" storage_wrapper : base
+	//	anonymous_union "1" *-right- "many" indexed_vector : swizzles
+	//	basic_vector "1" *-- "1" anonymous_union : nested union
+	//	CRTP_duck_type <.right. vector_base : Derived CRTP
+	//	basic_matrix "1" *-right- "many" basic_vector
 	//	@enduml
 
 	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
@@ -1376,13 +1395,13 @@ namespace dsga
 		}
 
 		// min value in vector
-		constexpr T min() const requires non_bool_scalar<T>		{ return *std::min_element(begin(), end()); }
+		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>		{ return *std::min_element(begin(), end()); }
 
 		// max value in vector
-		constexpr T max() const requires non_bool_scalar<T>		{ return *std::max_element(begin(), end()); }
+		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>		{ return *std::max_element(begin(), end()); }
 
 		// sum of values in vector
-		constexpr T sum() const requires non_bool_scalar<T>		{ return std::accumulate(begin(), end(), T(0)); }
+		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>		{ return std::accumulate(begin(), end(), T(0)); }
 	};
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
@@ -5688,7 +5707,7 @@ namespace dsga
 			return R;
 		}
 
-		std::array<basic_vector<T, R>, C> values;
+		std::array<basic_vector<T, R>, C> columns;
 
 		//
 		// operator [] gets the column vector
@@ -5696,12 +5715,14 @@ namespace dsga
 
 		[[nodiscard]] constexpr basic_vector<T, R> &operator [](std::integral auto index) noexcept
 		{
-			return values[static_cast<std::size_t>(index)];
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < C, "index out of bounds");
+			return columns[static_cast<std::size_t>(index)];
 		}
 
 		[[nodiscard]] constexpr const basic_vector<T, R> &operator [](std::integral auto index) const noexcept
 		{
-			return values[static_cast<std::size_t>(index)];
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < C, "index out of bounds");
+			return columns[static_cast<std::size_t>(index)];
 		}
 
 		// get a row of the matrix as a vector
@@ -5711,7 +5732,7 @@ namespace dsga
 			// these components up into a vector that represents the row
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, C>(values[Is][row_index]...);
+				return basic_vector<T, C>(columns[Is][row_index]...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -5736,7 +5757,7 @@ namespace dsga
 		template <typename U, typename ... Args>
 		requires (detail::valid_matrix_component<U, T>::value) && (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, U, Args...>
 		explicit constexpr basic_matrix(const U &u, const Args & ...args) noexcept
-			: values{}
+			: columns{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -5744,7 +5765,7 @@ namespace dsga
 				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					values[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
+					columns[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
 				}(std::make_index_sequence<R>{})), ...);
 			}(std::make_index_sequence<C>{});
 		}
@@ -5753,7 +5774,7 @@ namespace dsga
 		template <typename ... Args>
 		requires (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, Args...>
 		explicit constexpr basic_matrix(const Args & ...args) noexcept
-			: values{}
+			: columns{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(args...);
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -5761,7 +5782,7 @@ namespace dsga
 				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					values[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
+					columns[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
 				}(std::make_index_sequence<R>{})), ...);
 			}(std::make_index_sequence<C>{});
 		}
@@ -5771,11 +5792,11 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, T> && (C == R)
 		explicit constexpr basic_matrix(U arg) noexcept
-			: values{}
+			: columns{}
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				((values[Is][Is] = static_cast<T>(arg)), ...);
+				((columns[Is][Is] = static_cast<T>(arg)), ...);
 			}(std::make_index_sequence<C>());
 		}
 
@@ -5783,11 +5804,11 @@ namespace dsga
 		template <floating_point_scalar U>
 		requires implicitly_convertible_to<U, T>
 		explicit(false) constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
-			: values{}
+			: columns{}
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				((values[Is] = arg[Is]), ...);
+				((columns[Is] = arg[Is]), ...);
 			}(std::make_index_sequence<C>());
 		}
 
@@ -5795,14 +5816,14 @@ namespace dsga
 		template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
 		requires implicitly_convertible_to<U, T> && (Cols != C || Rows != R)
 		explicit(false) constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
-			: values{}
+			: columns{}
 		{
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					((values[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
+					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
 				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
 			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
 
@@ -5811,7 +5832,7 @@ namespace dsga
 			{
 				[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 				{
-					((values[Is][Is] = T(1.0)), ...);
+					((columns[Is][Is] = T(1.0)), ...);
 				}(detail::make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
 			}
 		}
@@ -5820,14 +5841,14 @@ namespace dsga
 		template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
 		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 		explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
-			: values{}
+			: columns{}
 		{
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					((values[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
+					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
 				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
 			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
 
@@ -5836,7 +5857,7 @@ namespace dsga
 			{
 				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 				{
-					((values[Is][Is] = T(1.0)), ...);
+					((columns[Is][Is] = T(1.0)), ...);
 				}(detail::make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
 			}
 		}
@@ -5851,31 +5872,31 @@ namespace dsga
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((values[Is] = other[Is]), ...);			// let basic_vector do any type conversion if needed
+				((columns[Is] = other[Is]), ...);			// let basic_vector do any type conversion if needed
 			}(std::make_index_sequence<C>{});
 
 			return *this;
 		}
 
 		// pointer interface
-		[[nodiscard]] constexpr basic_vector<T, R> * data() noexcept				{ return values.data(); }
-		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return values.data(); }
+		[[nodiscard]] constexpr basic_vector<T, R> * data() noexcept				{ return columns.data(); }
+		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return columns.data(); }
 
-		constexpr void swap(basic_matrix &bm) noexcept			{ values.swap(bm.values); }
+		constexpr void swap(basic_matrix &bm) noexcept			{ columns.swap(bm.columns); }
 
 		// support for range-based for loop -- gives column vectors
-		[[nodiscard]] constexpr auto begin() noexcept			{ return values.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return values.cbegin(); }
+		[[nodiscard]] constexpr auto begin() noexcept			{ return columns.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept		{ return columns.cbegin(); }
 		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return values.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return values.cend(); }
+		[[nodiscard]] constexpr auto end() noexcept				{ return columns.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept		{ return columns.cend(); }
 		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return values.rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return values.crbegin(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept			{ return columns.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return columns.crbegin(); }
 		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return values.rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return values.crend(); }
+		[[nodiscard]] constexpr auto rend() noexcept			{ return columns.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept		{ return columns.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
 	};
 

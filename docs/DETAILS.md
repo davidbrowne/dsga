@@ -9,19 +9,20 @@ A ```basic_vector``` has data members that provide [swizzling](https://en.wikipe
 We want to use both types of vectors in the same way, for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc. Instead of duplicating this effort, ```basic_vector``` and ```indexed_vector``` derive from a [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class called **vector_base**, and this provides the generic foundation for constructors, equality comparison, assignment, operators, compound assignment, vector functions, etc:
 ![vec_base](./vec_base_uml.svg)
 
-```vector_base``` assumes that its derived structs and classes implement the **vector duck type** interface, which is not a real code interface, just more of a conceptual [duck typing](https://en.wikipedia.org/wiki/Duck_typing) idea (determined at compile time). Both ```basic_vector``` and ```indexed_vector``` implement this conceptual interface. ```storage_wrapper``` copies its interface from ```vector_base```, but there is no formal inheritance of this interface.
+```vector_base``` assumes that its derived structs and classes implement the **vector duck type** interface, which is not a real code interface, just more of a conceptual [duck typing](https://en.wikipedia.org/wiki/Duck_typing) idea (determined at compile time). Both ```basic_vector``` and ```indexed_vector``` implement this conceptual interface. ```storage_wrapper``` copies much of its interface from ```vector_base```, but there is no formal inheritance of this interface.
 
 ```vector_base``` carries the following information, via template parameters:
-* Whether it can be used as an lvalue, i.e., **is it writable**
-* The **type of the data** in the vector (some arithmetic type)
-* How many elements are in the vector (1-4), i.e., the **Count**
-* The **type of the derived class**
+* Whether it can inherently be modified, i.e., **is it writable**. All ```basic_vector```s are **writable**, but not all ```indexed_vector```s. This is unrelated to ```const```.
+* The **type of the data** in the vector (some arithmetic type).
+* How many elements are in the vector (1-4), i.e., the **Count**.
+* The **type of the derived class**.
 
 It provides the following functions that can be used to generically manipulate and access vector data:
-* **set()** - relies on ```init()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it is writable. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
-* **operator[]** - relies on ```at()```, which is a reference to a single data value. If writable then can use as an lvalue. The data is in logical order.
-* **data()** - provides pointer to data access via ```raw_data()```. If it is writable, then can use pointer to write data. Pointer access is in physical order.
-* **sequence()** - relies on ```make_sequence_pack()```. The physical order to logical order mapping in a parameter pack.
+* **set()** - relies on CRTP ```set()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it is writable. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
+* **operator[]** - relies on CRTP ```operator[]```, which is a reference to a single data value. If writable then can use as an lvalue. The data is in logical order.
+* **data()** - provides pointer to data access via CRTP ```data()```. If it is writable, then can use pointer to write data. Pointer access is in physical order.
+* **sequence()** - relies on CRTP ```sequence()```. The physical order to logical order mapping in a parameter pack.
+* **iterator functions** - relies on CRTP ```begin()```, ```crend()```, etc.
 *  **length()** - relies on ```Count``` template parameter, and it returns type ```int```.
 * **size()** - relies on ```Count``` template parameter, and it returns type ```std::size_t```.
 * **as_derived()** - relies on the type of the derived class - useful for returning derived references to ```this``` when you just have a ```vector_base```.
@@ -95,7 +96,7 @@ template <bool Writable, dimensional_scalar T, std::size_t Count, typename Deriv
 struct vector_base;
 ```
 
-```vector_base``` is fairly well described above. It relies on derived classes implementing the "vector duck type" interface, but the only enforcement there would be compile errors if they didn't. A ```c++20``` concept was attempted to check for the "vector duck type" interface, but not much time was spent on making it work, so it was abandoned. We may try again to create such a concept.
+```vector_base``` is fairly well described above. It has no data members of its own, relying on the derived types for storage. It relies on derived types implementing the "vector duck type" interface, but the only enforcement there would be compile errors if they didn't. A ```c++20``` concept was attempted to check for the "vector duck type" interface, but not much time was spent on making it work, so it was abandoned. We may try again to create such a concept.
 
 We want operations and functions to work the same on a ```basic_vector``` or a swizzle of one of these vectors (```indexed_vector```), and ```vector_base``` was created to give a common type for all the functions and operators to work with. This cuts our code in half, eliminating that redundancy. There are situations where we need to be explicit with ```basic_vector``` and ```indexed_vector```, supplying functions aimed specifically at the derived vector classes, i.e., ```isnan()``` and ```isinf()```, but that is not the norm.
 

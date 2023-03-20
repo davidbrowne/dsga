@@ -186,7 +186,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.10.0`
+Current version: `v0.10.1`
 
 * **All the intended vector and matrix functionality from the GLSL specification is implemented.** We keep refining the implementation, and we keep expanding the API to better support ```c++20``` idioms and usage as we go.
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
