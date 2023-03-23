@@ -258,7 +258,7 @@
 	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
 		<DisplayString>{{ cols={$T2}, rows={$T3} }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values</ExpandedItem>
+			<ExpandedItem>columns</ExpandedItem>
 		</Expand>
 	</Type>
 

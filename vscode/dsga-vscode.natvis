@@ -281,175 +281,175 @@
 	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
 		<DisplayString>{{ cols={$T2} rows={$T3} }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat2x2">
 		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat2x3">
 		<DisplayString>{{ cols=2 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat2x4">
 		<DisplayString>{{ cols=2 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat3x2">
 		<DisplayString>{{ cols=3 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat3x3">
 		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat3x4">
 		<DisplayString>{{ cols=3 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat4x2">
 		<DisplayString>{{ cols=4 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat4x3">
 		<DisplayString>{{ cols=4 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat4x4">
 		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat2">
 		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat3">
 		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::mat4">
 		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat2x2">
 		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat2x3">
 		<DisplayString>{{ cols=2 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat2x4">
 		<DisplayString>{{ cols=2 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat3x2">
 		<DisplayString>{{ cols=3 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat3x3">
 		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat3x4">
 		<DisplayString>{{ cols=3 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat4x2">
 		<DisplayString>{{ cols=4 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat4x3">
 		<DisplayString>{{ cols=4 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat4x4">
 		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat2">
 		<DisplayString>{{ cols=2 rows=2 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat3">
 		<DisplayString>{{ cols=3 rows=3 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::dmat4">
 		<DisplayString>{{ cols=4 rows=4 }}</DisplayString>
 		<Expand>
-			<ExpandedItem>values._M_elems</ExpandedItem>
+			<ExpandedItem>columns._M_elems</ExpandedItem>
 		</Expand>
 	</Type>
 
