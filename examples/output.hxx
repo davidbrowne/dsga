@@ -9,10 +9,11 @@
 #include "dsga.hxx"
 
 //
-// std::format interface
+// std::format interfaces
 //
 
 // adapted from https://www.modernescpp.com/index.php/extend-std-format-in-c-20-for-user-defined-types
+
 template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived>
 struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>> : std::formatter<std::string_view>
 {
@@ -33,17 +34,114 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>> : std::for
 	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, format_context &ctx)
 	{
 		std::string temp;
-		std::format_to(std::back_inserter(temp), "{}", "{ ");
+		std::format_to(std::back_inserter(temp), "{{ ");
 		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(v[0]));
 
 		for (int i = 1; i < v.length(); ++i)
 			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(v[i]));
 
-		std::format_to(std::back_inserter(temp), "{}", " }");
+		std::format_to(std::back_inserter(temp), " }}");
 
 		return std::formatter<string_view>::format(temp, ctx);
 	}
 };
+
+template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>> : std::formatter<std::string_view>
+{
+	std::string value_format;
+	constexpr auto parse(std::format_parse_context &ctx)
+	{
+		value_format = "{:";
+		auto pos = ctx.begin();
+		while (pos != ctx.end() && *pos != '}')
+		{
+			value_format += *pos;
+			++pos;
+		}
+		value_format += "}";
+		return pos;  // expect `}` at this position, otherwise, it's error! exception!
+	}
+
+	auto format(const dsga::indexed_vector<T, Size, Count, Is...> &v, format_context &ctx)
+	{
+		std::string temp;
+		std::format_to(std::back_inserter(temp), "{{ ");
+		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(v[0]));
+
+		for (int i = 1; i < v.length(); ++i)
+			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(v[i]));
+
+		std::format_to(std::back_inserter(temp), " }}");
+
+		return std::formatter<string_view>::format(temp, ctx);
+	}
+};
+
+template <dsga::dimensional_scalar T, std::size_t Size>
+struct std::formatter<dsga::basic_vector<T, Size>> : std::formatter<std::string_view>
+{
+	std::string value_format;
+	constexpr auto parse(std::format_parse_context &ctx)
+	{
+		value_format = "{:";
+		auto pos = ctx.begin();
+		while (pos != ctx.end() && *pos != '}')
+		{
+			value_format += *pos;
+			++pos;
+		}
+		value_format += "}";
+		return pos;  // expect `}` at this position, otherwise, it's error! exception!
+	}
+
+	auto format(const dsga::basic_vector<T, Size> &v, format_context &ctx)
+	{
+		std::string temp;
+		std::format_to(std::back_inserter(temp), "{{ ");
+		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(v[0]));
+
+		for (int i = 1; i < v.length(); ++i)
+			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(v[i]));
+
+		std::format_to(std::back_inserter(temp), " }}");
+
+		return std::formatter<string_view>::format(temp, ctx);
+	}
+};
+
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+struct std::formatter<dsga::basic_matrix<T, C, R>> : std::formatter<std::string_view>
+{
+	std::string value_format;
+	constexpr auto parse(std::format_parse_context &ctx)
+	{
+		value_format = "{:";
+		auto pos = ctx.begin();
+		while (pos != ctx.end() && *pos != '}')
+		{
+			value_format += *pos;
+			++pos;
+		}
+		value_format += "}";
+		return pos;  // expect `}` at this position, otherwise, it's error! exception!
+	}
+
+	auto format(const dsga::basic_matrix<T, C, R> &m, format_context &ctx)
+	{
+		std::string temp;
+		std::format_to(std::back_inserter(temp), "[ ");
+		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(m[0]));
+
+		for (int i = 1; i < m.length(); ++i)
+			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(m[i]));
+
+		std::format_to(std::back_inserter(temp), " ]");
+
+		return std::formatter<string_view>::format(temp, ctx);
+	}
+};
+
 
 //
 // iostream interface
@@ -58,12 +156,39 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::vector_base<Writabl
 	return o << " }";
 }
 
+template <dsga::dimensional_scalar T, std::size_t Size>
+inline std::ostream &operator<<(std::ostream &o, const dsga::basic_vector<T, Size> &v)
+{
+	o << "{ " << v[0];
+	for (int i = 1; i < v.length(); ++i)
+		o << ", " << v[i];
+	return o << " }";
+}
+
+template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+inline std::ostream &operator<<(std::ostream &o, const dsga::indexed_vector<T, Size, Count, Is...> &v)
+{
+	o << "{ " << v[0];
+	for (int i = 1; i < v.length(); ++i)
+		o << ", " << v[i];
+	return o << " }";
+}
+
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+inline std::ostream &operator<<(std::ostream &o, const dsga::basic_matrix<T, C, R> &m)
+{
+	o << "[ " << m[0];
+	for (int i = 1; i < m.length(); ++i)
+		o << ", " << m[i];
+	return o << " ]";
+}
+
 //
-// test function
+// test functions
 //
 
 template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived>
-inline void test_print(const dsga::vector_base<Writable, T, Count, Derived> &v)
+inline void test_print_vector_base(const dsga::vector_base<Writable, T, Count, Derived> &v)
 {
 	// iostream interface
 	std::cout << v << '\n';
@@ -71,4 +196,37 @@ inline void test_print(const dsga::vector_base<Writable, T, Count, Derived> &v)
 	// std::format interface
 	std::cout << std::format("{}\n", v);
 	std::cout << std::format("{:10.5}\n", v);
+}
+
+template <dsga::dimensional_scalar T, std::size_t Size>
+inline void test_print_vector(const dsga::basic_vector<T, Size> &v)
+{
+	// iostream interface
+	std::cout << v << '\n';
+
+	// std::format interface
+	std::cout << std::format("{}\n", v);
+	std::cout << std::format("{:10.5}\n", v);
+}
+
+template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+inline void test_print_indexed_vector(const dsga::indexed_vector<T, Size, Count, Is...> &v)
+{
+	// iostream interface
+	std::cout << v << '\n';
+
+	// std::format interface
+	std::cout << std::format("{}\n", v);
+	std::cout << std::format("{:10.5}\n", v);
+}
+
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+inline void test_print_matrix(const dsga::basic_matrix<T, C, R> &m)
+{
+	// iostream interface
+	std::cout << m << '\n';
+
+	// std::format interface
+	std::cout << std::format("{}\n", m);
+	std::cout << std::format("{:10.5}\n", m);
 }
