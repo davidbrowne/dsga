@@ -23,7 +23,7 @@ template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename
 struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>> : std::formatter<std::string_view>
 {
 	std::string value_format;
-	constexpr auto parse(std::format_parse_context &ctx)
+	constexpr auto parse(const std::format_parse_context &ctx)
 	{
 		value_format = "{:";
 		auto pos = ctx.begin();
@@ -36,7 +36,7 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>> : std::for
 		return pos;
 	}
 
-	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, format_context &ctx)
+	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, std::format_context &ctx)
 	{
 		std::string temp;
 		std::format_to(std::back_inserter(temp), "{{ ");
@@ -55,7 +55,7 @@ template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::
 struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>> : std::formatter<std::string_view>
 {
 	std::string value_format;
-	constexpr auto parse(std::format_parse_context &ctx)
+	constexpr auto parse(const std::format_parse_context &ctx)
 	{
 		value_format = "{:";
 		auto pos = ctx.begin();
@@ -68,7 +68,7 @@ struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>> : std::format
 		return pos;
 	}
 
-	auto format(const dsga::indexed_vector<T, Size, Count, Is...> &v, format_context &ctx)
+	auto format(const dsga::indexed_vector<T, Size, Count, Is...> &v, std::format_context &ctx)
 	{
 		std::string temp;
 		std::format_to(std::back_inserter(temp), "{{ ");
@@ -87,7 +87,7 @@ template <dsga::dimensional_scalar T, std::size_t Size>
 struct std::formatter<dsga::basic_vector<T, Size>> : std::formatter<std::string_view>
 {
 	std::string value_format;
-	constexpr auto parse(std::format_parse_context &ctx)
+	constexpr auto parse(const std::format_parse_context &ctx)
 	{
 		value_format = "{:";
 		auto pos = ctx.begin();
@@ -100,7 +100,7 @@ struct std::formatter<dsga::basic_vector<T, Size>> : std::formatter<std::string_
 		return pos;
 	}
 
-	auto format(const dsga::basic_vector<T, Size> &v, format_context &ctx)
+	auto format(const dsga::basic_vector<T, Size> &v, std::format_context &ctx)
 	{
 		std::string temp;
 		std::format_to(std::back_inserter(temp), "{{ ");
@@ -119,7 +119,7 @@ template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
 struct std::formatter<dsga::basic_matrix<T, C, R>> : std::formatter<std::string_view>
 {
 	std::string value_format;
-	constexpr auto parse(std::format_parse_context &ctx)
+	constexpr auto parse(const std::format_parse_context &ctx)
 	{
 		value_format = "{:";
 		auto pos = ctx.begin();
@@ -132,7 +132,7 @@ struct std::formatter<dsga::basic_matrix<T, C, R>> : std::formatter<std::string_
 		return pos;
 	}
 
-	auto format(const dsga::basic_matrix<T, C, R> &m, format_context &ctx)
+	auto format(const dsga::basic_matrix<T, C, R> &m, std::format_context &ctx)
 	{
 		std::string temp;
 		std::format_to(std::back_inserter(temp), "[ ");
