@@ -104,7 +104,7 @@ struct std::formatter<std::array<T, N>>
 	auto format(const std::array<T, N> &val, std::format_context &ctx)
 	{
 		std::string fmts{};
-		for (int i = 1; i < N; ++i)
+		for (std::size_t i = 1; i < N; ++i)
 			fmts += ", " + value_format;
 
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
