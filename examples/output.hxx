@@ -7,7 +7,7 @@
 #include <iostream>
 #include "dsga.hxx"
 
-#if defined(__cpp_lib_format)
+#if defined(__cpp_lib_format) && defined(_MSC_VER)
 
 #include <format>
 
@@ -83,6 +83,38 @@ struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>> : std::format
 	}
 };
 
+
+template <typename T, std::size_t N>
+struct std::formatter<std::array<T, N>>
+{
+	std::string value_format;
+	constexpr auto parse(const std::format_parse_context &ctx)
+	{
+		value_format = "{:";
+		auto pos = ctx.begin();
+		while (pos != ctx.end() && *pos != '}')
+		{
+			value_format += *pos;
+			++pos;
+		}
+		value_format += "}";
+		return pos;
+	}
+
+	auto format(const std::array<T, N> &val, std::format_context &ctx)
+	{
+		std::string fmts{};
+		for (int i = 1; i < N; ++i)
+			fmts += ", " + value_format;
+
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		{
+			return std::vformat_to(ctx.out(), std::format("{{{{ {}{} }}}}", value_format, fmts), std::make_format_args(val[Is]...));
+		}(std::make_index_sequence<N>{});
+	}
+};
+
+
 template <dsga::dimensional_scalar T, std::size_t Size>
 struct std::formatter<dsga::basic_vector<T, Size>> : std::formatter<std::string_view>
 {
@@ -157,6 +189,14 @@ inline void test_format_vector_base(const dsga::vector_base<Writable, T, Count, 
 	// std::format interface
 	std::cout << std::format("{}\n", v);
 	std::cout << std::format("{:10.5}\n", v);
+}
+
+template <typename T, std::size_t Size>
+inline void test_format_array(const std::array<T, Size> &arr)
+{
+	// std::format interface
+	std::cout << std::format("{}\n", arr);
+	std::cout << std::format("{:10.5}\n", arr);
 }
 
 template <dsga::dimensional_scalar T, std::size_t Size>
