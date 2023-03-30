@@ -38,16 +38,14 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>> : std::for
 
 	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, std::format_context &ctx)
 	{
-		std::string temp;
-		std::format_to(std::back_inserter(temp), "{{ ");
-		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(v[0]));
+		std::string fmts{};
+		for (std::size_t i = 1; i < Count; ++i)
+			fmts += ", " + value_format;
 
-		for (int i = 1; i < v.length(); ++i)
-			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(v[i]));
-
-		std::format_to(std::back_inserter(temp), " }}");
-
-		return std::formatter<string_view>::format(temp, ctx);
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		{
+			return std::vformat_to(ctx.out(), std::format("{{{{ {}{} }}}}", value_format, fmts), std::make_format_args(v[Is]...));
+		}(std::make_index_sequence<Count>{});
 	}
 };
 
@@ -70,16 +68,14 @@ struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>> : std::format
 
 	auto format(const dsga::indexed_vector<T, Size, Count, Is...> &v, std::format_context &ctx)
 	{
-		std::string temp;
-		std::format_to(std::back_inserter(temp), "{{ ");
-		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(v[0]));
+		std::string fmts{};
+		for (std::size_t i = 1; i < Count; ++i)
+			fmts += ", " + value_format;
 
-		for (int i = 1; i < v.length(); ++i)
-			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(v[i]));
-
-		std::format_to(std::back_inserter(temp), " }}");
-
-		return std::formatter<string_view>::format(temp, ctx);
+		return[&]<std::size_t ...Js>(std::index_sequence<Js...>)
+		{
+			return std::vformat_to(ctx.out(), std::format("{{{{ {}{} }}}}", value_format, fmts), std::make_format_args(v[Js]...));
+		}(std::make_index_sequence<Count>{});
 	}
 };
 
@@ -103,14 +99,21 @@ struct std::formatter<std::array<T, N>>
 
 	auto format(const std::array<T, N> &val, std::format_context &ctx)
 	{
-		std::string fmts{};
-		for (std::size_t i = 1; i < N; ++i)
-			fmts += ", " + value_format;
-
-		return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		if constexpr (N == 0)
 		{
-			return std::vformat_to(ctx.out(), std::format("{{{{ {}{} }}}}", value_format, fmts), std::make_format_args(val[Is]...));
-		}(std::make_index_sequence<N>{});
+			return std::format_to(ctx.out(), "{{ }}");
+		}
+		else
+		{
+			std::string fmts{};
+			for (std::size_t i = 1; i < N; ++i)
+				fmts += ", " + value_format;
+
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return std::vformat_to(ctx.out(), std::format("{{{{ {}{} }}}}", value_format, fmts), std::make_format_args(val[Is]...));
+			}(std::make_index_sequence<N>{});
+		}
 	}
 };
 
@@ -134,16 +137,14 @@ struct std::formatter<dsga::basic_vector<T, Size>> : std::formatter<std::string_
 
 	auto format(const dsga::basic_vector<T, Size> &v, std::format_context &ctx)
 	{
-		std::string temp;
-		std::format_to(std::back_inserter(temp), "{{ ");
-		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(v[0]));
+		std::string fmts{};
+		for (std::size_t i = 1; i < Size; ++i)
+			fmts += ", " + value_format;
 
-		for (int i = 1; i < v.length(); ++i)
-			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(v[i]));
-
-		std::format_to(std::back_inserter(temp), " }}");
-
-		return std::formatter<string_view>::format(temp, ctx);
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		{
+			return std::vformat_to(ctx.out(), std::format("{{{{ {}{} }}}}", value_format, fmts), std::make_format_args(v[Is]...));
+		}(std::make_index_sequence<Size>{});
 	}
 };
 
@@ -166,16 +167,14 @@ struct std::formatter<dsga::basic_matrix<T, C, R>> : std::formatter<std::string_
 
 	auto format(const dsga::basic_matrix<T, C, R> &m, std::format_context &ctx)
 	{
-		std::string temp;
-		std::format_to(std::back_inserter(temp), "[ ");
-		std::vformat_to(std::back_inserter(temp), value_format, std::make_format_args(m[0]));
+		std::string fmts{};
+		for (std::size_t i = 1; i < C; ++i)
+			fmts += ", " + value_format;
 
-		for (int i = 1; i < m.length(); ++i)
-			std::vformat_to(std::back_inserter(temp), std::string_view(", " + value_format), std::make_format_args(m[i]));
-
-		std::format_to(std::back_inserter(temp), " ]");
-
-		return std::formatter<string_view>::format(temp, ctx);
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+		{
+			return std::vformat_to(ctx.out(), std::format("[ {}{} ]", value_format, fmts), std::make_format_args(m[Is]...));
+		}(std::make_index_sequence<C>{});
 	}
 };
 
