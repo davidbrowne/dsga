@@ -9,7 +9,7 @@
 		+ {abstract} sequence()
 		+ {abstract} iterator functions()
 	}
-	note left of "CRTP duck type"
+	note right of "CRTP duck type"
 		Conceptual interface, not real :
 		Could be made into a c++ concept
 	end note
@@ -32,7 +32,7 @@
 	}
 	struct basic_vector<T, Size>
 	{
-		+ base and swizzles union
+		+ union
 		+ {static} offsets
 		+ set()
 		+ operator[]()
@@ -42,7 +42,7 @@
 		+ iterator functions()
 		+ swap()
 	}
-	annotation "basic_vector::anonymous union"
+	annotation basic_vector::anonymous_union
 	{
 		+ base
 		+ swizzles
@@ -93,15 +93,15 @@
 	vector_base <|-down- indexed_vector : CRTP inherits
 	"CRTP duck type" ^.. basic_vector : duck implements
 	"CRTP duck type" ^.. indexed_vector : duck implements
-	"basic_vector::anonymous union" "1" *-- "1" storage_wrapper : base
-	"basic_vector::anonymous union" "1" *-- "many" indexed_vector : swizzles
-	basic_vector "1" *-- "1" "basic_vector::anonymous union" : nested anonymous union
+	basic_vector::anonymous_union::base "1" *-- "1" storage_wrapper : base
+	basic_vector::anonymous_union::swizzles "1" *-- "many" indexed_vector : swizzles
+	basic_vector::union "1" *-- "1" basic_vector::anonymous_union : nested anonymous union
 	"CRTP duck type" <.. vector_base : Derived CRTP
-	basic_matrix "1" *-- "Cols" basic_vector : columns
-	storage_wrapper "1" *-- "1" std::array : offsets<std::size_t, Size>
-	storage_wrapper "1" *-- "1" std::array : store<T, Size>
-	basic_vector "1" *-- "1" std::array : offsets<std::size_t, Size>
-	indexed_vector "1" *-- "1" std::array : offsets<std::size_t, Count>
-	indexed_vector "1" *-- "1" std::array : base<T, Size>
-	(basic_matrix, basic_vector) .. std::array : columns<basic_vector<T, Rows>, Cols>
+	storage_wrapper::offsets "1" *-- "1" std::array : <std::size_t, Size>
+	storage_wrapper::store "1" *-- "1" std::array : <T, Size>
+	basic_vector::offsets "1" *-- "1" std::array : <std::size_t, Size>
+	indexed_vector::offsets "1" *-- "1" std::array : <std::size_t, Count>
+	indexed_vector::base "1" *-- "1" std::array : <T, Size>
+	basic_matrix::columns "1" *.. "Cols" basic_vector : <T, Rows>
+	basic_matrix::columns "1" *-- "1" std::array : <basic_vector<T, Rows>, Cols>
 @enduml
