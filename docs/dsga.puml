@@ -89,8 +89,9 @@
 	class std::array<T, Size>
 	{
 	}
-	vector_base <|-down- basic_vector: CRTP inherits
-	vector_base <|-down- indexed_vector : CRTP inherits
+	class class1 as "std::array<basic_vector<T, Rows>, Cols>"
+	vector_base <|-- basic_vector: CRTP inherits
+	vector_base <|-- indexed_vector : CRTP inherits
 	"CRTP duck type" ^.. basic_vector : duck implements
 	"CRTP duck type" ^.. indexed_vector : duck implements
 	basic_vector::anonymous_union::base "1" *-- "1" storage_wrapper : base
@@ -102,6 +103,7 @@
 	basic_vector::offsets "1" *-- "1" std::array : <std::size_t, Size>
 	indexed_vector::offsets "1" *-- "1" std::array : <std::size_t, Count>
 	indexed_vector::base "1" *-- "1" std::array : <T, Size>
-	basic_matrix::columns "1" *.. "Cols" basic_vector : <T, Rows>
-	basic_matrix::columns "1" *-- "1" std::array : <basic_vector<T, Rows>, Cols>
+	class1 -left- "Cols" basic_vector : <T, Rows>
+	class1 --> std::array : specializes
+	basic_matrix::columns "1" *-- "1" class1
 @enduml
