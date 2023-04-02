@@ -9,7 +9,7 @@
 		+ {abstract} sequence()
 		+ {abstract} iterator functions()
 	}
-	note right of "CRTP duck type"
+	note left of "CRTP duck type"
 		Conceptual interface, not real :
 		Could be made into a c++ concept
 	end note
@@ -33,7 +33,7 @@
 	struct basic_vector<T, Size>
 	{
 		+ union
-		+ {static} offsets
+		+ {static} offsets : std::array<std::size_t, Size>
 		+ set()
 		+ operator[]()
 		+ operator=()
@@ -49,8 +49,8 @@
 	}
 	struct storage_wrapper<T, Size>
 	{
-		+ store
-		+ {static} offsets
+		+ store : std::array<T, Size>
+		+ {static} offsets : std::array<std::size_t, Size>
 		+ set()
 		+ operator[]()
 		+ operator=()
@@ -63,8 +63,8 @@
 	}
 	struct indexed_vector<T, Size, Count, ...Is>
 	{
-		+ base
-		+ {static} offsets
+		+ base : std::array<T, Size>
+		+ {static} offsets : std::array<std::size_t, Count>
 		+ set()
 		+ operator[]()
 		+ operator=()
@@ -74,7 +74,7 @@
 	}
 	struct basic_matrix<T, Cols, Rows>
 	{
-		+ columns
+		+ columns : std::array<basic_vector<T, Rows>, Cols>
 		+ row()
 		+ operator[]()
 		+ operator=()
@@ -86,24 +86,20 @@
 		+ column_size()
 		+ swap()
 	}
-	class std::array<T, Size>
-	{
-	}
-	class class1 as "std::array<basic_vector<T, Rows>, Cols>"
 	vector_base <|-- basic_vector: CRTP inherits
 	vector_base <|-- indexed_vector : CRTP inherits
 	"CRTP duck type" ^.. basic_vector : duck implements
 	"CRTP duck type" ^.. indexed_vector : duck implements
 	basic_vector::anonymous_union::base "1" *-- "1" storage_wrapper : base
 	basic_vector::anonymous_union::swizzles "1" *-- "many" indexed_vector : swizzles
-	basic_vector::union "1" *-- "1" basic_vector::anonymous_union : nested anonymous union
-	"CRTP duck type" <.. vector_base : Derived CRTP
-	storage_wrapper::offsets "1" *-- "1" std::array : <std::size_t, Size>
-	storage_wrapper::store "1" *-- "1" std::array : <T, Size>
-	basic_vector::offsets "1" *-- "1" std::array : <std::size_t, Size>
-	indexed_vector::offsets "1" *-- "1" std::array : <std::size_t, Count>
-	indexed_vector::base "1" *-- "1" std::array : <T, Size>
-	class1 -left- "Cols" basic_vector : <T, Rows>
-	class1 --> std::array : specializes
-	basic_matrix::columns "1" *-- "1" class1
+	basic_vector::union "1" *-- "1" basic_vector::anonymous_union
+	note right on link
+	  Nested anonymous union where
+	  all members have a common initial
+	  sequence with each other
+	end note
+	"CRTP duck type" <. vector_base : Derived CRTP
+	basic_matrix::columns "1" *-- "Cols" basic_vector : columns
+	basic_vector -[hidden]left- indexed_vector
+	storage_wrapper .[hidden]right. basic_matrix
 @enduml
