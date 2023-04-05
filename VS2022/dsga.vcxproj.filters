@@ -36,6 +36,12 @@
     <ClInclude Include="..\examples\output.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\examples\format_output.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\examples\ostream_output.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
