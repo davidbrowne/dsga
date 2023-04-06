@@ -172,7 +172,6 @@
     <ClInclude Include="..\examples\bezier.hxx" />
     <ClInclude Include="..\examples\format_output.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
-    <ClInclude Include="..\examples\output.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />
   </ItemGroup>
