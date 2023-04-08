@@ -5058,6 +5058,24 @@ namespace dsga
 		}
 
 		//
+		// byteswap() for non-boolean typed vectors
+		//
+
+		// since dsga is designed for c++20, we can't use std::byteswap() from c++23
+		inline auto byte_swap_op = []<non_bool_scalar T>(T x) noexcept -> T
+		{
+			auto bytes = reinterpret_cast<std::byte *>(&x);
+			std::reverse(bytes, bytes + sizeof(T));
+			return *reinterpret_cast<T *>(bytes);
+		};
+
+		template <bool W, non_bool_scalar T, std::size_t C, typename D>
+		[[nodiscard]] auto byteswap(const vector_base<W, T, C, D> &x) noexcept
+		{
+			return x.apply(byte_swap_op);
+		}
+
+		//
 		// 8.4 is omitted
 		//
 

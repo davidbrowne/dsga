@@ -105,6 +105,44 @@ auto angle_between(const vector_base<W1, T, C, D1> &v1,
 }
 ```
 
+``` c++
+using namespace dsga;
+
+//
+// STL file format read/write helpers
+//
+
+// make sure data has no infinities or NaNs
+constexpr bool definite_coordinate_triple(const vec3 &data) noexcept
+{
+    return !(any(isinf(data)) || any(isnan(data)));
+}
+
+// make sure normal vector has no infinities or NaNs and is not the zero-vector { 0, 0, 0 }
+constexpr bool valid_normal_vector(const vec3 &normal) noexcept
+{
+    return definite_coordinate_triple(normal) && any(notEqual(normal, vec3(0)));
+}
+
+// not checking for positive-only first octant data -- we are allowing zeros and negative values
+constexpr bool valid_vertex_relaxed(const vec3 &vertex) noexcept
+{
+    return definite_coordinate_triple(vertex);
+}
+
+// strict version where all vertex coordinates must be positive-definite
+constexpr bool valid_vertex_strict(const vec3 &vertex) noexcept
+{
+    return definite_coordinate_triple(vertex) && all(greaterThan(vertex, vec3(0)));
+}
+
+// right-handed unit normal vector for a triangle facet,
+// inputs are triangle vertices in counter-clockwise order
+constexpr vec3 right_handed_normal(const vec3 &v1, const vec3 &v2, const vec3 &v3) noexcept
+{
+    return normalize(cross(v2 - v1, v3 - v1));
+}
+```
 ## Relevant GLSL Overview
 
 Our programming environment is ```c++20```, not a GLSL shader program, so the entire GLSL Shading language specification is a super-set of what we are trying to achieve. We really just want the vector and matrix data structures (and their corresponding functions and behavior) to be usable in a ```c++20``` environment.

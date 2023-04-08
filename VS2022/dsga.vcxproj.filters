@@ -39,6 +39,9 @@
     <ClInclude Include="..\examples\ostream_output.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\examples\stl.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
