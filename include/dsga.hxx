@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 10;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
