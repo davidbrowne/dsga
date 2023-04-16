@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 10;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -73,7 +73,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 0;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 13;
+		constexpr inline int CXCM_PATCH_VERSION = 14;
 
 		namespace limits
 		{
@@ -831,8 +831,6 @@ namespace dsga
 			// sqrt()
 			//
 
-	#if defined(DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED)
-
 			template <std::floating_point T>
 			constexpr T sqrt(T value) noexcept
 			{
@@ -846,21 +844,9 @@ namespace dsga
 				}
 			}
 
-	#else
-
-			template <std::floating_point T>
-			T sqrt(T value) noexcept
-			{
-				return std::sqrt(value);
-			}
-
-	#endif
-
 			//
 			// rsqrt() - inverse square root
 			//
-
-	#if defined(DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED)
 
 			template <std::floating_point T>
 			constexpr T rsqrt(T value) noexcept
@@ -874,16 +860,6 @@ namespace dsga
 					return T(1.0) / std::sqrt(value);
 				}
 			}
-
-	#else
-
-			template <std::floating_point T>
-			T rsqrt(T value) noexcept
-			{
-				return T(1.0) / std::sqrt(value);
-			}
-
-	#endif
 
 		} // namespace strict
 

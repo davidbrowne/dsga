@@ -214,7 +214,7 @@ This is a **single header library**, where you just need the file [dsga.hxx](inc
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
-Since the constexpr versions of ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) have mostly identical results but sometimes differs with ```std::sqrt()``` with ```double``` arguments, if you want the approximate but constexpr version of those or ```dsga::sqrt()``` or ```dsga::rsqrt()```, you have to opt-in by defining the macro ```DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED```. The approximation for ```sqrt(double)``` in the worst case is at most 1 ulp away from ```std::sqrt(double)```, and ```rsqrt(double)``` in the worst case is at most 2 ulps away from ```1.0 / std::sqrt(double)```.
+Be aware that the constexpr functions ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) have mostly identical results but sometimes differ with ```std::sqrt()``` with ```double``` arguments. The approximation for ```sqrt(double)``` in the worst case is at most 1 ulp away from ```std::sqrt(double)```, and ```rsqrt(double)``` in the worst case is at most 2 ulps away from ```1.0 / std::sqrt(double)```.
 
 There are asserts in the codebase that can be disabled by defining the macro ```DSGA_DISABLE_ASSERTS```.
 
@@ -224,7 +224,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.10.4`
+Current version: `v0.10.5`
 
 * **All the intended vector and matrix functionality from the GLSL specification is implemented.** We keep refining the implementation, and we keep expanding the API to better support ```c++20``` idioms and usage as we go.
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -260,7 +260,7 @@ The tests have been most recently run on:
 * **MSVC 2022 - v17.5**
 
 ```
-[doctest] doctest version is "2.4.10"
+[doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
@@ -271,7 +271,7 @@ The tests have been most recently run on:
 * **gcc 12.2.0** on Windows, [MinGW](https://github.com/niXman/mingw-builds-binaries) distribution:
 
 ```
-[doctest] doctest version is "2.4.10"
+[doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
@@ -279,12 +279,12 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 15.0.7** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.7), with MSVC installed:
+* **clang 16.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.1), with MSVC installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.10"
+[doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
@@ -297,7 +297,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 12.1.0**
 
 ```
-[doctest] doctest version is "2.4.10"
+[doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
@@ -305,12 +305,12 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 15.0.7**
+* **clang 16.0.2**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.10"
+[doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
@@ -354,7 +354,7 @@ The libraries we use (some just occasionally):
 ```
 // doctest.h - the lightest feature-rich C++ single-header testing framework for unit tests and TDD
 //
-// Copyright (c) 2016-2021 Viktor Kirilov
+// Copyright (c) 2016-2023 Viktor Kirilov
 //
 // Distributed under the MIT Software License
 // See accompanying file LICENSE.txt or copy at
