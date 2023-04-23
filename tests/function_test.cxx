@@ -612,6 +612,18 @@ TEST_SUITE("test functions")
 		// determinant()
 		const auto det = determinant(some4x4);
 		CHECK_EQ(det, 2);
+
+		// cross_matrix() - different ways to get cross product
+		const auto u = dvec3(255429.53125, -139725.125, 140508.53125);
+		const auto v = dvec3(10487005., 8066347., -11042884.);
+
+		auto uv = cross(u, v);
+		auto uv1 = cross_matrix(u) * v;
+		auto uv2 = u * cross_matrix(v);
+
+		CHECK_EQ(uv, uv1);
+		CHECK_EQ(uv, uv2);
+		CHECK_EQ(uv1, uv2);
 	}
 }
 

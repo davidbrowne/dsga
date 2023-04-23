@@ -224,7 +224,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.10.5`
+Current version: `v0.10.6`
 
 * **All the intended vector and matrix functionality from the GLSL specification is implemented.** We keep refining the implementation, and we keep expanding the API to better support ```c++20``` idioms and usage as we go.
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -264,7 +264,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2394 | 2394 passed | 0 failed |
+[doctest] assertions: 2397 | 2397 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -275,7 +275,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2394 | 2394 passed | 0 failed |
+[doctest] assertions: 2397 | 2397 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -288,7 +288,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2378 | 2378 passed | 0 failed |
+[doctest] assertions: 2381 | 2381 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -301,11 +301,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2394 | 2394 passed | 0 failed |
+[doctest] assertions: 2397 | 2397 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.2**
+* **clang 16.0.3**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -314,7 +314,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
-[doctest] assertions: 2378 | 2378 passed | 0 failed |
+[doctest] assertions: 2381 | 2381 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

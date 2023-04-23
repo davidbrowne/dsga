@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 10;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
@@ -5933,6 +5933,19 @@ namespace dsga
 				+ arg[0][0] * arg[1][1] * arg[2][2] + arg[1][0] * arg[2][1] * arg[0][2] + arg[2][0] * arg[0][1] * arg[1][2]
 				- arg[2][0] * arg[1][1] * arg[0][2] - arg[1][0] * arg[0][1] * arg[2][2] - arg[0][0] * arg[2][1] * arg[1][2]
 				) / determinant(arg);
+		}
+
+		// not in glsl
+		//
+		// returns a matrix that can be used for computing the cross product:
+		//
+		// dsga::cross(u, v) == dsga::cross_matrix(u) * v == u * dsga::cross_matrix(v)
+		template <bool W, dsga::floating_point_scalar T, typename D>
+		constexpr dsga::basic_matrix<T, 3u, 3u> cross_matrix(const dsga::vector_base<W, T, 3u, D> &vec) noexcept
+		{
+			return dsga::basic_matrix<T, 3u, 3u>(T(0), vec[2], -vec[1],
+												 -vec[2], T(0), vec[0],
+												 vec[1], -vec[0], T(0));
 		}
 	}
 
