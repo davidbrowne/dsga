@@ -34,15 +34,31 @@ constexpr auto get_perpendicular2(const vec2 &some_vec) noexcept
 {
     return vec2(-1, 1) * some_vec.yx;
 }
+```
 
-// project a point to a line in 3D -- there is no coincident or collinear point checking
-constexpr auto project_to_line(const dvec3 &p0, const dvec3 &p1, const dvec3 &point_in_space) noexcept
+``` c++
+using namespace dsga;
+
+// gives closest projection point from point to a line made from line segment p1 <=> p2
+constexpr auto project_to_line1(const dvec3 &point,
+                                const dvec3 &p1,
+                                const dvec3 &p2) noexcept
 {
-    auto v1 = p1 - p0;
-    auto vq = point_in_space - p0;
-    auto t = dot(vq, v1) / dot(v1, v1);
+    auto hyp = point - p1;
+    auto v1 = p2 - p1;
+    auto t = dot(hyp, v1) / dot(v1, v1);
 
-    return p1 + t * v1;
+    return p1 + (t * v1);
+}
+
+// same as above, different implementation
+constexpr auto project_to_line2(const dvec3 &point,
+                                const dvec3 &p1,
+                                const dvec3 &p2) noexcept
+{
+    auto hyp = point - p1;
+    auto v1 = p2 - p1;
+    return p1 + outerProduct(v1, v1) * hyp / dot(v1, v1);
 }
 ```
 
@@ -195,11 +211,7 @@ The following links to the shading specification should help with understanding 
     * [Angle and Trigonometry Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#angle-and-trigonometry-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
     * [Exponential Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#exponential-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
 
-      ```dsga::sqrt()``` and ```dsga::inversesqrt()``` for ```double``` scalars and vectors have constexpr versions that are not exact matches for the output of ```std::sqrt()```. They are both very close, where most cases are exact, and they are off by 1 or 2 ulps at most when not exact. To be able to use these for constexpr purposes, you must opt-in with the following define:
-        ```c++
-        #define DSGA_CXCM_CONSTEXPR_APPROXIMATIONS_ALLOWED
-        #include "dsga.hxx"
-        ```
+      ```dsga::sqrt()``` and ```dsga::inversesqrt()``` for ```double``` scalars and vectors have constexpr versions that are not exact matches for the output of ```std::sqrt()```. They are both very close, where most cases are exact, and they are off by 1 or 2 ulps at most when not exact.
 
     * [Common Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#common-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
     * [Geometric Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#geometric-functions): ```ftransform()``` is not implemented as it is only for GLSL vertex shader programs.
@@ -279,7 +291,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.1), with MSVC installed:
+* **clang 16.0.2** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.2), with MSVC installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

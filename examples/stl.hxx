@@ -91,3 +91,6 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 {
 	return dsga::normalize(dsga::cross(v2 - v1, v3 - v1));
 }
+
+
+extern int stl_main(int argc, char *argv[]);
