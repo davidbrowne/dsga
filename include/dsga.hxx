@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 10;
-constexpr inline int DSGA_PATCH_VERSION = 6;
+constexpr inline int DSGA_PATCH_VERSION = 7;
 
 namespace dsga
 {
@@ -984,11 +984,11 @@ namespace dsga
 
 		template<std::size_t N, std::size_t... Seq>
 		constexpr std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) { return {}; }
-
-		template<std::size_t Min, std::size_t Max>
-		requires (Min <= Max)
-		using make_index_range = decltype(add<Min>(std::make_index_sequence<Max - Min>()));
 	}
+
+	template<std::size_t Min, std::size_t Max>
+	requires (Min <= Max)
+	using make_index_range = decltype(detail::add<Min>(std::make_index_sequence<Max - Min>()));
 
 	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
@@ -5654,7 +5654,7 @@ namespace dsga
 				[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 				{
 					((columns[Is][Is] = T(1.0)), ...);
-				}(detail::make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
+				}(make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
 			}
 		}
 
@@ -5679,7 +5679,7 @@ namespace dsga
 				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 				{
 					((columns[Is][Is] = T(1.0)), ...);
-				}(detail::make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
+				}(make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
 			}
 		}
 
