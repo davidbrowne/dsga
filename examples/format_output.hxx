@@ -21,18 +21,18 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : s
 	template <typename FormatContext>
 	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, FormatContext &ctx) const
 	{
-		std::vformat_to(ctx.out(), "{{ ", std::make_format_args());
+		std::format_to(ctx.out(), "{{ ");
 		std::formatter<T, CharT>::format(v[0], ctx);
 
 		if constexpr (Count > 1)
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				((std::vformat_to(ctx.out(), ", ", std::make_format_args()), std::formatter<T, CharT>::format(v[Is], ctx)), ...);
+				((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(v[Is], ctx)), ...);
 			}(dsga::make_index_range<1, Count>{});
 		}
 
-		std::vformat_to(ctx.out(), " }}", std::make_format_args());
+		std::format_to(ctx.out(), " }}");
 
 		return ctx.out();
 	}
@@ -44,18 +44,18 @@ struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>, CharT> : std:
 	template <typename FormatContext>
 	auto format(const dsga::indexed_vector<T, Size, Count, Is...> &v, FormatContext &ctx) const
 	{
-		std::vformat_to(ctx.out(), "{{ ", std::make_format_args());
+		std::format_to(ctx.out(), "{{ ");
 		std::formatter<T, CharT>::format(v[0], ctx);
 
 		if constexpr (Count > 1)
 		{
 			[&] <std::size_t ...Js>(std::index_sequence<Js...>)
 			{
-				((std::vformat_to(ctx.out(), ", ", std::make_format_args()), std::formatter<T, CharT>::format(v[Js], ctx)), ...);
+				((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(v[Js], ctx)), ...);
 			}(dsga::make_index_range<1, Count>{});
 		}
 
-		std::vformat_to(ctx.out(), " }}", std::make_format_args());
+		std::format_to(ctx.out(), " }}");
 
 		return ctx.out();
 	}
@@ -73,18 +73,18 @@ struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
 		}
 		else
 		{
-			std::vformat_to(ctx.out(), "{{ ", std::make_format_args());
+			std::format_to(ctx.out(), "{{ ");
 			std::formatter<T, CharT>::format(arr[0], ctx);
 
 			if constexpr (N > 1)
 			{
 				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 				{
-					((std::vformat_to(ctx.out(), ", ", std::make_format_args()), std::formatter<T, CharT>::format(arr[Is], ctx)), ...);
+					((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(arr[Is], ctx)), ...);
 				}(dsga::make_index_range<1, N>{});
 			}
 
-			std::vformat_to(ctx.out(), " }}", std::make_format_args());
+			std::format_to(ctx.out(), " }}");
 
 			return ctx.out();
 		}
@@ -97,18 +97,18 @@ struct std::formatter<dsga::basic_vector<T, Size>, CharT> : std::formatter<T, Ch
 	template <typename FormatContext>
 	auto format(const dsga::basic_vector<T, Size> &v, FormatContext &ctx) const
 	{
-		std::vformat_to(ctx.out(), "{{ ", std::make_format_args());
+		std::format_to(ctx.out(), "{{ ");
 		std::formatter<T, CharT>::format(v[0], ctx);
 
 		if constexpr (Size > 1)
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				((std::vformat_to(ctx.out(), ", ", std::make_format_args()), std::formatter<T, CharT>::format(v[Is], ctx)), ...);
+				((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(v[Is], ctx)), ...);
 			}(dsga::make_index_range<1, Size>{});
 		}
 
-		std::vformat_to(ctx.out(), " }}", std::make_format_args());
+		std::format_to(ctx.out(), " }}");
 
 		return ctx.out();
 	}
@@ -120,18 +120,18 @@ struct std::formatter<dsga::basic_matrix<T, C, R>, CharT> : std::formatter<dsga:
 	template <typename FormatContext>
 	auto format(const dsga::basic_matrix<T, C, R> &m, FormatContext &ctx) const
 	{
-		std::vformat_to(ctx.out(), "[ ", std::make_format_args());
+		std::format_to(ctx.out(), "[ ");
 		std::formatter<dsga::basic_vector<T, R>, CharT>::format(m[0], ctx);
 
 		if constexpr (C > 1)
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				((std::vformat_to(ctx.out(), ", ", std::make_format_args()), std::formatter<dsga::basic_vector<T, R>, CharT>::format(m[Is], ctx)), ...);
+				((std::format_to(ctx.out(), ", "), std::formatter<dsga::basic_vector<T, R>, CharT>::format(m[Is], ctx)), ...);
 			}(dsga::make_index_range<1, C>{});
 		}
 
-		std::vformat_to(ctx.out(), " ]", std::make_format_args());
+		std::format_to(ctx.out(), " ]");
 
 		return ctx.out();
 	}
