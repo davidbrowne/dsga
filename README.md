@@ -211,7 +211,7 @@ The following links to the shading specification should help with understanding 
     * [Angle and Trigonometry Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#angle-and-trigonometry-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
     * [Exponential Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#exponential-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
 
-      ```dsga::sqrt()``` and ```dsga::inversesqrt()``` for ```double``` scalars and vectors have constexpr versions that are not exact matches for the output of ```std::sqrt()```. They are both very close, where most cases are exact, and they are off by 1 or 2 ulps at most when not exact.
+      ```dsga::sqrt()``` and ```dsga::inversesqrt()``` for ```double``` scalars and vectors have constexpr context versions that are not exact matches for the output of ```std::sqrt()```. They are both very close, where most cases are exact, and they are off by 1 or 2 ulps at most when not exact.
 
     * [Common Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#common-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
     * [Geometric Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#geometric-functions): ```ftransform()``` is not implemented as it is only for GLSL vertex shader programs.
@@ -236,7 +236,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.10.7`
+Current version: `v0.10.8`
 
 * **All the intended vector and matrix functionality from the GLSL specification is implemented.** We keep refining the implementation, and we keep expanding the API to better support ```c++20``` idioms and usage as we go.
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
@@ -291,7 +291,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.2** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.2), with MSVC installed:
+* **clang 16.0.3** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.3), with MSVC installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -301,6 +301,19 @@ Performs all the unit tests except where there is lack of support for ```std::is
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
 [doctest] assertions: 2381 | 2381 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+### Mint LMDE 5 running in WSL2 for Windows 11
+
+* **gcc 13.1.0**
+
+```
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
+[doctest] assertions: 2397 | 2397 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -317,7 +330,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.3**
+* **clang 16.0.4**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

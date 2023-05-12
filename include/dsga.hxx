@@ -58,7 +58,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
 constexpr inline int DSGA_MINOR_VERSION = 10;
-constexpr inline int DSGA_PATCH_VERSION = 7;
+constexpr inline int DSGA_PATCH_VERSION = 8;
 
 namespace dsga
 {
@@ -5015,9 +5015,9 @@ namespace dsga
 		// 8.5 - geometric
 		//
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto dot(const vector_base<W1, T, C, D1> &x,
-										 const vector_base<W2, T, C, D2> &y) noexcept
+		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
+		[[nodiscard]] constexpr auto dot(const vector_base<W1, T1, C, D1> &x,
+										 const vector_base<W2, T2, C, D2> &y) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -5025,13 +5025,14 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		template <bool W1, floating_point_scalar T, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto cross(const vector_base<W1, T, 3u, D1> &x,
-										   const vector_base<W2, T, 3u, D2> &y) noexcept
+		template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
+		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3u, D1> &x,
+										   const vector_base<W2, T2, 3u, D2> &y) noexcept
 		{
-			return basic_vector<T, 3u>((x[1] * y[2]) - (y[1] * x[2]),
-									   (x[2] * y[0]) - (y[2] * x[0]),
-									   (x[0] * y[1]) - (y[0] * x[1]));
+			using Common = std::common_type_t<T1, T2>;
+			return basic_vector<Common, 3u>((x[1] * y[2]) - (y[1] * x[2]),
+											(x[2] * y[0]) - (y[2] * x[0]),
+											(x[0] * y[1]) - (y[0] * x[1]));
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -5046,9 +5047,9 @@ namespace dsga
 			return cxcm::abs(x[0u]);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto distance(const vector_base<W1, T, C, D1> &p0,
-											  const vector_base<W2, T, C, D2> &p1) noexcept
+		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
+		[[nodiscard]] constexpr auto distance(const vector_base<W1, T1, C, D1> &p0,
+											  const vector_base<W2, T2, C, D2> &p1) noexcept
 		{
 			return length(p1 - p0);
 		}
