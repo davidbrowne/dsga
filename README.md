@@ -20,19 +20,21 @@ using namespace dsga;
 
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
-constexpr auto get_perpendicular1(const vec2 &some_vec) noexcept
+template <floating_point_scalar T>
+constexpr auto get_perpendicular1(const basic_vector<T, 2> &some_vec) noexcept
 {
-    auto cos90 = 0.0f;
-    auto sin90 = 1.0f;
+	auto cos90 = 0.0f;
+	auto sin90 = 1.0f;
 
-    // rotation matrix -- components in column major order
-    return mat2(cos90, sin90, -sin90, cos90) * some_vec;
+	// rotation matrix -- components in column major order
+	return basic_matrix<T, 2, 2>(cos90, sin90, -sin90, cos90) * some_vec;
 }
 
 // same as above, different implementation
-constexpr auto get_perpendicular2(const vec2 &some_vec) noexcept
+template <floating_point_scalar T>
+constexpr auto get_perpendicular2(const basic_vector<T, 2> &some_vec) noexcept
 {
-    return vec2(-1, 1) * some_vec.yx;
+	return basic_vector<T, 2>(-1, 1) * some_vec.yx;
 }
 ```
 
