@@ -46,7 +46,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 // When evaluated at compile time emits a compilation error if condition is not true.
 // Invokes the standard assert at run time.
 #define dsga_constexpr_assert(cond, msg) \
-	((void)(!!(cond) ? 0 : (dsga_constexpr_assert_failed([](){ assert(((void)msg, !#cond));}), 0)))
+	((void)(!!(cond) ? 0 : (dsga_constexpr_assert_failed([](){ assert(((void)msg, !static_cast<bool>(#cond)));}), 0)))
 
 #endif
 
@@ -57,8 +57,8 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 0;
-constexpr inline int DSGA_MINOR_VERSION = 10;
-constexpr inline int DSGA_PATCH_VERSION = 8;
+constexpr inline int DSGA_MINOR_VERSION = 11;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {

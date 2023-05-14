@@ -238,24 +238,22 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.10.8`
+Current version: `v0.11.0`
 
 * **All the intended vector and matrix functionality from the GLSL specification is implemented.** We keep refining the implementation, and we keep expanding the API to better support ```c++20``` idioms and usage as we go.
 * First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
-* We need much better API documentation, including examples.
-* We need better ```cmake``` support.
-* [Released v0.10.0](https://github.com/davidbrowne/dsga/releases/tag/v0.10.0)
+* [Released v0.11.0](https://github.com/davidbrowne/dsga/releases/tag/v0.11.0)
 
 ### The next steps
-* Example projects: need small, medium, and large examples. The quick peek at the top of this page is a start, as is a [more detailed generic version of the example](docs/DETAILS.md#detailed-generic-example).
-* Detailed API documentation.
-* Extend ```cmake``` support. Separate the out the testing aspect, and add support declaring a header-only library.
+* Working on much better API documentation.
+* Working on extended example of STL file conversion.
+* Working on better ```cmake``` support.
 
 Once we have detailed API documentation and better ```cmake``` support, we can think about releasing a v1.0 version.
 
 ## Usage
 
-Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading. We hope to be able to use it for rapid development of geometric algorithms.
+Use it more or less like you would use vectors and matrices in a shader program, but not necessarily for shading. We hope to be able to use it for rapid development of geometric algorithms. See the [examples](examples) directory.
 
 The [documentation](docs/DOCUMENTATION.md) explains more about how the vector and matrix classes work, and describes the API.
 
@@ -271,7 +269,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.5**
+* **MSVC 2022 - v17.5.5**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -283,6 +281,7 @@ The tests have been most recently run on:
 ```
 
 * **gcc 12.2.0** on Windows, [MinGW](https://github.com/niXman/mingw-builds-binaries) distribution:
+* **gcc 13.1.0** on Windows, [WinLibs MinGW](https://winlibs.com/) distribution:
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -293,7 +292,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.3** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.3), with MSVC installed:
+* **clang 16.0.3** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.3), with MSVC and/or gcc v13.1.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -306,7 +305,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-### Mint LMDE 5 running in WSL2 for Windows 11
+### Ubuntu Mantic Minotaur preview running in WSL2 for Windows 11
 
 * **gcc 13.1.0**
 
@@ -316,6 +315,19 @@ Performs all the unit tests except where there is lack of support for ```std::is
 ===============================================================================
 [doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
 [doctest] assertions: 2397 | 2397 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+* **clang 16.0.0**
+
+Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+
+```
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  100 |  100 passed | 0 failed | 0 skipped
+[doctest] assertions: 2381 | 2381 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
