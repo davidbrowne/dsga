@@ -246,7 +246,6 @@ Current version: `v0.11.0`
 
 ### The next steps
 * Working on much better API documentation.
-* Working on extended example of STL file conversion.
 * Working on better ```cmake``` support.
 
 Once we have detailed API documentation and better ```cmake``` support, we can think about releasing a v1.0 version.
@@ -269,7 +268,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.5.5**
+* **MSVC 2022 - v17.6.2**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -292,7 +291,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.3** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.3), with MSVC and/or gcc v13.1.0 installed:
+* **clang 16.0.4** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.4), with MSVC and/or gcc v13.1.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -344,7 +343,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.4**
+* **clang 16.0.5**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

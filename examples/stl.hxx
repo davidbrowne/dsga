@@ -4,8 +4,6 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 
-#include "dsga.hxx"
-
 
 // The STL file format has been around for over three decades. Since the format is so
 // simple and straightforward, it is pretty easy to implement STL file readers and writers.
@@ -16,10 +14,10 @@
 // For maximum flexibility, consider these suggestions and observations:
 //
 // - Don't rely on the ASCII data to be only floats. The data could be doubles. Read the
-//   data as doubles, but then convert to float. Binary STL is always float.
+//   data, but then for output convert to float. Binary STL is always float.
 // - Don't rely on numeric data being written with full precision. It depends on the format
 //   specifiers that were used to write out the floating-point data.
-// - Don't rely on space as the only whitespace separator.
+// - Don't rely on the space character as the only whitespace separator.
 // - Don't rely on the normal vector. Compute it yourself from the vertex data
 // - Don't rely on only one solid in an ASCII STL file.
 // - Don't rely on the data being in the all-positive octant (definite numbers that are
@@ -60,37 +58,5 @@
 // data integrity, and it will be able to read and convert between both ASCII and binary
 // STL formats.
 //
-
-// make sure data has no infinities or NaNs
-constexpr bool definite_coordinate_triple(const dsga::vec3 &data) noexcept
-{
-	return !(dsga::any(dsga::isinf(data)) || dsga::any(dsga::isnan(data)));
-}
-
-// make sure normal vector has no infinities or NaNs and is not the zero-vector { 0, 0, 0 }
-constexpr bool valid_normal_vector(const dsga::vec3 &normal) noexcept
-{
-	return definite_coordinate_triple(normal) && dsga::any(dsga::notEqual(normal, dsga::vec3(0)));
-}
-
-// not checking for positive-only first octant data -- we are allowing zeros and negative values
-constexpr bool valid_vertex_relaxed(const dsga::vec3 &vertex) noexcept
-{
-	return definite_coordinate_triple(vertex);
-}
-
-// strict version where all vertex coordinates must be positive-definite
-constexpr bool valid_vertex_strict(const dsga::vec3 &vertex) noexcept
-{
-	return definite_coordinate_triple(vertex) && dsga::all(dsga::greaterThan(vertex, dsga::vec3(0)));
-}
-
-// right-handed unit normal vector for a triangle facet,
-// inputs are triangle vertices in counter-clockwise order
-constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 &v2, const dsga::vec3 &v3) noexcept
-{
-	return dsga::normalize(dsga::cross(v2 - v1, v3 - v1));
-}
-
 
 extern int stl_main(int argc, char *argv[]);
