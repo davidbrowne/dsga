@@ -55,13 +55,15 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// iostream output operator for STL ASCII output -- need to set scientific and precision==9 on the stream
+// iostream output operator for STL ASCII output -- need to set scientific and precision==9 on the stream (actually 8, because
+// std::scientific format only counts digits *after* the decimal point.
+// see https://www.zverovich.net/2023/06/04/printing-double.html
 template <dsga::dimensional_scalar T, std::size_t Size>
 inline std::ostream &operator<<(std::ostream &o, const dsga::basic_vector<T, Size> &v)
 {
 	o << v[0];
 	for (int i = 1; i < v.length(); ++i)
-		o << " " << v[i];
+		o << " " << std::scientific << v[i];
 	return o;
 }
 
@@ -69,9 +71,9 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::basic_vector<T, Siz
 
 bool maybe_binary_stl(std::ifstream &some_file, uintmax_t size)
 {
-	constexpr auto facet_size = 50u;
-	constexpr auto header_size = 80u;
-	constexpr auto num_facets_size = 4u;
+	constexpr uintmax_t facet_size = 50u;
+	constexpr uintmax_t header_size = 80u;
+	constexpr uintmax_t num_facets_size = 4u;
 	bool maybe_val = false;
 	unsigned int num_facets{};
 
@@ -190,8 +192,7 @@ bool convert_binary_stl_to_ascii(std::ifstream &some_file, std::ofstream &out_fi
 	some_file.seekg(header_size + num_facets_size);
 
 	// iostream ASCII STL float format
-	out_file.setf(std::ios::scientific);
-	out_file.precision(9);
+	out_file.precision(std::numeric_limits<float>::max_digits10 - 1);
 
 	// convert input to output
 	out_file << solid_open;
