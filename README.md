@@ -306,7 +306,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.6.2**
+* **MSVC 2022 - v17.6.5**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -329,7 +329,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.4** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.4), with MSVC and/or gcc v13.1.0 installed:
+* **clang 16.0.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.6), with MSVC and/or gcc v13.1.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -355,7 +355,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.0**
+* **clang 16.0.6**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -381,7 +381,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.5**
+* **clang 16.0.6**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
