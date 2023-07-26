@@ -6,7 +6,6 @@
 
 //#include "nanobench.h"
 #include "dsga.hxx"
-#include "../examples/format_output.hxx"
 
 //
 //
@@ -22,21 +21,6 @@ void sandbox_function()
 {
 	// put fun code here
 
-#if defined(__cpp_lib_format)
-	auto fmt_arr = std::array<double, 4>{1, 2, 3, 4};
-	auto empty_arr = std::array<double, 0>{};
-	auto one_arr = std::array<double, 1>{99};
-	auto fmt_vec = dsga::dvec4(10, 20, 30, 40);
-	auto fmt_mat = dsga::dmat3x2(1, 2, 3, 4, 5, 6);
-	test_format_array(empty_arr);
-	test_format_array(one_arr);
-	test_format_array(fmt_arr);
-	test_format_vector(fmt_vec);
-	test_format_vector_base(fmt_vec);
-	test_format_vector_base(fmt_vec.wzyx);
-	test_format_indexed_vector(fmt_vec.wzyx);
-	test_format_matrix(fmt_mat);
-#endif
 }
 
 #if defined(__clang__) && (__clang_major__ < 13)

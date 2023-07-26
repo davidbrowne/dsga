@@ -58,8 +58,8 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 // version info
 
-constexpr inline int DSGA_MAJOR_VERSION = 0;
-constexpr inline int DSGA_MINOR_VERSION = 11;
+constexpr inline int DSGA_MAJOR_VERSION = 1;
+constexpr inline int DSGA_MINOR_VERSION = 0;
 constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
@@ -1240,13 +1240,13 @@ namespace dsga
 			{
 				int count = by > max_val ? max_val : by;
 				auto shifted_end = std::shift_left(copy.begin(), copy.end(), count);
-				std::fill_n(shifted_end, count, T(0));
+				std::ranges::fill_n(shifted_end, count, T(0));
 			}
 			else if (by < 0)
 			{
 				int count = -by > max_val ? max_val : -by;
 				std::shift_right(copy.begin(), copy.end(), count);
-				std::fill_n(copy.begin(), count, T(0));
+				std::ranges::fill_n(copy.begin(), count, T(0));
 			}
 
 			return copy;
@@ -1261,22 +1261,22 @@ namespace dsga
 			if (by > 0)
 			{
 				int count = by > max_val ? max_val : by;
-				std::rotate(copy.begin(), copy.begin() + count, copy.end());
+				std::ranges::rotate(copy, copy.begin() + count);
 			}
 			else if (by < 0)
 			{
 				int count = -by > max_val ? max_val : -by;
-				std::rotate(copy.begin(), copy.begin() + max_val - count, copy.end());
+				std::ranges::rotate(copy, copy.begin() + max_val - count);
 			}
 
 			return copy;
 		}
 
 		// min value in vector
-		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>		{ return *std::min_element(begin(), end()); }
+		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>		{ return *std::ranges::min_element(*this); }
 
 		// max value in vector
-		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>		{ return *std::max_element(begin(), end()); }
+		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>		{ return *std::ranges::max_element(*this); }
 
 		// sum of values in vector
 		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>		{ return std::accumulate(begin(), end(), T(0)); }

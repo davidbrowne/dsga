@@ -2,9 +2,13 @@
 
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
+## Current Version
+v1.0.0
+
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
 * [Relevant GLSL Overview](#relevant-glsl-overview)
+* [Implemented Interfaces](#implemented-interfaces)
 * [Installation](#installation)
 * [Status](#status)
 * [Usage](#usage)
@@ -222,6 +226,43 @@ The following links to the shading specification should help with understanding 
 
       In addtion, we have added the non-GLSL convenience function ```none()```, which returns ```!any()```.
 
+## Implemented Interfaces
+
+To make the vectors and matrices as useful as possible in a c++ context, various c++ customization points were implemented or interfaces partially emulated, e.g., ```std::valarray<>```. For ```dsga``` vectors and matrices, we have:
+
+* swizzling from GLSL (just vector)
+    * just from the set of {x, y, z, w}, e.g., ```foo.wyxz```
+* ```std::valarray<>``` (just vector)
+    * ```apply()```
+    * ```shift()```
+    * ```cshift()```
+    * ```min()```
+    * ```max()```
+    * ```sum()```
+* ```std::tuple```, structured bindings
+    * ```tuple_size<>```
+    * ```tuple_element<>```
+    * ```get<>()```
+* iterators, ranges, range-for loop
+    * ```begin()```
+    * ```cbegin()```
+    * ```rbegin()```
+    * ```crbegin()```
+    * ```end()```
+    * ```cend()```
+    * ```rend()```
+    * ```crend()```
+* indexing
+    * ```operator []```
+* pointer (just vector)
+    * ```data()```
+    * ```offsets```
+    * ```sequence()```
+ * output
+    * [```std::ostream<>``` example](examples/ostream_output.hxx)
+    * [```std::formatter<>``` example](examples/format_output.hxx)
+
+
 ## Installation
 
 This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). Things are defined in the ```dsga``` namespace. The types provided by this library can be seen summarized in the [documentation](docs/DOCUMENTATION.md), [using directives](docs/DOCUMENTATION.md#types-and-functions).
@@ -238,17 +279,14 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v0.11.0`
+Current version: `v1.0.0`
 
-* **All the intended vector and matrix functionality from the GLSL specification is implemented.** We keep refining the implementation, and we keep expanding the API to better support ```c++20``` idioms and usage as we go.
-* First pass at test coverage. Everything major has some tests, but code coverage is not 100%.
-* [Released v0.11.0](https://github.com/davidbrowne/dsga/releases/tag/v0.11.0)
+* Everything major has some tests, but code coverage is not 100%.
+* [Released v1.0.0](https://github.com/davidbrowne/dsga/releases/tag/v1.0.0)
 
 ### The next steps
 * Working on much better API documentation.
 * Working on better ```cmake``` support.
-
-Once we have detailed API documentation and better ```cmake``` support, we can think about releasing a v1.0 version.
 
 ## Usage
 
