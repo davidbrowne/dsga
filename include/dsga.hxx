@@ -985,12 +985,45 @@ namespace dsga
 		//
 
 		template<std::size_t N, std::size_t... Seq>
-		constexpr std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) { return {}; }
+		constexpr std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) noexcept { return {}; }
+
+		template<std::size_t N, std::size_t... Seq>
+		constexpr std::index_sequence<N - Seq ...> subtract(std::index_sequence<Seq...>) noexcept { return {}; }
+
+		template<std::size_t Start, std::size_t End>
+		constexpr auto index_range() noexcept
+		{
+			if constexpr (Start <= End)
+			{
+				return add<Start>(std::make_index_sequence<End - Start>());
+			}
+			else
+			{
+				return subtract<Start>(std::make_index_sequence<Start - End>());
+			}
+		}
+
+		template<std::size_t Start, std::size_t End>
+		constexpr auto closed_index_range() noexcept
+		{
+			if constexpr (Start <= End)
+			{
+				return add<Start>(std::make_index_sequence<End - Start + 1>());
+			}
+			else
+			{
+				return subtract<Start>(std::make_index_sequence<Start - End + 1>());
+			}
+		}
 	}
 
-	template<std::size_t Min, std::size_t Max>
-	requires (Min <= Max)
-	using make_index_range = decltype(detail::add<Min>(std::make_index_sequence<Max - Min>()));
+	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
+	template<std::size_t Start, std::size_t End>
+	using make_index_range = decltype(detail::index_range<Start, End>());
+
+	// closed interval in a std::index_sequence -> [Start, End]
+	template<std::size_t Start, std::size_t End>
+	using make_closed_index_range = decltype(detail::closed_index_range<Start, End>());
 
 	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>

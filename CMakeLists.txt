@@ -20,6 +20,7 @@ set(TEST_FILES
 	tests/function_test.cxx
 	tests/operator_test.cxx
 	tests/swizzle_test.cxx
+	tests/utility_test.cxx
 )
 
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${TEST_FILES})

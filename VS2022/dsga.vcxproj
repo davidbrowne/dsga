@@ -205,6 +205,7 @@
     <ClCompile Include="..\tests\function_test.cxx" />
     <ClCompile Include="..\tests\operator_test.cxx" />
     <ClCompile Include="..\tests\swizzle_test.cxx" />
+    <ClCompile Include="..\tests\utility_test.cxx" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dsga.natvis" />
