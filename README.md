@@ -228,22 +228,15 @@ The following links to the shading specification should help with understanding 
 
 ## Implemented Interfaces
 
-To make the vectors and matrices as useful as possible in a c++ context, various c++ customization points were implemented or interfaces partially emulated, e.g., ```std::valarray<>```. For ```dsga``` vectors and matrices, we have:
+To make the vectors and matrices as useful as possible in a C++ context, various C++ customization points were implemented or interfaces partially emulated, e.g., ```std::valarray<>```. There are many options for data access. For ```dsga``` vectors and matrices, we have:
 
-* swizzling from GLSL (just vector)
-    * just from the set of {x, y, z, w}, e.g., ```foo.wyxz```
-* ```std::valarray<>``` (just vector)
-    * ```apply()```
-    * ```shift()```
-    * ```cshift()```
-    * ```min()```
-    * ```max()```
-    * ```sum()```
-* ```std::tuple```, structured bindings
+* Swizzle access like GLSL (vector only)
+    * Only from the set of {x, y, z, w}, e.g., ```foo.wyxz```
+* ```std::tuple``` type of access, structured bindings
+    * ```get<>()```
     * ```tuple_size<>```
     * ```tuple_element<>```
-    * ```get<>()```
-* iterators, ranges, range-for loop
+* Iterator access, ranges, range-for loop
     * ```begin()```
     * ```cbegin()```
     * ```rbegin()```
@@ -252,16 +245,28 @@ To make the vectors and matrices as useful as possible in a c++ context, various
     * ```cend()```
     * ```rend()```
     * ```crend()```
-* indexing
+* Index access (logical)
     * ```operator []```
-* pointer (just vector)
+    * ```size()```
+    * ```length()```
+* Pointer access (physical) (vector only)
     * ```data()```
-    * ```offsets```
-    * ```sequence()```
- * output
+    * ```offsets``` - allows logical use of ```data()```
+    * ```sequence()``` - allows logical use of ```data()```
+* Type Conversions (vector only)
+    * ```to_vector()``` - from both ```std::array``` and C style arrays
+    * ```to_array()``` - to ```std::array```
+    * [```std::span``` example](examples/span_convert.hxx)
+* Text output
     * [```std::ostream<>``` example](examples/ostream_output.hxx)
     * [```std::formatter<>``` example](examples/format_output.hxx)
-
+* ```std::valarray<>``` API (vector only)
+    * ```apply()```
+    * ```shift()```
+    * ```cshift()```
+    * ```min()```
+    * ```max()```
+    * ```sum()```
 
 ## Installation
 
