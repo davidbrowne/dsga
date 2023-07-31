@@ -60,7 +60,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -976,22 +976,18 @@ namespace dsga
 		template <typename T, typename U>
 		concept same_sizeof = (sizeof(T) == sizeof(U));
 
-		// compile time min and max functions for std::size_t -- didn't want to overload min() and max() yet again
-		consteval std::size_t min_helper(std::size_t first, std::size_t second) { return second < first ? second : first; };
-		consteval std::size_t max_helper(std::size_t first, std::size_t second) { return second < first ? first : second; };
-
 		//
 		// https://stackoverflow.com/questions/40617854/implement-c-template-for-generating-an-index-sequence-with-a-given-range
 		//
 
 		template<std::size_t N, std::size_t... Seq>
-		constexpr std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) noexcept { return {}; }
+		consteval std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) noexcept { return {}; }
 
 		template<std::size_t N, std::size_t... Seq>
-		constexpr std::index_sequence<N - Seq ...> subtract(std::index_sequence<Seq...>) noexcept { return {}; }
+		consteval std::index_sequence<N - Seq ...> subtract(std::index_sequence<Seq...>) noexcept { return {}; }
 
 		template<std::size_t Start, std::size_t End>
-		constexpr auto index_range() noexcept
+		consteval auto index_range() noexcept
 		{
 			if constexpr (Start <= End)
 			{
@@ -1004,7 +1000,7 @@ namespace dsga
 		}
 
 		template<std::size_t Start, std::size_t End>
-		constexpr auto closed_index_range() noexcept
+		consteval auto closed_index_range() noexcept
 		{
 			if constexpr (Start <= End)
 			{
@@ -1032,7 +1028,7 @@ namespace dsga
 	// build an array from the indexes of an index_sequence
 	template <std::size_t... Is>
 	requires (sizeof...(Is) > 0)
-	static constexpr std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */)
+	static consteval std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */)
 	{
 		return {Is...};
 	}
@@ -1056,7 +1052,7 @@ namespace dsga
 	// use those in NTTPs?), as we are not allowed to mix and match accessors from different mask sets.
 	enum class swizzle_mask_sets
 	{
-		xyzw,						// spatial points and normals
+		xyzw,						// spatial points and vectors
 		rgba,						// colors
 		stpq						// texture coordinates
 	};
@@ -1432,7 +1428,7 @@ namespace dsga
 			return temp;
 		}
 
-		constexpr indexed_vector_const_iterator &operator +=(int offset) noexcept
+		constexpr indexed_vector_const_iterator &operator +=(const int offset) noexcept
 		{
 			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
 
@@ -1440,7 +1436,7 @@ namespace dsga
 			return *this;
 		}
 
-		constexpr indexed_vector_const_iterator &operator -=(int offset) noexcept
+		constexpr indexed_vector_const_iterator &operator -=(const int offset) noexcept
 		{
 			dsga_constexpr_assert(((mapper_index - offset) >= begin_index) && ((mapper_index - offset) < end_index), "offset not in range");
 
@@ -1469,7 +1465,7 @@ namespace dsga
 			return mapper_index <=> iter.mapper_index;
 		}
 
-		[[nodiscard]] constexpr reference operator [](int offset) const noexcept
+		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
 		{
 			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
 			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
@@ -1564,13 +1560,13 @@ namespace dsga
 			return temp;
 		}
 
-		constexpr indexed_vector_iterator &operator +=(int offset) noexcept
+		constexpr indexed_vector_iterator &operator +=(const int offset) noexcept
 		{
 			base_iter::operator+=(offset);
 			return *this;
 		}
 
-		constexpr indexed_vector_iterator &operator -=(int offset) noexcept
+		constexpr indexed_vector_iterator &operator -=(const int offset) noexcept
 		{
 			base_iter::operator-=(offset);
 			return *this;
@@ -1598,7 +1594,7 @@ namespace dsga
 			return temp;
 		}
 
-		[[nodiscard]] constexpr reference operator [](int offset) const noexcept
+		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
 		{
 			return const_cast<reference>(base_iter::operator[](offset));
 		}
@@ -5681,8 +5677,8 @@ namespace dsga
 				{
 					constexpr std::size_t Col = Is;
 					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
-				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
-			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
+				}(std::make_index_sequence<std::min(R, Rows)>{})), ...);
+			}(std::make_index_sequence<std::min(C, Cols)>{});
 
 			// for square matrix, extend identity diagonal as needed
 			if constexpr (C == R)
@@ -5690,7 +5686,7 @@ namespace dsga
 				[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 				{
 					((columns[Is][Is] = T(1.0)), ...);
-				}(make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
+				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
 			}
 		}
 
@@ -5706,8 +5702,8 @@ namespace dsga
 				{
 					constexpr std::size_t Col = Is;
 					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
-				}(std::make_index_sequence<detail::min_helper(R, Rows)>{})), ...);
-			}(std::make_index_sequence<detail::min_helper(C, Cols)>{});
+				}(std::make_index_sequence<std::min(R, Rows)>{})), ...);
+			}(std::make_index_sequence<std::min(C, Cols)>{});
 
 			// for square matrix, extend identity diagonal as needed
 			if constexpr (C == R)
@@ -5715,7 +5711,7 @@ namespace dsga
 				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 				{
 					((columns[Is][Is] = T(1.0)), ...);
-				}(make_index_range<detail::min_helper(detail::min_helper(Cols, C), detail::min_helper(Rows, R)), C>{});
+				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
 			}
 		}
 
