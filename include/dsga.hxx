@@ -60,7 +60,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 3;
 
 namespace dsga
 {
@@ -963,12 +963,15 @@ namespace dsga
 
 		// concepts required to build concept for testing for writable swizzle indexes
 
+		// are all the Is... different/unique
 		template <std::size_t ...Is>
 		constexpr inline bool unique_indexes = (sizeof...(Is) > 0) && unique_indexes_impl<Is...>::value;
 
+		// is Count the same as the number of Is... and is Count an appropriate size for a vector
 		template <std::size_t Count, std::size_t ...Is>
 		constexpr inline bool valid_index_count = (sizeof...(Is) == Count) && dimensional_size<Count>;
 
+		// are the values of Is... in the range 0 <= Is... < Size
 		template <std::size_t Size, std::size_t ...Is>
 		constexpr inline bool valid_range_indexes = valid_indexes_impl<Size, Is...>::value;
 
@@ -980,12 +983,15 @@ namespace dsga
 		// https://stackoverflow.com/questions/40617854/implement-c-template-for-generating-an-index-sequence-with-a-given-range
 		//
 
+		// return std::index_sequence with positive offset
 		template<std::size_t N, std::size_t... Seq>
 		consteval std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) noexcept { return {}; }
 
+		// return std::index_sequence with negative offset
 		template<std::size_t N, std::size_t... Seq>
 		consteval std::index_sequence<N - Seq ...> subtract(std::index_sequence<Seq...>) noexcept { return {}; }
 
+		// return std::index_sequence -> [Start, End)
 		template<std::size_t Start, std::size_t End>
 		consteval auto index_range() noexcept
 		{
@@ -999,6 +1005,7 @@ namespace dsga
 			}
 		}
 
+		// return std::index_sequence -> [Start, End]
 		template<std::size_t Start, std::size_t End>
 		consteval auto closed_index_range() noexcept
 		{
@@ -1011,6 +1018,10 @@ namespace dsga
 				return subtract<Start>(std::make_index_sequence<Start - End + 1>());
 			}
 		}
+
+		// return std::index_sequence -> constexpr std::array<std::size_t, N> elements
+		template<auto indexable, std::size_t... Is>
+		consteval std::index_sequence<indexable[Is] ...> indexable_to_pack(std::index_sequence<Is...>) noexcept { return {}; }
 	}
 
 	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
@@ -1021,6 +1032,10 @@ namespace dsga
 	template<std::size_t Start, std::size_t End>
 	using make_closed_index_range = decltype(detail::closed_index_range<Start, End>());
 
+	// constexpr std::array<std::size_t, N> elements in a std::index_sequence
+	template <auto indexable>
+	using make_pack_from_indexable = decltype(detail::indexable_to_pack<indexable>(std::make_index_sequence<indexable.size()>()));
+
 	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
 	constexpr inline bool writable_swizzle = detail::valid_index_count<Count, Is...> && detail::unique_indexes<Is...> && detail::valid_range_indexes<Size, Is...>;
@@ -1028,10 +1043,7 @@ namespace dsga
 	// build an array from the indexes of an index_sequence
 	template <std::size_t... Is>
 	requires (sizeof...(Is) > 0)
-	static consteval std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */)
-	{
-		return {Is...};
-	}
+	consteval std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */) noexcept { return { Is... }; }
 
 	// is the second type also the common type of the two types
 	template <typename T, typename U>
