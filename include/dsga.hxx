@@ -60,7 +60,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -1019,9 +1019,17 @@ namespace dsga
 			}
 		}
 
+		// is T an array-like thing (indexable) that has values that can be used in a std::index_sequence
+		template <typename T>
+		concept sequence_indexable = requires (T t, std::size_t i)
+		{
+			{ t[i] } -> std::same_as<std::size_t &>;
+			{ t.size() } -> std::convertible_to<std::size_t>;
+		};
+
 		// return std::index_sequence -> constexpr std::array<std::size_t, N> elements
-		template<auto indexable, std::size_t... Is>
-		consteval std::index_sequence<indexable[Is] ...> indexable_to_pack(std::index_sequence<Is...>) noexcept { return {}; }
+		template <sequence_indexable auto val, std::size_t ...Is>
+		consteval std::index_sequence<val[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
 	}
 
 	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
@@ -1033,8 +1041,8 @@ namespace dsga
 	using make_closed_index_range = decltype(detail::closed_index_range<Start, End>());
 
 	// constexpr std::array<std::size_t, N> elements in a std::index_sequence
-	template <auto indexable>
-	using make_pack_from_indexable = decltype(detail::indexable_to_pack<indexable>(std::make_index_sequence<indexable.size()>()));
+	template <detail::sequence_indexable auto val>
+	using make_array_sequence = decltype(detail::indexable_to_sequence<val>(std::make_index_sequence<val.size()>()));
 
 	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
