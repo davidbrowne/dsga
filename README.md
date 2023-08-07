@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.0.4
+v1.0.5
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -195,10 +195,10 @@ The following links to the shading specification should help with understanding 
       ```c++
       auto my_vec = dsga::vec3(10, 20, 30);
       auto double_swiz = my_vec.zxy.x;           // error: no such data member x
-      auto swiz = my_vec.zxy;                    // swizzle type is not vec3
+      auto swiz = my_vec.zxy;                    // swizzle type is not dsga::vec3
       auto swiz_again = swiz.x;                  // error: no such data member x
-      auto try_swiz_again = dsga::vec3(swiz).x;  // wrapping with vec3 works
-      dsga::vec3 swiz_reborn = my_vec.zxy;       // vec3 constructor from swizzle
+      auto try_swiz_again = dsga::vec3(swiz).x;  // wrapping with dsga::vec3 works
+      dsga::vec3 swiz_reborn = my_vec.zxy;       // dsga::vec3 constructor from swizzle
       auto and_swiz_again = swiz_reborn.x;       // works
       ```
     * [Matrix Components](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrix-components)
@@ -284,7 +284,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v1.0.4`
+Current version: `v1.0.5`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Released v1.0.0](https://github.com/davidbrowne/dsga/releases/tag/v1.0.0)
@@ -322,7 +322,6 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 12.2.0** on Windows, [MinGW](https://github.com/niXman/mingw-builds-binaries) distribution:
 * **gcc 13.1.0** on Windows, [WinLibs MinGW](https://winlibs.com/) distribution:
 
 ```
@@ -349,7 +348,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 ### Ubuntu Mantic Minotaur preview running in WSL2 for Windows 11
 
-* **gcc 13.1.0**
+* **gcc 13.2.0**
 
 ```
 [doctest] doctest version is "2.4.11"

@@ -60,7 +60,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -985,15 +985,15 @@ namespace dsga
 
 		// return std::index_sequence with positive offset
 		template<std::size_t N, std::size_t... Seq>
-		consteval std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) noexcept { return {}; }
+		constexpr std::index_sequence<N + Seq ...> add(std::index_sequence<Seq...>) noexcept { return {}; }
 
 		// return std::index_sequence with negative offset
 		template<std::size_t N, std::size_t... Seq>
-		consteval std::index_sequence<N - Seq ...> subtract(std::index_sequence<Seq...>) noexcept { return {}; }
+		constexpr std::index_sequence<N - Seq ...> subtract(std::index_sequence<Seq...>) noexcept { return {}; }
 
 		// return std::index_sequence -> [Start, End)
 		template<std::size_t Start, std::size_t End>
-		consteval auto index_range() noexcept
+		constexpr auto index_range() noexcept
 		{
 			if constexpr (Start <= End)
 			{
@@ -1007,7 +1007,7 @@ namespace dsga
 
 		// return std::index_sequence -> [Start, End]
 		template<std::size_t Start, std::size_t End>
-		consteval auto closed_index_range() noexcept
+		constexpr auto closed_index_range() noexcept
 		{
 			if constexpr (Start <= End)
 			{
@@ -1029,7 +1029,7 @@ namespace dsga
 
 		// return std::index_sequence -> constexpr std::array<std::size_t, N> elements
 		template <sequence_indexable auto val, std::size_t ...Is>
-		consteval std::index_sequence<val[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
+		constexpr std::index_sequence<val[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
 	}
 
 	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
@@ -1050,8 +1050,19 @@ namespace dsga
 
 	// build an array from the indexes of an index_sequence
 	template <std::size_t... Is>
-	requires (sizeof...(Is) > 0)
-	consteval std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...> /* dummy */) noexcept { return { Is... }; }
+	constexpr std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...>) noexcept { return { Is... }; }
+
+	// convert a std::index_sequence<Is...> to a std:index_sequence with the Is... in reverse order from input
+	template<std::size_t ...Is>
+	constexpr auto make_reverse_sequence(std::index_sequence<Is...> seq) noexcept
+	{
+		constexpr auto vals = make_sequence_array(seq);
+
+		return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+		{
+			return std::index_sequence<vals[sizeof...(Js) - Js - 1]...>();
+		}(std::make_index_sequence<sizeof...(Is)>());
+	}
 
 	// is the second type also the common type of the two types
 	template <typename T, typename U>
@@ -1068,8 +1079,8 @@ namespace dsga
 
 	// there is no use for this enum, it is meant as FEO (For Exposition Only). we will separate domains by the names of the swizzle union
 	// members we create, as opposed to using this enum class as a template parameter. we only intend to implement the xyzw swizzle accessors.
-	// if we intend to implement the other swizzle mask sets, then values of this enum class would come in handy as a template parameter (can we
-	// use those in NTTPs?), as we are not allowed to mix and match accessors from different mask sets.
+	// if we intend to implement the other swizzle mask sets, then values of this enum class would come in handy as a template parameter, as
+	// the spec states that it isn't allowed to mix and match accessors from different mask sets.
 	enum class swizzle_mask_sets
 	{
 		xyzw,						// spatial points and vectors
@@ -1131,7 +1142,7 @@ namespace dsga
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...> /* dummy */, As ...same_args) noexcept
+			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...>, As ...same_args) noexcept
 			{
 				((store[Js] = static_cast<T>(same_args)),...);
 			}(std::make_index_sequence<Count>{}, args...);
@@ -1652,7 +1663,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				set(other[Js]...);
 			}(std::make_index_sequence<Count>{});
@@ -2390,7 +2401,7 @@ namespace dsga
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				((base[Js] = static_cast<T>(args)), ...);
 			}(std::make_index_sequence<Count>{});
@@ -2655,7 +2666,7 @@ namespace dsga
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				((base[Js] = static_cast<T>(args)), ...);
 			}(std::make_index_sequence<Count>{});
@@ -3143,7 +3154,7 @@ namespace dsga
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...> /* dummy */) noexcept
+			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				((base[Js] = static_cast<T>(args)), ...);
 			}(std::make_index_sequence<Count>{});
@@ -3187,14 +3198,14 @@ namespace dsga
 		// convert basic array types to a basic_vector
 
 		template <typename T, std::size_t S, std::size_t ...Is>
-		constexpr auto passthru_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto passthru_execute(std::index_sequence<Is...>,
 										const std::array<T, S> &arg) noexcept
 		{
 			return basic_vector<T, S>(arg[Is]...);
 		}
 
 		template <typename T, std::size_t S, std::size_t ...Is>
-		constexpr auto passthru_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto passthru_execute(std::index_sequence<Is...>,
 										const T(&arg)[S]) noexcept
 		{
 			return basic_vector<T, S>(arg[Is]...);
@@ -3219,7 +3230,7 @@ namespace dsga
 		// when Count == 1, treat it like a scalar value and return a scalar value.
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D, typename UnOp, std::size_t ...Is>
-		constexpr auto unary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto unary_op_execute(std::index_sequence<Is...>,
 										const vector_base<W, T, C, D> &arg,
 										UnOp &lambda) noexcept
 		{
@@ -3229,7 +3240,7 @@ namespace dsga
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
-		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto binary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W1, T1, C, D1> &lhs,
 										 const vector_base<W2, T2, C, D2> &rhs,
 										 BinOp &lambda) noexcept
@@ -3241,7 +3252,7 @@ namespace dsga
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
-		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto binary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W, T, C, D> &lhs,
 										 U rhs,
 										 BinOp &lambda) noexcept
@@ -3253,7 +3264,7 @@ namespace dsga
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
-		constexpr auto binary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto binary_op_execute(std::index_sequence<Is...>,
 										 U lhs,
 										 const vector_base<W, T, C, D> &rhs,
 										 BinOp &lambda) noexcept
@@ -3269,7 +3280,7 @@ namespace dsga
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
-		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
+		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...>,
 													const vector_base<W1, T1, C, D1> &lhs,
 													const vector_base<W2, T2, C, D2> &rhs,
 													BinOp &lambda) noexcept
@@ -3279,7 +3290,7 @@ namespace dsga
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
-		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
+		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...>,
 													const vector_base<W, T, C, D> &lhs,
 													U rhs,
 													BinOp &lambda) noexcept
@@ -3289,7 +3300,7 @@ namespace dsga
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
-		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
+		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...>,
 													U lhs,
 													const vector_base<W, T, C, D> &rhs,
 													BinOp &lambda) noexcept
@@ -3306,7 +3317,7 @@ namespace dsga
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
 		requires W1
-		constexpr void binary_op_set(std::index_sequence<Is...> /* dummy */,
+		constexpr void binary_op_set(std::index_sequence<Is...>,
 									 vector_base<W1, T1, C, D1> &lhs,
 									 const vector_base<W2, T2, C, D2> &rhs,
 									 BinOp &lambda) noexcept
@@ -3318,7 +3329,7 @@ namespace dsga
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		requires W
-		constexpr void binary_op_set(std::index_sequence<Is...> /* dummy */,
+		constexpr void binary_op_set(std::index_sequence<Is...>,
 									 vector_base<W, T, C, D> &lhs,
 									 U rhs,
 									 BinOp &lambda) noexcept
@@ -3330,7 +3341,7 @@ namespace dsga
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
 		requires W1
-		constexpr void binary_op_set_no_convert(std::index_sequence<Is...> /* dummy */,
+		constexpr void binary_op_set_no_convert(std::index_sequence<Is...>,
 												vector_base<W1, T1, C, D1> &lhs,
 												const vector_base<W2, T2, C, D2> &rhs,
 												BinOp &lambda) noexcept
@@ -3341,7 +3352,7 @@ namespace dsga
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		requires W
-		constexpr void binary_op_set_no_convert(std::index_sequence<Is...> /* dummy */,
+		constexpr void binary_op_set_no_convert(std::index_sequence<Is...>,
 												vector_base<W, T, C, D> &lhs,
 												U rhs,
 												BinOp &lambda) noexcept
@@ -3352,7 +3363,7 @@ namespace dsga
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, bool W3, dsga::dimensional_scalar T3, typename D3,
 			typename TernOp, std::size_t ...Is>
-		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W1, T1, C, D1> &x,
 										 const vector_base<W2, T2, C, D2> &y,
 										 const vector_base<W3, T3, C, D3> &z,
@@ -3365,7 +3376,7 @@ namespace dsga
 
 		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dsga::dimensional_scalar T2, typename D2, dsga::dimensional_scalar U, typename TernOp, std::size_t ...Is>
-		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W1, T1, C, D1> &x,
 										 const vector_base<W2, T2, C, D2> &y,
 										 U z,
@@ -3378,7 +3389,7 @@ namespace dsga
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, dsga::dimensional_scalar V, typename TernOp, std::size_t ...Is>
-		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W, T, C, D> &x,
 										 U y,
 										 V z,
@@ -3391,7 +3402,7 @@ namespace dsga
 
 		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
 			dsga::dimensional_scalar U, dsga::dimensional_scalar V, typename TernOp, std::size_t ...Is>
-		constexpr auto ternary_op_execute(std::index_sequence<Is...> /* dummy */,
+		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 U x,
 										 V y,
 										 const vector_base<W, T, C, D> &z,
@@ -3406,7 +3417,7 @@ namespace dsga
 			bool W2, dsga::dimensional_scalar T2, typename D2,
 			bool W3, dsga::dimensional_scalar T3, typename D3,
 			typename TernOp, std::size_t ...Is>
-		constexpr auto ternary_op_execute_no_convert(std::index_sequence<Is...> /* dummy */,
+		constexpr auto ternary_op_execute_no_convert(std::index_sequence<Is...>,
 													 const vector_base<W1, T1, C, D1> &x,
 													 const vector_base<W2, T2, C, D2> &y,
 													 const vector_base<W3, T3, C, D3> &z,

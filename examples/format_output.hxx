@@ -146,7 +146,9 @@ inline void test_format_vector_base(const dsga::vector_base<Writable, T, Count, 
 {
 	// std::format interface
 	std::cout << std::format("{}\n", v);
-	std::cout << std::format("{:10.5}\n", v);
+
+	if constexpr (std::is_floating_point_v<T>)
+		std::cout << std::format("{:10.5}\n", v);
 }
 
 template <typename T, std::size_t Size>
@@ -154,7 +156,9 @@ inline void test_format_array(const std::array<T, Size> &arr)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", arr);
-	std::cout << std::format("{:10.5}\n", arr);
+
+	if constexpr (std::is_floating_point_v<T>)
+		std::cout << std::format("{:10.5}\n", arr);
 }
 
 template <dsga::dimensional_scalar T, std::size_t Size>
@@ -162,7 +166,9 @@ inline void test_format_vector(const dsga::basic_vector<T, Size> &v)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", v);
-	std::cout << std::format("{:10.5}\n", v);
+
+	if constexpr (std::is_floating_point_v<T>)
+		std::cout << std::format("{:10.5}\n", v);
 }
 
 template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
@@ -170,7 +176,9 @@ inline void test_format_indexed_vector(const dsga::indexed_vector<T, Size, Count
 {
 	// std::format interface
 	std::cout << std::format("{}\n", v);
-	std::cout << std::format("{:10.5}\n", v);
+
+	if constexpr (std::is_floating_point_v<T>)
+		std::cout << std::format("{:10.5}\n", v);
 }
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
