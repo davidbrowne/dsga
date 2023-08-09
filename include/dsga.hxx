@@ -997,11 +997,11 @@ namespace dsga
 		{
 			if constexpr (Start <= End)
 			{
-				return add<Start>(std::make_index_sequence<End - Start>());
+				return add<Start>(std::make_index_sequence<End - Start>{});
 			}
 			else
 			{
-				return subtract<Start>(std::make_index_sequence<Start - End>());
+				return subtract<Start>(std::make_index_sequence<Start - End>{});
 			}
 		}
 
@@ -1011,11 +1011,11 @@ namespace dsga
 		{
 			if constexpr (Start <= End)
 			{
-				return add<Start>(std::make_index_sequence<End - Start + 1>());
+				return add<Start>(std::make_index_sequence<End - Start + 1>{});
 			}
 			else
 			{
-				return subtract<Start>(std::make_index_sequence<Start - End + 1>());
+				return subtract<Start>(std::make_index_sequence<Start - End + 1>{});
 			}
 		}
 
@@ -1028,8 +1028,8 @@ namespace dsga
 		};
 
 		// return std::index_sequence -> constexpr std::array<std::size_t, N> elements
-		template <sequence_indexable auto val, std::size_t ...Is>
-		constexpr std::index_sequence<val[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
+		template <sequence_indexable auto vals, std::size_t ...Is>
+		constexpr std::index_sequence<vals[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
 	}
 
 	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
@@ -1041,8 +1041,8 @@ namespace dsga
 	using make_closed_index_range = decltype(detail::closed_index_range<Start, End>());
 
 	// constexpr std::array<std::size_t, N> elements in a std::index_sequence
-	template <detail::sequence_indexable auto val>
-	using make_array_sequence = decltype(detail::indexable_to_sequence<val>(std::make_index_sequence<val.size()>()));
+	template <detail::sequence_indexable auto vals>
+	using make_array_sequence = decltype(detail::indexable_to_sequence<vals>(std::make_index_sequence<vals.size()>{}));
 
 	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
@@ -1060,8 +1060,8 @@ namespace dsga
 
 		return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
 		{
-			return std::index_sequence<vals[sizeof...(Js) - Js - 1]...>();
-		}(std::make_index_sequence<sizeof...(Is)>());
+			return std::index_sequence<vals[sizeof...(Js) - Js - 1]...>{};
+		}(std::make_index_sequence<sizeof...(Is)>{});
 	}
 
 	// is the second type also the common type of the two types
@@ -1288,7 +1288,7 @@ namespace dsga
 			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
 				return basic_vector<T, Count>(op((*this)[Is]) ...);
-			}(std::make_index_sequence<Count>());
+			}(std::make_index_sequence<Count>{});
 		}
 
 		// positive count is left shift, negative count is right shift
@@ -5681,7 +5681,7 @@ namespace dsga
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
 				((columns[Is][Is] = static_cast<T>(arg)), ...);
-			}(std::make_index_sequence<C>());
+			}(std::make_index_sequence<C>{});
 		}
 
 		// implicit constructor from a matrix - uses implicitly convertible vector assignment
@@ -5693,7 +5693,7 @@ namespace dsga
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
 				((columns[Is] = arg[Is]), ...);
-			}(std::make_index_sequence<C>());
+			}(std::make_index_sequence<C>{});
 		}
 
 		// implicit constructor from a matrix

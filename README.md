@@ -232,7 +232,7 @@ To make the vectors and matrices as useful as possible in a C++ context, various
 
 * Swizzle access like GLSL (vector only)
     * Only from the set of {x, y, z, w}, e.g., ```foo.wyxz```
-* ```std::tuple``` type of access, structured bindings
+* ```std::tuple``` protocol, structured bindings
     * ```get<>()```
     * ```tuple_size<>```
     * ```tuple_element<>```
