@@ -196,20 +196,20 @@ The matrix types are very generic. One can pre-mulitply (matrix on left, vector 
 * Matrices and Vectors
    * [Index Interface](#index-interface)
    * [Iterators](#iterators)
-   * [Tuple Interface](#tuple-interface)
+   * [Tuple Protocol](#tuple-protocol)
    * [Low Level Pointer Access](#low-level-pointer-access)
 * [Vector](#vector)
    * [Rule Of Six For Vectors](#rule-of-six-for-vectors)
    * [Vector Constructors](#vector-constructors)
-   * [Vector Members](#vector-members)
+   * [Vector Members](#vector-member-functions)
    * [Vector Operators](#vector-operators)
-   * [Vector Functions](#vector-functions)
+   * [Vector Functions](#vector-free-functions)
 * [Matrix](#matrix)
    * [Rule Of Six For Matrices](#rule-of-six-for-matrices)
    * [Matrix Constructors](#matrix-constructors)
-   * [Matrix Members](#matrix-members)
+   * [Matrix Members](#matrix-member-functions)
    * [Matrix Operators](#matrix-operators)
-   * [Matrix Functions](#matrix-functions)
+   * [Matrix Functions](#matrix-free-functions)
 
 It is difficult to give a straightforward list of all the functions in the vector and matrix structs. First, there are many different classes for different sized vectors, although each has roughly the same API. Second, we specialize the vectors and matrices based on size and type. Third, the function signatures are pretty difficult to read, as they:
 
@@ -235,7 +235,7 @@ Both the vector and matrix structs support ```begin()/cbegin()/rbegin()/crbegin(
 * Standard Library Algorithms
 * [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for)
 
-### Tuple Interface
+### Tuple Protocol
 
 Both the vector and matrix structs support ```std::tuple_element<>```, ```std::tuple_size<>``` and ```get<>``` in order to provide basic ```std::tuple``` support. This gives us access to:
 
@@ -318,7 +318,7 @@ This approach is exactly what ```basic_matrix``` does.
 
 ### Vector Member Functions
 
-These are the members that are not part of the [index interface](#index-interface), [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
+These are the members that are not part of the [index interface](#index-interface), [iterator interface](#iterators), the [tuple protocol](#tuple-protocol), or the [pointer interface](#low-level-pointer-access).
 
 * ```operator =``` - assignment operator. The vector needs to be the same length and underlying types must be convertible.
 * ```int length()``` - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
@@ -535,7 +535,7 @@ constexpr basic_matrix(const Args & ...args) noexcept;
 
 ### Matrix Member Functions
 
-These are the members that are not part of the [iterator interface](#iterators), the [tuple interface](#tuple-interface), or the [low-level interface](#low-level-pointer-access).
+These are the members that are not part of the [iterator interface](#iterators), the [tuple protocol](#tuple-protocol), or the [low-level interface](#low-level-pointer-access).
 
 * **operator =** - assignment operator. The matrix needs to be the same size and underlying types must be convertible.
 * **int length()** - returns the number of columns as an ```int```. This is part of the spec, and is the same as ```size()``` except it has a different return type.

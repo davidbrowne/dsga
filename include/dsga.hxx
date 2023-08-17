@@ -1935,7 +1935,7 @@ namespace dsga
 			using tuple_pack = std::tuple<Args...>;
 
 			// get the last Arg type in the pack
-			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> -1u, tuple_pack>;
+			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> - 1u, tuple_pack>;
 
 			// see what the component count is if we didn't use the last Arg type in pack
 			static constexpr std::size_t previous_size = value - component_size<last_type>::value;
@@ -3187,7 +3187,7 @@ namespace dsga
 
 		template <typename ...Ts>
 		requires dimensional_storage<std::common_type_t<Ts...>, sizeof...(Ts)>
-			constexpr auto parameter_pack_to_vec(Ts ...args) noexcept
+		constexpr auto parameter_pack_to_vec(Ts ...args) noexcept
 		{
 			using ArgType = std::common_type_t<Ts...>;
 			constexpr std::size_t Size = sizeof...(Ts);
@@ -4106,7 +4106,7 @@ namespace dsga
 	}
 
 	//
-	// get<> part of tuple interface -- needed for structured bindings
+	// get<> part of tuple protocol -- needed for structured bindings
 	//
 
 	template <int N, dimensional_scalar T, std::size_t S>
@@ -5629,8 +5629,10 @@ namespace dsga
 		}
 
 		// get a row of the matrix as a vector
-		[[nodiscard]] constexpr basic_vector<T, C> row(std::size_t row_index) const noexcept
+		[[nodiscard]] constexpr basic_vector<T, C> row(std::integral auto row_index) const noexcept
 		{
+			dsga_constexpr_assert(row_index >= 0 && static_cast<std::size_t>(row_index) < R, "row_index out of bounds");
+
 			// for each column of the matrix, get a row component, and bundle
 			// these components up into a vector that represents the row
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -5792,7 +5794,7 @@ namespace dsga
 
 
 	//
-	// get<> part of tuple interface -- needed for structured bindings
+	// get<> part of tuple protocol -- needed for structured bindings
 	//
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
@@ -6395,7 +6397,7 @@ namespace dsga
 }	// namespace dsga
 
 //
-// tuple inteface for basic_vector and indexed_vector and vec_base -- supports structured bindings
+// tuple protocol for basic_vector and indexed_vector and vec_base -- supports structured bindings
 //
 
 template<dsga::dimensional_scalar T, std::size_t S>

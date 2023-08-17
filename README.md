@@ -11,7 +11,7 @@ v1.0.5
 * [Implemented Interfaces](#implemented-interfaces)
 * [Installation](#installation)
 * [Status](#status)
-* [Usage](#usage)
+* [Usage and Documentation](#usage)
 * [Testing](#testing)
 * [Similar Projects](#similar-projects)
 * [License](#license)
@@ -189,9 +189,9 @@ The following links to the shading specification should help with understanding 
     * [Matrices](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrices)
 * [Operators and Expressions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#operators-and-expressions)
     * [Vector and Matrix Constructors](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-and-matrix-constructors)
-    * [Vector and Scalar Components and Length](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-components): we only allow swizzling with the ```{ x, y, z, w }``` component names. Support for ```{r, g, b, a}``` and ```{s, t, p , q}``` has not been implemented.
+    * [Vector and Scalar Components and Length](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-components): we only allow swizzling with the ```{ x, y, z, w }``` component names. Support for ```{ r, g, b, a }``` and ```{ s, t, p , q }``` has not been implemented.
 
-      In addition, you cannot swizzle a swizzle. I am currently unclear if this is a constraint of the specification, but it is a constraint of the implementation:
+      In addition, you cannot swizzle a swizzle. I am currently unclear if this is a constraint of the specification, but it is a constraint of dsga's implementation:
       ```c++
       auto my_vec = dsga::vec3(10, 20, 30);
       auto double_swiz = my_vec.zxy.x;           // error: no such data member x
@@ -249,10 +249,14 @@ To make the vectors and matrices as useful as possible in a C++ context, various
     * ```operator []```
     * ```size()```
     * ```length()```
-* Pointer access (physical) (vector only)
+* Pointer access (physical), ```std::span``` (for contiguous range types ```dsga::basic_vector``` and ```dsga::basic_matrix```)
     * ```data()```
-    * ```offsets``` - allows logical use of ```data()```
-    * ```sequence()``` - allows logical use of ```data()```
+        * vector - pointer to scalars of concept type ```dsga::dimensional_scalar```
+        * matrix - pointer to column vectors whose scalars are of concept type ```dsga::floating_point_scalar```
+    * ```size()```
+    * vector only - these allow logical use of ```data()```
+        * ```offsets```
+        * ```sequence()```
 * Type Conversions (vector only)
     * ```to_vector()``` - from both ```std::array``` and C style arrays
     * ```to_array()``` - to ```std::array```
@@ -311,7 +315,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.6.5**
+* **MSVC 2022 - v17.7.1**
 
 ```
 [doctest] doctest version is "2.4.11"

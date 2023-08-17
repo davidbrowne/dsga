@@ -11,7 +11,7 @@
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs) noexcept
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -20,7 +20,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs) noexcept
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -29,7 +29,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, 
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs) noexcept
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -38,7 +38,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
+constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs) noexcept
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -49,7 +49,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, 
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<T, U>
-constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs) noexcept
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -58,9 +58,116 @@ constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T,
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<T, U>
-constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs) noexcept
 {
 	const std::size_t count = std::min(S, lhs.size());
 	for (std::size_t i = 0; i < count; ++i)
 		lhs[i] = static_cast<U>(rhs[i]);
+}
+
+//
+// create span from dsga::basic_vector - can't create spans for dsga::indexed_vector because not contiguous range,
+// so a general purpose version for dsga::vector_base won't compile either for dsga::indexed_vector Derived classes
+//
+
+// non-const T span from non-const vector
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_span(dsga::basic_vector<T, S> &v) noexcept
+{
+//	return std::span<T, S>(v.begin(), v.end());
+//	return std::span<T, S>(v.data(), v.size());
+	return std::span<T, S>(v);
+}
+
+// const T span from const vector
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_span(const dsga::basic_vector<T, S> &v) noexcept
+{
+//	return std::span<const T, S>(v.begin(), v.end());
+//	return std::span<const T, S>(v.data(), v.size());
+	return std::span<const T, S>(v);
+}
+
+// disallow creating spans from rvalues
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_span(dsga::basic_vector<T, S> &&v) noexcept = delete;
+
+// disallow creating spans from rvalues
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_span(const dsga::basic_vector<T, S> &&v) noexcept = delete;
+
+// const T span from either const or non-const vector
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_const_span(const dsga::basic_vector<T, S> &v) noexcept
+{
+//	return std::span<const T, S>(v.begin(), v.end());
+//	return std::span<const T, S>(v.data(), v.size());
+	return std::span<const T, S>(v);
+}
+
+// disallow creating spans from rvalues
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_const_span(dsga::basic_vector<T, S> &&v) noexcept = delete;
+
+// disallow creating spans from rvalues
+template <dsga::dimensional_scalar T, std::size_t S>
+auto to_const_span(const dsga::basic_vector<T, S> &&v) noexcept = delete;
+
+//
+// create span from dsga::basic_matrix
+//
+
+// non-const dsga::basic_vector<T, C> span from non-const matrix
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+auto to_span(dsga::basic_matrix<T, C, R> &m) noexcept
+{
+//	return std::span<dsga::basic_vector<T, R>, C>(m.begin(), m.end());
+//	return std::span<dsga::basic_vector<T, R>, C>(m.data(), m.size());
+	return std::span<dsga::basic_vector<T, R>, C>(m);
+}
+
+// const dsga::basic_vector<T, C> span from const matrix
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+auto to_span(const dsga::basic_matrix<T, C, R> &m) noexcept
+{
+//	return std::span<const dsga::basic_vector<T, R>, C>(m.begin(), m.end());
+//	return std::span<const dsga::basic_vector<T, R>, C>(m.data(), m.size());
+	return std::span<const dsga::basic_vector<T, R>, C>(m);
+}
+
+// disallow creating spans from rvalues
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+auto to_span(dsga::basic_matrix<T, C, R> &&m) noexcept = delete;
+
+// disallow creating spans from rvalues
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+auto to_span(const dsga::basic_matrix<T, C, R> &&m) noexcept = delete;
+
+// const dsga::basic_vector<T, C> span from either const or non-const matrix
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+auto to_const_span(const dsga::basic_matrix<T, C, R> &m) noexcept
+{
+//	return std::span<const dsga::basic_vector<T, R>, C>(m.begin(), m.end());
+//	return std::span<const dsga::basic_vector<T, R>, C>(m.data(), m.size());
+	return std::span<const dsga::basic_vector<T, R>, C>(m);
+}
+
+// disallow creating spans from rvalues
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+auto to_const_span(dsga::basic_matrix<T, C, R> &&m) noexcept = delete;
+
+// disallow creating spans from rvalues
+template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
+auto to_const_span(const dsga::basic_matrix<T, C, R> &&m) noexcept = delete;
+
+//
+// std::span to dsga::basic_vector
+//
+
+// create a basic_vector from parts of a span, the parts (indexes) described in a std::index_sequence
+template <typename T, std::size_t E, std::size_t ...Is>
+requires (E != std::dynamic_extent) && dsga::dimensional_scalar<std::remove_cvref_t<T>> && dsga::dimensional_size<sizeof...(Is)> && dsga::detail::valid_range_indexes<E, Is...>
+auto to_vector(std::span<T, E> s, std::index_sequence<Is...> ) noexcept
+{
+	return dsga::basic_vector<std::remove_cvref_t<T>, sizeof...(Is)>(s[Is]...);
 }
