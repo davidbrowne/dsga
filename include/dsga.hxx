@@ -60,7 +60,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
@@ -4111,14 +4111,14 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr auto && get(dsga::storage_wrapper<T, S> & arg) noexcept
+	[[nodiscard]] constexpr auto & get(dsga::storage_wrapper<T, S> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr auto && get(const dsga::storage_wrapper<T, S> & arg) noexcept
+	[[nodiscard]] constexpr const auto & get(const dsga::storage_wrapper<T, S> & arg) noexcept
 	{
 		return arg[N];
 	}
@@ -4132,7 +4132,7 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr auto && get(const dsga::storage_wrapper<T, S> && arg) noexcept
+	[[nodiscard]] constexpr const auto && get(const dsga::storage_wrapper<T, S> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -4140,15 +4140,15 @@ namespace dsga
 	//
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(dsga::vector_base<W, T, C, D> & arg) noexcept
+	requires W && (N >= 0) && (N < C)
+	[[nodiscard]] constexpr auto & get(dsga::vector_base<W, T, C, D> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(const dsga::vector_base<W, T, C, D> & arg) noexcept
+	[[nodiscard]] constexpr const auto & get(const dsga::vector_base<W, T, C, D> & arg) noexcept
 	{
 		return arg[N];
 	}
@@ -4162,7 +4162,7 @@ namespace dsga
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(const dsga::vector_base<W, T, C, D> && arg) noexcept
+	[[nodiscard]] constexpr const auto && get(const dsga::vector_base<W, T, C, D> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -5799,14 +5799,14 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(dsga::basic_matrix<T, C, R> & arg) noexcept
+	[[nodiscard]] constexpr auto & get(dsga::basic_matrix<T, C, R> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(const dsga::basic_matrix<T, C, R> & arg) noexcept
+	[[nodiscard]] constexpr const auto & get(const dsga::basic_matrix<T, C, R> & arg) noexcept
 	{
 		return arg[N];
 	}
@@ -5820,7 +5820,7 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(const dsga::basic_matrix<T, C, R> && arg) noexcept
+	[[nodiscard]] constexpr const auto && get(const dsga::basic_matrix<T, C, R> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
