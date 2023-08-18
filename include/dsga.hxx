@@ -60,7 +60,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 6;
+constexpr inline int DSGA_PATCH_VERSION = 7;
 
 namespace dsga
 {
@@ -6369,15 +6369,15 @@ namespace dsga
 	// converting from external vector type or data to internal vector type
 	//
 
-	template <dsga::dimensional_scalar T, std::size_t S>
-	requires dsga::dimensional_storage<T, S>
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
 	[[nodiscard]] constexpr basic_vector<T, S> to_vector(const std::array<T, S> &arg) noexcept
 	{
 		return detail::passthru_execute(std::make_index_sequence<S>{}, arg);
 	}
 
-	template <dsga::dimensional_scalar T, std::size_t S>
-	requires dsga::dimensional_storage<T, S>
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
 	[[nodiscard]] constexpr basic_vector<T, S> to_vector(const T(&arg)[S]) noexcept
 	{
 		return detail::passthru_execute(std::make_index_sequence<S>{}, arg);
@@ -6386,12 +6386,61 @@ namespace dsga
 	// converting from internal vector type to std::array
 
 	template <bool W, typename T, std::size_t C, typename D>
-	[[nodiscard]] constexpr std::array<T, C> to_array(const dsga::vector_base<W, T, C, D> &arg) noexcept
+	[[nodiscard]] constexpr std::array<T, C> to_array(const vector_base<W, T, C, D> &arg) noexcept
 	{
 		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 		{
 			return {arg[Is]...};
 		}(std::make_index_sequence<C>{});
+	}
+
+	// converting from array to a basic_matrix
+
+	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
+	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
+	[[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept
+	{
+		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+		{
+			return dsga::basic_matrix<T, C, R>(
+				[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				constexpr auto cols = Js;
+				return dsga::basic_vector<T, R>(arg[cols * R + Is]...);
+			}(std::make_index_sequence<R>{}) ...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
+	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
+	[[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const T(&arg)[S]) noexcept
+	{
+		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+		{
+			return dsga::basic_matrix<T, C, R>(
+				[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				constexpr auto cols = Js;
+				return dsga::basic_vector<T, R>(arg[cols * R + Is]...);
+			}(std::make_index_sequence<R>{}) ...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	// converting from internal matrix type to std::array
+
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+	[[nodiscard]] constexpr std::array<T, C * R> to_array(const basic_matrix<T, C, R> &arg) noexcept
+	{
+		auto matrix_tuple = [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+		{
+			return detail::flatten_args_to_tuple(arg[Is]...);
+		}(std::make_index_sequence<C>{});
+
+		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+		{
+			return std::array<T, C * R>{std::get<Js>(matrix_tuple) ...};
+		}(std::make_index_sequence<C * R>{});
 	}
 
 }	// namespace dsga
