@@ -312,7 +312,7 @@ explicit constexpr basic_vector(U value) noexcept;
 // variadic constructor of scalar and vector arguments
 template <typename ... Args>
 constexpr basic_vector(const Args & ...args) noexcept;
-``` 
+```
 
 This approach is exactly what ```basic_matrix``` does.
 
@@ -366,14 +366,6 @@ The vector operators all work component-wise.
 * ```operator ^=```
 * ```operator ==```
 * ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
-
-#### Relational Comparison Operators - not in GLSL
-The comparisons are not very strict. They also work when comparing types where one is convertible to the other. The component count must be the same, except when comparing a length 1 vector with a scalar. They don't work with bool.
-* ```operator <=>``` - lexicographic comparison of x, y, z, w components in that order (assuming vectors of length 4)
-* ```operator <``` - created automatically from ```operator <=>``` in ```c++20```
-* ```operator <=``` - created automatically from ```operator <=>``` in ```c++20```
-* ```operator >``` - created automatically from ```operator <=>``` in ```c++20```
-* ```operator >=``` - created automatically from ```operator <=>``` in ```c++20```
 
 ### Vector Free Functions
 The vector functions all work component-wise, except for the geometric functions and the two vector relational functions ```any()``` and ```all()```.
@@ -467,8 +459,6 @@ The vector component type must be floating-point.
 * ```all()``` - result relies on the components' relationship with each other
 * ```none()``` - result relies on the components' relationship with each other - not in GLSL
 * ```logicalNot()``` - can't use keyword ```not``` as a function name in ```c++```, so using ```logicalNot()```
-* ```default_comparison_weights()``` - not in GLSL - default weights for ```weighted_compare()```, showing dimensional priority
-* ```weighted_compare()``` - not in GLSL - called by ```operator <=>``` with ```default_comparison_weights()```. The underlying comparison has each dimension weighted separately and summed up to a signed integral comparison result, where negative means ```<```, positive means ```>```, 0 means equal. It takes a vector of weights, which should be either ```default_comparison_weights()``` or a swizzle of it that uses all the dimensions. Changing the signs of some or all of the weighted components could be an option as well. Returns the ordering relation of the arguments. This function allows customization for comparing vectors if the default comparisons from ```operator <=>``` are insufficient.
 
 #### The Rest of the Specification
 
@@ -563,13 +553,6 @@ The matrix operators all work component-wise, except for ```operator *```, which
 * binary ```operator /```
 * ```operator ==```
 * ```operator !=``` - created automatically from ```operator ==``` in ```c++20```
-
-#### Relational Comparison Operators - not in GLSL
-* ```operator <=>``` - lexicographic comparison of the vectors
-* ```operator <``` - created automatically from ```operator <=>``` in ```c++20```
-* ```operator <=``` - created automatically from ```operator <=>``` in ```c++20```
-* ```operator >``` - created automatically from ```operator <=>``` in ```c++20```
-* ```operator >=``` - created automatically from ```operator <=>``` in ```c++20```
 
 ### Matrix Free Functions
 The matrix functions treat a matrix as an entity instead of as a collection of components, except for ```matrixCompMult()```, which works component-wise.

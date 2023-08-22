@@ -175,6 +175,7 @@
     <ClInclude Include="..\examples\angle.hxx" />
     <ClInclude Include="..\examples\basic.hxx" />
     <ClInclude Include="..\examples\bezier.hxx" />
+    <ClInclude Include="..\examples\compare.hxx" />
     <ClInclude Include="..\examples\format_output.hxx" />
     <ClInclude Include="..\examples\hash.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
