@@ -16,7 +16,7 @@
 #include <algorithm>				// min()
 #include <numbers>					// pi_v<>, inv_pi_v<>
 #include <version>					// feature test macros
-#include <climits>					// for cxcm
+#include <limits>					// for cxcm
 #include <cmath>					// for cxcm
 #include <numeric>
 #include <cassert>
