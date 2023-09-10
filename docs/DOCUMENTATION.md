@@ -325,7 +325,7 @@ These are the members that are not part of the [index interface](#index-interfac
 
 #### Valarray Functions
 
-There is conceptual overlap between the vector structs and ```std::valarray```. Much of this conceptual overlap is implemented in ```dsga``` in terms of operators and vector free functions. The following functions have been implemented as vector member functions. These functions are part of the ```std::valarray``` [API](https://en.cppreference.com/w/cpp/numeric/valarray).
+There is conceptual overlap between the vector structs and ```std::valarray```. Much of this conceptual overlap is implemented in ```dsga``` in terms of operators and vector free functions. The following functions have been implemented as vector member functions. These functions are part of the [```std::valarray``` API](https://en.cppreference.com/w/cpp/numeric/valarray).
 
 * ```apply()```
 * ```shift()```
@@ -562,4 +562,4 @@ The matrix functions treat a matrix as an entity instead of as a collection of c
 * ```transpose()```
 * ```determinant()```
 * ```inverse()```
-* ```cross_matrix()``` - not in GLSL - only works for vectors of size 3 - create matrix to compute cross product, e.g., ```dsga::cross(u, v) == dsga::cross_matrix(u) * v == u * dsga::cross_matrix(v)```
+* ```cross_matrix()``` - ```dsga::cross(u, v) == dsga::cross_matrix(u) * v == u * dsga::cross_matrix(v)```  - not in GLSL - create matrix to compute cross product - only works for vectors of size 3 

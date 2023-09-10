@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.1.1
+v1.2.0
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -288,7 +288,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v1.1.1`
+Current version: `v1.2.0`
 
 * Breaking Change with v1.1.0
   * Removed ```default_comparison_weights()```, ```weighted_compare()```, and related functions
@@ -301,6 +301,7 @@ Current version: `v1.1.1`
 ### The next steps
 * Working on much better API documentation.
 * Working on better ```cmake``` support.
+* Add more tests.
 
 ## Usage
 
@@ -331,7 +332,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 13.1.0** on Windows, [WinLibs MinGW](https://winlibs.com/) distribution:
+* **gcc 13.1.0** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
 [doctest] doctest version is "2.4.11"

@@ -26,6 +26,18 @@
 #endif
 
 //
+// disable all asserts
+//
+
+#if defined(DISABLE_ASSERTS)
+
+#define DSGA_DISABLE_ASSERTS
+#define CXCM_DISABLE_ASSERTS
+
+#endif
+
+
+//
 // dsga_constexpr_assert() derived from https://gist.github.com/oliora/928424f7675d58fadf49c70fdba70d2f
 //
 
@@ -33,9 +45,6 @@
 
 #define dsga_assertm(exp, msg) ((void)0)
 #define dsga_constexpr_assert(cond, msg) ((void)0)
-
-// if we are disabling dsga asserts, also disable cxcm asserts
-#define CXCM_DISABLE_ASSERTS
 
 #else
 
@@ -51,7 +60,7 @@ inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
 // When evaluated at compile time emits a compilation error if condition is not true.
 // Invokes the standard assert at run time.
 #define dsga_constexpr_assert(cond, msg) \
-	((void)(!!(cond) ? 0 : (dsga_constexpr_assert_failed([](){ assert(((void)msg, !static_cast<bool>(#cond)));}), 0)))
+	((void)(!!(cond) ? 0 : (dsga_constexpr_assert_failed([](){ assert(((void)msg, !static_cast<bool>(#cond))); }), 0)))
 
 #endif
 
@@ -78,7 +87,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 // When evaluated at compile time emits a compilation error if condition is not true.
 // Invokes the standard assert at run time.
 #define cxcm_constexpr_assert(cond, msg) \
-	((void)(!!(cond) ? 0 : (cxcm_constexpr_assert_failed([](){ assert(((void)msg, !static_cast<bool>(#cond)));}), 0)))
+	((void)(!!(cond) ? 0 : (cxcm_constexpr_assert_failed([](){ assert(((void)msg, !static_cast<bool>(#cond))); }), 0)))
 
 #endif
 
@@ -89,8 +98,8 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
-constexpr inline int DSGA_MINOR_VERSION = 1;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_MINOR_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
@@ -1198,10 +1207,11 @@ namespace dsga
 		dimensional_storage_t<T, Size> store;
 
 		[[nodiscard]] constexpr int length() const noexcept					{ return Count; }
-		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
+//		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
+		static constexpr std::integral_constant<std::size_t, Count> size =	{};
 
 		// logical and physically contiguous access to data
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept
+		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return store[static_cast<std::size_t>(index)];
@@ -1214,38 +1224,38 @@ namespace dsga
 		}
 
 		// in general, data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr T * data() noexcept							{ return store.data(); }
+		[[nodiscard]] constexpr T * data() noexcept requires Writable		{ return store.data(); }
 		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
 		template <typename ...Args>
-		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...>, As ...same_args) noexcept
+			[&]<std::size_t ...Js, typename ...As>(std::index_sequence<Js ...>, As ...same_args) noexcept
 			{
 				((store[Js] = static_cast<T>(same_args)),...);
 			}(std::make_index_sequence<Count>{}, args...);
 		}
 
-		constexpr void swap(storage_wrapper &sw) noexcept		{ store.swap(sw.store); 	}
+		constexpr void swap(storage_wrapper &sw) noexcept requires Writable	{ store.swap(sw.store); 	}
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept			{ return store.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return store.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return store.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return store.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return store.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return store.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return store.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return store.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return store.rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return store.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return store.rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return store.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return store.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return store.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return store.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return store.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 	};
 
 	template <dimensional_scalar T, std::size_t Size>
@@ -1259,7 +1269,7 @@ namespace dsga
 	constexpr bool operator ==(const storage_wrapper<T1, C> &first,
 							   const storage_wrapper<T2, C> &second) noexcept
 	{
-		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
 			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
 		}(std::make_index_sequence<C>{});
@@ -1341,22 +1351,23 @@ namespace dsga
 		[[nodiscard]] constexpr int length() const noexcept						{ return Count; }
 
 		// not required by spec, but more c++ container-like
-		[[nodiscard]] constexpr std::size_t	size() const noexcept				{ return Count; }
+//		[[nodiscard]] constexpr std::size_t	size() const noexcept				{ return Count; }
+		static constexpr std::integral_constant<std::size_t, Count> size =		{};
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept			{ return this->as_derived().begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return this->as_derived().cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return this->as_derived().end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return this->as_derived().cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable			{ return this->as_derived().begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept						{ return this->as_derived().cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable			{ return this->as_derived().end(); }
+		[[nodiscard]] constexpr auto end() const noexcept						{ return this->as_derived().cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept						{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return this->as_derived().rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return this->as_derived().crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return this->as_derived().rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return this->as_derived().crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable		{ return this->as_derived().rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept					{ return this->as_derived().crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept					{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable			{ return this->as_derived().rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept						{ return this->as_derived().crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept						{ return rend(); }
 
 		//
 		// functions similar to std::valarray
@@ -1367,7 +1378,7 @@ namespace dsga
 		requires (std::same_as<T, decltype(std::declval<UnOp>()(std::declval<T>()))> || std::same_as<T, decltype(std::declval<UnOp>()(std::declval<const T &>()))>)
 		[[nodiscard]] constexpr basic_vector<T, Count> apply(UnOp op) const noexcept
 		{
-			return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return basic_vector<T, Count>(op((*this)[Is]) ...);
 			}(std::make_index_sequence<Count>{});
@@ -1745,7 +1756,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				set(other[Js]...);
 			}(std::make_index_sequence<Count>{});
@@ -1840,7 +1851,7 @@ namespace dsga
 		// scalar assignment
 		// assignment for some scalar type that converts to T and is only for indexed_vector of [Size == 1]
 		template <dimensional_scalar U>
-		requires implicitly_convertible_to<U, T>
+		requires Writable && implicitly_convertible_to<U, T>
 		constexpr indexed_vector &operator =(U other) noexcept
 		{
 			set(other);
@@ -1906,7 +1917,7 @@ namespace dsga
 		// logically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename U>
-		requires Writable &&std::convertible_to<U, T>
+		requires Writable && std::convertible_to<U, T>
 		constexpr void set(U other) noexcept
 		{
 			base[I] = static_cast<T>(other);
@@ -2045,7 +2056,7 @@ namespace dsga
 		template <dimensional_scalar T, std::size_t C>
 		constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
 		{
-			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return std::tuple(arg[Is]...);
 			}(std::make_index_sequence<C>{});
@@ -2054,7 +2065,7 @@ namespace dsga
 		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 		constexpr auto to_tuple(const indexed_vector<T, S, C, Is...> &arg) noexcept
 		{
-			return[&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+			return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
 			{
 				return std::tuple(arg[Js]...);
 			}(std::make_index_sequence<C>{});
@@ -2063,7 +2074,7 @@ namespace dsga
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
 		constexpr auto to_tuple(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return std::tuple(arg[Is]...);
 			}(std::make_index_sequence<C>{});
@@ -2072,7 +2083,7 @@ namespace dsga
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
 		constexpr auto to_tuple(const basic_matrix<T, C, R> &arg) noexcept
 		{
-			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return std::tuple_cat(to_tuple(arg[Is])...);
 			}(std::make_index_sequence<C>{});
@@ -2228,7 +2239,7 @@ namespace dsga
 			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
-			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
@@ -2239,7 +2250,7 @@ namespace dsga
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
+		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			set(other[0u]);
@@ -2247,7 +2258,7 @@ namespace dsga
 		}
 
 		template <typename U>
-		requires implicitly_convertible_to<U, T>
+		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(U value) noexcept
 		{
 			set(value);
@@ -2286,22 +2297,22 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept			{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept			{ return base.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return base.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return base.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return base.rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 
 		//
 		// data access
@@ -2310,7 +2321,7 @@ namespace dsga
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename U>
-		requires std::convertible_to<U, T>
+		requires Writable && std::convertible_to<U, T>
 		constexpr void set(U value) noexcept
 		{
 			base[0u] = static_cast<T>(value);
@@ -2423,7 +2434,7 @@ namespace dsga
 			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
-			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
@@ -2434,7 +2445,7 @@ namespace dsga
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
+		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			set(other[0u], other[1u]);
@@ -2456,22 +2467,22 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept			{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept			{ return base.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return base.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return base.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return base.rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 
 		//
 		// data access
@@ -2480,10 +2491,10 @@ namespace dsga
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
-		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				((base[Js] = static_cast<T>(args)), ...);
 			}(std::make_index_sequence<Count>{});
@@ -2688,7 +2699,7 @@ namespace dsga
 			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
-			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
@@ -2699,7 +2710,7 @@ namespace dsga
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
+		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			set(other[0u], other[1u], other[2u]);
@@ -2721,22 +2732,22 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept			{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept			{ return base.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return base.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return base.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return base.rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 
 		//
 		// data access
@@ -2745,10 +2756,10 @@ namespace dsga
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
-		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				((base[Js] = static_cast<T>(args)), ...);
 			}(std::make_index_sequence<Count>{});
@@ -3176,7 +3187,7 @@ namespace dsga
 			: base{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
-			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[this, &arg_tuple]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
@@ -3187,7 +3198,7 @@ namespace dsga
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
+		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
 			set(other[0u], other[1u], other[2u], other[3u]);
@@ -3209,22 +3220,22 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept			{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept			{ return base.begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept		{ return base.cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept	{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept				{ return base.end(); }
-		[[nodiscard]] constexpr auto end() const noexcept		{ return base.cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept		{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept			{ return base.rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept	{ return base.crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept			{ return base.rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept		{ return base.crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 
 		//
 		// data access
@@ -3233,10 +3244,10 @@ namespace dsga
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
-		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				((base[Js] = static_cast<T>(args)), ...);
 			}(std::make_index_sequence<Count>{});
@@ -3295,13 +3306,13 @@ namespace dsga
 
 		// return types from executing lambdas on arguments of various types
 
-		template <typename UnOp, dsga::dimensional_scalar T>
+		template <typename UnOp, dimensional_scalar T>
 		using unary_op_return_t = decltype(std::declval<UnOp>()(std::declval<T>()));
 
-		template <typename BinOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U>
+		template <typename BinOp, dimensional_scalar T, dimensional_scalar U>
 		using binary_op_return_t = decltype(std::declval<BinOp>()(std::declval<T>(), std::declval<U>()));
 
-		template <typename TernOp, dsga::dimensional_scalar T, dsga::dimensional_scalar U, dsga::dimensional_scalar V>
+		template <typename TernOp, dimensional_scalar T, dimensional_scalar U, dimensional_scalar V>
 		using ternary_op_return_t = decltype(std::declval<TernOp>()(std::declval<T>(), std::declval<U>(), std::declval<V>()));
 
 		//
@@ -3311,7 +3322,7 @@ namespace dsga
 		// perform the lambda action on components of vector_base arguments, returning a new basic_vector.
 		// when Count == 1, treat it like a scalar value and return a scalar value.
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D, typename UnOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename UnOp, std::size_t ...Is>
 		constexpr auto unary_op_execute(std::index_sequence<Is...>,
 										const vector_base<W, T, C, D> &arg,
 										UnOp &lambda) noexcept
@@ -3320,8 +3331,8 @@ namespace dsga
 			return basic_vector<ReturnType, C>(lambda(arg[Is])...);
 		}
 
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W1, T1, C, D1> &lhs,
 										 const vector_base<W2, T2, C, D2> &rhs,
@@ -3332,8 +3343,8 @@ namespace dsga
 			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W, T, C, D> &lhs,
 										 U rhs,
@@ -3344,8 +3355,8 @@ namespace dsga
 			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute(std::index_sequence<Is...>,
 										 U lhs,
 										 const vector_base<W, T, C, D> &rhs,
@@ -3360,8 +3371,8 @@ namespace dsga
 		// don't cast the arguments to the lambda
 		//
 
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...>,
 													const vector_base<W1, T1, C, D1> &lhs,
 													const vector_base<W2, T2, C, D2> &rhs,
@@ -3370,8 +3381,8 @@ namespace dsga
 			return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...>,
 													const vector_base<W, T, C, D> &lhs,
 													U rhs,
@@ -3380,8 +3391,8 @@ namespace dsga
 			return basic_vector<binary_op_return_t<BinOp, T, U>, C>(lambda(lhs[Is], rhs)...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		constexpr auto binary_op_execute_no_convert(std::index_sequence<Is...>,
 													U lhs,
 													const vector_base<W, T, C, D> &rhs,
@@ -3396,8 +3407,8 @@ namespace dsga
 		// we set values as we iterate. we need to set them all only after the new values
 		// have all been gathered.
 
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
 		requires W1
 		constexpr void binary_op_set(std::index_sequence<Is...>,
 									 vector_base<W1, T1, C, D1> &lhs,
@@ -3408,8 +3419,8 @@ namespace dsga
 			lhs.set(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		requires W
 		constexpr void binary_op_set(std::index_sequence<Is...>,
 									 vector_base<W, T, C, D> &lhs,
@@ -3420,8 +3431,8 @@ namespace dsga
 			lhs.set(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
 		}
 
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, typename BinOp, std::size_t ...Is>
 		requires W1
 		constexpr void binary_op_set_no_convert(std::index_sequence<Is...>,
 												vector_base<W1, T1, C, D1> &lhs,
@@ -3431,8 +3442,8 @@ namespace dsga
 			lhs.set(lambda(lhs[Is], rhs[Is])...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, typename BinOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, typename BinOp, std::size_t ...Is>
 		requires W
 		constexpr void binary_op_set_no_convert(std::index_sequence<Is...>,
 												vector_base<W, T, C, D> &lhs,
@@ -3442,8 +3453,8 @@ namespace dsga
 			lhs.set(lambda(lhs[Is], rhs)...);
 		}
 
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2, bool W3, dsga::dimensional_scalar T3, typename D3,
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, bool W3, dimensional_scalar T3, typename D3,
 			typename TernOp, std::size_t ...Is>
 		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W1, T1, C, D1> &x,
@@ -3456,8 +3467,8 @@ namespace dsga
 			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z[Is]))...);
 		}
 
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2, dsga::dimensional_scalar U, typename TernOp, std::size_t ...Is>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2, dimensional_scalar U, typename TernOp, std::size_t ...Is>
 		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W1, T1, C, D1> &x,
 										 const vector_base<W2, T2, C, D2> &y,
@@ -3469,8 +3480,8 @@ namespace dsga
 			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z))...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, dsga::dimensional_scalar V, typename TernOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, dimensional_scalar V, typename TernOp, std::size_t ...Is>
 		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 const vector_base<W, T, C, D> &x,
 										 U y,
@@ -3482,8 +3493,8 @@ namespace dsga
 			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y), static_cast<ArgType>(z))...);
 		}
 
-		template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D,
-			dsga::dimensional_scalar U, dsga::dimensional_scalar V, typename TernOp, std::size_t ...Is>
+		template <bool W, dimensional_scalar T, std::size_t C, typename D,
+			dimensional_scalar U, dimensional_scalar V, typename TernOp, std::size_t ...Is>
 		constexpr auto ternary_op_execute(std::index_sequence<Is...>,
 										 U x,
 										 V y,
@@ -3495,9 +3506,9 @@ namespace dsga
 			return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x), static_cast<ArgType>(y), static_cast<ArgType>(z[Is]))...);
 		}
 
-		template <bool W1, dsga::dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dsga::dimensional_scalar T2, typename D2,
-			bool W3, dsga::dimensional_scalar T3, typename D3,
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
+			bool W2, dimensional_scalar T2, typename D2,
+			bool W3, dimensional_scalar T3, typename D3,
 			typename TernOp, std::size_t ...Is>
 		constexpr auto ternary_op_execute_no_convert(std::index_sequence<Is...>,
 													 const vector_base<W1, T1, C, D1> &x,
@@ -4193,28 +4204,28 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr auto & get(dsga::storage_wrapper<T, S> & arg) noexcept
+	[[nodiscard]] constexpr auto & get(storage_wrapper<T, S> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr const auto & get(const dsga::storage_wrapper<T, S> & arg) noexcept
+	[[nodiscard]] constexpr const auto & get(const storage_wrapper<T, S> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr auto && get(dsga::storage_wrapper<T, S> && arg) noexcept
+	[[nodiscard]] constexpr auto && get(storage_wrapper<T, S> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr const auto && get(const dsga::storage_wrapper<T, S> && arg) noexcept
+	[[nodiscard]] constexpr const auto && get(const storage_wrapper<T, S> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -4223,28 +4234,28 @@ namespace dsga
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires W && (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto & get(dsga::vector_base<W, T, C, D> & arg) noexcept
+	[[nodiscard]] constexpr auto & get(vector_base<W, T, C, D> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr const auto & get(const dsga::vector_base<W, T, C, D> & arg) noexcept
+	[[nodiscard]] constexpr const auto & get(const vector_base<W, T, C, D> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(dsga::vector_base<W, T, C, D> && arg) noexcept
+	[[nodiscard]] constexpr auto && get(vector_base<W, T, C, D> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr const auto && get(const dsga::vector_base<W, T, C, D> && arg) noexcept
+	[[nodiscard]] constexpr const auto && get(const vector_base<W, T, C, D> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -5458,7 +5469,7 @@ namespace dsga
 	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
 							   const vector_base<W2, T2, C, D2> &second) noexcept
 	{
-		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
 			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
 		}(std::make_index_sequence<C>{});
@@ -5468,7 +5479,7 @@ namespace dsga
 	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
 							   const vector_base<W2, T, C, D2> &second) noexcept
 	{
-		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
 			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == second[Is])) && ...);
 		}(std::make_index_sequence<C>{});
@@ -5507,17 +5518,16 @@ namespace dsga
 		}
 
 		// returns number of columns (row size), not number of elements
-		[[nodiscard]] constexpr std::size_t size() const noexcept
-		{
-			return C;
-		}
+		// not required by spec, but more c++ container-like
+//		[[nodiscard]] constexpr std::size_t	size() const noexcept				{ return C; }
+		static constexpr std::integral_constant<std::size_t, C> size = {};
 
 		// returns number of rows
-		[[nodiscard]] constexpr std::size_t column_size() const noexcept
-		{
-			return R;
-		}
+		// not required by spec, but more c++ container-like
+//		[[nodiscard]] constexpr std::size_t	column_size() const noexcept		{ return R; }
+		static constexpr std::integral_constant<std::size_t, R> column_size = {};
 
+		// 
 		std::array<basic_vector<T, R>, C> columns;
 
 		//
@@ -5572,9 +5582,9 @@ namespace dsga
 			: columns{}
 		{
 			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
-			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
 					columns[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
@@ -5588,7 +5598,7 @@ namespace dsga
 		explicit constexpr basic_matrix(U arg) noexcept
 			: columns{}
 		{
-			[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				((columns[Is][Is] = static_cast<T>(arg)), ...);
 			}(std::make_index_sequence<C>{});
@@ -5600,7 +5610,7 @@ namespace dsga
 		explicit(false) constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept
 			: columns{}
 		{
-			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
+			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				((columns[Is] = arg[Is]), ...);
 			}(std::make_index_sequence<C>{});
@@ -5612,9 +5622,9 @@ namespace dsga
 		explicit(false) constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 			: columns{}
 		{
-			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
 					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
@@ -5624,7 +5634,7 @@ namespace dsga
 			// for square matrix, extend identity diagonal as needed
 			if constexpr (C == R)
 			{
-				[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+				[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
 					((columns[Is][Is] = T(1.0)), ...);
 				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
@@ -5637,9 +5647,9 @@ namespace dsga
 		explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 			: columns{}
 		{
-			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				(([&] <std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
 					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
@@ -5649,7 +5659,7 @@ namespace dsga
 			// for square matrix, extend identity diagonal as needed
 			if constexpr (C == R)
 			{
-				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
+				[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
 					((columns[Is][Is] = T(1.0)), ...);
 				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
@@ -5664,7 +5674,7 @@ namespace dsga
 		requires implicitly_convertible_to<U, T>
 		constexpr basic_matrix &operator =(const basic_matrix<U, C, R> &other) noexcept
 		{
-			[&] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				((columns[Is] = other[Is]), ...);			// let basic_vector do any type conversion if needed
 			}(std::make_index_sequence<C>{});
@@ -5706,28 +5716,28 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto & get(dsga::basic_matrix<T, C, R> & arg) noexcept
+	[[nodiscard]] constexpr auto & get(basic_matrix<T, C, R> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr const auto & get(const dsga::basic_matrix<T, C, R> & arg) noexcept
+	[[nodiscard]] constexpr const auto & get(const basic_matrix<T, C, R> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(dsga::basic_matrix<T, C, R> && arg) noexcept
+	[[nodiscard]] constexpr auto && get(basic_matrix<T, C, R> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr const auto && get(const dsga::basic_matrix<T, C, R> && arg) noexcept
+	[[nodiscard]] constexpr const auto && get(const basic_matrix<T, C, R> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -5911,13 +5921,13 @@ namespace dsga
 		//
 		// returns a matrix that can be used for computing the cross product:
 		//
-		// dsga::cross(u, v) == dsga::cross_matrix(u) * v == u * dsga::cross_matrix(v)
-		template <bool W, dsga::floating_point_scalar T, typename D>
-		constexpr dsga::basic_matrix<T, 3u, 3u> cross_matrix(const dsga::vector_base<W, T, 3u, D> &vec) noexcept
+		// cross(u, v) == cross_matrix(u) * v == u * cross_matrix(v)
+		template <bool W, floating_point_scalar T, typename D>
+		[[nodiscard]] constexpr basic_matrix<T, 3u, 3u> cross_matrix(const vector_base<W, T, 3u, D> &vec) noexcept
 		{
-			return dsga::basic_matrix<T, 3u, 3u>(T(0), vec[2], -vec[1],
-												 -vec[2], T(0), vec[0],
-												 vec[1], -vec[0], T(0));
+			return basic_matrix<T, 3u, 3u>(T(0), vec[2], -vec[1],
+										   -vec[2], T(0), vec[0],
+										   vec[1], -vec[0], T(0));
 		}
 	}
 
@@ -6008,7 +6018,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
 											U rhs) noexcept
 	{
-		return [&]<std::size_t ...Is>(std::index_sequence <Is...>)
+		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
 			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] + rhs)...);
 		}(std::make_index_sequence<C>{});
@@ -6280,7 +6290,7 @@ namespace dsga
 	template <bool W, typename T, std::size_t C, typename D>
 	[[nodiscard]] constexpr std::array<T, C> to_array(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 		{
 			return {arg[Is]...};
 		}(std::make_index_sequence<C>{});
@@ -6290,31 +6300,31 @@ namespace dsga
 
 	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
 	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
-	[[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept
+	[[nodiscard]] constexpr basic_matrix<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept
 	{
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 		{
-			return dsga::basic_matrix<T, C, R>(
+			return basic_matrix<T, C, R>(
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
-			{
-				constexpr auto cols = Js;
-				return dsga::basic_vector<T, R>(arg[cols * R + Is]...);
-			}(std::make_index_sequence<R>{}) ...);
+				{
+					constexpr auto cols = Js;
+					return basic_vector<T, R>(arg[cols * R + Is]...);
+				}(std::make_index_sequence<R>{}) ...);
 		}(std::make_index_sequence<C>{});
 	}
 
 	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
 	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
-	[[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const T(&arg)[S]) noexcept
+	[[nodiscard]] constexpr basic_matrix<T, C, R> to_matrix(const T(&arg)[S]) noexcept
 	{
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 		{
-			return dsga::basic_matrix<T, C, R>(
+			return basic_matrix<T, C, R>(
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
-			{
-				constexpr auto cols = Js;
-				return dsga::basic_vector<T, R>(arg[cols * R + Is]...);
-			}(std::make_index_sequence<R>{}) ...);
+				{
+					constexpr auto cols = Js;
+					return basic_vector<T, R>(arg[cols * R + Is]...);
+				}(std::make_index_sequence<R>{}) ...);
 		}(std::make_index_sequence<C>{});
 	}
 
