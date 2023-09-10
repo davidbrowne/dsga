@@ -9,6 +9,9 @@ v1.2.0
 * [Some Quick Examples](#some-quick-examples)
 * [Relevant GLSL Overview](#relevant-glsl-overview)
 * [Implemented Interfaces](#implemented-interfaces)
+* [General documentation](docs/DOCUMENTATION.md)
+* [Detailed API documentation](docs/API.md)
+* [```dsga``` Implementation Details](docs/DETAILS.md)
 * [Installation](#installation)
 * [Status](#status)
 * [Usage and Documentation](#usage)
@@ -290,6 +293,8 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 Current version: `v1.2.0`
 
+* Breaking Change with v1.2.0
+  * ```size``` and ```column_size``` functions in the various classes are now static member functions, tied to static data members of type ```std::integral_constant```
 * Breaking Change with v1.1.0
   * Removed ```default_comparison_weights()```, ```weighted_compare()```, and related functions
   * Removed ```operator <=>``` for vector and matrix structs
@@ -299,7 +304,7 @@ Current version: `v1.2.0`
 * [Last Released: v1.1.0](https://github.com/davidbrowne/dsga/releases/tag/v1.1.0)
 
 ### The next steps
-* Working on much better API documentation.
+* Refining API documentation.
 * Working on better ```cmake``` support.
 * Add more tests.
 

@@ -1,6 +1,8 @@
 # Documentation
 
-Jump to [API](#api).
+Go to [detailed API documentation](API.md)
+
+Jump to [API concept descriptions](#api).
 
 This single header library aims to provide the basic functionality of the types and functions in the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). We are only interested in the vector and matrix types, along with the corresponding functions that operate on these types. We don't support the language as a whole, just the data types, and that is so we can develop geometric algebraic algorithms. The types are very flexible, and they can be used for a natural rapid prototyping environment for ```c++```.
 
@@ -192,6 +194,7 @@ For an example of GLSL type names vs. math notation, ```mat4x2``` is a matrix wi
 The matrix types are very generic. One can pre-mulitply (matrix on left, vector on right), post-multiply (vector on left, matrix on right), treat square matrices that are meant to represent transformations as left-handed or right-handed, etc. There is no default preferred interpretation in ```dsga```, although users may have a preferred approach to using matrices.
 
 # API
+[Detailed API documentation](API.md) for ```dsga```.
 
 * Matrices and Vectors
    * [Index Interface](#index-interface)
@@ -432,7 +435,7 @@ There are scalar versions of these vector functions where it makes sense, i.e., 
 #### Geometric Functions
 The geometric functions treat a vector as an entity instead of as a collection of components.
 
-The vector component type may be of the vector types except bool.
+The vector component type may be any of the vector types except bool.
 
 * ```innerProduct()``` - not in GLSL -  similar to ```dot()```
 

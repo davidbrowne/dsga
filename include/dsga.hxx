@@ -6287,7 +6287,7 @@ namespace dsga
 
 	// converting from internal vector type to std::array
 
-	template <bool W, typename T, std::size_t C, typename D>
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr std::array<T, C> to_array(const vector_base<W, T, C, D> &arg) noexcept
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>

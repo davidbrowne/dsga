@@ -64,6 +64,7 @@
     <None Include="..\docs\dsga.svg">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\docs\API.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\LICENSE_1_0.txt" />
