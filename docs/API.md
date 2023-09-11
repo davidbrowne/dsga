@@ -291,7 +291,7 @@ This struct is structurally equivalent to [```indexed_vector```](#indexed_vector
   * [```size``` (theoretical function)](#storage_wrappersize-theoretical-function)
 * Non-Static Member Functions
   * [```length```](#storage_wrapperlength)
-  * [```operator []```](#storage_wrapperoperator)
+  * [```operator []```](#storage_wrapperoperator-)
   * [```data```](#storage_wrapperdata)
   * [```sequence```](#storage_wrappersequence)
   * [```set```](#storage_wrapperset)
@@ -454,7 +454,7 @@ This [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) 
 * Non-Static Member Functions
   * [```length```](#vector_baselength)
   * [```as_derived```](#vector_baseas_derived)
-  * [```operator []```](#vector_baseoperator)
+  * [```operator []```](#vector_baseoperator-)
   * [```data```](#vector_basedata)
   * [```sequence```](#vector_basesequence)
   * [```set```](#vector_baseset)
@@ -608,8 +608,8 @@ Size and Count are two different things, with Size being the physical number of 
 * Static Member Functions
   * None.
 * Non-Static Member Functions
-  * [```operator []```](#indexed_vectoroperator)
-  * [```operator =```](#indexed_vectoroperator-assignment)
+  * [```operator []```](#indexed_vectoroperator-)
+  * [```operator =```](#indexed_vectoroperator--assignment)
   * [```data```](#indexed_vectordata)
   * [```sequence```](#indexed_vectorsequence)
   * [```set```](#indexed_vectorset)
@@ -741,8 +741,8 @@ The different sized versions of ```basic_vector``` are individually partially sp
 * Static Member Functions
   * None.
 * Non-Static Member Functions
-  * [```operator []```](#basic_vectoroperator)
-  * [```operator =```](#basic_vectoroperator-assignment)
+  * [```operator []```](#basic_vectoroperator-)
+  * [```operator =```](#basic_vectoroperator--assignment)
   * [```data```](#basic_vectordata)
   * [```sequence```](#basic_vectorsequence)
   * [```set```](#basic_vectorset)
@@ -976,8 +976,8 @@ The struct that represents a matrix. The matrix elements are stored column order
 * Non-Static Member Functions
   * [```length```](#basic_matrixlength)
   * [```column_length```](#basic_matrixcolumn_length)
-  * [```operator []```](#basic_matrixoperator)
-  * [```operator =```](#basic_matrixoperator-assignment)
+  * [```operator []```](#basic_matrixoperator-)
+  * [```operator =```](#basic_matrixoperator--assignment)
   * [```data```](#basic_matrixdata)
   * [```row```](#basic_matrixrow)
   * [```swap```](#basic_matrixswap)
