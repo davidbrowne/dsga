@@ -199,7 +199,7 @@ This gives a closed interval in a ```std::index_sequence``` -> [Start, End]. If 
 template <detail::sequence_indexable auto vals>
 using make_array_sequence = decltype(detail::indexable_to_sequence<vals>(std::make_index_sequence<vals.size()>{}));
 ```
-This gives a ```std::index_sequence``` that contains the elements of a constexpr ```std::array<std::size_t, N>```.
+This gives a ```std::index_sequence``` that contains the elements of a constexpr ```std::array<T, N> vals```, where ```T``` is convertible to a ```std::size_t``` and none of the elements are negative. Constexpr non-type template parameter```vals``` doesn't have to be of type ```std::array<T, N>```, but it must have constexpr member functions ```size``` and ```operator []```, both of whose return values are convertible to ```std::size_t```, e.g., ```dsga::basic_vector<T, N>```, as long as all values in the vector are non-negative and ```std::convertible_to<T, std::size_t>``` is true.
 
 #### Using Directives for Creating ```indexed_vector```s
 
@@ -238,13 +238,14 @@ Convenience using directive for creating a ```indexed_vector``` for ```Count == 
 
 * [```make_sequence_array```](#make_sequence_array)
 * [```make_reverse_sequence```](#make_reverse_sequence)
+* [```is_constexpr```](#is_constexpr)
 
 #### ```make_sequence_array```
 ```c++
 template <std::size_t... Is>
 constexpr std::array<std::size_t, sizeof...(Is)> make_sequence_array(std::index_sequence<Is...>) noexcept;
 ```
-Build an array from the indexes of an ```std::index_sequence```.
+Build an array from the indexes of a ```std::index_sequence```.
 
 #### ```make_reverse_sequence```
 ```c++
@@ -253,15 +254,22 @@ constexpr auto make_reverse_sequence(std::index_sequence<Is...> seq) noexcept;
 ```
 Convert a ```std::index_sequence<Is...>``` to another ```std::index_sequence``` with the ```Is...``` in reverse order from input.
 
+#### ```is_constexpr```
+```c++
+template <typename C, auto val = std::bool_constant<(C{}(), true)>{}>
+consteval auto is_constexpr(C);
+```
+Is a default-constructible callable constexpr? If not, then compile error due to trying to evaluate something that is not constexpr at compile time.
+
 ### Class Templates
 
-* [```storage_wrapper```](#storage_wrapper)
-* [```vector_base```](#vector_base)
+* [```basic_vector```](#basic_vector)
+* [```basic_matrix```](#basic_matrix)
 * [```indexed_vector```](#indexed_vector)
   * [```indexed_vector_iterator```](#indexed_vector_iterator)
   * [```indexed_vector_const_iterator```](#indexed_vector_const_iterator)
-* [```basic_vector```](#basic_vector)
-* [```basic_matrix```](#basic_matrix)
+* [```vector_base```](#vector_base)
+* [```storage_wrapper```](#storage_wrapper)
 
 This diagram explores the relationships between the various ```dsga``` template classes, which are actually all structs. The main two template structs are ```basic_vector``` and ```basic_matrix```. The other structs are in support of those two primary components.
 

@@ -99,7 +99,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 0;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
@@ -1018,6 +1018,11 @@ namespace dsga
 	requires dimensional_storage<T, Size>
 	using dimensional_storage_t = std::array<T, Size>;
 
+	// https://stackoverflow.com/questions/63326542/checking-for-constexpr-in-a-concept
+	// test whether default-constructable callable C is constexpr
+	template <typename C, auto val = std::bool_constant<(C{}(), true)>{}>
+	consteval auto is_constexpr(C) { return val(); }
+
 	namespace detail
 	{
 		// the concepts will help indexed_vector determine if it can be assigned to, like an lvalue reference,
@@ -1114,12 +1119,16 @@ namespace dsga
 		template <typename T>
 		concept sequence_indexable = requires (T t, std::size_t i)
 		{
-			{ t[i] } -> std::same_as<std::size_t &>;
+			{ t[i] } -> std::convertible_to<std::size_t>;
+			requires is_constexpr([] { [[ maybe_unused ]] auto val = T{}[0]; });
+
 			{ t.size() } -> std::convertible_to<std::size_t>;
+			requires is_constexpr([] { [[ maybe_unused ]] auto val = T{}.size(); });
 		};
 
-		// return std::index_sequence -> constexpr std::array<std::size_t, N> elements
+		// return std::index_sequence from constexpr std::array<std::size_t, N> elements
 		template <sequence_indexable auto vals, std::size_t ...Is>
+		requires ((vals[Is] >= 0) && ...)
 		constexpr std::index_sequence<vals[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
 	}
 
@@ -1147,12 +1156,19 @@ namespace dsga
 	template<std::size_t ...Is>
 	constexpr auto make_reverse_sequence(std::index_sequence<Is...> seq) noexcept
 	{
-		constexpr auto vals = make_sequence_array(seq);
-
-		return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+		if constexpr (sizeof...(Is) != 0)
 		{
-			return std::index_sequence<vals[sizeof...(Js) - Js - 1]...>{};
-		}(std::make_index_sequence<sizeof...(Is)>{});
+			constexpr auto vals = make_sequence_array(seq);
+
+			return [&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+			{
+				return std::index_sequence<vals[vals.size() - 1 - Js]...>{};
+			}(std::make_index_sequence<vals.size()>{});
+		}
+		else
+		{
+			return seq;
+		}
 	}
 
 	// is the second type also the common type of the two types

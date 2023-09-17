@@ -191,7 +191,7 @@ bool convert_binary_stl_to_ascii(std::ifstream &some_file, std::ofstream &out_fi
 
 	some_file.seekg(header_size + num_facets_size);
 
-	// iostream ASCII STL float format
+	// iostream ASCII STL float precision for format flag std::scientific
 	out_file.precision(std::numeric_limits<float>::max_digits10 - 1);
 
 	// convert input to output

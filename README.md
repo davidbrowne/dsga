@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.2.0
+v1.2.1
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -23,103 +23,95 @@ v1.2.0
 ## Some Quick Examples
 
 ``` c++
-using namespace dsga;
-
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
-template <floating_point_scalar T>
-constexpr auto get_perpendicular1(const basic_vector<T, 2> &some_vec) noexcept
+template <dsga::floating_point_scalar T>
+constexpr auto get_perpendicular1(const dsga::basic_vector<T, 2> &some_vec) noexcept
 {
-	auto cos90 = 0.0f;
-	auto sin90 = 1.0f;
+    auto cos90 = 0.0f;
+    auto sin90 = 1.0f;
 
-	// rotation matrix -- components in column major order
-	return basic_matrix<T, 2, 2>(cos90, sin90, -sin90, cos90) * some_vec;
+    // rotation matrix -- components in column major order
+    return dsga::basic_matrix<T, 2, 2>(cos90, sin90, -sin90, cos90) * some_vec;
 }
 
 // same as above, different implementation
-template <floating_point_scalar T>
-constexpr auto get_perpendicular2(const basic_vector<T, 2> &some_vec) noexcept
+template <dsga::floating_point_scalar T>
+constexpr auto get_perpendicular2(const dsga::basic_vector<T, 2> &some_vec) noexcept
 {
-	return basic_vector<T, 2>(-1, 1) * some_vec.yx;
+    return dsga::basic_vector<T, 2>(-1, 1) * some_vec.yx;
 }
 ```
 
 ``` c++
-using namespace dsga;
-
 // gives closest projection point from point to a line made from line segment p1 <=> p2
-constexpr auto project_to_line1(const dvec3 &point,
-                                const dvec3 &p1,
-                                const dvec3 &p2) noexcept
+constexpr auto project_to_line1(const dsga::dvec3 &point,
+                                const dsga::dvec3 &p1,
+                                const dsga::dvec3 &p2) noexcept
 {
     auto hyp = point - p1;
     auto v1 = p2 - p1;
-    auto t = dot(hyp, v1) / dot(v1, v1);
+    auto t = dsga::dot(hyp, v1) / dsga::dot(v1, v1);
 
     return p1 + (t * v1);
 }
 
 // same as above, different implementation
-constexpr auto project_to_line2(const dvec3 &point,
-                                const dvec3 &p1,
-                                const dvec3 &p2) noexcept
+constexpr auto project_to_line2(const dsga::dvec3 &point,
+                                const dsga::dvec3 &p1,
+                                const dsga::dvec3 &p2) noexcept
 {
     auto hyp = point - p1;
     auto v1 = p2 - p1;
-    return p1 + outerProduct(v1, v1) * hyp / dot(v1, v1);
+    return p1 + dsga::outerProduct(v1, v1) * hyp / dsga::dot(v1, v1);
 }
 ```
 
 ``` c++
-using namespace dsga;
-
 //
 // evaluate a 2D cubic bezier curve at t
 //
 
 // cubic bezier linear interpolation, one ordinate at a time, e.g., x, y, z, or w
-constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, float t) noexcept
+constexpr auto single_ordinate_cubic_bezier_eval(dsga::vec4 cubic_control_points, float t) noexcept
 {
-    auto quadratic_control_points = mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
-    auto linear_control_points = mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
-    return mix(linear_control_points.x, linear_control_points.y, t);
+    auto quadratic_control_points = dsga::mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
+    auto linear_control_points = dsga::mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
+    return dsga::mix(linear_control_points.x, linear_control_points.y, t);
 }
 
 // main cubic bezier eval function -- takes 2D control points with float values.
 // returns the 2D point on the curve at t
-constexpr auto simple_cubic_bezier_eval(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t) noexcept
+constexpr auto simple_cubic_bezier_eval(dsga::vec2 p0, dsga::vec2 p1, dsga::vec2 p2, dsga::vec2 p3, float t) noexcept
 {
     // each control point is a column of the matrix.
     // the rows represent x coords and y coords.
-    auto AoS = mat4x2(p0, p1, p2, p3);
+    auto AoS = dsga::mat4x2(p0, p1, p2, p3);
 
     // lambda pack wrapper -- would be better solution if vector size was generic
     return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
     {
-        return vec2(single_ordinate_cubic_bezier_eval(AoS.row(Is), t)...);
+        return dsga::vec2(single_ordinate_cubic_bezier_eval(AoS.row(Is), t)...);
     }(std::make_index_sequence<2u>{});
 }
 ```
 
 ``` c++
-using namespace dsga;
-
 //
 // find the minimum positive angle between 2 vectors and/or indexed vectors (swizzles).
 // Uses base class for vector types to be inclusive to both types.
 // 2D or 3D only.
 //
 
-template <bool W1, floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
+template <bool W1, dsga::floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
 requires ((C > 1u) && (C < 4u))
-auto angle_between(const vector_base<W1, T, C, D1> &v1,
-                   const vector_base<W2, T, C, D2> &v2)
+auto angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
+                   const dsga::vector_base<W2, T, C, D2> &v2)
 {
-    auto v1_mag = length(v1);
-    auto v2_mag = length(v2);
-    auto numerator = length(v1 * v2_mag - v2 * v1_mag);
-    auto denominator = length(v1 * v2_mag + v2 * v1_mag);
+    auto v1_mag = dsga::length(v1);
+    auto v2_mag = dsga::length(v2);
+    auto numerator = dsga::length(v1 * v2_mag - v2 * v1_mag);
+    auto denominator = dsga::length(v1 * v2_mag + v2 * v1_mag);
 
     if (numerator == T(0))
         return T(0);
@@ -131,41 +123,39 @@ auto angle_between(const vector_base<W1, T, C, D1> &v1,
 ```
 
 ``` c++
-using namespace dsga;
-
 //
 // STL file format read/write helpers
 //
 
 // make sure data has no infinities or NaNs
-constexpr bool definite_coordinate_triple(const vec3 &data) noexcept
+constexpr bool definite_coordinate_triple(const dsga::vec3 &data) noexcept
 {
-    return !(any(isinf(data)) || any(isnan(data)));
+    return !(dsga::any(dsga::isinf(data)) || dsga::any(dsga::isnan(data)));
 }
 
 // make sure normal vector has no infinities or NaNs and is not the zero-vector { 0, 0, 0 }
-constexpr bool valid_normal_vector(const vec3 &normal) noexcept
+constexpr bool valid_normal_vector(const dsga::vec3 &normal) noexcept
 {
-    return definite_coordinate_triple(normal) && any(notEqual(normal, vec3(0)));
+    return definite_coordinate_triple(normal) && dsga::any(dsga::notEqual(normal, dsga::vec3(0)));
 }
 
 // not checking for positive-only first octant data -- we are allowing zeros and negative values
-constexpr bool valid_vertex_relaxed(const vec3 &vertex) noexcept
+constexpr bool valid_vertex_relaxed(const dsga::vec3 &vertex) noexcept
 {
     return definite_coordinate_triple(vertex);
 }
 
 // strict version where all vertex coordinates must be positive-definite
-constexpr bool valid_vertex_strict(const vec3 &vertex) noexcept
+constexpr bool valid_vertex_strict(const dsga::vec3 &vertex) noexcept
 {
-    return definite_coordinate_triple(vertex) && all(greaterThan(vertex, vec3(0)));
+    return definite_coordinate_triple(vertex) && dsga::all(dsga::greaterThan(vertex, dsga::vec3(0)));
 }
 
 // right-handed unit normal vector for a triangle facet,
 // inputs are triangle vertices in counter-clockwise order
-constexpr vec3 right_handed_normal(const vec3 &v1, const vec3 &v2, const vec3 &v3) noexcept
+constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 &v2, const dsga::vec3 &v3) noexcept
 {
-    return normalize(cross(v2 - v1, v3 - v1));
+    return dsga::normalize(dsga::cross(v2 - v1, v3 - v1));
 }
 ```
 ## Relevant GLSL Overview
@@ -236,44 +226,45 @@ To make the vectors and matrices as useful as possible in a C++ context, various
 * Swizzle access like GLSL (vector only)
     * Only from the set of {x, y, z, w}, e.g., ```foo.wyxz```
 * ```std::tuple``` protocol, structured bindings
-    * ```get<>()```
-    * ```tuple_size<>```
-    * ```tuple_element<>```
+    * ```get```
+    * ```tuple_size```
+    * ```tuple_element```
 * Iterator access, ranges, range-for loop
-    * ```begin()```
-    * ```cbegin()```
-    * ```rbegin()```
-    * ```crbegin()```
-    * ```end()```
-    * ```cend()```
-    * ```rend()```
-    * ```crend()```
+    * ```begin```
+    * ```cbegin```
+    * ```rbegin```
+    * ```crbegin```
+    * ```end```
+    * ```cend```
+    * ```rend```
+    * ```crend```
 * Index access (logical)
     * ```operator []```
-    * ```size()```
-    * ```length()```
+    * ```size```
+    * ```length```
 * Pointer access (physical), ```std::span``` (for contiguous range types ```dsga::basic_vector``` and ```dsga::basic_matrix```)
-    * ```data()```
+    * ```data```
         * vector - pointer to scalars of concept type ```dsga::dimensional_scalar```
         * matrix - pointer to column vectors whose scalars are of concept type ```dsga::floating_point_scalar```
-    * ```size()```
-    * vector only - these allow logical use of ```data()```
+    * ```size```
+    * vector only - these allow logical use of ```data```
         * ```offsets```
-        * ```sequence()```
+        * ```sequence```
 * Type Conversions
-    * ```to_vector()``` - from both ```std::array``` and C style arrays
-    * ```to_array()``` - to ```std::array```
+    * ```to_vector``` - from both ```std::array``` and C style arrays
+    * ```to_matrix``` - from both ```std::array``` and C style arrays
+    * ```to_array``` - from both ```dsga::basic_matrix``` and ```dsga::vector_base``` to ```std::array```
     * [```std::span``` example](examples/span_convert.hxx)
 * Text output
-    * [```std::ostream<>``` example](examples/ostream_output.hxx)
-    * [```std::formatter<>``` example](examples/format_output.hxx)
-* ```std::valarray<>``` API (vector only)
-    * ```apply()```
-    * ```shift()```
-    * ```cshift()```
-    * ```min()```
-    * ```max()```
-    * ```sum()```
+    * [```std::ostream``` example](examples/ostream_output.hxx)
+    * [```std::formatter``` example](examples/format_output.hxx)
+* ```std::valarray``` API (vector only)
+    * ```apply```
+    * ```shift```
+    * ```cshift```
+    * ```min```
+    * ```max```
+    * ```sum```
 
 ## Installation
 
@@ -291,7 +282,7 @@ Remember, this is a c++20 library, so that needs to be the minimum standard that
 
 ## Status
 
-Current version: `v1.2.0`
+Current version: `v1.2.1`
 
 * Breaking Change with v1.2.0
   * ```size``` and ```column_size``` functions in the various classes are now static member functions, tied to static data members of type ```std::integral_constant```
@@ -326,7 +317,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.7.2**
+* **MSVC 2022 - v17.7.4**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -337,7 +328,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 13.1.0** on Windows, [MSYS2](https://www.msys2.org/) distribution:
+* **gcc 13.2.0** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -348,7 +339,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.6), with MSVC and/or gcc v13.1.0 installed:
+* **clang 16.0.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-16.0.6), with MSVC and/or gcc v13.2.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -389,7 +380,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 ### Ubuntu 22.04 running in WSL2 for Windows 11
 
-* **gcc 12.1.0**
+* **gcc 12.3.0**
 
 ```
 [doctest] doctest version is "2.4.11"
