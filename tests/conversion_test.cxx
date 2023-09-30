@@ -377,7 +377,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec2(7, 8));
 
 			// tuple interface -- structured bindings and get<>
-			auto [a, b] = simple_data;
+			auto &[a, b] = simple_data;
 			CHECK_EQ(a, 999);
 			CHECK_EQ(b, 9999);
 			CHECK_EQ(a, get<0>(simple_data));
@@ -437,7 +437,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec3(4, 5, 6));
 
 			// tuple interface -- structured bindings and get<>
-			auto [a, b, c] = simple_data;
+			auto &[a, b, c] = simple_data;
 			CHECK_EQ(a, 999);
 			CHECK_EQ(b, 9999);
 			CHECK_EQ(c, 99999);
@@ -499,7 +499,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(simple_dest, ivec4(0, 1, 2, 3));
 
 			// tuple interface -- structured bindings and get<>
-			auto [a, b, c, d] = simple_data;
+			auto &[a, b, c, d] = simple_data;
 			CHECK_EQ(a, 999);
 			CHECK_EQ(b, 9999);
 			CHECK_EQ(c, 99999);
@@ -560,7 +560,7 @@ TEST_SUITE("test conversions")
 			std::copy(somevec.yx.cbegin(), somevec.yx.cend(), anothervec.begin());
 			CHECK_EQ(anothervec, ivec2(63, 54));
 
-			auto [a, b] = anothervec.xy;
+			auto &[a, b] = anothervec.xy;
 			CHECK_EQ(a, 63);
 			CHECK_EQ(b, 54);
 
@@ -588,7 +588,7 @@ TEST_SUITE("test conversions")
 			std::copy(somevec.zxy.cbegin(), somevec.zxy.cend(), anothervec.begin());
 			CHECK_EQ(anothervec, ivec3(74, 53, 65));
 
-			auto [a, b, c] = anothervec.yxz;
+			auto &[a, b, c] = anothervec.yxz;
 			CHECK_EQ(a, 53);
 			CHECK_EQ(b, 74);
 			CHECK_EQ(c, 65);
@@ -617,7 +617,7 @@ TEST_SUITE("test conversions")
 			std::copy(somevec.zxwy.cbegin(), somevec.zxwy.cend(), anothervec.begin());
 			CHECK_EQ(anothervec, ivec4(75, 54, 83, 66));
 
-			auto [a, b, c, d] = anothervec.ywxz;
+			const auto &[a, b, c, d] = anothervec.ywxz;
 			CHECK_EQ(a, 54);
 			CHECK_EQ(b, 66);
 			CHECK_EQ(c, 75);

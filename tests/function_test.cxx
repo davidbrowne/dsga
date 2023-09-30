@@ -624,6 +624,20 @@ TEST_SUITE("test functions")
 		CHECK_EQ(uv, uv1);
 		CHECK_EQ(uv, uv2);
 		CHECK_EQ(uv1, uv2);
+
+		// diagonal_matrix()
+		auto diagonal_vec = dsga::dvec4(0, 1, 2, 3);
+		auto dm1 = dsga::diagonal_matrix(diagonal_vec);
+		auto dm2 = dsga::diagonal_matrix(diagonal_vec.wwyz);
+
+		CHECK_EQ(dm1, dsga::dmat4(dsga::dvec4(0, 0, 0, 0),
+								  dsga::dvec4(0, 1, 0, 0),
+								  dsga::dvec4(0, 0, 2, 0),
+								  dsga::dvec4(0, 0, 0, 3)));
+		CHECK_EQ(dm2, dsga::dmat4(dsga::dvec4(3, 0, 0, 0),
+								  dsga::dvec4(0, 3, 0, 0),
+								  dsga::dvec4(0, 0, 1, 0),
+								  dsga::dvec4(0, 0, 0, 2)));
 	}
 }
 

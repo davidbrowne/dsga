@@ -99,7 +99,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -1019,7 +1019,7 @@ namespace dsga
 	using dimensional_storage_t = std::array<T, Size>;
 
 	// https://stackoverflow.com/questions/63326542/checking-for-constexpr-in-a-concept
-	// test whether default-constructable callable C is constexpr
+	// test whether default-constructable callable C's operator() can be called in a constexpr context
 	template <typename C, auto val = std::bool_constant<(C{}(), true)>{}>
 	consteval auto is_constexpr(C) { return val(); }
 
@@ -1220,7 +1220,15 @@ namespace dsga
 		// as an array
 		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
+		// underlying storage
 		dimensional_storage_t<T, Size> store;
+
+		// using directives related to storage
+		using value_type = dimensional_storage_t<T, Size>::value_type;
+		using iterator = dimensional_storage_t<T, Size>::iterator;
+		using const_iterator = dimensional_storage_t<T, Size>::const_iterator;
+		using reverse_iterator = dimensional_storage_t<T, Size>::reverse_iterator;
+		using const_reverse_iterator = dimensional_storage_t<T, Size>::const_reverse_iterator;
 
 		[[nodiscard]] constexpr int length() const noexcept					{ return Count; }
 //		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
@@ -1767,6 +1775,13 @@ namespace dsga
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
 		dimensional_storage_t<T, Size> base;
 
+		// using directives related to storage
+		using value_type = dimensional_storage_t<T, Size>::value_type;
+		using iterator = indexed_vector_iterator<T, Size, Count, Is...>;
+		using const_iterator = indexed_vector_const_iterator<T, Size, Count, Is...>;
+		using reverse_iterator = std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>;
+		using const_reverse_iterator = std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>;
+
 		// copy assignment
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && implicitly_convertible_to<U, T>
@@ -1853,6 +1868,13 @@ namespace dsga
 
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
 		dimensional_storage_t<T, Size> base;
+
+		// using directives related to storage
+		using value_type = dimensional_storage_t<T, Size>::value_type;
+		using iterator = indexed_vector_iterator<T, Size, Count, I>;
+		using const_iterator = indexed_vector_const_iterator<T, Size, Count, I>;
+		using reverse_iterator = std::reverse_iterator<indexed_vector_iterator<T, Size, Count, I>>;
+		using const_reverse_iterator = std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, I>>;
 
 		// copy assignment
 		template <bool W, dimensional_scalar U, typename D>
@@ -2218,6 +2240,13 @@ namespace dsga
 			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
 		};
 
+		// using directives related to storage
+		using value_type = storage_wrapper<T, Size>::value_type;
+		using iterator = storage_wrapper<T, Size>::iterator;
+		using const_iterator = storage_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = storage_wrapper<T, Size>::const_reverse_iterator;
+
 		//
 		// defaulted functions
 		//
@@ -2405,6 +2434,13 @@ namespace dsga
 			dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
 			dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
 		};
+
+		// using directives related to storage
+		using value_type = storage_wrapper<T, Size>::value_type;
+		using iterator = storage_wrapper<T, Size>::iterator;
+		using const_iterator = storage_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = storage_wrapper<T, Size>::const_reverse_iterator;
 
 		//
 		// defaulted functions
@@ -2668,6 +2704,13 @@ namespace dsga
 			dexvec4<T, Size, 2, 2, 2, 1>		zzzy;
 			dexvec4<T, Size, 2, 2, 2, 2>		zzzz;
 		};
+
+		// using directives related to storage
+		using value_type = storage_wrapper<T, Size>::value_type;
+		using iterator = storage_wrapper<T, Size>::iterator;
+		using const_iterator = storage_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = storage_wrapper<T, Size>::const_reverse_iterator;
 
 		//
 		// defaulted functions
@@ -3153,6 +3196,13 @@ namespace dsga
 			dexvec4<T, Size, 3, 3, 3, 2>		wwwz;
 			dexvec4<T, Size, 3, 3, 3, 3>		wwww;
 		};
+
+		// using directives related to storage
+		using value_type = storage_wrapper<T, Size>::value_type;
+		using iterator = storage_wrapper<T, Size>::iterator;
+		using const_iterator = storage_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = storage_wrapper<T, Size>::const_reverse_iterator;
 
 		//
 		// defaulted functions
@@ -5935,7 +5985,7 @@ namespace dsga
 
 		// not in glsl
 		//
-		// returns a matrix that can be used for computing the cross product:
+		// returns a skew symmetric matrix that can be used for computing the cross product. vector and matrix are 3D.
 		//
 		// cross(u, v) == cross_matrix(u) * v == u * cross_matrix(v)
 		template <bool W, floating_point_scalar T, typename D>
@@ -5944,6 +5994,25 @@ namespace dsga
 			return basic_matrix<T, 3u, 3u>(T(0), vec[2], -vec[1],
 										   -vec[2], T(0), vec[0],
 										   vec[1], -vec[0], T(0));
+		}
+
+		// not in glsl
+		//
+		// returns a symmetric diagonal matrix (square) using the vector parameter as the diagonal values,
+		// with all other elements being 0.
+		//
+		template <bool W, floating_point_scalar T, std::size_t C, typename D>
+		requires (C > 1)
+		[[nodiscard]] constexpr basic_matrix<T, C, C> diagonal_matrix(const vector_base<W, T, C, D> &vec) noexcept
+		{
+			auto square_mat = basic_matrix<T, C, C>();
+
+			[&] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				((square_mat[Is][Is] = vec[Is]), ...);
+			}(std::make_index_sequence<C>{});
+
+			return square_mat;
 		}
 	}
 

@@ -307,6 +307,12 @@ This struct is structurally equivalent to [```indexed_vector```](#indexed_vector
   * [Iterators](#storage_wrapper-iterators)
 * Using Directives
   * [```sequence_pack```](#storage_wrappersequence_pack)
+  * ```value_type```
+  * ```iterator```
+  * ```const_iterator```
+  * ```reverse_iterator```
+  * ```const_reverse_iterator```
+
 * [Free Functions](#storage_wrapper-free-functions)
 * [Class Template Argument Deduction (CTAD)](#storage_wrapper-ctad)
 
@@ -624,6 +630,11 @@ Size and Count are two different things, with Size being the physical number of 
   * [Iterators](#indexed_vector-iterators)
 * Using Directives
   * [```sequence_pack```](#indexed_vectorsequence_pack)
+  * ```value_type```
+  * ```iterator```
+  * ```const_iterator```
+  * ```reverse_iterator```
+  * ```const_reverse_iterator```
 * [Vector Operators](#vector-operators)
 * [Vector Free Functions](#vector-free-functions)
 
@@ -758,6 +769,11 @@ The different sized versions of ```basic_vector``` are individually partially sp
   * [Iterators](#basic_vector-iterators)
 * Using Directives
   * [```sequence_pack```](#basic_vectorsequence_pack)
+  * ```value_type```
+  * ```iterator```
+  * ```const_iterator```
+  * ```reverse_iterator```
+  * ```const_reverse_iterator```
 * [Vector Operators](#vector-operators)
 * [Vector Free Functions](#vector-free-functions)
 * [```basic_vector``` Free Functions](#basic_vector-free-functions)
@@ -2488,6 +2504,7 @@ The matrix functions treat a matrix as an entity instead of as a collection of c
 * [```determinant```](#determinant)
 * [```inverse```](#inverse)
 * [```cross_matrix```](#cross_matrix)
+* [```diagonal_matrix```](#diagonal_matrix)
 
 ##### ```matrixCompMult```
 ```c++
@@ -2531,6 +2548,14 @@ template <bool W, floating_point_scalar T, typename D>
 [[nodiscard]] constexpr basic_matrix<T, 3u, 3u> cross_matrix(const vector_base<W, T, 3u, D> &vec) noexcept;
 ```
 ```cross(u, v) == cross_matrix(u) * v == u * cross_matrix(v)```. This creates a matrix that can be used to compute the cross product when multiplied by a vector. This is not in GLSL.
+
+##### ```diagonal_matrix```
+```c++
+template <bool W, floating_point_scalar T, std::size_t C, typename D>
+requires (C > 1)
+[[nodiscard]] constexpr basic_matrix<T, C, C> diagonal_matrix(const vector_base<W, T, C, D> &vec) noexcept;
+```
+This creates a symmetric diagonal matrix (square matrix) using the vector parameter for the diagonal values, with all other matrix elements having value 0. This is not in GLSL.
 
 ### Simple Conversion Functions
 These functions allow the vector and matrix classes in ```namespace dsga``` to interoperate with C++ array types, for both producing and consuming.

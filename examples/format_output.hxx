@@ -15,116 +15,6 @@
 // std::format interfaces
 //
 
-template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived, typename CharT>
-struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : std::formatter<T, CharT>
-{
-	constexpr auto parse(std::basic_format_parse_context<CharT> &ctx)
-	{
-		if constexpr (dsga::floating_point_scalar<T>)
-		{
-			for (auto it = ctx.begin(); !lead_hex && (it != ctx.end()); ++it)
-			{
-				CharT c = *it;
-
-				if (c == 'a')
-				{
-					lead_hex = true;
-					upper_hex = false;
-				}
-				else if (c == 'A')
-				{
-					lead_hex = true;
-					upper_hex = true;
-				}
-			}
-		}
-
-		return std::formatter<T, CharT>::parse(ctx);
-	}
-
-	template <typename FormatContext>
-	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, FormatContext &ctx) const
-	{
-		auto prefix = [&]() { if (lead_hex) (upper_hex ? std::format_to(ctx.out(), "0X") : std::format_to(ctx.out(), "0x")); };
-
-		std::format_to(ctx.out(), "{{ ");
-
-		prefix();
-		std::formatter<T, CharT>::format(v[0], ctx);
-
-		if constexpr (Count > 1)
-		{
-			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
-			{
-				((std::format_to(ctx.out(), ", "), prefix(), std::formatter<T, CharT>::format(v[Is], ctx)), ...);
-			}(dsga::make_index_range<1, Count>{});
-		}
-
-		std::format_to(ctx.out(), " }}");
-
-		return ctx.out();
-	}
-
-	// set these appropriately if 'a' or 'A' was found during parsing for a floating_point_scalar type
-	bool upper_hex = false;
-	bool lead_hex = false;
-};
-
-template <typename CharT, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>, CharT> : std::formatter<T, CharT>
-{
-	constexpr auto parse(std::basic_format_parse_context<CharT> &ctx)
-	{
-		if constexpr (dsga::floating_point_scalar<T>)
-		{
-			for (auto it = ctx.begin(); !lead_hex && (it != ctx.end()); ++it)
-			{
-				CharT c = *it;
-
-				if (c == 'a')
-				{
-					lead_hex = true;
-					upper_hex = false;
-				}
-				else if (c == 'A')
-				{
-					lead_hex = true;
-					upper_hex = true;
-				}
-			}
-		}
-
-		return std::formatter<T, CharT>::parse(ctx);
-	}
-
-	template <typename FormatContext>
-	auto format(const dsga::indexed_vector<T, Size, Count, Is...> &v, FormatContext &ctx) const
-	{
-		auto prefix = [&]() { if (lead_hex) (upper_hex ? std::format_to(ctx.out(), "0X") : std::format_to(ctx.out(), "0x")); };
-
-		std::format_to(ctx.out(), "{{ ");
-
-		prefix();
-		std::formatter<T, CharT>::format(v[0], ctx);
-
-		if constexpr (Count > 1)
-		{
-			[&] <std::size_t ...Js>(std::index_sequence<Js...>)
-			{
-				((std::format_to(ctx.out(), ", "), prefix(), std::formatter<T, CharT>::format(v[Js], ctx)), ...);
-			}(dsga::make_index_range<1, Count>{});
-		}
-
-		std::format_to(ctx.out(), " }}");
-
-		return ctx.out();
-	}
-
-	// set these appropriately if 'a' or 'A' was found during parsing for a floating_point_scalar type
-	bool upper_hex = false;
-	bool lead_hex = false;
-};
-
 template<typename T, std::size_t N, typename CharT>
 struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
 {
@@ -187,8 +77,8 @@ struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
 	bool lead_hex = false;
 };
 
-template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::basic_vector<T, Size>, CharT> : std::formatter<T, CharT>
+template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived, typename CharT>
+struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : std::formatter<T, CharT>
 {
 	constexpr auto parse(std::basic_format_parse_context<CharT> &ctx)
 	{
@@ -215,7 +105,7 @@ struct std::formatter<dsga::basic_vector<T, Size>, CharT> : std::formatter<T, Ch
 	}
 
 	template <typename FormatContext>
-	auto format(const dsga::basic_vector<T, Size> &v, FormatContext &ctx) const
+	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, FormatContext &ctx) const
 	{
 		auto prefix = [&]() { if (lead_hex) (upper_hex ? std::format_to(ctx.out(), "0X") : std::format_to(ctx.out(), "0x")); };
 
@@ -224,12 +114,12 @@ struct std::formatter<dsga::basic_vector<T, Size>, CharT> : std::formatter<T, Ch
 		prefix();
 		std::formatter<T, CharT>::format(v[0], ctx);
 
-		if constexpr (Size > 1)
+		if constexpr (Count > 1)
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
 				((std::format_to(ctx.out(), ", "), prefix(), std::formatter<T, CharT>::format(v[Is], ctx)), ...);
-			}(dsga::make_index_range<1, Size>{});
+			}(dsga::make_index_range<1, Count>{});
 		}
 
 		std::format_to(ctx.out(), " }}");
@@ -240,6 +130,18 @@ struct std::formatter<dsga::basic_vector<T, Size>, CharT> : std::formatter<T, Ch
 	// set these appropriately if 'a' or 'A' was found during parsing for a floating_point_scalar type
 	bool upper_hex = false;
 	bool lead_hex = false;
+};
+
+template <typename CharT, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>, CharT>
+	: std::formatter<dsga::vector_base<dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::indexed_vector<T, Size, Count, Is...>>, CharT>
+{
+};
+
+template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
+struct std::formatter<dsga::basic_vector<T, Size>, CharT>
+	: std::formatter<dsga::vector_base<true, T, Size, dsga::basic_vector<T, Size>>, CharT>
+{
 };
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R, typename CharT>

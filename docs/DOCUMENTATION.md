@@ -566,3 +566,4 @@ The matrix functions treat a matrix as an entity instead of as a collection of c
 * ```determinant()```
 * ```inverse()```
 * ```cross_matrix()``` - ```dsga::cross(u, v) == dsga::cross_matrix(u) * v == u * dsga::cross_matrix(v)```  - not in GLSL - create matrix to compute cross product - only works for vectors of size 3 
+* ```diagonal_matrix()``` - not in GLSL - create matrix whose diagonal values come from vector parameter, with all other values being 0
