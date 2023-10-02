@@ -172,7 +172,7 @@ template <dsga::floating_point_scalar T>
 auto from_hexfloat_chars(std::string_view sv, T &val)
 {
 	int leading_plus = 0;
-	if (sv.front() == '+')
+	if (!sv.empty() && sv.front() == '+')
 		leading_plus = 1;
 
 	auto res = std::from_chars(sv.data() + leading_plus, sv.data() + sv.size(), val, std::chars_format::hex);
