@@ -167,17 +167,21 @@ struct std::formatter<dsga::basic_matrix<T, C, R>, CharT> : std::formatter<dsga:
 // helper functions
 //
 
-// std::from_chars does not like a leading '+' unless it is associated with the exponent
+// std::from_chars does not like a leading '+' unless it is associated with the exponent.
+// std::format uses std::to_chars beneath the hood. from_format_hexfloat_chars() handles cases such as:
+//
+//    double val = 1.5;
+//    auto vanilla_float_hex = std::format("{:a}", val); =>  "1.8p+0"s
+//    auto plus_float_hex =  std::format("{:+a}", val);  => "+1.8p+0"s
+//    auto space_float_hex =  std::format("{: a}", val); => " 1.8p+0"s
 template <dsga::floating_point_scalar T>
-auto from_hexfloat_chars(std::string_view sv, T &val)
+auto from_format_hexfloat_chars(std::string_view sv, T &val)
 {
-	int leading_plus = 0;
-	if (!sv.empty() && sv.front() == '+')
-		leading_plus = 1;
+	int leading_char = 0;
+	if (!sv.empty() && ((sv.front() == '+') || (sv.front() == ' ')))
+		leading_char = 1;
 
-	auto res = std::from_chars(sv.data() + leading_plus, sv.data() + sv.size(), val, std::chars_format::hex);
-
-	return res;
+	return std::from_chars(sv.data() + leading_char, sv.data() + sv.size(), val, std::chars_format::hex);
 }
 
 //
