@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.2.3
+v1.2.4
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -278,11 +278,11 @@ There are asserts in the codebase that can be disabled by defining the macro ```
 
 This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE. While debugging this on Linux (WSL2: Windows Subsystem for Linux) with gcc in Visual Studio Code, we created a [.natvis](vscode/dsga-vscode.natvis) file for that too.
 
-Remember, this is a c++20 library, so that needs to be the minimum standard that you tell the compiler to use.
+This is a c++20 library, so that needs to be the minimum standard that you tell the compiler to use.
 
 ## Status
 
-Current version: `v1.2.3`
+Current version: `v1.2.4`
 
 * Breaking Change with v1.2.0
   * ```size``` and ```column_size``` functions in the various classes are now static member functions, tied to static data members of type ```std::integral_constant```
@@ -339,7 +339,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 17.0.1** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.1), with MSVC and/or gcc v13.2.0 installed:
+* **clang 17.0.2** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.2), with MSVC and/or gcc v13.2.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -365,7 +365,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 17.0.1**
+* **clang 17.0.2**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
