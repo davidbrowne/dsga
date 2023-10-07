@@ -346,8 +346,6 @@ TEST_SUITE("test functions")
 
 		SUBCASE("bit changing functions")
 		{
-#if defined(__cpp_lib_bit_cast)
-
 			// floatBitsToInt()
 			auto floatToInt = floatBitsToInt(vec4(123.125, 6967.0e+4, -654.0, std::numbers::pi_v<float>));
 			CHECK_EQ(floatToInt, ivec4(1123434496, 1283777166, -1004306432, 1078530011));
@@ -387,8 +385,6 @@ TEST_SUITE("test functions")
 			auto ulongLongToDouble = ulongLongBitsToDouble(ullvec4(4355345018344775537ull, 4724447884039159808ull, 13872335897510281216ull, 4603256987541740397ull));
 			CHECK_EQ(ulongLongToDouble, dvec4(1.5e-17, 6967.0e+4, -654.0, std::numbers::inv_sqrtpi_v<double>));
 			CHECK_EQ(dvec4(ulongLongBitsToDouble(4355345018344775537ull), ulongLongBitsToDouble(4724447884039159808ull), ulongLongBitsToDouble(13872335897510281216ull), ulongLongBitsToDouble(4603256987541740397ull)), ulongLongToDouble);
-
-#endif
 		}
 
 		SUBCASE("other common functions")
