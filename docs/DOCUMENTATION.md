@@ -419,14 +419,14 @@ There are scalar versions of these vector functions where it makes sense, i.e., 
 * ```smoothstep()```
 * ```isnan()```
 * ```isinf()```
-* ```floatBitsToInt()``` - requires ```std::bit_cast<>```
-* ```floatBitsToUint()``` - requires ```std::bit_cast<>```
-* ```doubleBitsToLongLong()``` - not in GLSL - requires ```std::bit_cast<>```
-* ```doubleBitsToUlongLong()``` - not in GLSL - requires ```std::bit_cast<>```
-* ```intBitsToFloat()``` - requires ```std::bit_cast<>```
-* ```uintBitsToFloat()``` - requires ```std::bit_cast<>```
-* ```longLongBitsToDouble()``` - not in GLSL - requires ```std::bit_cast<>```
-* ```ulongLongBitsToDouble()``` - not in GLSL - requires ```std::bit_cast<>```
+* ```floatBitsToInt()```
+* ```floatBitsToUint()```
+* ```doubleBitsToLongLong()``` - not in GLSL
+* ```doubleBitsToUlongLong()``` - not in GLSL
+* ```intBitsToFloat()```
+* ```uintBitsToFloat()```
+* ```longLongBitsToDouble()``` - not in GLSL
+* ```ulongLongBitsToDouble()``` - not in GLSL
 * ```fma()```
 * ```frexp()```
 * ```ldexp()```

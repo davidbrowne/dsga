@@ -15,7 +15,6 @@
 #include <tuple>					// tuple interface for structured bindings, variadic constructors
 #include <algorithm>				// min()
 #include <numbers>					// pi_v<>, inv_pi_v<>
-#include <version>					// feature test macros
 #include <limits>					// for cxcm
 #include <cmath>					// for cxcm
 #include <numeric>
@@ -96,22 +95,487 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
 	namespace cxcm
 	{
 		// copyright for cxcm - https://github.com/davidbrowne/cxcm
-		
+
 		//          Copyright David Browne 2020-2023.
 		// Distributed under the Boost Software License, Version 1.0.
 		//    (See accompanying file LICENSE_1_0.txt or copy at
 		//          https://www.boost.org/LICENSE_1_0.txt)
 
-		constexpr inline int CXCM_MAJOR_VERSION = 0;
-		constexpr inline int CXCM_MINOR_VERSION = 9;
-		constexpr inline int CXCM_PATCH_VERSION = 2;
+		constexpr inline int CXCM_MAJOR_VERSION = 1;
+		constexpr inline int CXCM_MINOR_VERSION = 0;
+		constexpr inline int CXCM_PATCH_VERSION = 0;
+
+		namespace qdouble
+		{
+			// this is heavily modified to be as minimal as needed for constexpr sqrt() and rsqrt().
+			// it will not be used with +/-infinity, NaNs, +/-0, or negative numbers.
+			// https://github.com/janm31415/qdouble
+
+			/*
+			MIT License
+
+			Copyright (c) 2022 Jan Maes
+
+			Permission is hereby granted, free of charge, to any person obtaining a copy
+			of this software and associated documentation files (the "Software"), to deal
+			in the Software without restriction, including without limitation the rights
+			to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+			copies of the Software, and to permit persons to whom the Software is
+			furnished to do so, subject to the following conditions:
+
+			The above copyright notice and this permission notice shall be included in all
+			copies or substantial portions of the Software.
+
+			THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+			IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+			FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+			AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+			LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+			OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+			SOFTWARE.
+			*/
+
+			/* The following code computes s = fl(a+b) and error(a + b), assuming |a| >= |b|. */
+			constexpr double quick_two_sum(double a, double b, double &error) noexcept
+			{
+				double s = a + b;
+				error = b - (s - a);
+				return s;
+			}
+
+			/* The following code computes s = fl(a+b) and error(a + b). */
+			constexpr double two_sum(double a, double b, double &error) noexcept
+			{
+				double s = a + b;
+				double v = s - a;
+				error = (a - (s - v)) + (b - v);
+				return s;
+			}
+
+			/* The following code splits a 53-bit IEEE double precision floating number a into a high word and a low word, each with 26
+			bits of significand, such that a is the sum of the high word with the low word. The high word will contain the first 26 bits,
+			while the low word will contain the lower 26 bits.*/
+			constexpr void split(double a, double &high, double &low) noexcept
+			{
+				double temp = 134217729.0 * a; // 134217729.0 = 2^27 + 1
+				high = temp - (temp - a);
+				low = a - high;
+			}
+
+			/* The following code computes fl(a x b) and error(a x b). */
+			constexpr double two_prod(double a, double b, double &error) noexcept
+			{
+				double a_high, a_low, b_high, b_low;
+				double p = a * b;
+				split(a, a_high, a_low);
+				split(b, b_high, b_low);
+				error = ((a_high * b_high - p) + a_high * b_low + a_low * b_high) + a_low * b_low;
+				return p;
+			}
+
+			constexpr void three_sum(double &a, double &b, double &c) noexcept
+			{
+				double t1, t2, t3;
+				t1 = two_sum(a, b, t2);
+				a = two_sum(c, t1, t3);
+				b = two_sum(t2, t3, c);
+			}
+
+			constexpr void three_sum2(double &a, double &b, double &c) noexcept
+			{
+				double t1, t2, t3;
+				t1 = two_sum(a, b, t2);
+				a = two_sum(c, t1, t3);
+				b = t2 + t3;
+			}
+
+
+			struct qdouble
+			{
+				double a[4];
+
+				constexpr qdouble() noexcept
+				{
+					a[0] = 0.0;
+					a[1] = 0.0;
+					a[2] = 0.0;
+					a[3] = 0.0;
+				}
+
+				constexpr qdouble(double a0, double a1, double a2, double a3) noexcept
+				{
+					a[0] = a0;
+					a[1] = a1;
+					a[2] = a2;
+					a[3] = a3;
+				}
+
+				constexpr qdouble(double a0) noexcept
+				{
+					a[0] = a0;
+					a[1] = 0.0;
+					a[2] = 0.0;
+					a[3] = 0.0;
+				}
+
+				constexpr qdouble(int i) noexcept
+				{
+					a[0] = static_cast<double>(i);
+					a[1] = 0.0;
+					a[2] = 0.0;
+					a[3] = 0.0;
+				}
+
+				template <class TType>
+				constexpr double operator[] (TType i) const noexcept
+				{
+					return a[i];
+				}
+
+				template <class TType>
+				constexpr double &operator[] (TType i) noexcept
+				{
+					return a[i];
+				}
+
+				explicit constexpr operator double() noexcept
+				{
+					return a[0];
+				}
+
+			};
+
+			constexpr bool operator == (const qdouble &a, const qdouble &b) noexcept
+			{
+				return (a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3]);
+			}
+
+			constexpr void renormalize(double &a0, double &a1, double &a2, double &a3) noexcept
+			{
+				double s0, s1, s2 = 0.0, s3 = 0.0;
+				s0 = quick_two_sum(a2, a3, a3);
+				s0 = quick_two_sum(a1, s0, a2);
+				a0 = quick_two_sum(a0, s0, a1);
+
+				s0 = a0;
+				s1 = a1;
+				if (s1 != 0.0)
+				{
+					s1 = quick_two_sum(s1, a2, s2);
+					if (s2 != 0.0)
+						s2 = quick_two_sum(s2, a3, s3);
+					else
+						s1 = quick_two_sum(s1, a3, s2);
+				}
+				else
+				{
+					s0 = quick_two_sum(s0, a2, s1);
+					if (s1 != 0.0)
+						s1 = quick_two_sum(s1, a3, s2);
+					else
+						s0 = quick_two_sum(s0, a3, s1);
+				}
+
+				a0 = s0;
+				a1 = s1;
+				a2 = s2;
+				a3 = s3;
+			}
+
+			constexpr void renormalize(double &a0, double &a1, double &a2, double &a3, double &a4) noexcept
+			{
+				double s0, s1, s2 = 0.0, s3 = 0.0;
+
+				s0 = quick_two_sum(a3, a4, a4);
+				s0 = quick_two_sum(a2, s0, a3);
+				s0 = quick_two_sum(a1, s0, a2);
+				a0 = quick_two_sum(a0, s0, a1);
+
+				s0 = a0;
+				s1 = a1;
+
+				s0 = quick_two_sum(a0, a1, s1);
+				if (s1 != 0.0)
+				{
+					s1 = quick_two_sum(s1, a2, s2);
+					if (s2 != 0.0)
+					{
+						s2 = quick_two_sum(s2, a3, s3);
+						if (s3 != 0.0)
+							s3 += a4;
+						else
+							s2 += a4;
+					}
+					else
+					{
+						s1 = quick_two_sum(s1, a3, s2);
+						if (s2 != 0.0)
+							s2 = quick_two_sum(s2, a4, s3);
+						else
+							s1 = quick_two_sum(s1, a4, s2);
+					}
+				}
+				else
+				{
+					s0 = quick_two_sum(s0, a2, s1);
+					if (s1 != 0.0)
+					{
+						s1 = quick_two_sum(s1, a3, s2);
+						if (s2 != 0.0)
+							s2 = quick_two_sum(s2, a4, s3);
+						else
+							s1 = quick_two_sum(s1, a4, s2);
+					}
+					else
+					{
+						s0 = quick_two_sum(s0, a3, s1);
+						if (s1 != 0.0)
+							s1 = quick_two_sum(s1, a4, s2);
+						else
+							s0 = quick_two_sum(s0, a4, s1);
+					}
+				}
+
+				a0 = s0;
+				a1 = s1;
+				a2 = s2;
+				a3 = s3;
+			}
+
+			/*
+			s = double_accumulate(u,v,x) adds x to the double double pair (u,v).
+			The output is the significant component s if the remaining components
+			contain more than one double worth of significand. u and v are
+			modified to represent the other two components in the sum.
+			*/
+
+			constexpr double double_accumulate(double &u, double &v, double x) noexcept
+			{
+				double s;
+				bool zu, zv;
+
+				s = two_sum(v, x, v);
+				s = two_sum(u, s, u);
+
+				zu = (u != 0.0);
+				zv = (v != 0.0);
+
+				if (zu && zv)
+					return s;
+
+				if (!zv)
+				{
+					v = u;
+					u = s;
+				}
+				else
+				{
+					u = s;
+				}
+
+				return 0.0;
+			}
+
+			constexpr double abs(double value) noexcept
+			{
+				return (value < 0.0) ? -value : value;
+			}
+
+			constexpr qdouble operator + (const qdouble &a, const qdouble &b) noexcept
+			{
+				int i, j, k;
+				double s, t;
+				double u, v;   /* double-length accumulator */
+				double x[4] = {0.0, 0.0, 0.0, 0.0};
+
+				i = j = k = 0;
+				if (abs(a[i]) > abs(b[j]))
+					u = a[i++];
+				else
+					u = b[j++];
+				if (abs(a[i]) > abs(b[j]))
+					v = a[i++];
+				else
+					v = b[j++];
+
+				u = quick_two_sum(u, v, v);
+
+				while (k < 4)
+				{
+					if (i >= 4 && j >= 4)
+					{
+						x[k] = u;
+						if (k < 3)
+							x[++k] = v;
+						break;
+					}
+
+					if (i >= 4)
+						t = b[j++];
+					else if (j >= 4)
+						t = a[i++];
+					else if (abs(a[i]) > abs(b[j]))
+					{
+						t = a[i++];
+					}
+					else
+						t = b[j++];
+
+					s = double_accumulate(u, v, t);
+
+					if (s != 0.0)
+					{
+						x[k++] = s;
+					}
+				}
+
+			  /* add the rest. */
+				for (k = i; k < 4; ++k)
+					x[3] += a[k];
+				for (k = j; k < 4; ++k)
+					x[3] += b[k];
+
+				renormalize(x[0], x[1], x[2], x[3]);
+				return qdouble(x[0], x[1], x[2], x[3]);
+			}
+
+			constexpr qdouble operator - (const qdouble &a) noexcept
+			{
+				return qdouble(-a[0], -a[1], -a[2], -a[3]);
+			}
+
+			constexpr qdouble operator - (const qdouble &a, const qdouble &b) noexcept
+			{
+				return a + (-b);
+			}
+
+			constexpr qdouble &operator += (qdouble &a, const qdouble &b) noexcept
+			{
+				a = (a + b);
+				return a;
+			}
+
+			constexpr qdouble &operator -= (qdouble &a, const qdouble &b) noexcept
+			{
+				a = (a - b);
+				return a;
+			}
+
+			constexpr qdouble operator * (const qdouble &a, double b) noexcept
+			{
+				double p0, p1, p2, p3;
+				double q0, q1, q2;
+				double s0, s1, s2, s3, s4;
+				p0 = two_prod(a[0], b, q0);
+				p1 = two_prod(a[1], b, q1);
+				p2 = two_prod(a[2], b, q2);
+				p3 = a[3] * b;
+				s0 = p0;
+				s1 = two_sum(q0, p1, s2);
+				three_sum(s2, q1, p2);
+				three_sum2(q1, q2, p3);
+				s3 = q1;
+				s4 = q2 + p2;
+				renormalize(s0, s1, s2, s3, s4);
+				return qdouble(s0, s1, s2, s3);
+			}
+
+			constexpr qdouble operator * (const qdouble &a, const qdouble &b) noexcept
+			{
+				double p0, p1, p2, p3, p4, p5;
+				double q0, q1, q2, q3, q4, q5;
+				double p6, p7, p8, p9;
+				double q6, q7, q8, q9;
+				double r0, r1;
+				double t0, t1;
+				double s0, s1, s2;
+
+				p0 = two_prod(a[0], b[0], q0);
+
+				p1 = two_prod(a[0], b[1], q1);
+				p2 = two_prod(a[1], b[0], q2);
+
+				p3 = two_prod(a[0], b[2], q3);
+				p4 = two_prod(a[1], b[1], q4);
+				p5 = two_prod(a[2], b[0], q5);
+
+				/* Start Accumulation */
+				three_sum(p1, p2, q0);
+
+				/* Six-Three Sum  of p2, q1, q2, p3, p4, p5. */
+				three_sum(p2, q1, q2);
+				three_sum(p3, p4, p5);
+				/* compute (s0, s1, s2) = (p2, q1, q2) + (p3, p4, p5). */
+				s0 = two_sum(p2, p3, t0);
+				s1 = two_sum(q1, p4, t1);
+				s2 = q2 + p5;
+				s1 = two_sum(s1, t0, t0);
+				s2 += (t0 + t1);
+
+				/* O(eps^3) order terms */
+				p6 = two_prod(a[0], b[3], q6);
+				p7 = two_prod(a[1], b[2], q7);
+				p8 = two_prod(a[2], b[1], q8);
+				p9 = two_prod(a[3], b[0], q9);
+
+				/* Nine-Two-Sum of q0, s1, q3, q4, q5, p6, p7, p8, p9. */
+				q0 = two_sum(q0, q3, q3);
+				q4 = two_sum(q4, q5, q5);
+				p6 = two_sum(p6, p7, p7);
+				p8 = two_sum(p8, p9, p9);
+				/* Compute (t0, t1) = (q0, q3) + (q4, q5). */
+				t0 = two_sum(q0, q4, t1);
+				t1 += (q3 + q5);
+				/* Compute (r0, r1) = (p6, p7) + (p8, p9). */
+				r0 = two_sum(p6, p8, r1);
+				r1 += (p7 + p9);
+				/* Compute (q3, q4) = (t0, t1) + (r0, r1). */
+				q3 = two_sum(t0, r0, q4);
+				q4 += (t1 + r1);
+				/* Compute (t0, t1) = (q3, q4) + s1. */
+				t0 = two_sum(q3, s1, t1);
+				t1 += q4;
+
+				/* O(eps^4) terms -- Nine-One-Sum */
+				t1 += a[1] * b[3] + a[2] * b[2] + a[3] * b[1] + q6 + q7 + q8 + q9 + s2;
+
+				renormalize(p0, p1, s0, t0, t1);
+				return qdouble(p0, p1, s0, t0);
+			}
+
+			constexpr qdouble operator / (const qdouble &a, const qdouble &b) noexcept
+			{
+				double q0, q1, q2, q3;
+
+				qdouble r;
+
+				q0 = a[0] / b[0];
+				r = a - (b * q0);
+
+				q1 = r[0] / b[0];
+				r -= (b * q1);
+
+				q2 = r[0] / b[0];
+				r -= (b * q2);
+
+				q3 = r[0] / b[0];
+
+				r -= (b * q3);
+				double q4 = r[0] / b[0];
+
+				renormalize(q0, q1, q2, q3, q4);
+
+				return qdouble(q0, q1, q2, q3);
+			}
+
+		} // namespace qdouble
 
 		namespace limits
 		{
@@ -343,76 +807,74 @@ namespace dsga
 
 			namespace detail
 			{
-				//	By itself, converging_sqrt() gives:
-				//	0 ulps : ~75.26%
-				//	1 ulps : ~24.74%
-				template <std::floating_point T>
+				template <typename T>
 				constexpr T converging_sqrt(T arg) noexcept
 				{
 					T current_value = arg;
 					T previous_value = T(0);
 
-					while ((current_value * current_value != arg) && (current_value != previous_value))
+					if constexpr (std::is_same_v<T, qdouble::qdouble>)
 					{
-						previous_value = current_value;
-						current_value = (T(0.5) * current_value) + (T(0.5) * (arg / current_value));
+						while ((current_value[0] * current_value[0] != arg[0]) && (current_value[0] != previous_value[0]))
+						{
+							previous_value = current_value;
+							current_value = (T(0.5) * current_value) + (T(0.5) * (arg / current_value));
+						}
+					}
+					else if constexpr (std::floating_point<T>)
+					{
+						while ((current_value * current_value != arg) && (current_value != previous_value))
+						{
+							previous_value = current_value;
+							current_value = (T(0.5) * current_value) + (T(0.5) * (arg / current_value));
+						}
 					}
 
 					return current_value;
 				}
 
-				// 3 refinements is best
-				template <std::floating_point T>
+				template <typename T>
 				constexpr T inverse_sqrt(T arg) noexcept
 				{
 					T current_value = T(1.0) / converging_sqrt(arg);
 
-					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);					// first refinement
-					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);					// second refinement
+					// 3 refinements is best
+					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);
+					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);
+					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);
 
-					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);					// third refinement
 					return current_value;
 				}
 			}
 
-			// square root - double
-			//	0 ulps : ~75.26%
-			//	1 ulps : ~24.74%
 			template <std::floating_point T>
 			constexpr T sqrt(T value) noexcept
 			{
 				return detail::converging_sqrt(value);
 			}
 
-			// float specialization - uses double internally - relied upon by rsqrt<T>() when [T = float]
-			//		100% match with std::sqrt
+			// float specialization - uses higher precision internally (double) which gives us 100% fidelity with std::sqrt()
 			template <>
 			constexpr float sqrt(float value) noexcept
 			{
 				double val = value;
-#if 0
-				return static_cast<float>(val * detail::inverse_sqrt(val));
-#else
 				return static_cast<float>(detail::converging_sqrt(val));
-#endif
 			}
 
-			// reciprocal of square root - double
-			//	0 ulps : ~85.6978931%
-			//	1 ulps : ~12.4255190%
-			//	2 ulps :  ~1.8765879%
+			// double specialization - uses higher precision internally (qdouble) which gives us 100% fidelity with std::sqrt()
+			template <>
+			constexpr double sqrt(double value) noexcept
+			{
+				qdouble::qdouble val = value;
+				return static_cast<double>(detail::converging_sqrt(val));
+			}
+
+			// reciprocal of square root - our constexpr sqrt() has 100% fidelity with std::sqrt()
 			template <std::floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
-				return T(1.0) / (value * detail::inverse_sqrt(value));
-			}
-
-			// float specialization - uses double internally
-			//		100% match with (1.0f / std::sqrt) when using sqrt() float specialization
-			template <>
-			constexpr float rsqrt(float value) noexcept
-			{
-				return 1.0f / sqrt(value);
+				return T(1.0) / sqrt(value);
+//				return T(1.0) / (value * detail::inverse_sqrt(value));
 			}
 
 		} // namespace relaxed
@@ -5042,8 +5504,6 @@ namespace dsga
 			return isinf_op(arg);
 		}
 
-#if defined(__cpp_lib_bit_cast)
-
 		constexpr inline auto float_bits_to_int_op = [](float arg) noexcept { return std::bit_cast<int>(arg); };
 
 		template <bool W, std::size_t C, typename D>
@@ -5147,8 +5607,6 @@ namespace dsga
 		{
 			return ulong_long_bits_to_double_op(arg);
 		}
-
-#endif
 
 		inline auto fma_op = []<floating_point_scalar T>(T a, T b, T c) noexcept { return std::fma(a, b, c); };
 

@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.2.5
+v1.2.6
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -210,8 +210,6 @@ The following links to the shading specification should help with understanding 
     * [Angle and Trigonometry Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#angle-and-trigonometry-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
     * [Exponential Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#exponential-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
 
-      ```dsga::sqrt()``` and ```dsga::inversesqrt()``` for ```double``` scalars and vectors have constexpr context versions that are not exact matches for the output of ```std::sqrt()```. They are both very close, where most cases are exact, and they are off by 1 or 2 ulps at most when not exact.
-
     * [Common Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#common-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
     * [Geometric Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#geometric-functions): ```ftransform()``` is not implemented as it is only for GLSL vertex shader programs.
     * [Matrix Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrix-functions)
@@ -272,8 +270,6 @@ This is a **single header library**, where you just need the file [dsga.hxx](inc
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
-Be aware that the constexpr functions ```dsga::cxcm::sqrt()``` and ```dsga::cxcm::rsqrt()``` from [cxcm](https://github.com/davidbrowne/cxcm) have mostly identical results but sometimes differ with ```std::sqrt()``` with ```double``` arguments. The approximation for ```sqrt(double)``` in the worst case is at most 1 ulp away from ```std::sqrt(double)```, and ```rsqrt(double)``` in the worst case is at most 2 ulps away from ```1.0 / std::sqrt(double)```.
-
 There are asserts in the codebase that can be disabled by defining the macro ```DSGA_DISABLE_ASSERTS```.
 
 This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE. While debugging this on Linux (WSL2: Windows Subsystem for Linux) with gcc in Visual Studio Code, we created a [.natvis](vscode/dsga-vscode.natvis) file for that too.
@@ -282,7 +278,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.2.5`
+Current version: `v1.2.6`
 
 * Breaking Change with v1.2.0
   * ```size``` and ```column_size``` functions in the various classes are now static member functions, tied to static data members of type ```std::integral_constant```
@@ -435,6 +431,35 @@ The libraries we use (some just occasionally):
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
+```
+
+```
+// qdouble - quad-double precision floating point number
+// https://github.com/janm31415/qdouble
+
+// MIT License
+//
+// Copyright (c) 2022 Jan Maes
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// https://opensource.org/licenses/MIT
 ```
 
 ```
