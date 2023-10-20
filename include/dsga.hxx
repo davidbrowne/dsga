@@ -95,7 +95,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 8;
+constexpr inline int DSGA_PATCH_VERSION = 9;
 
 namespace dsga
 {
@@ -148,6 +148,10 @@ namespace dsga
 				   license: a non-exclusive, royalty-free perpetual license to install, use, modify, prepare derivative works, incorporate into other computer
 				   software, distribute, and sublicense such enhancements or derivative works thereof, in binary and source code form.
 			*/
+
+			//
+			// heavily modified dd_real type and support
+			//
 
 			// The following code computes s = fl(a+b) and error(a + b), assuming |a| >= |b|.
 			constexpr double quick_two_sum(double a, double b, double &error) noexcept
@@ -343,8 +347,6 @@ namespace dsga
 				double p1, p2;
 				p1 = two_prod(a.x[0], b.x[0], p2);
 				p2 += (a.x[0] * b.x[1] + a.x[1] * b.x[0]);
-//				p2 += b.x[1] * a.x[0];
-//				p2 += b.x[0] * a.x[1];
 				a.x[0] = quick_two_sum(p1, p2, a.x[1]);
 				return a;
 			}
@@ -5041,20 +5043,6 @@ namespace dsga
 			return sqrt_op(arg);
 		}
 
-		constexpr inline auto rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::rsqrt(arg); };
-
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto inversesqrt(const vector_base<W, T, C, D> &arg) noexcept
-		{
-			return machinery::unary_op_execute(std::make_index_sequence<C>{}, arg, rsqrt_op);
-		}
-
-		template <floating_point_scalar T>
-		[[nodiscard]] constexpr auto inversesqrt(T arg) noexcept
-		{
-			return rsqrt_op(arg);
-		}
-
 		constexpr inline auto fast_rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fast_rsqrt(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -5067,6 +5055,34 @@ namespace dsga
 		[[nodiscard]] constexpr auto fast_inversesqrt(T arg) noexcept
 		{
 			return fast_rsqrt_op(arg);
+		}
+
+		constexpr inline auto rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::rsqrt(arg); };
+
+		// double specializations
+
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr auto inversesqrt(const vector_base<W, double, C, D> &arg) noexcept
+		{
+			return machinery::unary_op_execute(std::make_index_sequence<C>{}, arg, rsqrt_op);
+		}
+
+		[[nodiscard]] constexpr auto inversesqrt(double arg) noexcept
+		{
+			return rsqrt_op(arg);
+		}
+
+		// float specializations - cxcm::rsqrt(float) is 100% match with cxcm::fast_rsqrt(float)
+
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr auto inversesqrt(const vector_base<W, float, C, D> &arg) noexcept
+		{
+			return fast_inversesqrt(arg);
+		}
+
+		[[nodiscard]] constexpr auto inversesqrt(float arg) noexcept
+		{
+			return fast_inversesqrt(arg);
 		}
 
 		//

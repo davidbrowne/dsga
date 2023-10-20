@@ -4,6 +4,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 
+#include <numbers>
 #include "dsga.hxx"
 using namespace dsga;
 
@@ -169,11 +170,24 @@ TEST_SUITE("test functions")
 			auto sqrtvals = sqrt(vals);
 			CHECK_EQ(sqrtvals, vec3(2, 4, 8));
 			CHECK_EQ(vec3(dsga::sqrt(4.f), dsga::sqrt(16.f), dsga::sqrt(64.f)), sqrtvals);
+			CHECK_EQ(dsga::sqrt(dvec2(2.0, 3.0)), dvec2(std::numbers::sqrt2_v<double>, std::numbers::sqrt3_v<double>));
+			CHECK_EQ(dsga::sqrt(vec2(2.0f, 3.0f)), vec2(std::numbers::sqrt2_v<float>, std::numbers::sqrt3_v<float>));
+			CHECK_EQ(std::numbers::phi_v<double>, (1.0 + dsga::sqrt(5.0)) / 2.0);
+			CHECK_EQ(std::numbers::phi_v<float>, (1.0f + dsga::sqrt(5.0f)) / 2.0f);
 
 			// inversesqrt()
 			auto invsqrtvals = inversesqrt(vals);
 			CHECK_EQ(invsqrtvals, vec3(0.5, 0.25, 0.125));
 			CHECK_EQ(vec3(inversesqrt(4.f), inversesqrt(16.f), inversesqrt(64.f)), invsqrtvals);
+			CHECK_EQ(dsga::inversesqrt(dvec2(3.0, std::numbers::pi_v<double>)), dvec2(std::numbers::inv_sqrt3_v<double>, std::numbers::inv_sqrtpi_v<double>));
+			CHECK_EQ(dsga::inversesqrt(fscal(3.0f)), fscal(std::numbers::inv_sqrt3_v<float>));
+
+			// off by 1 ulp
+//			CHECK_EQ(std::numbers::inv_sqrtpi_v<float>, dsga::inversesqrt(std::numbers::pi_v<float>));
+
+			// fast_inversesqrt()
+			CHECK_EQ(dsga::fast_inversesqrt(std::numbers::pi_v<double>), std::numbers::inv_sqrtpi_v<double>);
+			CHECK_EQ(dsga::fast_inversesqrt(fscal(3.0f)), fscal(std::numbers::inv_sqrt3_v<float>));
 		}
 	}
 

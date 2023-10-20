@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.2.8
+v1.2.9
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -278,7 +278,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.2.8`
+Current version: `v1.2.9`
 
 * Breaking Change with v1.2.0
   * ```size``` and ```column_size``` functions in the various classes are now static member functions, tied to static data members of type ```std::integral_constant```
@@ -313,14 +313,14 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.7.4**
+* **MSVC 2022 - v17.7.5**
 
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  106 |  106 passed | 0 failed | 0 skipped
-[doctest] assertions: 2115 | 2115 passed | 0 failed |
+[doctest] assertions: 2123 | 2123 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -331,11 +331,11 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  106 |  106 passed | 0 failed | 0 skipped
-[doctest] assertions: 2115 | 2115 passed | 0 failed |
+[doctest] assertions: 2123 | 2123 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 17.0.2** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.2), with MSVC and/or gcc v13.2.0 installed:
+* **clang 17.0.3** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.3), with MSVC and/or gcc v13.2.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -344,7 +344,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  106 |  106 passed | 0 failed | 0 skipped
-[doctest] assertions: 2099 | 2099 passed | 0 failed |
+[doctest] assertions: 2107 | 2107 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -357,7 +357,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  106 |  106 passed | 0 failed | 0 skipped
-[doctest] assertions: 2115 | 2115 passed | 0 failed |
+[doctest] assertions: 2123 | 2123 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -370,7 +370,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  106 |  106 passed | 0 failed | 0 skipped
-[doctest] assertions: 2099 | 2099 passed | 0 failed |
+[doctest] assertions: 2107 | 2107 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -383,7 +383,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  106 |  106 passed | 0 failed | 0 skipped
-[doctest] assertions: 2115 | 2115 passed | 0 failed |
+[doctest] assertions: 2123 | 2123 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -396,7 +396,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  106 |  106 passed | 0 failed | 0 skipped
-[doctest] assertions: 2099 | 2099 passed | 0 failed |
+[doctest] assertions: 2107 | 2107 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -434,32 +434,39 @@ The libraries we use (some just occasionally):
 ```
 
 ```
-// qdouble - quad-double precision floating point number
-// https://github.com/janm31415/qdouble
-
-// MIT License
+// QD
+// https://www.davidhbailey.com/dhbsoftware/
 //
-// Copyright (c) 2022 Jan Maes
+// Modfied BSD 3-Clause License
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// This work was supported by the Director, Office of Science, Division
+// of Mathematical, Information, and Computational Sciences of the
+// U.S. Department of Energy under contract number DE-AC03-76SF00098.
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+// Copyright (c) 2000-2007
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
-// https://opensource.org/licenses/MIT
+// 1. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+//
+//   (1) Redistributions of source code must retain the copyright notice, this list of conditions and the following disclaimer.
+//
+//   (2) Redistributions in binary form must reproduce the copyright notice, this list of conditions and the following disclaimer in the documentation
+//       and/or other materials provided with the distribution.
+//
+//   (3) Neither the name of the University of California, Lawrence Berkeley National Laboratory, U.S. Dept. of Energy nor the names of its contributors
+//       may be used to endorse or promote products derived from this software without specific prior written permission.
+//
+// 2. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//    THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+//    BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+//    IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+//    OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// 3. You are under no obligation whatsoever to provide any bug fixes, patches, or upgrades to the features, functionality or performance of the
+//    source code ("Enhancements") to anyone; however, if you choose to make your Enhancements available either publicly, or directly to Lawrence
+//    Berkeley National Laboratory, without imposing a separate written license agreement for such Enhancements, then you hereby grant the following
+//    license: a non-exclusive, royalty-free perpetual license to install, use, modify, prepare derivative works, incorporate into other computer
+//    software, distribute, and sublicense such enhancements or derivative works thereof, in binary and source code form.
 ```
 
 ```
