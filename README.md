@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.2.6
+v1.2.7
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -178,7 +178,7 @@ The following links to the shading specification should help with understanding 
       dsga::dvec3 swizzled_value = value.xxx; 
       ```
 
-      1-dimensional vectors types are also the return type for single component swizzles, e.g., ```val.x```, ```val.y```, ```val.z```, ```val.w```. They are designed to be easily convertible to the underlying type of the vector.
+      1-dimensional vectors types are also the return type for single component swizzles, e.g., ```val.x```, ```val.y```, ```val.z```, ```val.w```. They are designed to be easily convertible to the underlying type of the vector elements.
     * [Matrices](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrices)
 * [Operators and Expressions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#operators-and-expressions)
     * [Vector and Matrix Constructors](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-and-matrix-constructors)
@@ -215,14 +215,14 @@ The following links to the shading specification should help with understanding 
     * [Matrix Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrix-functions)
     * [Vector Relational Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-relational-functions): GLSL has a vector function ```not()```, but ```not``` is a c++ keyword. Instead of naming this function ```not()```, we name it ```logicalNot()```.
 
-      In addtion, we have added the non-GLSL convenience function ```none()```, which returns ```!any()```.
+      In addition, we have added the non-GLSL convenience function ```none()```, which returns ```!any()```.
 
 ## Implemented Interfaces
 
 To make the vectors and matrices as useful as possible in a C++ context, various C++ customization points were implemented or interfaces partially emulated, e.g., ```std::valarray<>```. There are many options for data access. For ```dsga``` vectors and matrices, we have:
 
 * Swizzle access like GLSL (vector only)
-    * Only from the set of {x, y, z, w}, e.g., ```foo.wyxz```
+    * Only from the set of { x, y, z, w }, e.g., ```foo.wyxz```
 * ```std::tuple``` protocol, structured bindings
     * ```get```
     * ```tuple_size```
@@ -278,7 +278,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.2.6`
+Current version: `v1.2.7`
 
 * Breaking Change with v1.2.0
   * ```size``` and ```column_size``` functions in the various classes are now static member functions, tied to static data members of type ```std::integral_constant```

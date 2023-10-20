@@ -113,8 +113,8 @@ template <typename T, typename U>
 concept promotes_to =
 requires
 {
-	typename std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
-	requires std::same_as<std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>, std::remove_cvref_t<U>>;
+    typename std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+    requires std::same_as<std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>, std::remove_cvref_t<U>>;
 };
 ```
 Is the second type U also the common type of the two types T and U?
@@ -342,7 +342,7 @@ The static ```std::array``` for how the physical representation is mapped to the
 
 ##### ```storage_wrapper::size``` (```std::integral_constant```)
 ```c++
-static constexpr std::integral_constant<std::size_t, Count> size =	{};
+static constexpr std::integral_constant<std::size_t, Count> size = {};
 ```
 
 ##### ```storage_wrapper::size``` (theoretical function)
@@ -485,7 +485,7 @@ This [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) 
 
 ##### ```vector_base::size``` (```std::integral_constant```)
 ```c++
-static constexpr std::integral_constant<std::size_t, Count> size =	{};
+static constexpr std::integral_constant<std::size_t, Count> size = {};
 ```
 
 ##### ```vector_base::size``` (theoretical function)
@@ -559,7 +559,7 @@ These CRTP functions call the derived class/struct versions of the functions.
 ##### ```vector_base::apply```
 ```c++
 template <typename UnOp>
-requires (std::same_as<T, decltype(std::declval<UnOp>()(std::declval<T>()))> || std::same_as<T, decltype(std::declval<UnOp>()(std::declval<const T &>()))>)
+requires (std::same_as<T, std::invoke_result_t<UnOp, T>> || std::same_as<T, std::invoke_result_t<UnOp, const T &>>)
 [[nodiscard]] constexpr basic_vector<T, Count> apply(UnOp op) const noexcept;
 ```
 Applies a lambda/function/function object/callable to every element of a vector. The callable must take either a ```T``` or ```const T &```, and it must return a ```T```. Returns a vector of the results.
