@@ -95,7 +95,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 7;
+constexpr inline int DSGA_PATCH_VERSION = 8;
 
 namespace dsga
 {
@@ -109,40 +109,47 @@ namespace dsga
 		//          https://www.boost.org/LICENSE_1_0.txt)
 
 		constexpr inline int CXCM_MAJOR_VERSION = 1;
-		constexpr inline int CXCM_MINOR_VERSION = 0;
+		constexpr inline int CXCM_MINOR_VERSION = 1;
 		constexpr inline int CXCM_PATCH_VERSION = 0;
 
-		namespace qdouble
+		namespace dd_real
 		{
-			// this is heavily modified to be as minimal as needed for constexpr sqrt() and rsqrt().
-			// it will not be used with +/-infinity, NaNs, +/-0, or negative numbers.
-			// https://github.com/janm31415/qdouble
+			// https://www.davidhbailey.com/dhbsoftware/ - QD
 
 			/*
-			MIT License
+				Modfied BSD 3-Clause License
 
-			Copyright (c) 2022 Jan Maes
+				This work was supported by the Director, Office of Science, Division
+				of Mathematical, Information, and Computational Sciences of the
+				U.S. Department of Energy under contract number DE-AC03-76SF00098.
+ 
+				Copyright (c) 2000-2007
 
-			Permission is hereby granted, free of charge, to any person obtaining a copy
-			of this software and associated documentation files (the "Software"), to deal
-			in the Software without restriction, including without limitation the rights
-			to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-			copies of the Software, and to permit persons to whom the Software is
-			furnished to do so, subject to the following conditions:
+				1. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-			The above copyright notice and this permission notice shall be included in all
-			copies or substantial portions of the Software.
+					(1) Redistributions of source code must retain the copyright notice, this list of conditions and the following disclaimer.
 
-			THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-			IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-			FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-			AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-			LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-			OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-			SOFTWARE.
+					(2) Redistributions in binary form must reproduce the copyright notice, this list of conditions and the following disclaimer in the documentation
+					    and/or other materials provided with the distribution.
+
+					(3) Neither the name of the University of California, Lawrence Berkeley National Laboratory, U.S. Dept. of Energy nor the names of its contributors
+					    may be used to endorse or promote products derived from this software without specific prior written permission.
+
+				2. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+				   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+				   BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+				   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+				   IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+				   OF THE POSSIBILITY OF SUCH DAMAGE.
+
+				3. You are under no obligation whatsoever to provide any bug fixes, patches, or upgrades to the features, functionality or performance of the
+				   source code ("Enhancements") to anyone; however, if you choose to make your Enhancements available either publicly, or directly to Lawrence
+				   Berkeley National Laboratory, without imposing a separate written license agreement for such Enhancements, then you hereby grant the following
+				   license: a non-exclusive, royalty-free perpetual license to install, use, modify, prepare derivative works, incorporate into other computer
+				   software, distribute, and sublicense such enhancements or derivative works thereof, in binary and source code form.
 			*/
 
-			/* The following code computes s = fl(a+b) and error(a + b), assuming |a| >= |b|. */
+			// The following code computes s = fl(a+b) and error(a + b), assuming |a| >= |b|.
 			constexpr double quick_two_sum(double a, double b, double &error) noexcept
 			{
 				double s = a + b;
@@ -150,7 +157,7 @@ namespace dsga
 				return s;
 			}
 
-			/* The following code computes s = fl(a+b) and error(a + b). */
+			// The following code computes s = fl(a+b) and error(a + b).
 			constexpr double two_sum(double a, double b, double &error) noexcept
 			{
 				double s = a + b;
@@ -159,17 +166,17 @@ namespace dsga
 				return s;
 			}
 
-			/* The following code splits a 53-bit IEEE double precision floating number a into a high word and a low word, each with 26
-			bits of significand, such that a is the sum of the high word with the low word. The high word will contain the first 26 bits,
-			while the low word will contain the lower 26 bits.*/
+			// The following code splits a 53-bit IEEE double precision floating number a into a high word and a low word, each with 26
+			// bits of significand, such that a is the sum of the high word with the low word. The high word will contain the first 26 bits,
+			// while the low word will contain the lower 26 bits.
 			constexpr void split(double a, double &high, double &low) noexcept
 			{
-				double temp = 134217729.0 * a; // 134217729.0 = 2^27 + 1
+				double temp = 134217729.0 * a;			// 134217729.0 = 2^27 + 1
 				high = temp - (temp - a);
 				low = a - high;
 			}
 
-			/* The following code computes fl(a x b) and error(a x b). */
+			// The following code computes fl(a x b) and error(a x b).
 			constexpr double two_prod(double a, double b, double &error) noexcept
 			{
 				double a_high, a_low, b_high, b_low;
@@ -180,402 +187,225 @@ namespace dsga
 				return p;
 			}
 
-			constexpr void three_sum(double &a, double &b, double &c) noexcept
+			// higher precision double-double
+			struct dd_real
 			{
-				double t1, t2, t3;
-				t1 = two_sum(a, b, t2);
-				a = two_sum(c, t1, t3);
-				b = two_sum(t2, t3, c);
-			}
+				double x[2];
 
-			constexpr void three_sum2(double &a, double &b, double &c) noexcept
-			{
-				double t1, t2, t3;
-				t1 = two_sum(a, b, t2);
-				a = two_sum(c, t1, t3);
-				b = t2 + t3;
-			}
-
-
-			struct qdouble
-			{
-				double a[4];
-
-				constexpr qdouble() noexcept
+				constexpr dd_real() noexcept : x{}
 				{
-					a[0] = 0.0;
-					a[1] = 0.0;
-					a[2] = 0.0;
-					a[3] = 0.0;
 				}
 
-				constexpr qdouble(double a0, double a1, double a2, double a3) noexcept
+				constexpr dd_real(double hi, double lo) noexcept : x{ hi, lo }
 				{
-					a[0] = a0;
-					a[1] = a1;
-					a[2] = a2;
-					a[3] = a3;
 				}
 
-				constexpr qdouble(double a0) noexcept
+				explicit constexpr dd_real(double h) noexcept : x{ h, 0. }
 				{
-					a[0] = a0;
-					a[1] = 0.0;
-					a[2] = 0.0;
-					a[3] = 0.0;
 				}
 
-				constexpr qdouble(int i) noexcept
+				constexpr dd_real(const dd_real &) noexcept = default;
+				constexpr dd_real(dd_real &&) noexcept = default;
+				constexpr dd_real & operator =(const dd_real &) noexcept = default;
+				constexpr dd_real & operator =(dd_real &&) noexcept = default;
+
+				constexpr double operator [](unsigned int index) const noexcept
 				{
-					a[0] = static_cast<double>(i);
-					a[1] = 0.0;
-					a[2] = 0.0;
-					a[3] = 0.0;
+					return x[index];
 				}
 
-				template <class TType>
-				constexpr double operator[] (TType i) const noexcept
+				constexpr double & operator [](unsigned int index) noexcept
 				{
-					return a[i];
+					return x[index];
 				}
 
-				template <class TType>
-				constexpr double &operator[] (TType i) noexcept
+				explicit constexpr operator double() const noexcept
 				{
-					return a[i];
+					return x[0];
 				}
 
-				explicit constexpr operator double() noexcept
+				explicit constexpr operator float() const noexcept
 				{
-					return a[0];
+					return static_cast<float>(x[0]);
 				}
 
 			};
 
-			constexpr bool operator == (const qdouble &a, const qdouble &b) noexcept
+			// double-double + double-double
+			constexpr dd_real ieee_add(const dd_real &a, const dd_real &b) noexcept
 			{
-				return (a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3]);
+				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
+				double s1, s2, t1, t2;
+
+				s1 = two_sum(a.x[0], b.x[0], s2);
+				t1 = two_sum(a.x[1], b.x[1], t2);
+				s2 += t1;
+				s1 = quick_two_sum(s1, s2, s2);
+				s2 += t2;
+				s1 = quick_two_sum(s1, s2, s2);
+				return dd_real(s1, s2);
 			}
 
-			constexpr void renormalize(double &a0, double &a1, double &a2, double &a3) noexcept
+			// double-double + double
+			constexpr dd_real ieee_add(const dd_real &a, double b) noexcept
 			{
-				double s0, s1, s2 = 0.0, s3 = 0.0;
-				s0 = quick_two_sum(a2, a3, a3);
-				s0 = quick_two_sum(a1, s0, a2);
-				a0 = quick_two_sum(a0, s0, a1);
+				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
+				double s1, s2;
 
-				s0 = a0;
-				s1 = a1;
-				if (s1 != 0.0)
-				{
-					s1 = quick_two_sum(s1, a2, s2);
-					if (s2 != 0.0)
-						s2 = quick_two_sum(s2, a3, s3);
-					else
-						s1 = quick_two_sum(s1, a3, s2);
-				}
-				else
-				{
-					s0 = quick_two_sum(s0, a2, s1);
-					if (s1 != 0.0)
-						s1 = quick_two_sum(s1, a3, s2);
-					else
-						s0 = quick_two_sum(s0, a3, s1);
-				}
-
-				a0 = s0;
-				a1 = s1;
-				a2 = s2;
-				a3 = s3;
+				s1 = two_sum(a.x[0], b, s2);
+				s1 = quick_two_sum(s1, s2 + a.x[1], s2);
+				return dd_real(s1, s2);
 			}
 
-			constexpr void renormalize(double &a0, double &a1, double &a2, double &a3, double &a4) noexcept
+			// double-double - double-double
+			constexpr dd_real ieee_subtract(const dd_real &a, const dd_real &b) noexcept
 			{
-				double s0, s1, s2 = 0.0, s3 = 0.0;
+				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
+				double s1, s2, t1, t2;
 
-				s0 = quick_two_sum(a3, a4, a4);
-				s0 = quick_two_sum(a2, s0, a3);
-				s0 = quick_two_sum(a1, s0, a2);
-				a0 = quick_two_sum(a0, s0, a1);
-
-				s0 = a0;
-				s1 = a1;
-
-				s0 = quick_two_sum(a0, a1, s1);
-				if (s1 != 0.0)
-				{
-					s1 = quick_two_sum(s1, a2, s2);
-					if (s2 != 0.0)
-					{
-						s2 = quick_two_sum(s2, a3, s3);
-						if (s3 != 0.0)
-							s3 += a4;
-						else
-							s2 += a4;
-					}
-					else
-					{
-						s1 = quick_two_sum(s1, a3, s2);
-						if (s2 != 0.0)
-							s2 = quick_two_sum(s2, a4, s3);
-						else
-							s1 = quick_two_sum(s1, a4, s2);
-					}
-				}
-				else
-				{
-					s0 = quick_two_sum(s0, a2, s1);
-					if (s1 != 0.0)
-					{
-						s1 = quick_two_sum(s1, a3, s2);
-						if (s2 != 0.0)
-							s2 = quick_two_sum(s2, a4, s3);
-						else
-							s1 = quick_two_sum(s1, a4, s2);
-					}
-					else
-					{
-						s0 = quick_two_sum(s0, a3, s1);
-						if (s1 != 0.0)
-							s1 = quick_two_sum(s1, a4, s2);
-						else
-							s0 = quick_two_sum(s0, a4, s1);
-					}
-				}
-
-				a0 = s0;
-				a1 = s1;
-				a2 = s2;
-				a3 = s3;
+				s1 = two_sum(a.x[0], -b.x[0], s2);
+				t1 = two_sum(a.x[1], -b.x[1], t2);
+				s2 += t1;
+				s1 = quick_two_sum(s1, s2, s2);
+				s2 += t2;
+				s1 = quick_two_sum(s1, s2, s2);
+				return dd_real(s1, s2);
 			}
 
-			/*
-			s = double_accumulate(u,v,x) adds x to the double double pair (u,v).
-			The output is the significant component s if the remaining components
-			contain more than one double worth of significand. u and v are
-			modified to represent the other two components in the sum.
-			*/
-
-			constexpr double double_accumulate(double &u, double &v, double x) noexcept
+			// double - double-double
+			constexpr dd_real ieee_subtract(double a, const dd_real &b) noexcept
 			{
-				double s;
-				bool zu, zv;
+				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
+				double s1, s2;
 
-				s = two_sum(v, x, v);
-				s = two_sum(u, s, u);
-
-				zu = (u != 0.0);
-				zv = (v != 0.0);
-
-				if (zu && zv)
-					return s;
-
-				if (!zv)
-				{
-					v = u;
-					u = s;
-				}
-				else
-				{
-					u = s;
-				}
-
-				return 0.0;
+				s1 = two_sum(a, -b.x[0], s2);
+				s1 = quick_two_sum(s1, s2 - b.x[1], s2);
+				return dd_real(s1, s2);
 			}
 
-			constexpr double abs(double value) noexcept
+			// double-double + double-double
+			constexpr dd_real operator +(const dd_real &a, const dd_real &b) noexcept
 			{
-				return (value < 0.0) ? -value : value;
+				return ieee_add(a, b);
 			}
 
-			constexpr qdouble operator + (const qdouble &a, const qdouble &b) noexcept
+			// double-double + double
+			constexpr dd_real operator +(const dd_real &a, double b) noexcept
 			{
-				int i, j, k;
-				double s, t;
-				double u, v;   /* double-length accumulator */
-				double x[4] = {0.0, 0.0, 0.0, 0.0};
-
-				i = j = k = 0;
-				if (abs(a[i]) > abs(b[j]))
-					u = a[i++];
-				else
-					u = b[j++];
-				if (abs(a[i]) > abs(b[j]))
-					v = a[i++];
-				else
-					v = b[j++];
-
-				u = quick_two_sum(u, v, v);
-
-				while (k < 4)
-				{
-					if (i >= 4 && j >= 4)
-					{
-						x[k] = u;
-						if (k < 3)
-							x[++k] = v;
-						break;
-					}
-
-					if (i >= 4)
-						t = b[j++];
-					else if (j >= 4)
-						t = a[i++];
-					else if (abs(a[i]) > abs(b[j]))
-					{
-						t = a[i++];
-					}
-					else
-						t = b[j++];
-
-					s = double_accumulate(u, v, t);
-
-					if (s != 0.0)
-					{
-						x[k++] = s;
-					}
-				}
-
-			  /* add the rest. */
-				for (k = i; k < 4; ++k)
-					x[3] += a[k];
-				for (k = j; k < 4; ++k)
-					x[3] += b[k];
-
-				renormalize(x[0], x[1], x[2], x[3]);
-				return qdouble(x[0], x[1], x[2], x[3]);
+				return ieee_add(a, b);
 			}
 
-			constexpr qdouble operator - (const qdouble &a) noexcept
+			constexpr dd_real operator -(const dd_real &a, const dd_real &b) noexcept
 			{
-				return qdouble(-a[0], -a[1], -a[2], -a[3]);
+				return ieee_subtract(a, b);
 			}
 
-			constexpr qdouble operator - (const qdouble &a, const qdouble &b) noexcept
+			constexpr dd_real operator -(double a, const dd_real &b) noexcept
 			{
-				return a + (-b);
+				return ieee_subtract(a, b);
 			}
 
-			constexpr qdouble &operator += (qdouble &a, const qdouble &b) noexcept
-			{
-				a = (a + b);
-				return a;
-			}
-
-			constexpr qdouble &operator -= (qdouble &a, const qdouble &b) noexcept
+			constexpr dd_real &operator -=(dd_real &a, const dd_real &b) noexcept
 			{
 				a = (a - b);
 				return a;
 			}
 
-			constexpr qdouble operator * (const qdouble &a, double b) noexcept
+			// double-double * double-double
+			constexpr dd_real operator *(const dd_real &a, const dd_real &b) noexcept
 			{
-				double p0, p1, p2, p3;
-				double q0, q1, q2;
-				double s0, s1, s2, s3, s4;
-				p0 = two_prod(a[0], b, q0);
-				p1 = two_prod(a[1], b, q1);
-				p2 = two_prod(a[2], b, q2);
-				p3 = a[3] * b;
-				s0 = p0;
-				s1 = two_sum(q0, p1, s2);
-				three_sum(s2, q1, p2);
-				three_sum2(q1, q2, p3);
-				s3 = q1;
-				s4 = q2 + p2;
-				renormalize(s0, s1, s2, s3, s4);
-				return qdouble(s0, s1, s2, s3);
+				double p1, p2;
+
+				p1 = two_prod(a.x[0], b.x[0], p2);
+				p2 += (a.x[0] * b.x[1] + a.x[1] * b.x[0]);
+				p1 = quick_two_sum(p1, p2, p2);
+				return dd_real(p1, p2);
 			}
 
-			constexpr qdouble operator * (const qdouble &a, const qdouble &b) noexcept
+			// double-double * double
+			constexpr dd_real operator *(const dd_real &a, double b) noexcept
 			{
-				double p0, p1, p2, p3, p4, p5;
-				double q0, q1, q2, q3, q4, q5;
-				double p6, p7, p8, p9;
-				double q6, q7, q8, q9;
-				double r0, r1;
-				double t0, t1;
-				double s0, s1, s2;
+				double p1, p2;
 
-				p0 = two_prod(a[0], b[0], q0);
-
-				p1 = two_prod(a[0], b[1], q1);
-				p2 = two_prod(a[1], b[0], q2);
-
-				p3 = two_prod(a[0], b[2], q3);
-				p4 = two_prod(a[1], b[1], q4);
-				p5 = two_prod(a[2], b[0], q5);
-
-				/* Start Accumulation */
-				three_sum(p1, p2, q0);
-
-				/* Six-Three Sum  of p2, q1, q2, p3, p4, p5. */
-				three_sum(p2, q1, q2);
-				three_sum(p3, p4, p5);
-				/* compute (s0, s1, s2) = (p2, q1, q2) + (p3, p4, p5). */
-				s0 = two_sum(p2, p3, t0);
-				s1 = two_sum(q1, p4, t1);
-				s2 = q2 + p5;
-				s1 = two_sum(s1, t0, t0);
-				s2 += (t0 + t1);
-
-				/* O(eps^3) order terms */
-				p6 = two_prod(a[0], b[3], q6);
-				p7 = two_prod(a[1], b[2], q7);
-				p8 = two_prod(a[2], b[1], q8);
-				p9 = two_prod(a[3], b[0], q9);
-
-				/* Nine-Two-Sum of q0, s1, q3, q4, q5, p6, p7, p8, p9. */
-				q0 = two_sum(q0, q3, q3);
-				q4 = two_sum(q4, q5, q5);
-				p6 = two_sum(p6, p7, p7);
-				p8 = two_sum(p8, p9, p9);
-				/* Compute (t0, t1) = (q0, q3) + (q4, q5). */
-				t0 = two_sum(q0, q4, t1);
-				t1 += (q3 + q5);
-				/* Compute (r0, r1) = (p6, p7) + (p8, p9). */
-				r0 = two_sum(p6, p8, r1);
-				r1 += (p7 + p9);
-				/* Compute (q3, q4) = (t0, t1) + (r0, r1). */
-				q3 = two_sum(t0, r0, q4);
-				q4 += (t1 + r1);
-				/* Compute (t0, t1) = (q3, q4) + s1. */
-				t0 = two_sum(q3, s1, t1);
-				t1 += q4;
-
-				/* O(eps^4) terms -- Nine-One-Sum */
-				t1 += a[1] * b[3] + a[2] * b[2] + a[3] * b[1] + q6 + q7 + q8 + q9 + s2;
-
-				renormalize(p0, p1, s0, t0, t1);
-				return qdouble(p0, p1, s0, t0);
+				p1 = two_prod(a.x[0], b, p2);
+				p1 = quick_two_sum(p1, p2 + (a.x[1] * b), p2);
+				return dd_real(p1, p2);
 			}
 
-			constexpr qdouble operator / (const qdouble &a, const qdouble &b) noexcept
+			// double * double-double
+			constexpr dd_real operator *(double a, const dd_real &b) noexcept
 			{
-				double q0, q1, q2, q3;
-
-				qdouble r;
-
-				q0 = a[0] / b[0];
-				r = a - (b * q0);
-
-				q1 = r[0] / b[0];
-				r -= (b * q1);
-
-				q2 = r[0] / b[0];
-				r -= (b * q2);
-
-				q3 = r[0] / b[0];
-
-				r -= (b * q3);
-				double q4 = r[0] / b[0];
-
-				renormalize(q0, q1, q2, q3, q4);
-
-				return qdouble(q0, q1, q2, q3);
+				return (b * a);
 			}
 
-		} // namespace qdouble
+			constexpr dd_real & operator *=(dd_real &a, const dd_real &b) noexcept
+			{
+				double p1, p2;
+				p1 = two_prod(a.x[0], b.x[0], p2);
+				p2 += (a.x[0] * b.x[1] + a.x[1] * b.x[0]);
+//				p2 += b.x[1] * a.x[0];
+//				p2 += b.x[0] * a.x[1];
+				a.x[0] = quick_two_sum(p1, p2, a.x[1]);
+				return a;
+			}
+
+			constexpr dd_real accurate_div(const dd_real &a, const dd_real &b) noexcept
+			{
+				double q1, q2, q3;
+
+				q1 = a.x[0] / b.x[0];						// approximate quotient
+
+				dd_real r = a - q1 * b;
+
+				q2 = r.x[0] / b.x[0];
+				r -= (q2 * b);
+
+				q3 = r.x[0] / b.x[0];
+
+				q1 = quick_two_sum(q1, q2, q2);
+
+				double s1, s2;
+				s1 = two_sum(q1, q3, s2);
+				s1 = quick_two_sum(s1, s2 + q2, s2);
+
+				return dd_real(s1, s2);
+			}
+
+			constexpr dd_real accurate_div(double a, const dd_real &b) noexcept
+			{
+				double q1, q2, q3;
+
+				q1 = a / b.x[0];							// approximate quotient
+
+				dd_real r = a - q1 * b;
+
+				q2 = r.x[0] / b.x[0];
+				r -= (q2 * b);
+
+				q3 = r.x[0] / b.x[0];
+
+				q1 = quick_two_sum(q1, q2, q2);
+
+				double s1, s2;
+				s1 = two_sum(q1, q3, s2);
+				s1 = quick_two_sum(s1, s2 + q2, s2);
+
+				return dd_real(s1, s2);
+			}
+
+			// double / double-double
+			constexpr dd_real operator /(double a, const dd_real &b) noexcept
+			{
+				return accurate_div(a, b);
+			}
+
+			// double-double / double-double
+			constexpr dd_real operator /(const dd_real &a, const dd_real &b) noexcept
+			{
+				return accurate_div(a, b);
+			}
+
+		} // namespace dd_real
 
 		namespace limits
 		{
@@ -807,74 +637,117 @@ namespace dsga
 
 			namespace detail
 			{
-				template <typename T>
+
+				// "Improving the Accuracy of the Fast Inverse Square Root by Modifying Newton-Raphson Corrections" 2021
+				// https://www.mdpi.com/1099-4300/23/1/86
+				//
+				// in comparison to inverse_sqrt(double), this method gives pretty good results:
+				//    0 ulps: ~68.58%
+				//    1 ulps: ~31.00%
+				//    2 ulps:  ~0.42%
+				//
+				// depending on compiler/platform, this may not be faster than rsqrt()
+				constexpr double fast_rsqrt(double x) noexcept
+				{
+					double halfx = 0.5 * x;
+					long long i = std::bit_cast<long long>(x);
+					i = 0x5FE6ED2102DCBFDA - (i >> 1);
+					double y = std::bit_cast<double>(i);
+					y *= 1.50087895511633457 - halfx * y * y;
+					y *= 1.50000057967625766 - halfx * y * y;
+					y *= 1.5000000000002520 - halfx * y * y;
+					y *= 1.5000000000000000 - halfx * y * y;
+					return y;
+				}
+
+				// float uses double internally, double uses dd_real internally
+				template <std::floating_point T>
 				constexpr T converging_sqrt(T arg) noexcept
 				{
-					T current_value = arg;
-					T previous_value = T(0);
+					const double boosted_arg = arg;
+					double init_value = boosted_arg * fast_rsqrt(boosted_arg);
 
-					if constexpr (std::is_same_v<T, qdouble::qdouble>)
+					if constexpr (std::is_same_v<T, double>)
 					{
-						while ((current_value[0] * current_value[0] != arg[0]) && (current_value[0] != previous_value[0]))
+						// boosted_arg doesn't need to be a dd_real for [T = double]
+
+						auto current_value = dd_real::dd_real(init_value);
+						auto previous_value = dd_real::dd_real(0.0);
+
+						while ((current_value[0] != previous_value[0]) && (current_value[0] * current_value[0] != boosted_arg))
 						{
 							previous_value = current_value;
-							current_value = (T(0.5) * current_value) + (T(0.5) * (arg / current_value));
+							current_value = 0.5 * (current_value + (boosted_arg / current_value));
 						}
+
+						return static_cast<double>(current_value);
 					}
-					else if constexpr (std::floating_point<T>)
+					else if constexpr (std::is_same_v<T, float>)
 					{
-						while ((current_value * current_value != arg) && (current_value != previous_value))
+						double current_value = init_value;
+						double previous_value = 0.0;
+
+						while ((current_value != previous_value) && (current_value * current_value != boosted_arg))
 						{
 							previous_value = current_value;
-							current_value = (T(0.5) * current_value) + (T(0.5) * (arg / current_value));
+							current_value = 0.5 * (current_value + (boosted_arg / current_value));
 						}
-					}
 
-					return current_value;
+						return static_cast<float>(current_value);
+					}
 				}
 
-				template <typename T>
+				// float uses double internally, double uses dd_real internally
+				template <std::floating_point T>
 				constexpr T inverse_sqrt(T arg) noexcept
 				{
-					T current_value = T(1.0) / converging_sqrt(arg);
+					// don't need this to be a dd_real
+					const double boosted_arg = arg;
 
-					// 3 refinements is best
-					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);
-					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);
-					current_value += T(0.5) * current_value * (T(1.0) - arg * current_value * current_value);
+					if constexpr (std::is_same_v<T, double>)
+					{
+						// arg is already a double
+						auto current_value = dd_real::dd_real(fast_rsqrt(arg));
 
-					return current_value;
+						current_value *= (1.5 - ((0.5 * boosted_arg) * (current_value * current_value)));
+
+						return static_cast<double>(current_value);
+					}
+					else if constexpr (std::is_same_v<T, float>)
+					{
+						double current_value = fast_rsqrt(boosted_arg);
+
+						current_value *= (1.5 - (0.5 * boosted_arg * current_value * current_value));
+
+						// do a couple more refinements for floating point (this needs testing to see if necessary)
+						current_value *= (1.5 - (0.5 * boosted_arg * current_value * current_value));
+						current_value *= (1.5 - (0.5 * boosted_arg * current_value * current_value));
+
+						return static_cast<float>(current_value);
+					}
 				}
+
 			}
 
+			// constexpr square root, uses higher precision behind the scenes
 			template <std::floating_point T>
 			constexpr T sqrt(T value) noexcept
 			{
 				return detail::converging_sqrt(value);
 			}
 
-			// float specialization - uses higher precision internally (double) which gives us 100% fidelity with std::sqrt()
-			template <>
-			constexpr float sqrt(float value) noexcept
-			{
-				double val = value;
-				return static_cast<float>(detail::converging_sqrt(val));
-			}
-
-			// double specialization - uses higher precision internally (qdouble) which gives us 100% fidelity with std::sqrt()
-			template <>
-			constexpr double sqrt(double value) noexcept
-			{
-				qdouble::qdouble val = value;
-				return static_cast<double>(detail::converging_sqrt(val));
-			}
-
-			// reciprocal of square root - our constexpr sqrt() has 100% fidelity with std::sqrt()
+			// reciprocal of square root, uses higher precision behind the scenes
 			template <std::floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
-				return T(1.0) / sqrt(value);
-//				return T(1.0) / (value * detail::inverse_sqrt(value));
+				return detail::inverse_sqrt(value);
+			}
+
+			// fast reciprocal of square root
+			template <std::floating_point T>
+			constexpr T fast_rsqrt(T value) noexcept
+			{
+				return static_cast<T>(detail::fast_rsqrt(static_cast<double>(value)));
 			}
 
 		} // namespace relaxed
@@ -1279,6 +1152,52 @@ namespace dsga
 					return relaxed::rsqrt(value);
 				}
 
+				template <std::floating_point T>
+				constexpr T constexpr_fast_rsqrt(T value) noexcept
+				{
+					// screen out unnecessary input
+
+					if (isnan(value))
+					{
+						if constexpr (sizeof(T) == 4)
+						{
+							unsigned int bits = std::bit_cast<unsigned int>(value);
+
+							// set the is_quiet bit
+							bits |= 0x00400000;
+
+							return std::bit_cast<T>(bits);
+						}
+						else if constexpr (sizeof(T) == 8)
+						{
+							unsigned long long bits = std::bit_cast<unsigned long long>(value);
+
+							// set the is_quiet bit
+							bits |= 0x0008000000000000;
+
+							return std::bit_cast<T>(bits);
+						}
+					}
+					else if (value == std::numeric_limits<T>::infinity())
+					{
+						return T(0);
+					}
+					else if (value == -std::numeric_limits<T>::infinity())
+					{
+						return -std::numeric_limits<T>::quiet_NaN();
+					}
+					else if (value == T(0))
+					{
+						return std::numeric_limits<T>::infinity();
+					}
+					else if (value < T(0))
+					{
+						return -std::numeric_limits<T>::quiet_NaN();
+					}
+
+					return relaxed::fast_rsqrt(value);
+				}
+
 			} // namespace detail
 
 			//
@@ -1504,17 +1423,24 @@ namespace dsga
 			// rsqrt() - inverse square root
 			//
 
+			// there is no standard c++ version of this, so always call constexpr version
+
 			template <std::floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
-				if (std::is_constant_evaluated())
-				{
 					return detail::constexpr_rsqrt(value);
-				}
-				else
-				{
-					return T(1.0) / std::sqrt(value);
-				}
+			}
+
+			//
+			// fast_rsqrt() - fast good approximation to inverse square root
+			//
+
+			// there is no standard c++ version of this, so always call constexpr version
+
+			template <std::floating_point T>
+			constexpr T fast_rsqrt(T value) noexcept
+			{
+				return detail::constexpr_fast_rsqrt(value);
 			}
 
 		} // namespace strict
@@ -5127,6 +5053,20 @@ namespace dsga
 		[[nodiscard]] constexpr auto inversesqrt(T arg) noexcept
 		{
 			return rsqrt_op(arg);
+		}
+
+		constexpr inline auto fast_rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fast_rsqrt(arg); };
+
+		template <bool W, floating_point_scalar T, std::size_t C, typename D>
+		[[nodiscard]] constexpr auto fast_inversesqrt(const vector_base<W, T, C, D> &arg) noexcept
+		{
+			return machinery::unary_op_execute(std::make_index_sequence<C>{}, arg, fast_rsqrt_op);
+		}
+
+		template <floating_point_scalar T>
+		[[nodiscard]] constexpr auto fast_inversesqrt(T arg) noexcept
+		{
+			return fast_rsqrt_op(arg);
 		}
 
 		//

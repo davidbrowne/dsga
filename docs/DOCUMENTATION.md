@@ -399,6 +399,7 @@ There are scalar versions of these vector functions where it makes sense, i.e., 
 * ```log2()```
 * ```sqrt()```
 * ```inversesqrt()```
+* ```fast_inversesqrt()``` - not in GLSL
 
 #### Common Functions
 * ```abs()```

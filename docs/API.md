@@ -1727,6 +1727,7 @@ Most of the functions perform their operation component-wise. There are some fun
   * [```log2```](#log2)
   * [```sqrt```](#sqrt)
   * [```inversesqrt```](#inversesqrt)
+  * [```fast_inversesqrt```](#fast_inversesqrt)
 * Common Functions
   * [```abs```](#abs)
   * [```sign```](#sign)
@@ -1917,6 +1918,16 @@ template <bool W, floating_point_scalar T, std::size_t C, typename D>
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
 [[nodiscard]] constexpr auto inversesqrt(const vector_base<W, T, C, D> &arg) noexcept;
 ```
+
+##### ```fast_inversesqrt```
+```c++
+template <bool W, floating_point_scalar T, std::size_t C, typename D>
+[[nodiscard]] constexpr auto fast_inversesqrt(const vector_base<W, T, C, D> &arg) noexcept;
+```
+Not in GLSL. May or may not actually be faster that ```rsqrt()```, for which this function is an approximation for. For ```float```, this function is 100% in agreement with ```rsqrt()```. For ```double```, the relationship to ```rsqrt()``` is:
+  * 0 ulps: ~68.58%
+  * 1 ulps: ~31.00%
+  * 2 ulps:  ~0.42%
 
 #### Common Functions
 
