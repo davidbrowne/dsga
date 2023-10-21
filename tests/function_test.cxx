@@ -594,6 +594,22 @@ TEST_SUITE("test functions")
 		}
 	}
 
+	TEST_CASE("other vector functions")
+	{
+		// swizzle()
+
+		dvec4 v(1, 2, 3, 4);
+		auto runtime_swizzle = swizzle(v, 3, 2, 1);
+		auto member_swizzle_swizzle = swizzle(v.wzyx, 3, 2, 1);
+		auto runtime_swizzle1 = swizzle(v, 3, 3, 3);
+		auto runtime_swizzle2 = swizzle(v, 2);
+
+		CHECK_EQ(runtime_swizzle, basic_vector(4.0, 3.0, 2.0));
+		CHECK_EQ(member_swizzle_swizzle, basic_vector(1.0, 2.0, 3.0));
+		CHECK_EQ(runtime_swizzle1, basic_vector(4.0, 4.0, 4.0));
+		CHECK_EQ(runtime_swizzle2, basic_vector(3.0));
+	}
+
 	TEST_CASE("matrix functions")
 	{
 		// matrixCompMult() - equivalent to a component-wise "matrix/matrix binary operator *" if there was one

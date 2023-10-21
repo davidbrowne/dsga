@@ -95,7 +95,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 9;
+constexpr inline int DSGA_PATCH_VERSION = 10;
 
 namespace dsga
 {
@@ -5878,6 +5878,29 @@ namespace dsga
 		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
 		{
 			return !any(x);
+		}
+
+		//
+		// runtime swizzle function -- returns a stand-alone basic_vector as opposed to a indexed_vector data member.
+		// return value is *not* linked to input argument, like v.xyz is a member of v.
+		// not in GLSL, but was inspired by Odin Programming Language.
+		//
+
+		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
+		requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
+		inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, Args...Is)
+		{
+			bool indexes_valid = ((static_cast<std::size_t>(Is) < C) && ...);
+			dsga_constexpr_assert(indexes_valid, "index out of bounds");
+
+			if (indexes_valid)
+			{
+				return basic_vector<T, sizeof...(Args)>(v[Is] ...);
+			}
+			else
+			{
+				throw "bad index";
+			}
 		}
 
 		//

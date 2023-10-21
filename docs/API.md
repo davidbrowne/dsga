@@ -1783,6 +1783,8 @@ Most of the functions perform their operation component-wise. There are some fun
 * Tolerance Checking Functions
   * [```within_distance```](#within_distance)
   * [```within_box```](#within_box)
+* Other Vector Functions
+  * [```swizzle```](#swizzle)
 
 #### Angle and Trigonometry Functions
 
@@ -2352,6 +2354,14 @@ requires ((C1 == C2) || (C2 == 1u)) && non_bool_scalar<T>
                                         const vector_base<W3, T, C2, D3> &tolerance) noexcept;
 ```
 Not in GLSL. This represents a bounding-box tolerance check, which aggregates the component-wise tolerance checks. These functions can take a single tolerance or a vector of tolerances. All the vector elements must be within tolerance or the whole answer is false. The tolerance is a strictly less-than comparison. All tolerances need to be non-negative.
+
+##### ```swizzle```
+```c++
+template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
+requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
+inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, Args...Is);
+```
+Not in GLSL. Runtime function for swizzling. Returns a ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. If the index arguments are invalid, this function will throw. Inspired by the Odin Programming Language.
 
 ### Scalar Functions
 Scalar versions of most of the vector free functions exist. It is not recommended to use them if there is a function in the C++ Standard Library that does the same thing.
