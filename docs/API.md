@@ -359,8 +359,13 @@ The GLSL specification requires that the ```length method``` behave as a member 
 
 ##### ```storage_wrapper::operator []```
 ```c++
-[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable;
-[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable;
+
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept;
 ```
 Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account. For ```storage_wrapper```, the elements are contiguous, so the physical and logical mapping is the same.
 
@@ -510,9 +515,13 @@ Since this is a CRTP base class, one of the template type parameters is for the 
 
 ##### ```vector_base::operator []```
 ```c++
-[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable;
 
-[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept;
 ```
 Data access through the indexing operator. This CRTP function calls the derived class/struct version of the function.
 
@@ -658,9 +667,13 @@ The static ```std::array``` for how the physical representation is mapped to the
 
 ##### ```indexed_vector::operator []```
 ```c++
-[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable;
 
-[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept;
 ```
 Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account, so no need to use [```sequence```](#indexed_vectorsequence) or [```offsets```](#indexed_vectoroffsets) with this operator.
 
@@ -892,9 +905,13 @@ The static ```std::array``` for how the physical representation is mapped to the
 
 ##### ```basic_vector::operator []```
 ```c++
-[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable;
 
-[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept;
 ```
 Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account. For ```basic_vector```, the elements are contiguous, so the physical and logical mapping is the same.
 
@@ -1099,9 +1116,13 @@ Return the number of rows.
 
 ##### ```basic_matrix::operator []```
 ```c++
-[[nodiscard]] constexpr basic_vector<T, R> &operator [](std::integral auto index) noexcept;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr basic_vector<T, R> &operator [](const U &index) noexcept;
 
-[[nodiscard]] constexpr const basic_vector<T, R> &operator [](std::integral auto index) const noexcept;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr const basic_vector<T, R> &operator [](const U &index) const noexcept;
 ```
 Data access through the indexing operator.
 
@@ -1123,7 +1144,9 @@ Data access through pointers.
 
 ##### ```basic_matrix::row```
 ```c++
-[[nodiscard]] constexpr basic_vector<T, C> row(std::integral auto row_index) const noexcept;
+template <typename U>
+requires std::convertible_to<U, std::size_t>
+[[nodiscard]] constexpr basic_vector<T, C> row(const U &row_index) const noexcept;
 ```
 Return a row from the column-order matrix.
 
@@ -2359,9 +2382,9 @@ Not in GLSL. This represents a bounding-box tolerance check, which aggregates th
 ```c++
 template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
 requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
-inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, Args...Is);
+inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is);
 ```
-Not in GLSL. Runtime function for swizzling. Returns a ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. If the index arguments are invalid, this function will throw. Inspired by the Odin Programming Language.
+Not in GLSL. Runtime function for swizzling. Returns a stand-alone ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. If the index arguments are invalid (out of bounds), this function will throw. Inspired by the Odin Programming Language.
 
 ### Scalar Functions
 Scalar versions of most of the vector free functions exist. It is not recommended to use them if there is a function in the C++ Standard Library that does the same thing.

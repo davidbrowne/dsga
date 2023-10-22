@@ -425,6 +425,18 @@ TEST_SUITE("test operators")
 		CHECK_EQ(vec4(1, 1, 1, 1).z.size(), 1u);
 	}
 
+	TEST_CASE("vector element access")
+	{
+		dvec4 v(10, 20, 30, 40);
+		ivec4 indexes(0, 1, 2, 3);
+
+		CHECK_EQ(v[indexes.z], 30.0);
+		CHECK_EQ(v[3], 40.0);
+
+		CHECK_EQ(v.wzyx[indexes.w], 10.0);
+		CHECK_EQ(v.wxyz[2], 20.0);
+	}
+
 	TEST_CASE("matrix unary operator +")
 	{
 		const mat2 A(1, 2, 3, 4);
@@ -553,18 +565,19 @@ TEST_SUITE("test operators")
 	TEST_CASE("matrix row and column access")
 	{
 		dmat4 A(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+		ivec4 indexes(0, 1, 2, 3);
 
 		// matrix columns
-		CHECK_EQ(A[0], dvec4(0, 1, 2, 3));
-		CHECK_EQ(A[1], dvec4(4, 5, 6, 7));
+		CHECK_EQ(A[indexes.x], dvec4(0, 1, 2, 3));
+		CHECK_EQ(A[indexes.y], dvec4(4, 5, 6, 7));
 		CHECK_EQ(A[2], dvec4(8, 9, 10, 11));
 		CHECK_EQ(A[3], dvec4(12, 13, 14, 15));
 
 		// matrix rows
 		CHECK_EQ(A.row(0u), dvec4(0, 4, 8, 12));
 		CHECK_EQ(A.row(1u), dvec4(1, 5, 9, 13));
-		CHECK_EQ(A.row(2u), dvec4(2, 6, 10, 14));
-		CHECK_EQ(A.row(3u), dvec4(3, 7, 11, 15));
+		CHECK_EQ(A.row(indexes.z), dvec4(2, 6, 10, 14));
+		CHECK_EQ(A.row(indexes.w), dvec4(3, 7, 11, 15));
 	}
 
 	TEST_CASE("matrix component access")

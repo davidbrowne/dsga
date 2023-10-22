@@ -95,7 +95,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 10;
+constexpr inline int DSGA_PATCH_VERSION = 11;
 
 namespace dsga
 {
@@ -1726,13 +1726,17 @@ namespace dsga
 		static constexpr std::integral_constant<std::size_t, Count> size =	{};
 
 		// logical and physically contiguous access to data
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return store[static_cast<std::size_t>(index)];
 		}
 
-		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return store[static_cast<std::size_t>(index)];
@@ -1846,43 +1850,48 @@ namespace dsga
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-		constexpr void set(Args ...args) noexcept								{ this->as_derived().set(args...); }
+		constexpr void set(Args ...args) noexcept									{ this->as_derived().set(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable		{ return this->as_derived()[index]; }
-		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept			{ return this->as_derived()[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable	{ return this->as_derived()[index]; }
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept			{ return this->as_derived()[index]; }
 
 		// physically contiguous access via pointer.
 		// DON"T ASSSUME data() contiguous order is same as operator[] "logically contiguous" order
 		// data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr T * data() noexcept requires Writable			{ return this->as_derived().data(); }
-		[[nodiscard]] constexpr const T * data() const noexcept					{ return this->as_derived().data(); }
+		[[nodiscard]] constexpr T * data() noexcept requires Writable				{ return this->as_derived().data(); }
+		[[nodiscard]] constexpr const T * data() const noexcept						{ return this->as_derived().data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
 		// this is only really helpful if you use data() in your API, because operator [] already adjusts for sequencing.
-		[[nodiscard]] constexpr auto sequence() const noexcept					{ return this->as_derived().sequence(); }
+		[[nodiscard]] constexpr auto sequence() const noexcept						{ return this->as_derived().sequence(); }
 
 		// number of accessible T elements - required by spec
-		[[nodiscard]] constexpr int length() const noexcept						{ return Count; }
+		[[nodiscard]] constexpr int length() const noexcept							{ return Count; }
 
 		// not required by spec, but more c++ container-like
-//		[[nodiscard]] constexpr std::size_t	size() const noexcept				{ return Count; }
-		static constexpr std::integral_constant<std::size_t, Count> size =		{};
+//		[[nodiscard]] constexpr std::size_t	size() const noexcept					{ return Count; }
+		static constexpr std::integral_constant<std::size_t, Count> size =			{};
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept requires Writable			{ return this->as_derived().begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept						{ return this->as_derived().cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept requires Writable			{ return this->as_derived().end(); }
-		[[nodiscard]] constexpr auto end() const noexcept						{ return this->as_derived().cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept						{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable				{ return this->as_derived().begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept							{ return this->as_derived().cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept						{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable				{ return this->as_derived().end(); }
+		[[nodiscard]] constexpr auto end() const noexcept							{ return this->as_derived().cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept							{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable		{ return this->as_derived().rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept					{ return this->as_derived().crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept					{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept requires Writable			{ return this->as_derived().rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept						{ return this->as_derived().crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept						{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable			{ return this->as_derived().rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept						{ return this->as_derived().crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept						{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable				{ return this->as_derived().rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept							{ return this->as_derived().crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept							{ return rend(); }
 
 		//
 		// functions similar to std::valarray
@@ -1941,13 +1950,13 @@ namespace dsga
 		}
 
 		// min value in vector
-		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>		{ return *std::ranges::min_element(*this); }
+		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>	{ return *std::ranges::min_element(*this); }
 
 		// max value in vector
-		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>		{ return *std::ranges::max_element(*this); }
+		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>	{ return *std::ranges::max_element(*this); }
 
 		// sum of values in vector
-		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>		{ return std::accumulate(begin(), end(), T(0)); }
+		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>	{ return std::accumulate(begin(), end(), T(0)); }
 	};
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
@@ -2315,14 +2324,18 @@ namespace dsga
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
 		// logically contiguous - used by operator [] for read access to data
-		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return base[offsets[static_cast<std::size_t>(index)]];
@@ -2728,10 +2741,14 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable		{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept			{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
 		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
@@ -2905,10 +2922,14 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable		{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept			{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
 		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
@@ -3177,10 +3198,14 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable		{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept			{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
 		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
@@ -3672,10 +3697,14 @@ namespace dsga
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr T &operator [](std::integral auto index) noexcept requires Writable		{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
-		[[nodiscard]] constexpr const T &operator [](std::integral auto index) const noexcept			{ return base[index]; }
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
 		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
@@ -5881,14 +5910,14 @@ namespace dsga
 		}
 
 		//
-		// runtime swizzle function -- returns a stand-alone basic_vector as opposed to a indexed_vector data member.
-		// return value is *not* linked to input argument, like v.xyz is a member of v.
-		// not in GLSL, but was inspired by Odin Programming Language.
+		// runtime swizzle function -- returns a stand-alone basic_vector as opposed to an indexed_vector union data member.
+		// return value is *not* linked to input argument, unlike how v.xyz is a member of v. It will throw if the index
+		// arguments are out of bounds. Not in GLSL -- inspired by the Odin Programming Language.
 		//
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
 		requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
-		inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, Args...Is)
+		inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is)
 		{
 			bool indexes_valid = ((static_cast<std::size_t>(Is) < C) && ...);
 			dsga_constexpr_assert(indexes_valid, "index out of bounds");
@@ -5899,7 +5928,7 @@ namespace dsga
 			}
 			else
 			{
-				throw "bad index";
+				throw;
 			}
 		}
 
@@ -6054,20 +6083,26 @@ namespace dsga
 		// operator [] gets the column vector
 		//
 
-		[[nodiscard]] constexpr basic_vector<T, R> &operator [](std::integral auto index) noexcept
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr basic_vector<T, R> &operator [](const U &index) noexcept
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < C, "index out of bounds");
 			return columns[static_cast<std::size_t>(index)];
 		}
 
-		[[nodiscard]] constexpr const basic_vector<T, R> &operator [](std::integral auto index) const noexcept
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const basic_vector<T, R> &operator [](const U &index) const noexcept
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < C, "index out of bounds");
 			return columns[static_cast<std::size_t>(index)];
 		}
 
 		// get a row of the matrix as a vector
-		[[nodiscard]] constexpr basic_vector<T, C> row(std::integral auto row_index) const noexcept
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr basic_vector<T, C> row(const U &row_index) const noexcept
 		{
 			dsga_constexpr_assert(row_index >= 0 && static_cast<std::size_t>(row_index) < R, "row_index out of bounds");
 

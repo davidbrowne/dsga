@@ -599,8 +599,9 @@ TEST_SUITE("test functions")
 		// swizzle()
 
 		dvec4 v(1, 2, 3, 4);
+		ivec4 indexes(0, 1, 2, 3);
 		auto runtime_swizzle = swizzle(v, 3, 2, 1);
-		auto member_swizzle_swizzle = swizzle(v.wzyx, 3, 2, 1);
+		auto member_swizzle_swizzle = swizzle(v.wzyx, indexes.w, indexes.z, indexes.y);
 		auto runtime_swizzle1 = swizzle(v, 3, 3, 3);
 		auto runtime_swizzle2 = swizzle(v, 2);
 
