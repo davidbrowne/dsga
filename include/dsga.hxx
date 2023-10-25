@@ -95,7 +95,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 0;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
@@ -117,7 +117,7 @@ namespace dsga
 			// https://www.davidhbailey.com/dhbsoftware/ - QD
 
 			/*
-				Modfied BSD 3-Clause License
+				Modified BSD 3-Clause License
 
 				This work was supported by the Director, Office of Science, Division
 				of Mathematical, Information, and Computational Sciences of the
@@ -1485,7 +1485,7 @@ namespace dsga
 
 	// want the size to be between 1 and 4, inclusive
 	template <std::size_t Size>
-	concept dimensional_size = ((Size >= 1u) && (Size <= 4u));
+	concept dimensional_size = ((Size >= 1) && (Size <= 4));
 
 	// dimensional storage needs the arithmetic type and size restrictions
 	template <typename T, std::size_t Size>
@@ -2004,7 +2004,7 @@ namespace dsga
 		using reference = const T &;
 
 		// range of valid values for mapper_index
-		constexpr static std::size_t begin_index = 0u;
+		constexpr static std::size_t begin_index = 0;
 		constexpr static std::size_t end_index = Count;
 
 		// the data
@@ -2351,8 +2351,8 @@ namespace dsga
 		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0u); }
-		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0u); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0); }
 		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
 		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
 		[[nodiscard]] constexpr auto end() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
@@ -2380,19 +2380,19 @@ namespace dsga
 	//
 
 	template <typename T, std::size_t Size, std::size_t I>
-	using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1u, I>;
+	using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1, I>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
-	requires (sizeof...(Is) == 2u)
-	using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2u, Is...>;
+	requires (sizeof...(Is) == 2)
+	using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2, Is...>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
-	requires (sizeof...(Is) == 3u)
-	using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3u, Is...>;
+	requires (sizeof...(Is) == 3)
+	using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3, Is...>;
 
 	template <typename T, std::size_t Size, std::size_t ...Is>
-	requires (sizeof...(Is) == 4u)
-	using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4u, Is...>;
+	requires (sizeof...(Is) == 4)
+	using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4, Is...>;
 
 	//
 	// basic_matrix will act as the primary matrix class in this library.
@@ -2403,7 +2403,7 @@ namespace dsga
 	//
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
 	struct basic_matrix;
 
 	//
@@ -2421,7 +2421,7 @@ namespace dsga
 		template <dimensional_scalar T>
 		struct component_size<T>
 		{
-			static constexpr std::size_t value = 1u;
+			static constexpr std::size_t value = 1;
 		};
 
 		template <dimensional_scalar T, std::size_t C>
@@ -2455,10 +2455,10 @@ namespace dsga
 
 		// can't have 0 Args unless Count is 0
 		template <std::size_t Count, typename ...Args>
-		requires (sizeof...(Args) == 0u)
+		requires (sizeof...(Args) == 0)
 		struct component_match<Count, Args...>
 		{
-			static constexpr bool valid = (Count == 0u);
+			static constexpr bool valid = (Count == 0);
 		};
 
 		// check Count components needed with the info from variadic template Args and their component counts.
@@ -2471,7 +2471,7 @@ namespace dsga
 		// every component in the constructed value. It is a compile-time error to provide extra
 		// arguments beyond this last used argument." section 5.4.2 of the spec for constructors (use case for this).
 		template <std::size_t Count, typename ...Args>
-		requires (sizeof...(Args) > 0u) && (Count > 0u)
+		requires (sizeof...(Args) > 0) && (Count > 0)
 		struct component_match<Count, Args...>
 		{
 			// total number components in Args...
@@ -2479,7 +2479,7 @@ namespace dsga
 			using tuple_pack = std::tuple<Args...>;
 
 			// get the last Arg type in the pack
-			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> - 1u, tuple_pack>;
+			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> - 1, tuple_pack>;
 
 			// see what the component count is if we didn't use the last Arg type in pack
 			static constexpr std::size_t previous_size = value - component_size<last_type>::value;
@@ -2618,10 +2618,10 @@ namespace dsga
 	//
 
 	template <dimensional_scalar T>
-	struct basic_vector<T, 1u> : vector_base<true, T, 1u, basic_vector<T, 1u>>
+	struct basic_vector<T, 1> : vector_base<true, T, 1, basic_vector<T, 1>>
 	{
 		// number of physical storage elements
-		static constexpr std::size_t Size = 1u;
+		static constexpr std::size_t Size = 1;
 
 		// number of indexable elements
 		static constexpr std::size_t Count = Size;
@@ -2679,7 +2679,7 @@ namespace dsga
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T>
 		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]) }
+			: base{ static_cast<T>(other[0]) }
 		{
 		}
 
@@ -2711,7 +2711,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			set(other[0u]);
+			set(other[0]);
 			return *this;
 		}
 
@@ -2730,14 +2730,14 @@ namespace dsga
 		// this is extremely important and is only for basic_vector of [Size == 1]
 		explicit(false) constexpr operator T() const noexcept
 		{
-			return base[0u];
+			return base[0];
 		}
 
 		template <typename U>
 		requires std::convertible_to<T, U>
 		explicit constexpr operator U() const noexcept
 		{
-			return static_cast<U>(base[0u]);
+			return static_cast<U>(base[0]);
 		}
 
 		// logically and physically contiguous - used by operator [] for access to data
@@ -2786,15 +2786,15 @@ namespace dsga
 		requires Writable && std::convertible_to<U, T>
 		constexpr void set(U value) noexcept
 		{
-			base[0u] = static_cast<T>(value);
+			base[0] = static_cast<T>(value);
 		}
 	};
 
 	template <dimensional_scalar T>
-	struct basic_vector<T, 2u> : vector_base<true, T, 2u, basic_vector<T, 2u>>
+	struct basic_vector<T, 2> : vector_base<true, T, 2, basic_vector<T, 2>>
 	{
 		// number of physical storage elements
-		static constexpr std::size_t Size = 2u;
+		static constexpr std::size_t Size = 2;
 
 		// number of indexable elements
 		static constexpr std::size_t Count = Size;
@@ -2892,7 +2892,7 @@ namespace dsga
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
 		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]) }
+			: base{ static_cast<T>(other[0]), static_cast<T>(other[1]) }
 		{
 		}
 
@@ -2917,7 +2917,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			set(other[0u], other[1u]);
+			set(other[0], other[1]);
 			return *this;
 		}
 
@@ -2975,10 +2975,10 @@ namespace dsga
 	};
 
 	template <dimensional_scalar T>
-	struct basic_vector<T, 3u> : vector_base<true, T, 3u, basic_vector<T, 3u>>
+	struct basic_vector<T, 3> : vector_base<true, T, 3, basic_vector<T, 3>>
 	{
 		// number of physical storage elements
-		static constexpr std::size_t Size = 3u;
+		static constexpr std::size_t Size = 3;
 
 		// number of indexable elements
 		static constexpr std::size_t Count = Size;
@@ -3168,7 +3168,7 @@ namespace dsga
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T> && (C >= Count)
 		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]) }
+			: base{ static_cast<T>(other[0]), static_cast<T>(other[1]), static_cast<T>(other[2]) }
 		{
 		}
 
@@ -3193,7 +3193,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			set(other[0u], other[1u], other[2u]);
+			set(other[0], other[1], other[2]);
 			return *this;
 		}
 
@@ -3251,10 +3251,10 @@ namespace dsga
 	};
 
 	template <dimensional_scalar T>
-	struct basic_vector<T, 4u> : vector_base<true, T, 4u, basic_vector<T, 4u>>
+	struct basic_vector<T, 4> : vector_base<true, T, 4, basic_vector<T, 4>>
 	{
 		// number of physical storage elements
-		static constexpr std::size_t Size = 4u;
+		static constexpr std::size_t Size = 4;
 
 		// number of indexable elements
 		static constexpr std::size_t Count = Size;
@@ -3667,7 +3667,7 @@ namespace dsga
 		template <bool W, dimensional_scalar U, typename D>
 		requires implicitly_convertible_to<U, T>
 		explicit(false) constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept
-			: base{ static_cast<T>(other[0u]), static_cast<T>(other[1u]), static_cast<T>(other[2u]), static_cast<T>(other[3u]) }
+			: base{ static_cast<T>(other[0]), static_cast<T>(other[1]), static_cast<T>(other[2]), static_cast<T>(other[3]) }
 		{
 		}
 
@@ -3692,7 +3692,7 @@ namespace dsga
 		requires Writable && implicitly_convertible_to<U, T>
 		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
 		{
-			set(other[0u], other[1u], other[2u], other[3u]);
+			set(other[0], other[1], other[2], other[3]);
 			return *this;
 		}
 
@@ -4059,9 +4059,9 @@ namespace dsga
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], plus_op);
+		machinery::binary_op_set(lhs, rhs[0], plus_op);
 		return lhs.as_derived();
 	}
 
@@ -4075,16 +4075,16 @@ namespace dsga
 	}
 
 	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator +(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, plus_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, plus_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], plus_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, plus_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], plus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4119,9 +4119,9 @@ namespace dsga
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], minus_op);
+		machinery::binary_op_set(lhs, rhs[0], minus_op);
 		return lhs.as_derived();
 	}
 
@@ -4135,16 +4135,16 @@ namespace dsga
 	}
 
 	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator -(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, minus_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, minus_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], minus_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, minus_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], minus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4179,9 +4179,9 @@ namespace dsga
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], times_op);
+		machinery::binary_op_set(lhs, rhs[0], times_op);
 		return lhs.as_derived();
 	}
 
@@ -4195,16 +4195,16 @@ namespace dsga
 	}
 
 	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator *(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, times_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, times_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], times_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, times_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], times_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4239,9 +4239,9 @@ namespace dsga
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], div_op);
+		machinery::binary_op_set(lhs, rhs[0], div_op);
 		return lhs.as_derived();
 	}
 
@@ -4255,16 +4255,16 @@ namespace dsga
 	}
 
 	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator /(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, div_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, div_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], div_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, div_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], div_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4300,9 +4300,9 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], modulus_op);
+		machinery::binary_op_set(lhs, rhs[0], modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -4316,16 +4316,16 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator %(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, modulus_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, modulus_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], modulus_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, modulus_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], modulus_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4371,9 +4371,9 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
-								 const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								 const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs[0u], lshift_op);
+		machinery::binary_op_set_no_convert(lhs, rhs[0], lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4387,16 +4387,16 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator <<(const vector_base<W1, T1, C1, D1> &lhs,
 											 const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute_no_convert(lhs, rhs, lshift_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute_no_convert(lhs[0u], rhs, lshift_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute_no_convert(lhs, rhs[0u], lshift_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute_no_convert(lhs[0], rhs, lshift_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute_no_convert(lhs, rhs[0], lshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4432,9 +4432,9 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
-								 const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								 const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs[0u], rshift_op);
+		machinery::binary_op_set_no_convert(lhs, rhs[0], rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4448,16 +4448,16 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator >>(const vector_base<W1, T1, C1, D1> &lhs,
 											 const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute_no_convert(lhs, rhs, rshift_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute_no_convert(lhs[0u], rhs, rshift_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute_no_convert(lhs, rhs[0u], rshift_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute_no_convert(lhs[0], rhs, rshift_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute_no_convert(lhs, rhs[0], rshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4492,9 +4492,9 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 	constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], and_op);
+		machinery::binary_op_set(lhs, rhs[0], and_op);
 		return lhs.as_derived();
 	}
 
@@ -4508,16 +4508,16 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
 	[[nodiscard]] constexpr auto operator &(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, and_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, and_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], and_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, and_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], and_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4552,9 +4552,9 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 	constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], or_op);
+		machinery::binary_op_set(lhs, rhs[0], or_op);
 		return lhs.as_derived();
 	}
 
@@ -4568,16 +4568,16 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
 	[[nodiscard]] constexpr auto operator |(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, or_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, or_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], or_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, or_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], or_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4612,9 +4612,9 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 	constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1u, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0u], xor_op);
+		machinery::binary_op_set(lhs, rhs[0], xor_op);
 		return lhs.as_derived();
 	}
 
@@ -4628,16 +4628,16 @@ namespace dsga
 	}
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
+	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
 	[[nodiscard]] constexpr auto operator ^(const vector_base<W1, T1, C1, D1> &lhs,
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
 			return machinery::binary_op_execute(lhs, rhs, xor_op);
-		else if constexpr (C1 == 1u)
-			return machinery::binary_op_execute(lhs[0u], rhs, xor_op);
-		else if constexpr (C2 == 1u)
-			return machinery::binary_op_execute(lhs, rhs[0u], xor_op);
+		else if constexpr (C1 == 1)
+			return machinery::binary_op_execute(lhs[0], rhs, xor_op);
+		else if constexpr (C2 == 1)
+			return machinery::binary_op_execute(lhs, rhs[0], xor_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -5723,18 +5723,18 @@ namespace dsga
 		}
 
 		template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
-		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3u, D1> &x,
-										   const vector_base<W2, T2, 3u, D2> &y) noexcept
+		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &x,
+										   const vector_base<W2, T2, 3, D2> &y) noexcept
 		{
 			using Common = std::common_type_t<T1, T2>;
-			return basic_vector<Common, 3u>((x[1] * y[2]) - (y[1] * x[2]),
+			return basic_vector<Common, 3>((x[1] * y[2]) - (y[1] * x[2]),
 											(x[2] * y[0]) - (y[2] * x[0]),
 											(x[0] * y[1]) - (y[0] * x[1]));
 		}
 
 //		template <floating_point_scalar T1, floating_point_scalar T2>
-//		[[nodiscard]] constexpr auto cross(const basic_vector<T1, 3u> &a,
-//										   const basic_vector<T2, 3u> &b) noexcept
+//		[[nodiscard]] constexpr auto cross(const basic_vector<T1, 3> &a,
+//										   const basic_vector<T2, 3> &b) noexcept
 //		{
 //			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
 //		}
@@ -5746,9 +5746,9 @@ namespace dsga
 		}
 
 		template <bool W, floating_point_scalar T, typename D>
-		[[nodiscard]] constexpr auto length(const vector_base<W, T, 1u, D> &x) noexcept
+		[[nodiscard]] constexpr auto length(const vector_base<W, T, 1, D> &x) noexcept
 		{
-			return cxcm::abs(x[0u]);
+			return cxcm::abs(x[0]);
 		}
 
 		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
@@ -5769,13 +5769,13 @@ namespace dsga
 		}
 
 		template <bool W, floating_point_scalar T, typename D>
-		[[nodiscard]] constexpr auto normalize(const vector_base<W, T, 1u, D> &x) noexcept
+		[[nodiscard]] constexpr auto normalize(const vector_base<W, T, 1, D> &x) noexcept
 		{
 			// can't normalize 0 -> 0/0
-			if (T(0.0) == x[0u])
-				return basic_vector<T, 1u>(std::numeric_limits<T>::quiet_NaN());
+			if (T(0.0) == x[0])
+				return basic_vector<T, 1>(std::numeric_limits<T>::quiet_NaN());
 
-			[[likely]] return basic_vector<T, 1u>(T(1.0));
+			[[likely]] return basic_vector<T, 1>(T(1.0));
 		}
 
 		//
@@ -5988,9 +5988,9 @@ namespace dsga
 		requires non_bool_scalar<T>
 		[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 													 const vector_base<W2, T, C, D2> &y,
-													 const vector_base<W3, T, 1u, D3> &tolerance) noexcept
+													 const vector_base<W3, T, 1, D3> &tolerance) noexcept
 		{
-			return within_distance(x, y, tolerance[0u]);
+			return within_distance(x, y, tolerance[0]);
 		}
 
 		// tolerance-box component check - strictly less than comparison, boundary is false
@@ -6007,7 +6007,7 @@ namespace dsga
 		}
 
 		template <bool W1, dimensional_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
-		requires ((C1 == C2) || (C2 == 1u)) && non_bool_scalar<T>
+		requires ((C1 == C2) || (C2 == 1)) && non_bool_scalar<T>
 		[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
 												const vector_base<W2, T, C1, D2> &y,
 												const vector_base<W3, T, C2, D3> &tolerance) noexcept
@@ -6018,9 +6018,9 @@ namespace dsga
 				auto comparison_vector = lessThan(deltas, tolerance);
 				return all(comparison_vector);
 			}
-			else		// (C2 == 1u)
+			else		// (C2 == 1)
 			{
-				return within_box(x, y, tolerance[0u]);
+				return within_box(x, y, tolerance[0]);
 			}
 		}
 	}
@@ -6056,11 +6056,11 @@ namespace dsga
 	// when Count == 1, treat it like a scalar value for equality comparison
 	template <bool W, dimensional_scalar T, typename D, dimensional_scalar U>
 	requires std::convertible_to<U, T> || std::convertible_to<T, U>
-	constexpr bool operator ==(const vector_base<W, T, 1u, D> &first,
+	constexpr bool operator ==(const vector_base<W, T, 1, D> &first,
 							   U second) noexcept
 	{
 		using commontype = std::common_type_t<T, U>;
-		return (static_cast<commontype>(first[0u]) == static_cast<commontype>(second));
+		return (static_cast<commontype>(first[0]) == static_cast<commontype>(second));
 	}
 
 	//
@@ -6068,7 +6068,7 @@ namespace dsga
 	//
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
 	struct basic_matrix
 	{
 		static constexpr std::size_t ComponentCount = C * R;
@@ -6367,7 +6367,7 @@ namespace dsga
 
 		// going for efficiency
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr auto determinant(const basic_matrix<T, 2u, 2u> &arg) noexcept
+		[[nodiscard]] constexpr auto determinant(const basic_matrix<T, 2, 2> &arg) noexcept
 		{
 			return 
 				+ arg[0][0] * arg[1][1]
@@ -6377,7 +6377,7 @@ namespace dsga
 
 		// going for efficiency
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr auto determinant(const basic_matrix<T, 3u, 3u> &arg) noexcept
+		[[nodiscard]] constexpr auto determinant(const basic_matrix<T, 3, 3> &arg) noexcept
 		{
 			// same results as dot(arg[0], cross(arg[1], arg[2]))
 			return
@@ -6391,7 +6391,7 @@ namespace dsga
 		}
 
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr auto determinant(const basic_matrix<T, 4u, 4u> &arg) noexcept
+		[[nodiscard]] constexpr auto determinant(const basic_matrix<T, 4, 4> &arg) noexcept
 		{
 			return
 				+ arg[0][0] * arg[1][1] * arg[2][2] * arg[3][3] + arg[0][0] * arg[2][1] * arg[3][2] * arg[1][3] + arg[0][0] * arg[3][1] * arg[1][2] * arg[2][3]
@@ -6410,17 +6410,17 @@ namespace dsga
 
 		// going for efficiency
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 2u, 2u> &arg) noexcept
+		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 2, 2> &arg) noexcept
 		{
-			return basic_matrix<T, 2u, 2u>( arg[1][1], -arg[0][1],
+			return basic_matrix<T, 2, 2>( arg[1][1], -arg[0][1],
 										   -arg[1][0],  arg[0][0]) / determinant(arg);
 		}
 
 		// going for efficiency
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 3u, 3u> &arg) noexcept
+		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 3, 3> &arg) noexcept
 		{
-			return basic_matrix<T, 3u, 3u>(
+			return basic_matrix<T, 3, 3>(
 				+(arg[1][1] * arg[2][2] - arg[2][1] * arg[1][2]),
 				-(arg[0][1] * arg[2][2] - arg[2][1] * arg[0][2]),
 				+(arg[0][1] * arg[1][2] - arg[1][1] * arg[0][2]),
@@ -6435,9 +6435,9 @@ namespace dsga
 
 		// going for efficiency
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 4u, 4u> &arg) noexcept
+		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 4, 4> &arg) noexcept
 		{
-			return basic_matrix<T, 4u, 4u>(
+			return basic_matrix<T, 4, 4>(
 				+ arg[1][1] * arg[2][2] * arg[3][3] + arg[2][1] * arg[3][2] * arg[1][3] + arg[3][1] * arg[1][2] * arg[2][3]
 				- arg[3][1] * arg[2][2] * arg[1][3] - arg[2][1] * arg[1][2] * arg[3][3] - arg[1][1] * arg[3][2] * arg[2][3],
 
@@ -6497,9 +6497,9 @@ namespace dsga
 		//
 		// cross(u, v) == cross_matrix(u) * v == u * cross_matrix(v)
 		template <bool W, floating_point_scalar T, typename D>
-		[[nodiscard]] constexpr basic_matrix<T, 3u, 3u> cross_matrix(const vector_base<W, T, 3u, D> &vec) noexcept
+		[[nodiscard]] constexpr basic_matrix<T, 3, 3> cross_matrix(const vector_base<W, T, 3, D> &vec) noexcept
 		{
-			return basic_matrix<T, 3u, 3u>(T(0), vec[2], -vec[1],
+			return basic_matrix<T, 3, 3>(T(0), vec[2], -vec[1],
 										   -vec[2], T(0), vec[0],
 										   vec[1], -vec[0], T(0));
 		}
@@ -6778,82 +6778,82 @@ namespace dsga
 	//
 
 	// boolean vectors
-	using bscal = basic_vector<bool, 1u>;
-	using bvec2 = basic_vector<bool, 2u>;
-	using bvec3 = basic_vector<bool, 3u>;
-	using bvec4 = basic_vector<bool, 4u>;
+	using bscal = basic_vector<bool, 1>;
+	using bvec2 = basic_vector<bool, 2>;
+	using bvec3 = basic_vector<bool, 3>;
+	using bvec4 = basic_vector<bool, 4>;
 
 	// int vectors
-	using iscal = basic_vector<int, 1u>;
-	using ivec2 = basic_vector<int, 2u>;
-	using ivec3 = basic_vector<int, 3u>;
-	using ivec4 = basic_vector<int, 4u>;
+	using iscal = basic_vector<int, 1>;
+	using ivec2 = basic_vector<int, 2>;
+	using ivec3 = basic_vector<int, 3>;
+	using ivec4 = basic_vector<int, 4>;
 
 	// unsigned int vectors
-	using uscal = basic_vector<unsigned, 1u>;
-	using uvec2 = basic_vector<unsigned, 2u>;
-	using uvec3 = basic_vector<unsigned, 3u>;
-	using uvec4 = basic_vector<unsigned, 4u>;
+	using uscal = basic_vector<unsigned, 1>;
+	using uvec2 = basic_vector<unsigned, 2>;
+	using uvec3 = basic_vector<unsigned, 3>;
+	using uvec4 = basic_vector<unsigned, 4>;
 
 	// long long vectors (not in glsl)
-	using llscal = basic_vector<long long, 1u>;
-	using llvec2 = basic_vector<long long, 2u>;
-	using llvec3 = basic_vector<long long, 3u>;
-	using llvec4 = basic_vector<long long, 4u>;
+	using llscal = basic_vector<long long, 1>;
+	using llvec2 = basic_vector<long long, 2>;
+	using llvec3 = basic_vector<long long, 3>;
+	using llvec4 = basic_vector<long long, 4>;
 
 	// unsigned long long vectors (not in glsl)
-	using ullscal = basic_vector<unsigned long long, 1u>;
-	using ullvec2 = basic_vector<unsigned long long, 2u>;
-	using ullvec3 = basic_vector<unsigned long long, 3u>;
-	using ullvec4 = basic_vector<unsigned long long, 4u>;
+	using ullscal = basic_vector<unsigned long long, 1>;
+	using ullvec2 = basic_vector<unsigned long long, 2>;
+	using ullvec3 = basic_vector<unsigned long long, 3>;
+	using ullvec4 = basic_vector<unsigned long long, 4>;
 
 	// float vectors with out an 'f' prefix -- this is from glsl
-	using scal = basic_vector<float, 1u>;
-	using vec2 = basic_vector<float, 2u>;
-	using vec3 = basic_vector<float, 3u>;
-	using vec4 = basic_vector<float, 4u>;
+	using scal = basic_vector<float, 1>;
+	using vec2 = basic_vector<float, 2>;
+	using vec3 = basic_vector<float, 3>;
+	using vec4 = basic_vector<float, 4>;
 
 	// also float vectors, but using the same naming convention as the other vectors do (not in glsl)
-	using fscal = basic_vector<float, 1u>;
-	using fvec2 = basic_vector<float, 2u>;
-	using fvec3 = basic_vector<float, 3u>;
-	using fvec4 = basic_vector<float, 4u>;
+	using fscal = basic_vector<float, 1>;
+	using fvec2 = basic_vector<float, 2>;
+	using fvec3 = basic_vector<float, 3>;
+	using fvec4 = basic_vector<float, 4>;
 
 	// double vectors
-	using dscal = basic_vector<double, 1u>;
-	using dvec2 = basic_vector<double, 2u>;
-	using dvec3 = basic_vector<double, 3u>;
-	using dvec4 = basic_vector<double, 4u>;
+	using dscal = basic_vector<double, 1>;
+	using dvec2 = basic_vector<double, 2>;
+	using dvec3 = basic_vector<double, 3>;
+	using dvec4 = basic_vector<double, 4>;
 
 	// float matrices
-	using mat2x2 = basic_matrix<float, 2u, 2u>;
-	using mat2x3 = basic_matrix<float, 2u, 3u>;
-	using mat2x4 = basic_matrix<float, 2u, 4u>;
-	using mat3x2 = basic_matrix<float, 3u, 2u>;
-	using mat3x3 = basic_matrix<float, 3u, 3u>;
-	using mat3x4 = basic_matrix<float, 3u, 4u>;
-	using mat4x2 = basic_matrix<float, 4u, 2u>;
-	using mat4x3 = basic_matrix<float, 4u, 3u>;
-	using mat4x4 = basic_matrix<float, 4u, 4u>;
+	using mat2x2 = basic_matrix<float, 2, 2>;
+	using mat2x3 = basic_matrix<float, 2, 3>;
+	using mat2x4 = basic_matrix<float, 2, 4>;
+	using mat3x2 = basic_matrix<float, 3, 2>;
+	using mat3x3 = basic_matrix<float, 3, 3>;
+	using mat3x4 = basic_matrix<float, 3, 4>;
+	using mat4x2 = basic_matrix<float, 4, 2>;
+	using mat4x3 = basic_matrix<float, 4, 3>;
+	using mat4x4 = basic_matrix<float, 4, 4>;
 
-	using mat2 = basic_matrix<float, 2u, 2u>;
-	using mat3 = basic_matrix<float, 3u, 3u>;
-	using mat4 = basic_matrix<float, 4u, 4u>;
+	using mat2 = basic_matrix<float, 2, 2>;
+	using mat3 = basic_matrix<float, 3, 3>;
+	using mat4 = basic_matrix<float, 4, 4>;
 
 	// double matrices
-	using dmat2x2 = basic_matrix<double, 2u, 2u>;
-	using dmat2x3 = basic_matrix<double, 2u, 3u>;
-	using dmat2x4 = basic_matrix<double, 2u, 4u>;
-	using dmat3x2 = basic_matrix<double, 3u, 2u>;
-	using dmat3x3 = basic_matrix<double, 3u, 3u>;
-	using dmat3x4 = basic_matrix<double, 3u, 4u>;
-	using dmat4x2 = basic_matrix<double, 4u, 2u>;
-	using dmat4x3 = basic_matrix<double, 4u, 3u>;
-	using dmat4x4 = basic_matrix<double, 4u, 4u>;
+	using dmat2x2 = basic_matrix<double, 2, 2>;
+	using dmat2x3 = basic_matrix<double, 2, 3>;
+	using dmat2x4 = basic_matrix<double, 2, 4>;
+	using dmat3x2 = basic_matrix<double, 3, 2>;
+	using dmat3x3 = basic_matrix<double, 3, 3>;
+	using dmat3x4 = basic_matrix<double, 3, 4>;
+	using dmat4x2 = basic_matrix<double, 4, 2>;
+	using dmat4x3 = basic_matrix<double, 4, 3>;
+	using dmat4x4 = basic_matrix<double, 4, 4>;
 
-	using dmat2 = basic_matrix<double, 2u, 2u>;
-	using dmat3 = basic_matrix<double, 3u, 3u>;
-	using dmat4 = basic_matrix<double, 4u, 4u>;
+	using dmat2 = basic_matrix<double, 2, 2>;
+	using dmat3 = basic_matrix<double, 3, 3>;
+	using dmat4 = basic_matrix<double, 4, 4>;
 
 	//
 	// bring the vector and matrix free functions into the dsga namespace
@@ -6892,7 +6892,7 @@ namespace dsga
 	// converting from array to a basic_matrix
 
 	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
-	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
+	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
 	[[nodiscard]] constexpr basic_matrix<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept
 	{
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
@@ -6907,7 +6907,7 @@ namespace dsga
 	}
 
 	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
-	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
+	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
 	[[nodiscard]] constexpr basic_matrix<T, C, R> to_matrix(const T(&arg)[S]) noexcept
 	{
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
@@ -6924,7 +6924,7 @@ namespace dsga
 	// converting from internal matrix type to std::array
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
 	[[nodiscard]] constexpr std::array<T, C * R> to_array(const basic_matrix<T, C, R> &arg) noexcept
 	{
 		auto matrix_tuple = [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
