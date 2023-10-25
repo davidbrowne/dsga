@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.2.11
+v1.3.0
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -278,17 +278,10 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.2.11`
-
-* Breaking Change with v1.2.0
-  * ```size``` and ```column_size``` functions in the various classes are now static member functions, tied to static data members of type ```std::integral_constant```
-* Breaking Change with v1.1.0
-  * Removed ```default_comparison_weights()```, ```weighted_compare()```, and related functions
-  * Removed ```operator <=>``` for vector and matrix structs
-  * Functionality is still available in [```examples/compare.hxx```](examples/compare.hxx)
+Current version: `v1.3.0`
 
 * Everything major has some tests, but code coverage is not 100%.
-* [Last Released: v1.1.0](https://github.com/davidbrowne/dsga/releases/tag/v1.1.0)
+* [Last Released: v1.3.0](https://github.com/davidbrowne/dsga/releases/tag/v1.3.0)
 
 ### The next steps
 * Refining API documentation.
@@ -313,14 +306,14 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.7.5**
+* **MSVC 2022 - v17.7.6**
 
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  108 |  108 passed | 0 failed | 0 skipped
-[doctest] assertions: 2131 | 2131 passed | 0 failed |
+[doctest] assertions: 2132 | 2131 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -331,7 +324,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  108 |  108 passed | 0 failed | 0 skipped
-[doctest] assertions: 2131 | 2131 passed | 0 failed |
+[doctest] assertions: 2132 | 2131 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -344,7 +337,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  108 |  108 passed | 0 failed | 0 skipped
-[doctest] assertions: 2115 | 2115 passed | 0 failed |
+[doctest] assertions: 2116 | 2115 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -357,7 +350,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  108 |  108 passed | 0 failed | 0 skipped
-[doctest] assertions: 2131 | 2131 passed | 0 failed |
+[doctest] assertions: 2132 | 2131 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -370,7 +363,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  108 |  108 passed | 0 failed | 0 skipped
-[doctest] assertions: 2115 | 2115 passed | 0 failed |
+[doctest] assertions: 2116 | 2115 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -383,7 +376,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  108 |  108 passed | 0 failed | 0 skipped
-[doctest] assertions: 2131 | 2131 passed | 0 failed |
+[doctest] assertions: 2132 | 2131 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -396,7 +389,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  108 |  108 passed | 0 failed | 0 skipped
-[doctest] assertions: 2115 | 2115 passed | 0 failed |
+[doctest] assertions: 2116 | 2115 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

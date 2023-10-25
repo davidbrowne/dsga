@@ -596,6 +596,12 @@ TEST_SUITE("test functions")
 
 	TEST_CASE("other vector functions")
 	{
+		// byteswap()
+
+		dsga::uvec3 uv(0xFFEEDDCC, 0xBBAA9988, 0x01234567);
+		auto swapped = dsga::byteswap(uv);
+		CHECK_EQ(swapped, dsga::uvec3(0xCCDDEEFF, 0x8899AABB, 0x67452301));
+
 		// swizzle()
 
 		dvec4 v(1, 2, 3, 4);

@@ -2200,7 +2200,7 @@ template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2,
 ##### ```byteswap```
 ```c++
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto byteswap(const vector_base<W, T, C, D> &x) noexcept;
+[[nodiscard]] inline auto byteswap(const vector_base<W, T, C, D> &arg) noexcept;
 ```
 Not in GLSL. This functionality was added to ```c++23```, but since this is a ```c++20``` library, we have to provide the underlying implementation ourselves.
 
