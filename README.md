@@ -92,7 +92,7 @@ constexpr auto simple_cubic_bezier_eval(dsga::vec2 p0, dsga::vec2 p1, dsga::vec2
     return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
     {
         return dsga::vec2(single_ordinate_cubic_bezier_eval(AoS.row(Is), t)...);
-    }(std::make_index_sequence<2u>{});
+    }(std::make_index_sequence<2>{});
 }
 ```
 
@@ -104,7 +104,7 @@ constexpr auto simple_cubic_bezier_eval(dsga::vec2 p0, dsga::vec2 p1, dsga::vec2
 //
 
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
-requires ((C > 1u) && (C < 4u))
+requires ((C > 1) && (C < 4))
 auto angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
                    const dsga::vector_base<W2, T, C, D2> &v2)
 {

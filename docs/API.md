@@ -96,7 +96,7 @@ Plain undecorated arithmetic types.
 #### ```dimensional_size```
 ```c++
 template <std::size_t Size>
-concept dimensional_size = ((Size >= 1u) && (Size <= 4u));
+concept dimensional_size = ((Size >= 1) && (Size <= 4));
 ```
 We want the size to be between 1 and 4, inclusive.
 
@@ -206,31 +206,31 @@ This gives a ```std::index_sequence``` that contains the elements of a constexpr
 #### ```dexvec1```
 ```c++
 template <typename T, std::size_t Size, std::size_t I>
-using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1u, I>;
+using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1, I>;
 ```
 Convenience using directive for creating a ```indexed_vector``` for ```Count == 1```.
 
 #### ```dexvec2```
 ```c++
 template <typename T, std::size_t Size, std::size_t ...Is>
-requires (sizeof...(Is) == 2u)
-using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2u, Is...>;
+requires (sizeof...(Is) == 2)
+using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2, Is...>;
 ```
 Convenience using directive for creating a ```indexed_vector``` for ```Count == 2```.
 
 #### ```dexvec3```
 ```c++
 template <typename T, std::size_t Size, std::size_t ...Is>
-requires (sizeof...(Is) == 3u)
-using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3u, Is...>;
+requires (sizeof...(Is) == 3)
+using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3, Is...>;
 ```
 Convenience using directive for creating a ```indexed_vector``` for ```Count == 3```.
 
 #### ```dexvec4```
 ```c++
 template <typename T, std::size_t Size, std::size_t ...Is>
-requires (sizeof...(Is) == 4u)
-using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4u, Is...>;
+requires (sizeof...(Is) == 4)
+using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4, Is...>;
 ```
 Convenience using directive for creating a ```indexed_vector``` for ```Count == 4```.
 
@@ -995,7 +995,7 @@ basic_vector(const vector_base<W, T, C, D> &) -> basic_vector<T, C>;
 #### ```basic_matrix```
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
 struct basic_matrix;
 ```
 The struct that represents a matrix. The matrix elements are stored column order, as an array of column [```basic_vector```](#basic_vector)s. The terminology looks backwards, with number of columns coming before the number of rows, but it makes sense from a data storage perspective. It is also how GLSL does it.
@@ -1186,82 +1186,82 @@ These instantiations represent the classes (structs) that are provided by GLSL, 
 
 ```c++
 // boolean vectors
-using bscal = basic_vector<bool, 1u>;
-using bvec2 = basic_vector<bool, 2u>;
-using bvec3 = basic_vector<bool, 3u>;
-using bvec4 = basic_vector<bool, 4u>;
+using bscal = basic_vector<bool, 1>;
+using bvec2 = basic_vector<bool, 2>;
+using bvec3 = basic_vector<bool, 3>;
+using bvec4 = basic_vector<bool, 4>;
 
 // int vectors
-using iscal = basic_vector<int, 1u>;
-using ivec2 = basic_vector<int, 2u>;
-using ivec3 = basic_vector<int, 3u>;
-using ivec4 = basic_vector<int, 4u>;
+using iscal = basic_vector<int, 1>;
+using ivec2 = basic_vector<int, 2>;
+using ivec3 = basic_vector<int, 3>;
+using ivec4 = basic_vector<int, 4>;
 
 // unsigned int vectors
-using uscal = basic_vector<unsigned, 1u>;
-using uvec2 = basic_vector<unsigned, 2u>;
-using uvec3 = basic_vector<unsigned, 3u>;
-using uvec4 = basic_vector<unsigned, 4u>;
+using uscal = basic_vector<unsigned, 1>;
+using uvec2 = basic_vector<unsigned, 2>;
+using uvec3 = basic_vector<unsigned, 3>;
+using uvec4 = basic_vector<unsigned, 4>;
 
 // long long vectors (not in GLSL)
-using llscal = basic_vector<long long, 1u>;
-using llvec2 = basic_vector<long long, 2u>;
-using llvec3 = basic_vector<long long, 3u>;
-using llvec4 = basic_vector<long long, 4u>;
+using llscal = basic_vector<long long, 1>;
+using llvec2 = basic_vector<long long, 2>;
+using llvec3 = basic_vector<long long, 3>;
+using llvec4 = basic_vector<long long, 4>;
 
 // unsigned long long vectors (not in GLSL)
-using ullscal = basic_vector<unsigned long long, 1u>;
-using ullvec2 = basic_vector<unsigned long long, 2u>;
-using ullvec3 = basic_vector<unsigned long long, 3u>;
-using ullvec4 = basic_vector<unsigned long long, 4u>;
+using ullscal = basic_vector<unsigned long long, 1>;
+using ullvec2 = basic_vector<unsigned long long, 2>;
+using ullvec3 = basic_vector<unsigned long long, 3>;
+using ullvec4 = basic_vector<unsigned long long, 4>;
 
 // float vectors with out an 'f' prefix -- this is from GLSL
-using scal = basic_vector<float, 1u>;
-using vec2 = basic_vector<float, 2u>;
-using vec3 = basic_vector<float, 3u>;
-using vec4 = basic_vector<float, 4u>;
+using scal = basic_vector<float, 1>;
+using vec2 = basic_vector<float, 2>;
+using vec3 = basic_vector<float, 3>;
+using vec4 = basic_vector<float, 4>;
 
 // also float vectors, but using the common naming convention (not in GLSL)
-using fscal = basic_vector<float, 1u>;
-using fvec2 = basic_vector<float, 2u>;
-using fvec3 = basic_vector<float, 3u>;
-using fvec4 = basic_vector<float, 4u>;
+using fscal = basic_vector<float, 1>;
+using fvec2 = basic_vector<float, 2>;
+using fvec3 = basic_vector<float, 3>;
+using fvec4 = basic_vector<float, 4>;
 
 // double vectors
-using dscal = basic_vector<double, 1u>;
-using dvec2 = basic_vector<double, 2u>;
-using dvec3 = basic_vector<double, 3u>;
-using dvec4 = basic_vector<double, 4u>;
+using dscal = basic_vector<double, 1>;
+using dvec2 = basic_vector<double, 2>;
+using dvec3 = basic_vector<double, 3>;
+using dvec4 = basic_vector<double, 4>;
 
 // float matrices
-using mat2x2 = basic_matrix<float, 2u, 2u>;
-using mat2x3 = basic_matrix<float, 2u, 3u>;
-using mat2x4 = basic_matrix<float, 2u, 4u>;
-using mat3x2 = basic_matrix<float, 3u, 2u>;
-using mat3x3 = basic_matrix<float, 3u, 3u>;
-using mat3x4 = basic_matrix<float, 3u, 4u>;
-using mat4x2 = basic_matrix<float, 4u, 2u>;
-using mat4x3 = basic_matrix<float, 4u, 3u>;
-using mat4x4 = basic_matrix<float, 4u, 4u>;
+using mat2x2 = basic_matrix<float, 2, 2>;
+using mat2x3 = basic_matrix<float, 2, 3>;
+using mat2x4 = basic_matrix<float, 2, 4>;
+using mat3x2 = basic_matrix<float, 3, 2>;
+using mat3x3 = basic_matrix<float, 3, 3>;
+using mat3x4 = basic_matrix<float, 3, 4>;
+using mat4x2 = basic_matrix<float, 4, 2>;
+using mat4x3 = basic_matrix<float, 4, 3>;
+using mat4x4 = basic_matrix<float, 4, 4>;
 
-using mat2 = basic_matrix<float, 2u, 2u>;
-using mat3 = basic_matrix<float, 3u, 3u>;
-using mat4 = basic_matrix<float, 4u, 4u>;
+using mat2 = basic_matrix<float, 2, 2>;
+using mat3 = basic_matrix<float, 3, 3>;
+using mat4 = basic_matrix<float, 4, 4>;
 
 // double matrices
-using dmat2x2 = basic_matrix<double, 2u, 2u>;
-using dmat2x3 = basic_matrix<double, 2u, 3u>;
-using dmat2x4 = basic_matrix<double, 2u, 4u>;
-using dmat3x2 = basic_matrix<double, 3u, 2u>;
-using dmat3x3 = basic_matrix<double, 3u, 3u>;
-using dmat3x4 = basic_matrix<double, 3u, 4u>;
-using dmat4x2 = basic_matrix<double, 4u, 2u>;
-using dmat4x3 = basic_matrix<double, 4u, 3u>;
-using dmat4x4 = basic_matrix<double, 4u, 4u>;
+using dmat2x2 = basic_matrix<double, 2, 2>;
+using dmat2x3 = basic_matrix<double, 2, 3>;
+using dmat2x4 = basic_matrix<double, 2, 4>;
+using dmat3x2 = basic_matrix<double, 3, 2>;
+using dmat3x3 = basic_matrix<double, 3, 3>;
+using dmat3x4 = basic_matrix<double, 3, 4>;
+using dmat4x2 = basic_matrix<double, 4, 2>;
+using dmat4x3 = basic_matrix<double, 4, 3>;
+using dmat4x4 = basic_matrix<double, 4, 4>;
 
-using dmat2 = basic_matrix<double, 2u, 2u>;
-using dmat3 = basic_matrix<double, 3u, 3u>;
-using dmat4 = basic_matrix<double, 4u, 4u>;
+using dmat2 = basic_matrix<double, 2, 2>;
+using dmat3 = basic_matrix<double, 3, 3>;
+using dmat4 = basic_matrix<double, 4, 4>;
 ```
 
 ### Vector Operators
@@ -1345,7 +1345,7 @@ template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
 ##### Vector Binary Plus
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 [[nodiscard]] constexpr auto operator +(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1363,7 +1363,7 @@ requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 ##### Vector Binary Minus
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 [[nodiscard]] constexpr auto operator -(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1381,7 +1381,7 @@ requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 ##### Vector Binary Times
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 [[nodiscard]] constexpr auto operator *(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1399,7 +1399,7 @@ requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 ##### Vector Binary Division
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 [[nodiscard]] constexpr auto operator /(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1417,7 +1417,7 @@ requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 ##### Vector Binary Modulus
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 [[nodiscard]] constexpr auto operator %(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1435,7 +1435,7 @@ requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 ##### Vector Binary Right Shift
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 [[nodiscard]] constexpr auto operator >>(const vector_base<W1, T1, C1, D1> &lhs,
                                          const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1453,7 +1453,7 @@ requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 ##### Vector Binary Left Shift
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u)
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 [[nodiscard]] constexpr auto operator <<(const vector_base<W1, T1, C1, D1> &lhs,
                                          const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1471,7 +1471,7 @@ requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 ##### Vector Binary Bitwise And
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
 [[nodiscard]] constexpr auto operator &(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1489,7 +1489,7 @@ requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) &&
 ##### Vector Binary Bitwise Or
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
 [[nodiscard]] constexpr auto operator |(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1507,7 +1507,7 @@ requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) &&
 ##### Vector Binary Bitwise Xor
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1u || C2 == 1u) && detail::same_sizeof<T1, T2>
+requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
 [[nodiscard]] constexpr auto operator ^(const vector_base<W1, T1, C1, D1> &lhs,
                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
 
@@ -1534,7 +1534,7 @@ constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
@@ -1552,7 +1552,7 @@ constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
@@ -1570,7 +1570,7 @@ constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
@@ -1588,7 +1588,7 @@ constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
@@ -1606,7 +1606,7 @@ constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T>
@@ -1624,7 +1624,7 @@ constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
-                             const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                             const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T>
@@ -1642,7 +1642,7 @@ constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
-                             const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                             const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T>
@@ -1660,7 +1660,7 @@ constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
@@ -1678,7 +1678,7 @@ constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
@@ -1696,7 +1696,7 @@ constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
 constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1u, D2> &rhs) noexcept;
+                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
@@ -2237,8 +2237,8 @@ template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2
 ##### ```cross```
 ```c++
 template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
-[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3u, D1> &x,
-                                   const vector_base<W2, T2, 3u, D2> &y) noexcept;
+[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &x,
+                                   const vector_base<W2, T2, 3, D2> &y) noexcept;
 ```
 
 ##### ```normalize```
@@ -2371,7 +2371,7 @@ requires non_bool_scalar<T>
                                         T tolerance) noexcept;
 
 template <bool W1, dimensional_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
-requires ((C1 == C2) || (C2 == 1u)) && non_bool_scalar<T>
+requires ((C1 == C2) || (C2 == 1)) && non_bool_scalar<T>
 [[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
                                         const vector_base<W2, T, C1, D2> &y,
                                         const vector_base<W3, T, C2, D3> &tolerance) noexcept;
@@ -2384,7 +2384,7 @@ template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...A
 requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
 inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is);
 ```
-Not in GLSL. Runtime function for swizzling. Returns a stand-alone ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. If the index arguments are invalid (out of bounds), this function will throw. Inspired by the Odin Programming Language.
+Not in GLSL. Runtime function for swizzling. Returns a stand-alone ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
 
 ### Scalar Functions
 Scalar versions of most of the vector free functions exist. It is not recommended to use them if there is a function in the C++ Standard Library that does the same thing.
@@ -2589,7 +2589,7 @@ requires ((2 <= C) && (C <= 4))
 ##### ```cross_matrix```
 ```c++
 template <bool W, floating_point_scalar T, typename D>
-[[nodiscard]] constexpr basic_matrix<T, 3u, 3u> cross_matrix(const vector_base<W, T, 3u, D> &vec) noexcept;
+[[nodiscard]] constexpr basic_matrix<T, 3, 3> cross_matrix(const vector_base<W, T, 3, D> &vec) noexcept;
 ```
 ```cross(u, v) == cross_matrix(u) * v == u * cross_matrix(v)```. This creates a matrix that can be used to compute the cross product when multiplied by a vector. This is not in GLSL.
 
@@ -2626,7 +2626,7 @@ template <bool W, dimensional_scalar T, std::size_t C, typename D>
 [[nodiscard]] constexpr std::array<T, C> to_array(const vector_base<W, T, C, D> &arg) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u)))
+requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
 [[nodiscard]] constexpr std::array<T, C * R> to_array(const basic_matrix<T, C, R> &arg) noexcept;
 ```
 Convenience functions for converting a vector or matrix to a ```std::array```. For the vector classes, the elements are written to the array in logical order (as opposed to physical order). For ```basic_matrix```, the elements are written to the array in column-order.
@@ -2634,11 +2634,11 @@ Convenience functions for converting a vector or matrix to a ```std::array```. F
 ##### Convert To Matrix
 ```c++
 template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
-requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
+requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
 [[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept;
 
 template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
-requires (((C >= 2u) && (C <= 4u)) && ((R >= 2u) && (R <= 4u))) && (C * R <= S)
+requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
 [[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const T(&arg)[S]) noexcept;
 ```
 Convenience functions for converting a ```std::array```  or ```C-style array``` to a ```basic_matrix```. The array types must store the data in column-order.

@@ -20,6 +20,7 @@
 #include <numeric>
 #include <bit>						// bit_cast
 #include <cassert>
+#include <stdexcept>
 
 //
 // disable all asserts
@@ -3832,8 +3833,7 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dimensional_scalar T2, typename D2, typename BinOp>
+		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		constexpr auto binary_op_execute(const vector_base<W1, T1, C, D1> &lhs,
 										 const vector_base<W2, T2, C, D2> &rhs,
 										 BinOp &lambda) noexcept
@@ -5287,7 +5287,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto modf(const vector_base<W1, T, C, D1> &arg,
 										  vector_base<W2, T, C, D2> &i) noexcept
 		{
-			(*static_cast<D2 *>(&i)) = trunc(arg);
+			i.as_derived() = trunc(arg);
 			return machinery::binary_op_execute(arg, i, modf_op);
 		}
 
@@ -5728,8 +5728,8 @@ namespace dsga
 		{
 			using Common = std::common_type_t<T1, T2>;
 			return basic_vector<Common, 3>((x[1] * y[2]) - (y[1] * x[2]),
-											(x[2] * y[0]) - (y[2] * x[0]),
-											(x[0] * y[1]) - (y[0] * x[1]));
+										   (x[2] * y[0]) - (y[2] * x[0]),
+										   (x[0] * y[1]) - (y[0] * x[1]));
 		}
 
 //		template <floating_point_scalar T1, floating_point_scalar T2>
@@ -5943,10 +5943,10 @@ namespace dsga
 		inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is)
 		{
 			bool indexes_valid = ((static_cast<std::size_t>(Is) < C) && ...);
-			dsga_constexpr_assert(indexes_valid, "index out of bounds");
+			dsga_constexpr_assert(indexes_valid, "indexes out of range");
 
 			if (!indexes_valid)
-				throw;
+				throw std::out_of_range("swizzle() indexes out of range");
 
 			return basic_vector<T, sizeof...(Args)>(v[Is] ...);
 		}
@@ -6413,7 +6413,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 2, 2> &arg) noexcept
 		{
 			return basic_matrix<T, 2, 2>( arg[1][1], -arg[0][1],
-										   -arg[1][0],  arg[0][0]) / determinant(arg);
+										 -arg[1][0],  arg[0][0]) / determinant(arg);
 		}
 
 		// going for efficiency
@@ -6499,9 +6499,9 @@ namespace dsga
 		template <bool W, floating_point_scalar T, typename D>
 		[[nodiscard]] constexpr basic_matrix<T, 3, 3> cross_matrix(const vector_base<W, T, 3, D> &vec) noexcept
 		{
-			return basic_matrix<T, 3, 3>(T(0), vec[2], -vec[1],
-										   -vec[2], T(0), vec[0],
-										   vec[1], -vec[0], T(0));
+			return basic_matrix<T, 3, 3>(   T(0),  vec[2], -vec[1],
+										 -vec[2],    T(0),  vec[0],
+										  vec[1], -vec[0],    T(0));
 		}
 
 		// not in glsl

@@ -27,82 +27,82 @@ namespace dsga
     // specialized using types
 
     // boolean vectors
-    using bscal = dsga::basic_vector<bool, 1u>;
-    using bvec2 = dsga::basic_vector<bool, 2u>;
-    using bvec3 = dsga::basic_vector<bool, 3u>;
-    using bvec4 = dsga::basic_vector<bool, 4u>;
+    using bscal = dsga::basic_vector<bool, 1>;
+    using bvec2 = dsga::basic_vector<bool, 2>;
+    using bvec3 = dsga::basic_vector<bool, 3>;
+    using bvec4 = dsga::basic_vector<bool, 4>;
 
     // int vectors
-    using iscal = dsga::basic_vector<int, 1u>;
-    using ivec2 = dsga::basic_vector<int, 2u>;
-    using ivec3 = dsga::basic_vector<int, 3u>;
-    using ivec4 = dsga::basic_vector<int, 4u>;
+    using iscal = dsga::basic_vector<int, 1>;
+    using ivec2 = dsga::basic_vector<int, 2>;
+    using ivec3 = dsga::basic_vector<int, 3>;
+    using ivec4 = dsga::basic_vector<int, 4>;
 
     // unsigned int vectors
-    using uscal = dsga::basic_vector<unsigned, 1u>;
-    using uvec2 = dsga::basic_vector<unsigned, 2u>;
-    using uvec3 = dsga::basic_vector<unsigned, 3u>;
-    using uvec4 = dsga::basic_vector<unsigned, 4u>;
+    using uscal = dsga::basic_vector<unsigned, 1>;
+    using uvec2 = dsga::basic_vector<unsigned, 2>;
+    using uvec3 = dsga::basic_vector<unsigned, 3>;
+    using uvec4 = dsga::basic_vector<unsigned, 4>;
 
     // long long vectors (not in glsl)
-    using llscal = dsga::basic_vector<long long, 1u>;
-    using llvec2 = dsga::basic_vector<long long, 2u>;
-    using llvec3 = dsga::basic_vector<long long, 3u>;
-    using llvec4 = dsga::basic_vector<long long, 4u>;
+    using llscal = dsga::basic_vector<long long, 1>;
+    using llvec2 = dsga::basic_vector<long long, 2>;
+    using llvec3 = dsga::basic_vector<long long, 3>;
+    using llvec4 = dsga::basic_vector<long long, 4>;
 
     // unsigned long long vectors (not in glsl)
-    using ullscal = dsga::basic_vector<unsigned long long, 1u>;
-    using ullvec2 = dsga::basic_vector<unsigned long long, 2u>;
-    using ullvec3 = dsga::basic_vector<unsigned long long, 3u>;
-    using ullvec4 = dsga::basic_vector<unsigned long long, 4u>;
+    using ullscal = dsga::basic_vector<unsigned long long, 1>;
+    using ullvec2 = dsga::basic_vector<unsigned long long, 2>;
+    using ullvec3 = dsga::basic_vector<unsigned long long, 3>;
+    using ullvec4 = dsga::basic_vector<unsigned long long, 4>;
 
     // float vectors with out an 'f' prefix -- this is from glsl
-    using scal = dsga::basic_vector<float, 1u>;
-    using vec2 = dsga::basic_vector<float, 2u>;
-    using vec3 = dsga::basic_vector<float, 3u>;
-    using vec4 = dsga::basic_vector<float, 4u>;
+    using scal = dsga::basic_vector<float, 1>;
+    using vec2 = dsga::basic_vector<float, 2>;
+    using vec3 = dsga::basic_vector<float, 3>;
+    using vec4 = dsga::basic_vector<float, 4>;
 
     // also float vectors, but using the common naming convention (not in glsl)
-    using fscal = dsga::basic_vector<float, 1u>;
-    using fvec2 = dsga::basic_vector<float, 2u>;
-    using fvec3 = dsga::basic_vector<float, 3u>;
-    using fvec4 = dsga::basic_vector<float, 4u>;
+    using fscal = dsga::basic_vector<float, 1>;
+    using fvec2 = dsga::basic_vector<float, 2>;
+    using fvec3 = dsga::basic_vector<float, 3>;
+    using fvec4 = dsga::basic_vector<float, 4>;
 
     // double vectors
-    using dscal = dsga::basic_vector<double, 1u>;
-    using dvec2 = dsga::basic_vector<double, 2u>;
-    using dvec3 = dsga::basic_vector<double, 3u>;
-    using dvec4 = dsga::basic_vector<double, 4u>;
+    using dscal = dsga::basic_vector<double, 1>;
+    using dvec2 = dsga::basic_vector<double, 2>;
+    using dvec3 = dsga::basic_vector<double, 3>;
+    using dvec4 = dsga::basic_vector<double, 4>;
 
     // float matrices
-    using mat2x2 = dsga::basic_matrix<float, 2u, 2u>;
-    using mat2x3 = dsga::basic_matrix<float, 2u, 3u>;
-    using mat2x4 = dsga::basic_matrix<float, 2u, 4u>;
-    using mat3x2 = dsga::basic_matrix<float, 3u, 2u>;
-    using mat3x3 = dsga::basic_matrix<float, 3u, 3u>;
-    using mat3x4 = dsga::basic_matrix<float, 3u, 4u>;
-    using mat4x2 = dsga::basic_matrix<float, 4u, 2u>;
-    using mat4x3 = dsga::basic_matrix<float, 4u, 3u>;
-    using mat4x4 = dsga::basic_matrix<float, 4u, 4u>;
+    using mat2x2 = dsga::basic_matrix<float, 2, 2>;
+    using mat2x3 = dsga::basic_matrix<float, 2, 3>;
+    using mat2x4 = dsga::basic_matrix<float, 2, 4>;
+    using mat3x2 = dsga::basic_matrix<float, 3, 2>;
+    using mat3x3 = dsga::basic_matrix<float, 3, 3>;
+    using mat3x4 = dsga::basic_matrix<float, 3, 4>;
+    using mat4x2 = dsga::basic_matrix<float, 4, 2>;
+    using mat4x3 = dsga::basic_matrix<float, 4, 3>;
+    using mat4x4 = dsga::basic_matrix<float, 4, 4>;
 
-    using mat2 = dsga::basic_matrix<float, 2u, 2u>;
-    using mat3 = dsga::basic_matrix<float, 3u, 3u>;
-    using mat4 = dsga::basic_matrix<float, 4u, 4u>;
+    using mat2 = dsga::basic_matrix<float, 2, 2>;
+    using mat3 = dsga::basic_matrix<float, 3, 3>;
+    using mat4 = dsga::basic_matrix<float, 4, 4>;
 
     // double matrices
-    using dmat2x2 = dsga::basic_matrix<double, 2u, 2u>;
-    using dmat2x3 = dsga::basic_matrix<double, 2u, 3u>;
-    using dmat2x4 = dsga::basic_matrix<double, 2u, 4u>;
-    using dmat3x2 = dsga::basic_matrix<double, 3u, 2u>;
-    using dmat3x3 = dsga::basic_matrix<double, 3u, 3u>;
-    using dmat3x4 = dsga::basic_matrix<double, 3u, 4u>;
-    using dmat4x2 = dsga::basic_matrix<double, 4u, 2u>;
-    using dmat4x3 = dsga::basic_matrix<double, 4u, 3u>;
-    using dmat4x4 = dsga::basic_matrix<double, 4u, 4u>;
+    using dmat2x2 = dsga::basic_matrix<double, 2, 2>;
+    using dmat2x3 = dsga::basic_matrix<double, 2, 3>;
+    using dmat2x4 = dsga::basic_matrix<double, 2, 4>;
+    using dmat3x2 = dsga::basic_matrix<double, 3, 2>;
+    using dmat3x3 = dsga::basic_matrix<double, 3, 3>;
+    using dmat3x4 = dsga::basic_matrix<double, 3, 4>;
+    using dmat4x2 = dsga::basic_matrix<double, 4, 2>;
+    using dmat4x3 = dsga::basic_matrix<double, 4, 3>;
+    using dmat4x4 = dsga::basic_matrix<double, 4, 4>;
 
-    using dmat2 = dsga::basic_matrix<double, 2u, 2u>;
-    using dmat3 = dsga::basic_matrix<double, 3u, 3u>;
-    using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
+    using dmat2 = dsga::basic_matrix<double, 2, 2>;
+    using dmat3 = dsga::basic_matrix<double, 3, 3>;
+    using dmat4 = dsga::basic_matrix<double, 4, 4>;
 
     //
     // bring the vector and matrix free functions into the dsga namespace

@@ -189,7 +189,6 @@
     <None Include="..\docs\DOCUMENTATION.md" />
     <None Include="..\docs\dsga.puml" />
     <None Include="..\docs\dsga.svg" />
-    <None Include="..\docs\LAMBDA_PACK_WRAPPER.md" />
     <None Include="..\docs\MOTIVATION.md" />
     <None Include="..\README.md" />
   </ItemGroup>
