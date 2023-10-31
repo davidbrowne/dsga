@@ -3772,103 +3772,66 @@ namespace dsga
 
 	namespace machinery
 	{
-		// convert a parameter pack into a basic_vector
-
-		template <typename ...Ts>
-		requires dimensional_storage<std::common_type_t<Ts...>, sizeof...(Ts)>
-		constexpr auto parameter_pack_to_vec(Ts ...args) noexcept
-		{
-			using ArgType = std::common_type_t<Ts...>;
-			constexpr std::size_t Size = sizeof...(Ts);
-
-			return basic_vector<ArgType, Size>{(static_cast<ArgType>(args))...};
-		}
-
-		// convert basic array types to a basic_vector
-
-		template <typename T, std::size_t S>
-		constexpr auto passthru_execute(const std::array<T, S> &arg) noexcept
-		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return basic_vector<T, S>(arg[Is]...);
-			}(std::make_index_sequence<S>{});
-		}
-
-		template <typename T, std::size_t S>
-		constexpr auto passthru_execute(const T(&arg)[S]) noexcept
-		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return basic_vector<T, S>(arg[Is]...);
-			}(std::make_index_sequence<S>{});
-		}
-
 		// return types from executing lambdas on arguments of various types
 
 		template <typename UnOp, dimensional_scalar T>
-		using unary_op_return_t = std::invoke_result_t<UnOp, T>;
+		using unop_return_t = std::invoke_result_t<UnOp, T>;
 
 		template <typename BinOp, dimensional_scalar T, dimensional_scalar U>
-		using binary_op_return_t = std::invoke_result_t<BinOp, T, U>;
+		using binop_return_t = std::invoke_result_t<BinOp, T, U>;
 
 		template <typename TernOp, dimensional_scalar T, dimensional_scalar U, dimensional_scalar V>
-		using ternary_op_return_t = std::invoke_result_t<TernOp, T, U, V>;
+		using ternop_return_t = std::invoke_result_t<TernOp, T, U, V>;
 
 		//
 		// these rely on vector_base::operator[] to have dealt with indirection, if any, of derived vector types.
+		// perform the lambda action on components of vector_base arguments, returning a new basic_vector or
+		// modifying an existing one.
 		//
-
-		// perform the lambda action on components of vector_base arguments, returning a new basic_vector.
-		// when Count == 1, treat it like a scalar value and return a scalar value.
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename UnOp>
 		constexpr auto unary_op_execute(const vector_base<W, T, C, D> &arg,
-										UnOp &lambda) noexcept
+										UnOp &op) noexcept
 		{
-			using ReturnType = unary_op_return_t<UnOp, T>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(arg[Is])...);
+				return basic_vector<unop_return_t<UnOp, T>, C>(op(arg[Is])...);
 			}(std::make_index_sequence<C>{});
 		}
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		constexpr auto binary_op_execute(const vector_base<W1, T1, C, D1> &lhs,
 										 const vector_base<W2, T2, C, D2> &rhs,
-										 BinOp &lambda) noexcept
+										 BinOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T1, T2>;
-			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
+			using ArgT = std::common_type_t<T1, T2>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
+				return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))...);
 			}(std::make_index_sequence<C>{});
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
 		constexpr auto binary_op_execute(const vector_base<W, T, C, D> &lhs,
 										 U rhs,
-										 BinOp &lambda) noexcept
+										 BinOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T, U>;
-			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
+			using ArgT = std::common_type_t<T, U>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
+				return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))...);
 			}(std::make_index_sequence<C>{});
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
 		constexpr auto binary_op_execute(U lhs,
 										 const vector_base<W, T, C, D> &rhs,
-										 BinOp &lambda) noexcept
+										 BinOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T, U>;
-			using ReturnType = binary_op_return_t<BinOp, ArgType, ArgType>;
+			using ArgT = std::common_type_t<T, U>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(lhs), static_cast<ArgType>(rhs[Is]))...);
+				return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>(op(static_cast<ArgT>(lhs), static_cast<ArgT>(rhs[Is]))...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3879,33 +3842,33 @@ namespace dsga
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		constexpr auto binary_op_execute_no_convert(const vector_base<W1, T1, C, D1> &lhs,
 													const vector_base<W2, T2, C, D2> &rhs,
-													BinOp &lambda) noexcept
+													BinOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<binary_op_return_t<BinOp, T1, T2>, C>(lambda(lhs[Is], rhs[Is])...);
+				return basic_vector<binop_return_t<BinOp, T1, T2>, C>(op(lhs[Is], rhs[Is])...);
 			}(std::make_index_sequence<C>{});
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
 		constexpr auto binary_op_execute_no_convert(const vector_base<W, T, C, D> &lhs,
 													U rhs,
-													BinOp &lambda) noexcept
+													BinOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<binary_op_return_t<BinOp, T, U>, C>(lambda(lhs[Is], rhs)...);
+				return basic_vector<binop_return_t<BinOp, T, U>, C>(op(lhs[Is], rhs)...);
 			}(std::make_index_sequence<C>{});
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
 		constexpr auto binary_op_execute_no_convert(U lhs,
 													const vector_base<W, T, C, D> &rhs,
-													BinOp &lambda) noexcept
+													BinOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<binary_op_return_t<BinOp, U, T>, C>(lambda(lhs, rhs[Is])...);
+				return basic_vector<binop_return_t<BinOp, U, T>, C>(op(lhs, rhs[Is])...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3919,12 +3882,12 @@ namespace dsga
 		requires W1
 		constexpr void binary_op_set(vector_base<W1, T1, C, D1> &lhs,
 									 const vector_base<W2, T2, C, D2> &rhs,
-									 BinOp &lambda) noexcept
+									 BinOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T1, T2>;
+			using ArgT = std::common_type_t<T1, T2>;
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs[Is]))...);
+				lhs.set(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3932,12 +3895,12 @@ namespace dsga
 		requires W
 		constexpr void binary_op_set(vector_base<W, T, C, D> &lhs,
 									 U rhs,
-									 BinOp &lambda) noexcept
+									 BinOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T, U>;
+			using ArgT = std::common_type_t<T, U>;
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(lambda(static_cast<ArgType>(lhs[Is]), static_cast<ArgType>(rhs))...);
+				lhs.set(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3945,11 +3908,11 @@ namespace dsga
 		requires W1
 		constexpr void binary_op_set_no_convert(vector_base<W1, T1, C, D1> &lhs,
 												const vector_base<W2, T2, C, D2> &rhs,
-												BinOp &lambda) noexcept
+												BinOp &op) noexcept
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(lambda(lhs[Is], rhs[Is])...);
+				lhs.set(op(lhs[Is], rhs[Is])...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3957,11 +3920,11 @@ namespace dsga
 		requires W
 		constexpr void binary_op_set_no_convert(vector_base<W, T, C, D> &lhs,
 												U rhs,
-												BinOp &lambda) noexcept
+												BinOp &op) noexcept
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(lambda(lhs[Is], rhs)...);
+				lhs.set(op(lhs[Is], rhs)...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3970,13 +3933,12 @@ namespace dsga
 		constexpr auto ternary_op_execute(const vector_base<W1, T1, C, D1> &x,
 										  const vector_base<W2, T2, C, D2> &y,
 										  const vector_base<W3, T3, C, D3> &z,
-										  TernOp &lambda) noexcept
+										  TernOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T1, T2, T3>;
-			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			using ArgT = std::common_type_t<T1, T2, T3>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z[Is]))...);
+				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z[Is]))...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3984,13 +3946,12 @@ namespace dsga
 		constexpr auto ternary_op_execute(const vector_base<W1, T1, C, D1> &x,
 										  const vector_base<W2, T2, C, D2> &y,
 										  U z,
-										  TernOp &lambda) noexcept
+										  TernOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T1, T2, U>;
-			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			using ArgT = std::common_type_t<T1, T2, U>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y[Is]), static_cast<ArgType>(z))...);
+				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3998,13 +3959,12 @@ namespace dsga
 		constexpr auto ternary_op_execute(const vector_base<W, T, C, D> &x,
 										  U y,
 										  V z,
-										  TernOp &lambda) noexcept
+										  TernOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T, U, V>;
-			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			using ArgT = std::common_type_t<T, U, V>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x[Is]), static_cast<ArgType>(y), static_cast<ArgType>(z))...);
+				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y), static_cast<ArgT>(z))...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -4012,13 +3972,12 @@ namespace dsga
 		constexpr auto ternary_op_execute(U x,
 										  V y,
 										  const vector_base<W, T, C, D> &z,
-										  TernOp &lambda) noexcept
+										  TernOp &op) noexcept
 		{
-			using ArgType = std::common_type_t<T, U, V>;
-			using ReturnType = ternary_op_return_t<TernOp, ArgType, ArgType, ArgType>;
+			using ArgT = std::common_type_t<T, U, V>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ReturnType, C>(lambda(static_cast<ArgType>(x), static_cast<ArgType>(y), static_cast<ArgType>(z[Is]))...);
+				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[Is]))...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -4029,14 +3988,13 @@ namespace dsga
 		constexpr auto ternary_op_execute_no_convert(const vector_base<W1, T1, C, D1> &x,
 													 const vector_base<W2, T2, C, D2> &y,
 													 const vector_base<W3, T3, C, D3> &z,
-													 TernOp &lambda) noexcept
+													 TernOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<ternary_op_return_t<TernOp, T1, T2, T3>, C>(lambda(x[Is], y[Is], z[Is])...);
+				return basic_vector<ternop_return_t<TernOp, T1, T2, T3>, C>(op(x[Is], y[Is], z[Is])...);
 			}(std::make_index_sequence<C>{});
 		}
-
 	}
 
 	//
@@ -6868,14 +6826,20 @@ namespace dsga
 	requires dimensional_storage<T, S>
 	[[nodiscard]] constexpr basic_vector<T, S> to_vector(const std::array<T, S> &arg) noexcept
 	{
-		return machinery::passthru_execute(arg);
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return basic_vector<T, S>(arg[Is]...);
+		}(std::make_index_sequence<S>{});
 	}
 
 	template <dimensional_scalar T, std::size_t S>
 	requires dimensional_storage<T, S>
 	[[nodiscard]] constexpr basic_vector<T, S> to_vector(const T(&arg)[S]) noexcept
 	{
-		return machinery::passthru_execute(arg);
+		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return basic_vector<T, S>(arg[Is]...);
+		}(std::make_index_sequence<S>{});
 	}
 
 	// converting from internal vector type to std::array
