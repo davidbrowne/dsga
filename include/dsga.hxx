@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -3772,7 +3772,7 @@ namespace dsga
 
 	namespace machinery
 	{
-		// return types from executing lambdas on arguments of various types
+		// return types from executing callables (lambdas) on arguments of various types
 
 		template <typename UnOp, dimensional_scalar T>
 		using unop_return_t = std::invoke_result_t<UnOp, T>;
@@ -3784,14 +3784,21 @@ namespace dsga
 		using ternop_return_t = std::invoke_result_t<TernOp, T, U, V>;
 
 		//
-		// these rely on vector_base::operator[] to have dealt with indirection, if any, of derived vector types.
-		// perform the lambda action on components of vector_base arguments, returning a new basic_vector or
-		// modifying an existing one.
+		// this machinery relies on vector_base::operator[] to be logically contiguous operation on a derived vector type,
+		// regardless of whether it is physically contiguous. apply the operation on components of vector_base arguments,
+		// either returning a new vector or modifying an existing one.
 		//
+		// apply_make() - one argument, one type -- return a new vector
+		// apply_unitype_make() - all arguments are cast to their common type -- return a new vector
+		// apply_multitype_make() - all arguments keep their types -- return a new vector
+		// apply_unitype_modify() - all arguments are cast to their common type -- modify the first argument with new values
+		// apply_multitype_modify() - all arguments keep their types -- modify the first argument with new values
+
+		// unary
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename UnOp>
-		constexpr auto unary_op_execute(const vector_base<W, T, C, D> &arg,
-										UnOp &op) noexcept
+		constexpr auto apply_make(const vector_base<W, T, C, D> &arg,
+								  UnOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -3799,10 +3806,12 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
+		// binary
+
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
-		constexpr auto binary_op_execute(const vector_base<W1, T1, C, D1> &lhs,
-										 const vector_base<W2, T2, C, D2> &rhs,
-										 BinOp &op) noexcept
+		constexpr auto apply_unitype_make(const vector_base<W1, T1, C, D1> &lhs,
+										  const vector_base<W2, T2, C, D2> &rhs,
+										  BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T1, T2>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -3812,9 +3821,9 @@ namespace dsga
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		constexpr auto binary_op_execute(const vector_base<W, T, C, D> &lhs,
-										 U rhs,
-										 BinOp &op) noexcept
+		constexpr auto apply_unitype_make(const vector_base<W, T, C, D> &lhs,
+										  U rhs,
+										  BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -3824,9 +3833,9 @@ namespace dsga
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		constexpr auto binary_op_execute(U lhs,
-										 const vector_base<W, T, C, D> &rhs,
-										 BinOp &op) noexcept
+		constexpr auto apply_unitype_make(U lhs,
+										  const vector_base<W, T, C, D> &rhs,
+										  BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U>;
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -3835,14 +3844,10 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		//
-		// don't cast the arguments to the lambda
-		//
-
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
-		constexpr auto binary_op_execute_no_convert(const vector_base<W1, T1, C, D1> &lhs,
-													const vector_base<W2, T2, C, D2> &rhs,
-													BinOp &op) noexcept
+		constexpr auto apply_multitype_make(const vector_base<W1, T1, C, D1> &lhs,
+											const vector_base<W2, T2, C, D2> &rhs,
+											BinOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -3851,9 +3856,9 @@ namespace dsga
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		constexpr auto binary_op_execute_no_convert(const vector_base<W, T, C, D> &lhs,
-													U rhs,
-													BinOp &op) noexcept
+		constexpr auto apply_multitype_make(const vector_base<W, T, C, D> &lhs,
+											U rhs,
+											BinOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -3862,9 +3867,9 @@ namespace dsga
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		constexpr auto binary_op_execute_no_convert(U lhs,
-													const vector_base<W, T, C, D> &rhs,
-													BinOp &op) noexcept
+		constexpr auto apply_multitype_make(U lhs,
+											const vector_base<W, T, C, D> &rhs,
+											BinOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -3872,17 +3877,11 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		// perform the lambda action, setting the lhs vector_base to new values.
-		// we need all the new values upfront before we set them. it is possible that
-		// we are indexing into the same vector, which could give unexpected results if
-		// we set values as we iterate. we need to set them all only after the new values
-		// have all been gathered.
-
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		requires W1
-		constexpr void binary_op_set(vector_base<W1, T1, C, D1> &lhs,
-									 const vector_base<W2, T2, C, D2> &rhs,
-									 BinOp &op) noexcept
+		constexpr void apply_unitype_modify(vector_base<W1, T1, C, D1> &lhs,
+											const vector_base<W2, T2, C, D2> &rhs,
+											BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T1, T2>;
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -3893,9 +3892,9 @@ namespace dsga
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
 		requires W
-		constexpr void binary_op_set(vector_base<W, T, C, D> &lhs,
-									 U rhs,
-									 BinOp &op) noexcept
+		constexpr void apply_unitype_modify(vector_base<W, T, C, D> &lhs,
+											U rhs,
+											BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U>;
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -3906,9 +3905,9 @@ namespace dsga
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		requires W1
-		constexpr void binary_op_set_no_convert(vector_base<W1, T1, C, D1> &lhs,
-												const vector_base<W2, T2, C, D2> &rhs,
-												BinOp &op) noexcept
+		constexpr void apply_multitype_modify(vector_base<W1, T1, C, D1> &lhs,
+											  const vector_base<W2, T2, C, D2> &rhs,
+											  BinOp &op) noexcept
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -3918,9 +3917,9 @@ namespace dsga
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
 		requires W
-		constexpr void binary_op_set_no_convert(vector_base<W, T, C, D> &lhs,
-												U rhs,
-												BinOp &op) noexcept
+		constexpr void apply_multitype_modify(vector_base<W, T, C, D> &lhs,
+											  U rhs,
+											  BinOp &op) noexcept
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -3928,9 +3927,11 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
+		// ternary
+
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
 			bool W2, dimensional_scalar T2, typename D2, bool W3, dimensional_scalar T3, typename D3, typename TernOp>
-		constexpr auto ternary_op_execute(const vector_base<W1, T1, C, D1> &x,
+		constexpr auto apply_unitype_make(const vector_base<W1, T1, C, D1> &x,
 										  const vector_base<W2, T2, C, D2> &y,
 										  const vector_base<W3, T3, C, D3> &z,
 										  TernOp &op) noexcept
@@ -3943,7 +3944,7 @@ namespace dsga
 		}
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, dimensional_scalar U, typename TernOp>
-		constexpr auto ternary_op_execute(const vector_base<W1, T1, C, D1> &x,
+		constexpr auto apply_unitype_make(const vector_base<W1, T1, C, D1> &x,
 										  const vector_base<W2, T2, C, D2> &y,
 										  U z,
 										  TernOp &op) noexcept
@@ -3956,7 +3957,7 @@ namespace dsga
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, dimensional_scalar V, typename TernOp>
-		constexpr auto ternary_op_execute(const vector_base<W, T, C, D> &x,
+		constexpr auto apply_unitype_make(const vector_base<W, T, C, D> &x,
 										  U y,
 										  V z,
 										  TernOp &op) noexcept
@@ -3969,7 +3970,7 @@ namespace dsga
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, dimensional_scalar V, typename TernOp>
-		constexpr auto ternary_op_execute(U x,
+		constexpr auto apply_unitype_make(U x,
 										  V y,
 										  const vector_base<W, T, C, D> &z,
 										  TernOp &op) noexcept
@@ -3985,10 +3986,10 @@ namespace dsga
 			bool W2, dimensional_scalar T2, typename D2,
 			bool W3, dimensional_scalar T3, typename D3,
 			typename TernOp>
-		constexpr auto ternary_op_execute_no_convert(const vector_base<W1, T1, C, D1> &x,
-													 const vector_base<W2, T2, C, D2> &y,
-													 const vector_base<W3, T3, C, D3> &z,
-													 TernOp &op) noexcept
+		constexpr auto apply_multitype_make(const vector_base<W1, T1, C, D1> &x,
+											const vector_base<W2, T2, C, D2> &y,
+											const vector_base<W3, T3, C, D3> &z,
+											TernOp &op) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -4010,7 +4011,7 @@ namespace dsga
 	constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, plus_op);
+		machinery::apply_unitype_modify(lhs, rhs, plus_op);
 		return lhs.as_derived();
 	}
 
@@ -4019,7 +4020,7 @@ namespace dsga
 	constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], plus_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], plus_op);
 		return lhs.as_derived();
 	}
 
@@ -4028,7 +4029,7 @@ namespace dsga
 	constexpr auto &operator +=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, plus_op);
+		machinery::apply_unitype_modify(lhs, rhs, plus_op);
 		return lhs.as_derived();
 	}
 
@@ -4038,11 +4039,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, plus_op);
+			return machinery::apply_unitype_make(lhs, rhs, plus_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, plus_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, plus_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], plus_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], plus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4050,7 +4051,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator +(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, plus_op);
+		return machinery::apply_unitype_make(lhs, rhs, plus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4058,7 +4059,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator +(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, plus_op);
+		return machinery::apply_unitype_make(lhs, rhs, plus_op);
 	}
 
 	// binary operators -=, -
@@ -4070,7 +4071,7 @@ namespace dsga
 	constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, minus_op);
+		machinery::apply_unitype_modify(lhs, rhs, minus_op);
 		return lhs.as_derived();
 	}
 
@@ -4079,7 +4080,7 @@ namespace dsga
 	constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], minus_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], minus_op);
 		return lhs.as_derived();
 	}
 
@@ -4088,7 +4089,7 @@ namespace dsga
 	constexpr auto &operator -=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, minus_op);
+		machinery::apply_unitype_modify(lhs, rhs, minus_op);
 		return lhs.as_derived();
 	}
 
@@ -4098,11 +4099,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, minus_op);
+			return machinery::apply_unitype_make(lhs, rhs, minus_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, minus_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, minus_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], minus_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], minus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4110,7 +4111,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, minus_op);
+		return machinery::apply_unitype_make(lhs, rhs, minus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4118,7 +4119,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator -(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, minus_op);
+		return machinery::apply_unitype_make(lhs, rhs, minus_op);
 	}
 
 	// binary operators *=, *
@@ -4130,7 +4131,7 @@ namespace dsga
 	constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, times_op);
+		machinery::apply_unitype_modify(lhs, rhs, times_op);
 		return lhs.as_derived();
 	}
 
@@ -4139,7 +4140,7 @@ namespace dsga
 	constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], times_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], times_op);
 		return lhs.as_derived();
 	}
 
@@ -4148,7 +4149,7 @@ namespace dsga
 	constexpr auto &operator *=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, times_op);
+		machinery::apply_unitype_modify(lhs, rhs, times_op);
 		return lhs.as_derived();
 	}
 
@@ -4158,11 +4159,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, times_op);
+			return machinery::apply_unitype_make(lhs, rhs, times_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, times_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, times_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], times_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], times_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4170,7 +4171,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator *(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, times_op);
+		return machinery::apply_unitype_make(lhs, rhs, times_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4178,7 +4179,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator *(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, times_op);
+		return machinery::apply_unitype_make(lhs, rhs, times_op);
 	}
 
 	// binary operators /=, /
@@ -4190,7 +4191,7 @@ namespace dsga
 	constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, div_op);
+		machinery::apply_unitype_modify(lhs, rhs, div_op);
 		return lhs.as_derived();
 	}
 
@@ -4199,7 +4200,7 @@ namespace dsga
 	constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], div_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], div_op);
 		return lhs.as_derived();
 	}
 
@@ -4208,7 +4209,7 @@ namespace dsga
 	constexpr auto &operator /=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, div_op);
+		machinery::apply_unitype_modify(lhs, rhs, div_op);
 		return lhs.as_derived();
 	}
 
@@ -4218,11 +4219,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, div_op);
+			return machinery::apply_unitype_make(lhs, rhs, div_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, div_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, div_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], div_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], div_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4230,7 +4231,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator /(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, div_op);
+		return machinery::apply_unitype_make(lhs, rhs, div_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4238,7 +4239,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator /(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, div_op);
+		return machinery::apply_unitype_make(lhs, rhs, div_op);
 	}
 
 	// binary operators %=, % -- uses c++ modulus operator rules
@@ -4251,7 +4252,7 @@ namespace dsga
 	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, modulus_op);
+		machinery::apply_unitype_modify(lhs, rhs, modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -4260,7 +4261,7 @@ namespace dsga
 	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], modulus_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -4269,7 +4270,7 @@ namespace dsga
 	constexpr auto &operator %=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, modulus_op);
+		machinery::apply_unitype_modify(lhs, rhs, modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -4279,11 +4280,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, modulus_op);
+			return machinery::apply_unitype_make(lhs, rhs, modulus_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, modulus_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, modulus_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], modulus_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], modulus_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4291,7 +4292,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator %(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, modulus_op);
+		return machinery::apply_unitype_make(lhs, rhs, modulus_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4299,7 +4300,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator %(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, modulus_op);
+		return machinery::apply_unitype_make(lhs, rhs, modulus_op);
 	}
 
 	// unary operator ~
@@ -4309,7 +4310,7 @@ namespace dsga
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator ~(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return machinery::unary_op_execute(arg, bit_not_op);
+		return machinery::apply_make(arg, bit_not_op);
 	}
 
 	// binary operators <<=, <<
@@ -4322,7 +4323,7 @@ namespace dsga
 	constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs, lshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4331,7 +4332,7 @@ namespace dsga
 	constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs[0], lshift_op);
+		machinery::apply_multitype_modify(lhs, rhs[0], lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4340,7 +4341,7 @@ namespace dsga
 	constexpr auto &operator <<=(vector_base<W, T, C, D> &lhs,
 								 U rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs, lshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4350,11 +4351,11 @@ namespace dsga
 											 const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute_no_convert(lhs, rhs, lshift_op);
+			return machinery::apply_multitype_make(lhs, rhs, lshift_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute_no_convert(lhs[0], rhs, lshift_op);
+			return machinery::apply_multitype_make(lhs[0], rhs, lshift_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute_no_convert(lhs, rhs[0], lshift_op);
+			return machinery::apply_multitype_make(lhs, rhs[0], lshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4362,7 +4363,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator <<(const vector_base<W, T, C, D> &lhs,
 											 U rhs) noexcept
 	{
-		return machinery::binary_op_execute_no_convert(lhs, rhs, lshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, lshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4370,7 +4371,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator <<(U lhs,
 											 const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute_no_convert(lhs, rhs, lshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, lshift_op);
 	}
 
 	// binary operators >>=, >>
@@ -4383,7 +4384,7 @@ namespace dsga
 	constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs, rshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4392,7 +4393,7 @@ namespace dsga
 	constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
 								 const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs[0], rshift_op);
+		machinery::apply_multitype_modify(lhs, rhs[0], rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4401,7 +4402,7 @@ namespace dsga
 	constexpr auto &operator >>=(vector_base<W, T, C, D> &lhs,
 								 U rhs) noexcept
 	{
-		machinery::binary_op_set_no_convert(lhs, rhs, rshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4411,11 +4412,11 @@ namespace dsga
 											 const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute_no_convert(lhs, rhs, rshift_op);
+			return machinery::apply_multitype_make(lhs, rhs, rshift_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute_no_convert(lhs[0], rhs, rshift_op);
+			return machinery::apply_multitype_make(lhs[0], rhs, rshift_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute_no_convert(lhs, rhs[0], rshift_op);
+			return machinery::apply_multitype_make(lhs, rhs[0], rshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4423,7 +4424,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator >>(const vector_base<W, T, C, D> &lhs,
 											 U rhs) noexcept
 	{
-		return machinery::binary_op_execute_no_convert(lhs, rhs, rshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, rshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4431,7 +4432,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator >>(U lhs,
 											 const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute_no_convert(lhs, rhs, rshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, rshift_op);
 	}
 
 	// binary operators &=, &
@@ -4443,7 +4444,7 @@ namespace dsga
 	constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, and_op);
+		machinery::apply_unitype_modify(lhs, rhs, and_op);
 		return lhs.as_derived();
 	}
 
@@ -4452,7 +4453,7 @@ namespace dsga
 	constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], and_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], and_op);
 		return lhs.as_derived();
 	}
 
@@ -4461,7 +4462,7 @@ namespace dsga
 	constexpr auto &operator &=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, and_op);
+		machinery::apply_unitype_modify(lhs, rhs, and_op);
 		return lhs.as_derived();
 	}
 
@@ -4471,11 +4472,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, and_op);
+			return machinery::apply_unitype_make(lhs, rhs, and_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, and_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, and_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], and_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], and_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4483,7 +4484,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator &(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, and_op);
+		return machinery::apply_unitype_make(lhs, rhs, and_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4491,7 +4492,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator &(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, and_op);
+		return machinery::apply_unitype_make(lhs, rhs, and_op);
 	}
 
 	// binary operators |=, |
@@ -4503,7 +4504,7 @@ namespace dsga
 	constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, or_op);
+		machinery::apply_unitype_modify(lhs, rhs, or_op);
 		return lhs.as_derived();
 	}
 
@@ -4512,7 +4513,7 @@ namespace dsga
 	constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], or_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], or_op);
 		return lhs.as_derived();
 	}
 
@@ -4521,7 +4522,7 @@ namespace dsga
 	constexpr auto &operator |=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, or_op);
+		machinery::apply_unitype_modify(lhs, rhs, or_op);
 		return lhs.as_derived();
 	}
 
@@ -4531,11 +4532,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, or_op);
+			return machinery::apply_unitype_make(lhs, rhs, or_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, or_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, or_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], or_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], or_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4543,7 +4544,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator |(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, or_op);
+		return machinery::apply_unitype_make(lhs, rhs, or_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4551,7 +4552,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator |(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, or_op);
+		return machinery::apply_unitype_make(lhs, rhs, or_op);
 	}
 
 	// binary operators ^=, ^
@@ -4563,7 +4564,7 @@ namespace dsga
 	constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, xor_op);
+		machinery::apply_unitype_modify(lhs, rhs, xor_op);
 		return lhs.as_derived();
 	}
 
@@ -4572,7 +4573,7 @@ namespace dsga
 	constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
 								const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs[0], xor_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], xor_op);
 		return lhs.as_derived();
 	}
 
@@ -4581,7 +4582,7 @@ namespace dsga
 	constexpr auto &operator ^=(vector_base<W, T, C, D> &lhs,
 								U rhs) noexcept
 	{
-		machinery::binary_op_set(lhs, rhs, xor_op);
+		machinery::apply_unitype_modify(lhs, rhs, xor_op);
 		return lhs.as_derived();
 	}
 
@@ -4591,11 +4592,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::binary_op_execute(lhs, rhs, xor_op);
+			return machinery::apply_unitype_make(lhs, rhs, xor_op);
 		else if constexpr (C1 == 1)
-			return machinery::binary_op_execute(lhs[0], rhs, xor_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, xor_op);
 		else if constexpr (C2 == 1)
-			return machinery::binary_op_execute(lhs, rhs[0], xor_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], xor_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4603,7 +4604,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator ^(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, xor_op);
+		return machinery::apply_unitype_make(lhs, rhs, xor_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4611,7 +4612,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator ^(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::binary_op_execute(lhs, rhs, xor_op);
+		return machinery::apply_unitype_make(lhs, rhs, xor_op);
 	}
 
 	// unary operator +
@@ -4629,7 +4630,7 @@ namespace dsga
 	template <bool W, non_bool_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return machinery::unary_op_execute(arg, neg_op);
+		return machinery::apply_make(arg, neg_op);
 	}
 
 	// unary operators ++
@@ -4783,7 +4784,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto sin(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, sin_op);
+			return machinery::apply_make(arg, sin_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4797,7 +4798,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto cos(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, cos_op);
+			return machinery::apply_make(arg, cos_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4811,7 +4812,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto tan(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, tan_op);
+			return machinery::apply_make(arg, tan_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4825,7 +4826,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto asin(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, asin_op);
+			return machinery::apply_make(arg, asin_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4839,7 +4840,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto acos(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, acos_op);
+			return machinery::apply_make(arg, acos_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4853,7 +4854,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto atan(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, atan_op);
+			return machinery::apply_make(arg, atan_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4869,7 +4870,7 @@ namespace dsga
 		[[nodiscard]] inline auto atan(const vector_base<W1, T, C, D1> &y,
 									   const vector_base<W2, T, C, D2> &x) noexcept
 		{
-			return machinery::binary_op_execute(y, x, atan2_op);
+			return machinery::apply_unitype_make(y, x, atan2_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4884,7 +4885,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto sinh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, sinh_op);
+			return machinery::apply_make(arg, sinh_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4898,7 +4899,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto cosh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, cosh_op);
+			return machinery::apply_make(arg, cosh_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4912,7 +4913,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto tanh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, tanh_op);
+			return machinery::apply_make(arg, tanh_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4926,7 +4927,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto asinh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, asinh_op);
+			return machinery::apply_make(arg, asinh_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4940,7 +4941,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto acosh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, acosh_op);
+			return machinery::apply_make(arg, acosh_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4954,7 +4955,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto atanh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, atanh_op);
+			return machinery::apply_make(arg, atanh_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4973,7 +4974,7 @@ namespace dsga
 		[[nodiscard]] inline auto pow(const vector_base<W1, T, C, D1> &base,
 									  const vector_base<W2, T, C, D2> &exp) noexcept
 		{
-			return machinery::binary_op_execute(base, exp, pow_op);
+			return machinery::apply_unitype_make(base, exp, pow_op);
 		}
 
 		template <floating_point_scalar T>
@@ -4988,7 +4989,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto exp(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, exp_op);
+			return machinery::apply_make(arg, exp_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5002,7 +5003,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto log(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, log_op);
+			return machinery::apply_make(arg, log_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5016,7 +5017,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto exp2(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, exp2_op);
+			return machinery::apply_make(arg, exp2_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5030,7 +5031,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto log2(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, log2_op);
+			return machinery::apply_make(arg, log2_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5044,7 +5045,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto sqrt(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, sqrt_op);
+			return machinery::apply_make(arg, sqrt_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5058,7 +5059,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto fast_inversesqrt(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, fast_rsqrt_op);
+			return machinery::apply_make(arg, fast_rsqrt_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5074,7 +5075,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto inversesqrt(const vector_base<W, double, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, rsqrt_op);
+			return machinery::apply_make(arg, rsqrt_op);
 		}
 
 		[[nodiscard]] constexpr auto inversesqrt(double arg) noexcept
@@ -5105,7 +5106,7 @@ namespace dsga
 		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
 		[[nodiscard]] constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, abs_op);
+			return machinery::apply_make(arg, abs_op);
 		}
 
 		template <dimensional_scalar T>
@@ -5121,7 +5122,7 @@ namespace dsga
 		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
 		[[nodiscard]] constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, sign_op);
+			return machinery::apply_make(arg, sign_op);
 		}
 
 		template <dimensional_scalar T>
@@ -5136,7 +5137,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto floor(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, floor_op);
+			return machinery::apply_make(arg, floor_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5150,7 +5151,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto trunc(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, trunc_op);
+			return machinery::apply_make(arg, trunc_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5164,7 +5165,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto round(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, round_op);
+			return machinery::apply_make(arg, round_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5178,7 +5179,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto roundEven(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, round_even_op);
+			return machinery::apply_make(arg, round_even_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5192,7 +5193,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto ceil(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, ceil_op);
+			return machinery::apply_make(arg, ceil_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5206,7 +5207,7 @@ namespace dsga
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto fract(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, fract_op);
+			return machinery::apply_make(arg, fract_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5221,14 +5222,14 @@ namespace dsga
 		[[nodiscard]] constexpr auto mod(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, mod_op);
+			return machinery::apply_unitype_make(x, y, mod_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto mod(const vector_base<W, T, C, D> &x,
 										 T y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, mod_op);
+			return machinery::apply_unitype_make(x, y, mod_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5246,7 +5247,7 @@ namespace dsga
 										  vector_base<W2, T, C, D2> &i) noexcept
 		{
 			i.as_derived() = trunc(arg);
-			return machinery::binary_op_execute(arg, i, modf_op);
+			return machinery::apply_unitype_make(arg, i, modf_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5263,14 +5264,14 @@ namespace dsga
 		[[nodiscard]] constexpr auto min(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, min_op);
+			return machinery::apply_unitype_make(x, y, min_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto min(const vector_base<W, T, C, D> &x,
 										 T y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, min_op);
+			return machinery::apply_unitype_make(x, y, min_op);
 		}
 
 		template <non_bool_scalar T>
@@ -5286,14 +5287,14 @@ namespace dsga
 		[[nodiscard]] constexpr auto max(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, max_op);
+			return machinery::apply_unitype_make(x, y, max_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto max(const vector_base<W, T, C, D> &x,
 										 T y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, max_op);
+			return machinery::apply_unitype_make(x, y, max_op);
 		}
 
 		template <non_bool_scalar T>
@@ -5310,7 +5311,7 @@ namespace dsga
 										   const vector_base<W2, T, C, D2> &min_val,
 										   const vector_base<W3, T, C, D3> &max_val) noexcept
 		{
-			return machinery::ternary_op_execute(x, min_val, max_val, clamp_op);
+			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
@@ -5318,7 +5319,7 @@ namespace dsga
 										   T min_val,
 										   T max_val) noexcept
 		{
-			return machinery::ternary_op_execute(x, min_val, max_val, clamp_op);
+			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
 		}
 
 		template <non_bool_scalar T>
@@ -5336,7 +5337,7 @@ namespace dsga
 										 const vector_base<W2, T, C, D2> &y,
 										 const vector_base<W3, T, C, D3> &a) noexcept
 		{
-			return machinery::ternary_op_execute(x, y, a, mix1_op);
+			return machinery::apply_unitype_make(x, y, a, mix1_op);
 		}
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
@@ -5344,7 +5345,7 @@ namespace dsga
 										 const vector_base<W2, T, C, D2> &y,
 										 T a) noexcept
 		{
-			return machinery::ternary_op_execute(x, y, a, mix1_op);
+			return machinery::apply_unitype_make(x, y, a, mix1_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5362,7 +5363,7 @@ namespace dsga
 										 const vector_base<W2, T, C, D2> &y,
 										 const vector_base<W3, B, C, D3> &a) noexcept
 		{
-			return machinery::ternary_op_execute_no_convert(x, y, a, mix2_op);
+			return machinery::apply_multitype_make(x, y, a, mix2_op);
 		}
 
 		template <dimensional_scalar T, bool_scalar B>
@@ -5379,14 +5380,14 @@ namespace dsga
 		[[nodiscard]] constexpr auto step(const vector_base<W1, T, C, D1> &edge,
 										  const vector_base<W2, T, C, D2> &x) noexcept
 		{
-			return machinery::binary_op_execute(edge, x, step_op);
+			return machinery::apply_unitype_make(edge, x, step_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto step(T edge,
 										  const vector_base<W, T, C, D> &x) noexcept
 		{
-			return machinery::binary_op_execute(edge, x, step_op);
+			return machinery::apply_unitype_make(edge, x, step_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5407,7 +5408,7 @@ namespace dsga
 												const vector_base<W2, T, C, D2> &edge1,
 												const vector_base<W3, T, C, D3> &x) noexcept
 		{
-			return machinery::ternary_op_execute(edge0, edge1, x, smoothstep_op);
+			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -5415,7 +5416,7 @@ namespace dsga
 												T edge1,
 												const vector_base<W, T, C, D> &x) noexcept
 		{
-			return machinery::ternary_op_execute(edge0, edge1, x, smoothstep_op);
+			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5433,13 +5434,13 @@ namespace dsga
 		template <floating_point_scalar T, std::size_t C>
 		[[nodiscard]] constexpr auto isnan(const basic_vector<T, C> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, isnan_op);
+			return machinery::apply_make(arg, isnan_op);
 		}
 
 		template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 		[[nodiscard]] constexpr auto isnan(const indexed_vector<T, S, C, Is...> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, isnan_op);
+			return machinery::apply_make(arg, isnan_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5455,13 +5456,13 @@ namespace dsga
 		template <floating_point_scalar T, std::size_t C>
 		[[nodiscard]] constexpr auto isinf(const basic_vector<T, C> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, isinf_op);
+			return machinery::apply_make(arg, isinf_op);
 		}
 
 		template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 		[[nodiscard]] constexpr auto isinf(const indexed_vector<T, S, C, Is...> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, isinf_op);
+			return machinery::apply_make(arg, isinf_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5475,7 +5476,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto floatBitsToInt(const vector_base<W, float, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, float_bits_to_int_op);
+			return machinery::apply_make(arg, float_bits_to_int_op);
 		}
 
 		[[nodiscard]] constexpr int floatBitsToInt(float arg) noexcept
@@ -5488,7 +5489,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto floatBitsToUint(const vector_base<W, float, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, float_bits_to_uint_op);
+			return machinery::apply_make(arg, float_bits_to_uint_op);
 		}
 
 		[[nodiscard]] constexpr unsigned int floatBitsToUint(float arg) noexcept
@@ -5501,7 +5502,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto doubleBitsToLongLong(const vector_base<W, double, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, double_bits_to_long_long_op);
+			return machinery::apply_make(arg, double_bits_to_long_long_op);
 		}
 
 		[[nodiscard]] constexpr long long doubleBitsToLongLong(double arg) noexcept
@@ -5514,7 +5515,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto doubleBitsToUlongLong(const vector_base<W, double, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, double_bits_to_ulong_long_op);
+			return machinery::apply_make(arg, double_bits_to_ulong_long_op);
 		}
 
 		[[nodiscard]] constexpr unsigned long long doubleBitsToUlongLong(double arg) noexcept
@@ -5527,7 +5528,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto intBitsToFloat(const vector_base<W, int, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, int_bits_to_float_op);
+			return machinery::apply_make(arg, int_bits_to_float_op);
 		}
 
 		[[nodiscard]] constexpr float intBitsToFloat(int arg) noexcept
@@ -5540,7 +5541,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto uintBitsToFloat(const vector_base<W, unsigned int, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, uint_bits_to_float_op);
+			return machinery::apply_make(arg, uint_bits_to_float_op);
 		}
 
 		[[nodiscard]] constexpr float uintBitsToFloat(unsigned int arg) noexcept
@@ -5553,7 +5554,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto longLongBitsToDouble(const vector_base<W, long long, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, long_long_bits_to_double_op);
+			return machinery::apply_make(arg, long_long_bits_to_double_op);
 		}
 
 		[[nodiscard]] constexpr double longLongBitsToDouble(long long arg) noexcept
@@ -5566,7 +5567,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto ulongLongBitsToDouble(const vector_base<W, unsigned long long, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, ulong_long_bits_to_double_op);
+			return machinery::apply_make(arg, ulong_long_bits_to_double_op);
 		}
 
 		[[nodiscard]] constexpr double ulongLongBitsToDouble(unsigned long long arg) noexcept
@@ -5581,7 +5582,7 @@ namespace dsga
 									  const vector_base<W2, T, C, D2> &b,
 									  const vector_base<W3, T, C, D3> &c) noexcept
 		{
-			return machinery::ternary_op_execute(a, b, c, fma_op);
+			return machinery::apply_unitype_make(a, b, c, fma_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5618,7 +5619,7 @@ namespace dsga
 		[[nodiscard]] inline auto ldexp(const vector_base<W1, T, C, D1> &x,
 										const vector_base<W2, int, C, D2> &exp) noexcept
 		{
-			return machinery::binary_op_execute_no_convert(x, exp, ldexp_op);
+			return machinery::apply_multitype_make(x, exp, ldexp_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5643,7 +5644,7 @@ namespace dsga
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto byteswap(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::unary_op_execute(arg, byte_swap_op);
+			return machinery::apply_make(arg, byte_swap_op);
 		}
 
 		template <non_bool_scalar T>
@@ -5781,7 +5782,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
 											  const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, less_op);
+			return machinery::apply_unitype_make(x, y, less_op);
 		}
 
 		constexpr inline auto less_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::islessequal(x, y); };
@@ -5791,7 +5792,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
 												   const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, less_equal_op);
+			return machinery::apply_unitype_make(x, y, less_equal_op);
 		}
 
 		constexpr inline auto greater_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isgreater(x, y); };
@@ -5801,7 +5802,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
 												 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, greater_op);
+			return machinery::apply_unitype_make(x, y, greater_op);
 		}
 
 		constexpr inline auto greater_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isgreaterequal(x, y); };
@@ -5811,7 +5812,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
 													  const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, greater_equal_op);
+			return machinery::apply_unitype_make(x, y, greater_equal_op);
 		}
 
 		constexpr inline auto equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? false : x == y; };
@@ -5821,7 +5822,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto equal(const vector_base<W1, T, C, D1> &x,
 										   const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, equal_op);
+			return machinery::apply_unitype_make(x, y, equal_op);
 		}
 
 		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept { return x == y; };
@@ -5830,7 +5831,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
 										   const vector_base<W2, bool, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, bool_equal_op);
+			return machinery::apply_unitype_make(x, y, bool_equal_op);
 		}
 
 		constexpr inline auto not_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? true : x != y; };
@@ -5840,7 +5841,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
 											  const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, not_equal_op);
+			return machinery::apply_unitype_make(x, y, not_equal_op);
 		}
 
 		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept { return x != y; };
@@ -5849,7 +5850,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
 											  const vector_base<W2, bool, C, D2> &y) noexcept
 		{
-			return machinery::binary_op_execute(x, y, bool_not_equal_op);
+			return machinery::apply_unitype_make(x, y, bool_not_equal_op);
 		}
 
 		template <bool W, std::size_t C, typename D>
@@ -5876,7 +5877,7 @@ namespace dsga
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept
 		{
-			return machinery::unary_op_execute(x, logical_not_op);
+			return machinery::apply_make(x, logical_not_op);
 		}
 
 		//
