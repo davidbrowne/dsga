@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 3;
 
 namespace dsga
 {
@@ -1517,51 +1517,41 @@ namespace dsga
 
 	namespace detail
 	{
-		// the concepts will help indexed_vector determine if it can be assigned to, like an lvalue reference,
+		// the concepts and requirements will help indexed_vector determine if it can be assigned to, like an lvalue reference,
 		// i.e., if all indexes are unique then it can be used as an lvalue reference, i.e., is writable to.
 
 		// see if all the std::size_t index values are unique
-
-		template <std::size_t ...Is>
-		struct unique_indexes_impl;
-
-		template <>
-		struct unique_indexes_impl<> : std::true_type
-		{
-		};
-
-		template <std::size_t Index>
-		struct unique_indexes_impl<Index> : std::true_type
-		{
-		};
-
 		template <std::size_t First, std::size_t ...Rest>
-		struct unique_indexes_impl<First, Rest...>
+		consteval bool unique_indexes(std::index_sequence<First, Rest...>)
 		{
-			static constexpr bool value = ((First != Rest) && ...) && unique_indexes_impl<Rest...>::value;
-		};
-
-		// all Index values must be in ranged [0, Size) -- not checking here about Size and number of Is
-
-		template <std::size_t Size, std::size_t ...Is>
-		struct valid_indexes_impl
-		{
-			static constexpr bool value = ((Is < Size) && ...);
-		};
-
-		// concepts required to build concept for testing for writable swizzle indexes
-
-		// are all the Is... different/unique
-		template <std::size_t ...Is>
-		constexpr inline bool unique_indexes = (sizeof...(Is) > 0) && unique_indexes_impl<Is...>::value;
+			if constexpr (sizeof...(Rest) == 0)
+				return true;
+			else
+				return ((First != Rest) && ...) && unique_indexes(std::index_sequence<Rest...>());
+		}
 
 		// is Count the same as the number of Is... and is Count an appropriate size for a vector
 		template <std::size_t Count, std::size_t ...Is>
-		constexpr inline bool valid_index_count = (sizeof...(Is) == Count) && dimensional_size<Count>;
+		consteval bool valid_index_count()
+		{
+			return (sizeof...(Is) == Count) && dimensional_size<Count>;
+		}
 
 		// are the values of Is... in the range 0 <= Is... < Size
+		// not checking here about Size and number of Is
 		template <std::size_t Size, std::size_t ...Is>
-		constexpr inline bool valid_range_indexes = valid_indexes_impl<Size, Is...>::value;
+		consteval bool valid_range_indexes()
+		{
+			return ((Is < Size) && ...);
+		}
+
+		// writable_swizzle_impl can determine whether a particular indexed_vector can be used as an lvalue reference
+		template <std::size_t Size, std::size_t Count, std::size_t ...Is>
+		constexpr inline bool writable_swizzle_impl =
+			(sizeof...(Is) > 0) &&
+			valid_index_count<Count, Is...>() &&
+			unique_indexes(std::index_sequence<Is...>()) &&
+			valid_range_indexes<Size, Is...>();
 
 		// are types the same size
 		template <typename T, typename U>
@@ -1624,6 +1614,10 @@ namespace dsga
 		constexpr std::index_sequence<vals[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
 	}
 
+	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
+	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
+	constexpr inline bool writable_swizzle = detail::writable_swizzle_impl<Size, Count, Is...>;
+
 	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
 	template<std::size_t Start, std::size_t End>
 	using make_index_range = decltype(detail::index_range<Start, End>());
@@ -1635,10 +1629,6 @@ namespace dsga
 	// constexpr std::array<std::size_t, N> elements in a std::index_sequence
 	template <detail::sequence_indexable auto vals>
 	using make_array_sequence = decltype(detail::indexable_to_sequence<vals>(std::make_index_sequence<vals.size()>{}));
-
-	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
-	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
-	constexpr inline bool writable_swizzle = detail::valid_index_count<Count, Is...> && detail::unique_indexes<Is...> && detail::valid_range_indexes<Size, Is...>;
 
 	// build an array from the indexes of an index_sequence
 	template <std::size_t... Is>
@@ -1972,7 +1962,7 @@ namespace dsga
 	// The indexes are valid for indexing into the values in the storage which is Size big.
 
 	template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-	concept indexable = dimensional_storage<T, Size> && detail::valid_index_count<Count, Is...> && detail::valid_range_indexes<Size, Is...>;
+	concept indexable = dimensional_storage<T, Size> && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>();
 
 	// the type of a basic_vector swizzle
 	// 

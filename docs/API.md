@@ -129,7 +129,7 @@ Are implicit conversions allowed for non-boolean arithmetic purposes?
 #### ```indexable```
 ```c++
 template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-concept indexable = dimensional_storage<T, Size> && detail::valid_index_count<Count, Is...> && detail::valid_range_indexes<Size, Is...>;
+concept indexable = dimensional_storage<T, Size> && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>();
 ```
 Do the template parameters meet the requirements for a valid ```indexed_vector```?
 
@@ -144,7 +144,7 @@ Size and Count are two different things, with Size being the physical number of 
 #### ```writable_swizzle```
 ```c++
 template <std::size_t Size, std::size_t Count, std::size_t ...Is>
-constexpr inline bool writable_swizzle = detail::valid_index_count<Count, Is...> && detail::unique_indexes<Is...> && detail::valid_range_indexes<Size, Is...>;
+constexpr inline bool writable_swizzle = detail::writable_swizzle_impl<Size, Count, Is...>;
 ```
 Used for the Writable template parameter of a ```indexed_vector```. Can a particular swizzle be used as an lvalue reference. All of the swizzle indexes must have been used at most once, e.g., for ```xyz```, Writable is true, and for ```xyx```, Writable is false (assuming that all other requirements are met).
 
