@@ -144,7 +144,8 @@ Size and Count are two different things, with Size being the physical number of 
 #### ```writable_swizzle```
 ```c++
 template <std::size_t Size, std::size_t Count, std::size_t ...Is>
-constexpr inline bool writable_swizzle = detail::writable_swizzle_impl<Size, Count, Is...>;
+requires ((sizeof...(Is) > 0) && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>())
+constexpr inline bool writable_swizzle = detail::unique_indexes(std::index_sequence<Is...>());
 ```
 Used for the Writable template parameter of a ```indexed_vector```. Can a particular swizzle be used as an lvalue reference. All of the swizzle indexes must have been used at most once, e.g., for ```xyz```, Writable is true, and for ```xyx```, Writable is false (assuming that all other requirements are met).
 

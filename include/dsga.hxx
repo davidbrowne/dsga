@@ -1545,14 +1545,6 @@ namespace dsga
 			return ((Is < Size) && ...);
 		}
 
-		// writable_swizzle_impl can determine whether a particular indexed_vector can be used as an lvalue reference
-		template <std::size_t Size, std::size_t Count, std::size_t ...Is>
-		constexpr inline bool writable_swizzle_impl =
-			(sizeof...(Is) > 0) &&
-			valid_index_count<Count, Is...>() &&
-			unique_indexes(std::index_sequence<Is...>()) &&
-			valid_range_indexes<Size, Is...>();
-
 		// are types the same size
 		template <typename T, typename U>
 		concept same_sizeof = (sizeof(T) == sizeof(U));
@@ -1616,7 +1608,8 @@ namespace dsga
 
 	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
-	constexpr inline bool writable_swizzle = detail::writable_swizzle_impl<Size, Count, Is...>;
+	requires ((sizeof...(Is) > 0) && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>())
+	constexpr inline bool writable_swizzle = detail::unique_indexes(std::index_sequence<Is...>());
 
 	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
 	template<std::size_t Start, std::size_t End>
