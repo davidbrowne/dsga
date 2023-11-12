@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -1513,7 +1513,7 @@ namespace dsga
 	// https://stackoverflow.com/questions/63326542/checking-for-constexpr-in-a-concept
 	// test whether default-constructable callable C's operator() can be called in a constexpr context
 	template <typename C, auto val = std::bool_constant<(C{}(), true)>{}>
-	consteval auto is_constexpr(C) { return val(); }
+	consteval auto is_constexpr(C) noexcept { return val(); }
 
 	namespace detail
 	{
@@ -1522,17 +1522,17 @@ namespace dsga
 
 		// see if all the std::size_t index values are unique
 		template <std::size_t First, std::size_t ...Rest>
-		consteval bool unique_indexes(std::index_sequence<First, Rest...>)
+		consteval bool unique_indexes(std::index_sequence<First, Rest...>) noexcept
 		{
 			if constexpr (sizeof...(Rest) == 0)
 				return true;
 			else
-				return ((First != Rest) && ...) && unique_indexes(std::index_sequence<Rest...>());
+				return ((First != Rest) && ...) && unique_indexes(std::index_sequence<Rest...>{});
 		}
 
 		// is Count the same as the number of Is... and is Count an appropriate size for a vector
 		template <std::size_t Count, std::size_t ...Is>
-		consteval bool valid_index_count()
+		consteval bool valid_index_count() noexcept
 		{
 			return (sizeof...(Is) == Count) && dimensional_size<Count>;
 		}
@@ -1540,7 +1540,7 @@ namespace dsga
 		// are the values of Is... in the range 0 <= Is... < Size
 		// not checking here about Size and number of Is
 		template <std::size_t Size, std::size_t ...Is>
-		consteval bool valid_range_indexes()
+		consteval bool valid_range_indexes() noexcept
 		{
 			return ((Is < Size) && ...);
 		}
@@ -1606,10 +1606,14 @@ namespace dsga
 		constexpr std::index_sequence<vals[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
 	}
 
+	// do the argument indexes and count/size make for valid indirect indexing
+	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
+	concept indexable = detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>();
+
 	// writable_swizzle can determine whether a particular indexed_vector can be used as an lvalue reference
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
-	requires ((sizeof...(Is) > 0) && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>())
-	constexpr inline bool writable_swizzle = detail::unique_indexes(std::index_sequence<Is...>());
+	requires indexable<Size, Count, Is...>
+	constexpr inline bool writable_swizzle = detail::unique_indexes(std::index_sequence<Is...>{});
 
 	// half-open/half-closed interval in a std::index_sequence -> [Start, End)
 	template<std::size_t Start, std::size_t End>
@@ -1631,7 +1635,7 @@ namespace dsga
 	template<std::size_t ...Is>
 	constexpr auto make_reverse_sequence(std::index_sequence<Is...> seq) noexcept
 	{
-		if constexpr (sizeof...(Is) != 0)
+		if constexpr (sizeof...(Is) > 1)
 		{
 			constexpr auto vals = make_sequence_array(seq);
 
@@ -1642,7 +1646,7 @@ namespace dsga
 		}
 		else
 		{
-			return seq;
+			return std::index_sequence<Is...>{};
 		}
 	}
 
@@ -1954,9 +1958,6 @@ namespace dsga
 	// to work with the basic_vector which also has these lengths. The number of indexes is the same as the Count, between 1 and 4.
 	// The indexes are valid for indexing into the values in the storage which is Size big.
 
-	template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-	concept indexable = dimensional_storage<T, Size> && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>();
-
 	// the type of a basic_vector swizzle
 	// 
 	// template parameters:
@@ -1976,7 +1977,7 @@ namespace dsga
 	//
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
-	requires indexable<T, Size, Count, Is...>
+	requires indexable<Size, Count, Is...>
 	struct indexed_vector_const_iterator
 	{
 		// publicly need these type using declarations or typedefs in iterator class,
@@ -2127,7 +2128,7 @@ namespace dsga
 	};
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
-	requires indexable<T, Size, Count, Is...>
+	requires indexable<Size, Count, Is...>
 	struct indexed_vector_iterator : indexed_vector_const_iterator<T, Size, Count, Is...>
 	{
 		// let base class do all the work
@@ -2238,7 +2239,7 @@ namespace dsga
 
 	// for swizzling 1D-4D parts of basic_vector
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-	requires indexable<T, Size, Count, Is...>
+	requires indexable<Size, Count, Is...>
 	struct indexed_vector<T, Size, Count, Is...>
 		: vector_base<writable_swizzle<Size, Count, Is...>, T, Count, indexed_vector<T, Size, Count, Is...>>
 	{
@@ -4732,10 +4733,10 @@ namespace dsga
 		// 8.1 - angle and trigonometry
 		//
 
-		template <std::floating_point T>
+		template <floating_point_scalar T>
 		inline constexpr T degrees_per_radian_v = std::numbers::inv_pi_v<T> * T(180);
 
-		template <std::floating_point T>
+		template <floating_point_scalar T>
 		inline constexpr T radians_per_degree_v = std::numbers::pi_v<T> / T(180);
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -4744,7 +4745,7 @@ namespace dsga
 			return deg * radians_per_degree_v<T>;
 		}
 
-		template <std::floating_point T>
+		template <floating_point_scalar T>
 		[[nodiscard]] constexpr auto radians(T deg) noexcept
 		{
 			return deg * radians_per_degree_v<T>;
@@ -4756,7 +4757,7 @@ namespace dsga
 			return rad * degrees_per_radian_v<T>;
 		}
 
-		template <std::floating_point T>
+		template <floating_point_scalar T>
 		[[nodiscard]] constexpr auto degrees(T rad) noexcept
 		{
 			return rad * degrees_per_radian_v<T>;
@@ -5645,9 +5646,10 @@ namespace dsga
 		[[nodiscard]] constexpr auto innerProduct(const vector_base<W1, T1, C, D1> &x,
 												  const vector_base<W2, T2, C, D2> &y) noexcept
 		{
-			using ProductType = decltype(std::declval<T1>() * std::declval<T2>());
-			using SumType = decltype(std::declval<ProductType>() + std::declval<ProductType>());
-			return std::inner_product(x.begin(), x.end(), y.begin(), SumType(0));
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return ((x[Is] * y[Is]) + ...);
+			}(std::make_index_sequence<C>{});
 		}
 
 		//
@@ -6677,14 +6679,24 @@ namespace dsga
 
 	// matrix * (column) vector => (column) vector
 
+//	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
+//	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
+//											const vector_base<W, U, C, D> &rhs) noexcept
+//	{
+//		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+//		{
+//			return basic_vector<std::common_type_t<T, U>, R>(functions::dot(lhs.row(Is), rhs)...);
+//		}(std::make_index_sequence<R>{});
+//	}
+
 	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
 	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
 											const vector_base<W, U, C, D> &rhs) noexcept
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_vector<std::common_type_t<T, U>, R>(functions::dot(lhs.row(Is), rhs)...);
-		}(std::make_index_sequence<R>{});
+			return ((lhs[Is] * rhs[Is]) + ...);
+		}(std::make_index_sequence<C>{});
 	}
 
 	// (row) vector * matrix => (row) vector

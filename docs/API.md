@@ -128,10 +128,10 @@ Are implicit conversions allowed for non-boolean arithmetic purposes?
 
 #### ```indexable```
 ```c++
-template <typename T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-concept indexable = dimensional_storage<T, Size> && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>();
+template <std::size_t Size, std::size_t Count, std::size_t ...Is>
+concept indexable = detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>();
 ```
-Do the template parameters meet the requirements for a valid ```indexed_vector```?
+Do the argument indexes and count/size make for valid indirect indexing, such as for ```indexed_vector```.
 
 Size and Count are two different things, with Size being the physical number of elements, and Count being the logical number of elements. Count must be the ```sizeof...Is```, and for every one of the Is, it must be smaller than Size.
 
@@ -144,20 +144,20 @@ Size and Count are two different things, with Size being the physical number of 
 #### ```writable_swizzle```
 ```c++
 template <std::size_t Size, std::size_t Count, std::size_t ...Is>
-requires ((sizeof...(Is) > 0) && detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>())
-constexpr inline bool writable_swizzle = detail::unique_indexes(std::index_sequence<Is...>());
+requires indexable<Size, Count, Is...>
+constexpr inline bool writable_swizzle = detail::unique_indexes(std::index_sequence<Is...>{});
 ```
 Used for the Writable template parameter of a ```indexed_vector```. Can a particular swizzle be used as an lvalue reference. All of the swizzle indexes must have been used at most once, e.g., for ```xyz```, Writable is true, and for ```xyx```, Writable is false (assuming that all other requirements are met).
 
 #### ```degrees_per_radian_v```
 ```c++
-template <std::floating_point T>
+template <floating_point_scalar T>
 inline constexpr T degrees_per_radian_v = std::numbers::inv_pi_v<T> * T(180);
 ```
 
 #### ```radians_per_degree_v```
 ```c++
-template <std::floating_point T>
+template <floating_point_scalar T>
 inline constexpr T radians_per_degree_v = std::numbers::pi_v<T> / T(180);
 ```
 
@@ -258,7 +258,7 @@ Convert a ```std::index_sequence<Is...>``` to another ```std::index_sequence``` 
 #### ```is_constexpr```
 ```c++
 template <typename C, auto val = std::bool_constant<(C{}(), true)>{}>
-consteval auto is_constexpr(C);
+consteval auto is_constexpr(C) noexcept;
 ```
 Is a default-constructible callable constexpr? If not, then compile error due to trying to evaluate something that is not constexpr at compile time.
 
