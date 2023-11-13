@@ -2522,9 +2522,10 @@ template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_boo
 
 ##### Matrix Linear Algebraic Matrix Times Matrix
 ```c++
-template <floating_point_scalar T, std::size_t C, std::size_t R1, std::size_t C2>
-[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R1> &lhs,
-                                        const basic_matrix<T, C2, C> &rhs) noexcept;
+template <floating_point_scalar T, std::size_t C1, std::size_t R1, std::size_t C2, std::size_t R2>
+requires (C1 == R2)
+[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C1, R1> &lhs,
+                                        const basic_matrix<T, C2, R2> &rhs) noexcept;
 ```
 
 #### Matrix Comparison Operators

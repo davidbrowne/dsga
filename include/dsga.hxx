@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -6679,16 +6679,6 @@ namespace dsga
 
 	// matrix * (column) vector => (column) vector
 
-//	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
-//	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
-//											const vector_base<W, U, C, D> &rhs) noexcept
-//	{
-//		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
-//		{
-//			return basic_vector<std::common_type_t<T, U>, R>(functions::dot(lhs.row(Is), rhs)...);
-//		}(std::make_index_sequence<R>{});
-//	}
-
 	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
 	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
 											const vector_base<W, U, C, D> &rhs) noexcept
@@ -6713,17 +6703,18 @@ namespace dsga
 
 	// matrix * matrix => matrix
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R1, std::size_t C2>
-	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R1> &lhs,
-											const basic_matrix<T, C2, C> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C1, std::size_t R1, std::size_t C2, std::size_t R2>
+	requires (C1 == R2)
+	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C1, R1> &lhs,
+											const basic_matrix<T, C2, R2> &rhs) noexcept
 	{
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 		{
 			return basic_matrix<T, C2, R1>(
-				[&]<std::size_t ...Is>(std::index_sequence <Is...>, const auto &col) noexcept
-				{
-					return basic_vector<T, R1>(functions::dot(lhs.row(Is), col)...);
-				}(std::make_index_sequence<R1>{}, rhs[Js]) ...);
+				[&]<std::size_t ...Is>(std::index_sequence <Is...>, const basic_vector<T, R2> &col) noexcept
+			{
+				return ((lhs[Is] * col[Is]) + ...);
+			}(std::make_index_sequence<R2>{}, rhs[Js]) ...);
 		}(std::make_index_sequence<C2>{});
 	}
 

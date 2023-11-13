@@ -551,15 +551,19 @@ TEST_SUITE("test operators")
 	{
 		dmat3 A(1, 1, 3, 0, 1, 2, 2, 1, 5);
 		dmat3 B(1, 0, 2, 0, 3, 0, 4, 0, 5);
+		dmat2x4 E(1, 1, 3, 0, 1, 2, 2, 1);
+		dmat3x2 F(5, 3, 3, 6, 14, 9);
 		dvec3 v(3, 7, 11);
 
 		auto foo = A * v;
 		auto bar = v * A;
 		auto baz = A * B;
+		auto val3x4 = E * F;
 
 		CHECK_EQ(foo, dvec3(25, 21, 78));
 		CHECK_EQ(bar, dvec3(43, 29, 68));
 		CHECK_EQ(baz, dmat3(5, 3, 13, 0, 3, 6, 14, 9, 37));
+		CHECK_EQ(val3x4, dmat3x4(8, 11, 21, 3, 9, 15, 21, 6, 23, 32, 60, 9));
 	}
 
 	TEST_CASE("matrix row and column access")
