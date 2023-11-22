@@ -86,7 +86,7 @@ constexpr std::array<T, C> from_vector_by_data_sequence(const dsga::vector_base<
 	return [ptr = vec.data()]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 	{
 		return { ptr[Is]... };		// equivalent to return {*(ptr + Is)...};
-	}(vec.sequence());
+	}(D::sequence());
 }
 
 // fill vector from valarray

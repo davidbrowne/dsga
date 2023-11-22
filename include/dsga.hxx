@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 6;
 
 namespace dsga
 {
@@ -1735,7 +1735,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		template <typename ...Args>
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -1857,7 +1857,7 @@ namespace dsga
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
 		// this is only really helpful if you use data() in your API, because operator [] already adjusts for sequencing.
-		[[nodiscard]] constexpr auto sequence() const noexcept						{ return this->as_derived().sequence(); }
+		[[nodiscard]] static constexpr auto sequence() noexcept						{ return Derived::sequence(); }
 
 		// number of accessible T elements - required by spec
 		[[nodiscard]] constexpr int length() const noexcept							{ return Count; }
@@ -2333,7 +2333,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0); }
@@ -2356,6 +2356,9 @@ namespace dsga
 		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
 		constexpr void set(Args ...args) noexcept
 		{
+			// these Is are likely not sequential as they are in indexable order,
+			// and we are accessing the internal storage directly. we are not using
+			// the indirection built into indexed_vector::operator []() for this function.
 			((base[Is] = static_cast<T>(args)), ...);
 		}
 	};
@@ -2742,7 +2745,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
@@ -2923,7 +2926,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
@@ -3199,7 +3202,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
@@ -3698,7 +3701,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] constexpr auto sequence() const noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
@@ -6712,9 +6715,9 @@ namespace dsga
 		{
 			return basic_matrix<T, C2, R1>(
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>, const basic_vector<T, R2> &col) noexcept
-			{
-				return ((lhs[Is] * col[Is]) + ...);
-			}(std::make_index_sequence<R2>{}, rhs[Js]) ...);
+				{
+					return ((lhs[Is] * col[Is]) + ...);
+				}(std::make_index_sequence<C1>{}, rhs[Js]) ...);
 		}(std::make_index_sequence<C2>{});
 	}
 

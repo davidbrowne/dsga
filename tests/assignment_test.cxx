@@ -23,7 +23,7 @@ constexpr void pointer_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, con
 	[&] <std::size_t ...Is, std::size_t ...Js>(std::index_sequence<Is ...>, std::index_sequence<Js ...> /* dummy */) noexcept
 	{
 		((dest.data()[Is] = src.data()[Js]), ...);
-	}(dest.sequence(), src.sequence());
+	}(D1::sequence(), D2::sequence());
 }
 
 template <bool W1, dsga::dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
