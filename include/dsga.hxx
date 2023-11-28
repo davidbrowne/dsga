@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 6;
+constexpr inline int DSGA_PATCH_VERSION = 7;
 
 namespace dsga
 {
@@ -2367,20 +2367,21 @@ namespace dsga
 	// convenience using types for indexed_vector as members of basic_vector
 	//
 
-	template <typename T, std::size_t Size, std::size_t I>
-	using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1, I>;
+	template <dimensional_scalar T, std::size_t Size, std::size_t I>
+	requires indexable<Size, 1, I>
+	using dexvec1 = indexed_vector<T, Size, 1, I>;
 
-	template <typename T, std::size_t Size, std::size_t ...Is>
-	requires (sizeof...(Is) == 2)
-	using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2, Is...>;
+	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+	requires indexable<Size, 2, Is...>
+	using dexvec2 = indexed_vector<T, Size, 2, Is...>;
 
-	template <typename T, std::size_t Size, std::size_t ...Is>
-	requires (sizeof...(Is) == 3)
-	using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3, Is...>;
+	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+	requires indexable<Size, 3, Is...>
+	using dexvec3 = indexed_vector<T, Size, 3, Is...>;
 
-	template <typename T, std::size_t Size, std::size_t ...Is>
-	requires (sizeof...(Is) == 4)
-	using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4, Is...>;
+	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+	requires indexable<Size, 4, Is...>
+	using dexvec4 = indexed_vector<T, Size, 4, Is...>;
 
 	//
 	// basic_matrix will act as the primary matrix class in this library.
@@ -6700,7 +6701,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_vector<std::common_type_t<T, U>, C>(functions::dot(lhs, rhs[Is])...);
+			return basic_vector(functions::dot(lhs, rhs[Is])...);
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6711,14 +6712,18 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C1, R1> &lhs,
 											const basic_matrix<T, C2, R2> &rhs) noexcept
 	{
-		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+		auto val = basic_matrix<T, C2, R1>();
+
+		for (std::size_t i = 0; i < R1; ++i)
 		{
-			return basic_matrix<T, C2, R1>(
-				[&]<std::size_t ...Is>(std::index_sequence <Is...>, const basic_vector<T, R2> &col) noexcept
-				{
-					return ((lhs[Is] * col[Is]) + ...);
-				}(std::make_index_sequence<C1>{}, rhs[Js]) ...);
-		}(std::make_index_sequence<C2>{});
+			auto row = lhs.row(i);
+			for (std::size_t j = 0; j < C2; ++j)
+			{
+				val[j][i] = functions::dot(rhs[j], row);
+			}
+		}
+
+		return val;
 	}
 
 	//

@@ -298,11 +298,11 @@ This struct is structurally equivalent to [```indexed_vector```](#indexed_vector
   * [```size``` (```std::integral_constant```)](#storage_wrappersize-stdintegral_constant)
 * Static Member Functions
   * [```size``` (theoretical function)](#storage_wrappersize-theoretical-function)
+  * [```sequence```](#storage_wrappersequence)
 * Non-Static Member Functions
   * [```length```](#storage_wrapperlength)
   * [```operator []```](#storage_wrapperoperator-)
   * [```data```](#storage_wrapperdata)
-  * [```sequence```](#storage_wrappersequence)
   * [```set```](#storage_wrapperset)
   * [```swap```](#storage_wrapperswap)
   * [Iterators](#storage_wrapper-iterators)
@@ -379,7 +379,7 @@ Data access through pointers. Use with ```sequence``` or ```offsets``` for physi
 
 ##### ```storage_wrapper::sequence```
 ```c++
-[[nodiscard]] constexpr auto sequence() const noexcept;
+[[nodiscard]] static constexpr auto sequence() noexcept;
 ```
 The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. For ```storage_wrapper```, the physical and logical representation are the same, i.e., a contiguous representation, and the sequence ascends from 0.
 
@@ -471,12 +471,12 @@ This [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) 
   * [```size``` (```std::integral_constant```)](#vector_basesize-stdintegral_constant)
 * Static Member Functions
   * [```size``` (theoretical function)](#vector_basesize-theoretical-function)
+  * [```sequence```](#vector_basesequence)
 * Non-Static Member Functions
   * [```length```](#vector_baselength)
   * [```as_derived```](#vector_baseas_derived)
   * [```operator []```](#vector_baseoperator-)
   * [```data```](#vector_basedata)
-  * [```sequence```](#vector_basesequence)
   * [```set```](#vector_baseset)
   * [Iterators](#vector_base-iterators)
   * [```std::valarray```](https://en.cppreference.com/w/cpp/numeric/valarray) API
@@ -536,7 +536,7 @@ Data access through pointers. Use with ```sequence``` or ```offsets``` for physi
 
 ##### ```vector_base::sequence```
 ```c++
-[[nodiscard]] constexpr auto sequence() const noexcept;
+[[nodiscard]] static constexpr auto sequence() noexcept;
 ```
 The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. This CRTP function calls the derived class/struct version of the function.
 
@@ -630,12 +630,11 @@ Size and Count are two different things, with Size being the physical number of 
   * [```Writable```](#indexed_vectorwritable)
   * [```offsets```](#indexed_vectoroffsets)
 * Static Member Functions
-  * None.
+  * [```sequence```](#indexed_vectorsequence)
 * Non-Static Member Functions
   * [```operator []```](#indexed_vectoroperator-)
   * [```operator =```](#indexed_vectoroperator--assignment)
   * [```data```](#indexed_vectordata)
-  * [```sequence```](#indexed_vectorsequence)
   * [```set```](#indexed_vectorset)
   * [Iterators](#indexed_vector-iterators)
 * Using Directives
@@ -696,7 +695,7 @@ Data access through pointers. Use with [```sequence```](#indexed_vectorsequence)
 
 ##### ```indexed_vector::sequence```
 ```c++
-[[nodiscard]] constexpr auto sequence() const noexcept;
+[[nodiscard]] static constexpr auto sequence() noexcept;
 ```
 The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. This is best used with [```data```](#indexed_vectordata) to manually access the elements for the logical representation.
 
@@ -772,12 +771,11 @@ The different sized versions of ```basic_vector``` are individually partially sp
   * [```Writable```](#basic_vectorwritable)
   * [```offsets```](#basic_vectoroffsets)
 * Static Member Functions
-  * None.
+  * [```sequence```](#basic_vectorsequence)
 * Non-Static Member Functions
   * [```operator []```](#basic_vectoroperator-)
   * [```operator =```](#basic_vectoroperator--assignment)
   * [```data```](#basic_vectordata)
-  * [```sequence```](#basic_vectorsequence)
   * [```set```](#basic_vectorset)
   * [```swap```](#basic_vectorswap)
   * [Iterators](#basic_vector-iterators)
@@ -934,7 +932,7 @@ Data access through pointers. Use with ```sequence``` or ```offsets``` for physi
 
 ##### ```basic_vector::sequence```
 ```c++
-[[nodiscard]] constexpr auto sequence() const noexcept;
+[[nodiscard]] static constexpr auto sequence() noexcept;
 ```
 The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. For ```basic_vector```, the physical and logical representation are the same, i.e., a contiguous representation, and the sequence ascends from 0.
 
