@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 7;
+constexpr inline int DSGA_PATCH_VERSION = 8;
 
 namespace dsga
 {
@@ -3802,10 +3802,12 @@ namespace dsga
 										  BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T1, T2>;
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))...);
-			}(std::make_index_sequence<C>{});
+			auto val = basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>();
+
+			for (std::size_t i = 0; i < C; ++i)
+				val[i] = op(static_cast<ArgT>(lhs[i]), static_cast<ArgT>(rhs[i]));
+
+			return val;
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
