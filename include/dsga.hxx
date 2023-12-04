@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 8;
+constexpr inline int DSGA_PATCH_VERSION = 9;
 
 namespace dsga
 {
@@ -1938,13 +1938,39 @@ namespace dsga
 		}
 
 		// min value in vector
-		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>	{ return *std::ranges::min_element(*this); }
+		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>
+		{
+			T smallest = (*this)[0];
+			for (std::size_t i = 1; i < Count; ++i)
+			{
+				if ((*this)[i] < smallest)
+					smallest = (*this)[i];
+			}
+
+			return smallest;
+		}
 
 		// max value in vector
-		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>	{ return *std::ranges::max_element(*this); }
+		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>
+		{
+			T largest = (*this)[0];
+			for (std::size_t i = 1; i < Count; ++i)
+			{
+				if ((*this)[i] > largest)
+					largest = (*this)[i];
+			}
+
+			return largest;
+		}
 
 		// sum of values in vector
-		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>	{ return std::accumulate(begin(), end(), T(0)); }
+		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>
+		{
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return ((*this)[Is] + ...);
+			}(std::make_index_sequence<Count>{});
+		}
 	};
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
