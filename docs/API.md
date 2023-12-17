@@ -2569,7 +2569,7 @@ requires (floating_point_scalar<T1> || floating_point_scalar<T2>) && ((C1 >= 2) 
 ##### ```transpose```
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-[[nodiscard]] constexpr auto transpose(const basic_matrix<T, C, R> &arg) noexcept;
+[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept;
 ```
 
 ##### ```determinant```

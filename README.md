@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.3.9
+v1.3.10
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -278,7 +278,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.3.9`
+Current version: `v1.3.10`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v1.3.0](https://github.com/davidbrowne/dsga/releases/tag/v1.3.0)
@@ -306,7 +306,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.8.2**
+* **MSVC 2022 - v17.8.3**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -328,7 +328,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 17.0.5** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.5), with MSVC and/or gcc v13.2.0 installed:
+* **clang 17.0.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.6), with MSVC and/or gcc v13.2.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -341,7 +341,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu Mantic Minotaur preview running in WSL2 for Windows 11
+### Ubuntu Noble Numbat preview running in WSL2 for Windows 11
 
 * **gcc 13.2.0**
 
@@ -354,7 +354,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 17.0.2**
+* **clang 17.0.6**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 9;
+constexpr inline int DSGA_PATCH_VERSION = 10;
 
 namespace dsga
 {
@@ -2431,40 +2431,41 @@ namespace dsga
 		// how many components can the item supply
 
 		template <typename T>
-		struct component_size;
+		struct component_count;
 
 		template <dimensional_scalar T>
-		struct component_size<T>
+		struct component_count<T>
 		{
 			static constexpr std::size_t value = 1;
 		};
 
 		template <dimensional_scalar T, std::size_t C>
-		struct component_size<basic_vector<T, C>>
+		struct component_count<basic_vector<T, C>>
 		{
 			static constexpr std::size_t value = C;
 		};
 
 		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-		struct component_size<indexed_vector<T, S, C, Is...>>
+		struct component_count<indexed_vector<T, S, C, Is...>>
 		{
 			static constexpr std::size_t value = C;
 		};
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		struct component_size<vector_base<W, T, C, D>>
+		struct component_count<vector_base<W, T, C, D>>
 		{
 			static constexpr std::size_t value = C;
 		};
 
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
-		struct component_size<basic_matrix<T, C, R>>
+		struct component_count<basic_matrix<T, C, R>>
 		{
 			static constexpr std::size_t value = C * R;
 		};
 
-		// the make sure Count and Args... are valid together w.r.t. component count.
-		// Args is expected to be a combination of derived vector_base classes and dimensional_scalars.
+		// make sure Count and Args... are valid together w.r.t. component count.
+		// Args is expected to be a combination of derived vector_base classes and
+		// dimensional_scalars, possibly a matrix too.
 		template <std::size_t Count, typename ...Args>
 		struct component_match;
 
@@ -2490,17 +2491,17 @@ namespace dsga
 		struct component_match<Count, Args...>
 		{
 			// total number components in Args...
-			static constexpr std::size_t value = (component_size<Args>::value + ... + 0);
+			static constexpr std::size_t total_count = (component_count<Args>::value + ... + 0);
 			using tuple_pack = std::tuple<Args...>;
 
 			// get the last Arg type in the pack
 			using last_type = std::tuple_element_t<std::tuple_size_v<tuple_pack> - 1, tuple_pack>;
 
 			// see what the component count is if we didn't use the last Arg type in pack
-			static constexpr std::size_t previous_size = value - component_size<last_type>::value;
+			static constexpr std::size_t previous_count = total_count - component_count<last_type>::value;
 
 			// check the conditions that we need exactly all those Args and that they give us enough components.
-			static constexpr bool valid = (previous_size < Count) && (value >= Count);
+			static constexpr bool valid = (previous_count < Count) && (total_count >= Count);
 		};
 
 		template <std::size_t Count, typename ...Args>
@@ -2556,7 +2557,7 @@ namespace dsga
 		}
 
 		// flatten the Args out in a big tuple. Args is expected to be a combination of derived vector_base classes
-		// and dimensional_scalars.
+		// and dimensional_scalars, possibly a matrix (for basic_vector).
 		template <typename ...Args>
 		constexpr auto flatten_args_to_tuple(const Args & ...args) noexcept
 		{
@@ -6071,7 +6072,7 @@ namespace dsga
 //		[[nodiscard]] constexpr std::size_t	column_size() const noexcept		{ return R; }
 		static constexpr std::integral_constant<std::size_t, R> column_size = {};
 
-		// 
+		// data storage for matrix
 		std::array<basic_vector<T, R>, C> columns;
 
 		//
@@ -6331,12 +6332,19 @@ namespace dsga
 
 		// transpose a matrix
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
-		[[nodiscard]] constexpr auto transpose(const basic_matrix<T, C, R> &arg) noexcept
+		[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept
 		{
-			return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			auto trans = basic_matrix<T, R, C>();
+
+			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				return basic_matrix<T, R, C>(arg.row(Is)...);
+				(([&] <std::size_t ...Js>(std::index_sequence <Js...>, std::size_t row) noexcept
+				{
+					((trans[row][Js] = arg[Js][row]), ...);
+				}(std::make_index_sequence<C>{}, Is)), ...);
 			}(std::make_index_sequence<R>{});
+
+			return trans;
 		}
 
 		// determinant() - only on square matrices
