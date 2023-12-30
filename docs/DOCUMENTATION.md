@@ -433,6 +433,7 @@ There are scalar versions of these vector functions where it makes sense, i.e., 
 * ```ldexp()```
 * ```byteswap()``` - not in GLSL - doesn't use ```std::byteswap()``` since that is in c++23
 * ```swizzle()``` - not in GLSL - runtime swizzle() function
+* ```to_underlying``` - not in GLSL - not for vectors or matrices, but is a c++23 function that might come in handy
 
 #### Geometric Functions
 The geometric functions treat a vector as an entity instead of as a collection of components.

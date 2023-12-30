@@ -617,6 +617,22 @@ TEST_SUITE("test functions")
 		CHECK_EQ(runtime_swizzle2, basic_vector(3.0));
 	}
 
+	TEST_CASE("general utility functions")
+	{
+		// to_underlying()
+		enum class bool_flag : bool {};
+		enum class int_flag : int {};
+
+		auto bool_arg = bool_flag{true};
+		auto int_arg = int_flag{42};
+
+		auto bool_value = dsga::to_underlying(bool_arg);
+		auto int_value = dsga::to_underlying(int_arg);
+
+		CHECK_EQ(bool_value, true);
+		CHECK_EQ(int_value, 42);
+	}
+
 	TEST_CASE("matrix functions")
 	{
 		// matrixCompMult() - equivalent to a component-wise "matrix/matrix binary operator *" if there was one

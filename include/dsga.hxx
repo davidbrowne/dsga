@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 10;
+constexpr inline int DSGA_PATCH_VERSION = 11;
 
 namespace dsga
 {
@@ -1937,7 +1937,7 @@ namespace dsga
 			return copy;
 		}
 
-		// min value in vector
+		// min value in vector - been through nanobench testing for current best implemention
 		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>
 		{
 			T smallest = (*this)[0];
@@ -1950,7 +1950,7 @@ namespace dsga
 			return smallest;
 		}
 
-		// max value in vector
+		// max value in vector - been through nanobench testing for current best implemention
 		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>
 		{
 			T largest = (*this)[0];
@@ -1963,7 +1963,7 @@ namespace dsga
 			return largest;
 		}
 
-		// sum of values in vector
+		// sum of values in vector - been through nanobench testing for current best implemention
 		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -3823,6 +3823,7 @@ namespace dsga
 
 		// binary
 
+		// been through nanobench testing for current best implemention
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		constexpr auto apply_unitype_make(const vector_base<W1, T1, C, D1> &lhs,
 										  const vector_base<W2, T2, C, D2> &rhs,
@@ -5651,23 +5652,35 @@ namespace dsga
 		//
 
 		// since dsga is designed for c++20, we can't use std::byteswap() from c++23
-		inline auto byte_swap_op = []<non_bool_scalar T>(T x) noexcept -> T
+		constexpr auto byteswap_op = []<numeric_integral_scalar T>(T x) noexcept -> T
 		{
-			auto bytes = reinterpret_cast<std::byte *>(&x);
-			std::reverse(bytes, bytes + sizeof(T));
-			return *reinterpret_cast<T *>(bytes);
+			auto value_representation = std::bit_cast<std::array<std::byte, sizeof(T)>>(x);
+			std::ranges::reverse(value_representation);
+			return std::bit_cast<T>(value_representation);
 		};
 
-		template <bool W, non_bool_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto byteswap(const vector_base<W, T, C, D> &arg) noexcept
+		template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
+		[[nodiscard]] constexpr auto byteswap(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, byte_swap_op);
+			return machinery::apply_make(arg, byteswap_op);
 		}
 
-		template <non_bool_scalar T>
-		[[nodiscard]] inline auto byteswap(T arg) noexcept
+		template <numeric_integral_scalar T>
+		[[nodiscard]] constexpr auto byteswap(T arg) noexcept
 		{
-			return byte_swap_op(arg);
+			return byteswap_op(arg);
+		}
+
+		//
+		// to_underlying() for underlying enum value - not really a good fit for dsga, but a helpful function anyway
+		//
+
+		// since dsga is designed for c++20, we can't use std::to_underlying() from c++23
+		template <typename E>
+		requires std::is_enum_v<E>
+		[[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E e) noexcept
+		{
+			return static_cast<std::underlying_type_t<E>>(e);
 		}
 
 		//
@@ -6330,21 +6343,21 @@ namespace dsga
 			}(std::make_index_sequence<C2>{});
 		}
 
-		// transpose a matrix
+		// transpose a matrix - been through nanobench testing for current best implemention
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
 		[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept
 		{
-			auto trans = basic_matrix<T, R, C>();
+			auto val = basic_matrix<T, R, C>();
 
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				(([&] <std::size_t ...Js>(std::index_sequence <Js...>, std::size_t row) noexcept
 				{
-					((trans[row][Js] = arg[Js][row]), ...);
+					((val[row][Js] = arg[Js][row]), ...);
 				}(std::make_index_sequence<C>{}, Is)), ...);
 			}(std::make_index_sequence<R>{});
 
-			return trans;
+			return val;
 		}
 
 		// determinant() - only on square matrices
@@ -6714,7 +6727,7 @@ namespace dsga
 	}
 
 	//
-	// linear-algebriac binary ops
+	// linear-algebriac binary ops - been through nanobench testing for current best implemention
 	//
 
 	// matrix * (column) vector => (column) vector
@@ -6750,12 +6763,12 @@ namespace dsga
 	{
 		auto val = basic_matrix<T, C2, R1>();
 
-		for (std::size_t i = 0; i < R1; ++i)
+		for (std::size_t j = 0; j < R1; ++j)
 		{
-			auto row = lhs.row(i);
-			for (std::size_t j = 0; j < C2; ++j)
+			auto row = lhs.row(j);
+			for (std::size_t i = 0; i < C2; ++i)
 			{
-				val[j][i] = functions::dot(rhs[j], row);
+				val[i][j] = functions::dot(row, rhs[i]);
 			}
 		}
 

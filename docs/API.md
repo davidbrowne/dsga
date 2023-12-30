@@ -240,6 +240,7 @@ Convenience using directive for creating a ```indexed_vector``` for ```Count == 
 * [```make_sequence_array```](#make_sequence_array)
 * [```make_reverse_sequence```](#make_reverse_sequence)
 * [```is_constexpr```](#is_constexpr)
+* [```to_underlying```](#to_underlying)
 
 #### ```make_sequence_array```
 ```c++
@@ -261,6 +262,14 @@ template <typename C, auto val = std::bool_constant<(C{}(), true)>{}>
 consteval auto is_constexpr(C) noexcept;
 ```
 Is a default-constructible callable constexpr? If not, then compile error due to trying to evaluate something that is not constexpr at compile time.
+
+##### ```to_underlying```
+```c++
+template <typename E>
+requires std::is_enum_v<E>
+[[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E e) noexcept;
+```
+Not a vector or matrix function. Not in GLSL. This functionality was added to ```c++23```, but since this is a ```c++20``` library, we have to provide the underlying implementation ourselves. It is not really a good fit for dsga, but it is handy to have around anyway.
 
 ### Class Templates
 
@@ -2198,8 +2207,8 @@ template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2,
 
 ##### ```byteswap```
 ```c++
-template <bool W, non_bool_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto byteswap(const vector_base<W, T, C, D> &arg) noexcept;
+template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
+[[nodiscard]] constexpr auto byteswap(const vector_base<W, T, C, D> &arg) noexcept;
 ```
 Not in GLSL. This functionality was added to ```c++23```, but since this is a ```c++20``` library, we have to provide the underlying implementation ourselves.
 

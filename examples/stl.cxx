@@ -125,7 +125,11 @@ bool read_binary_stl_float(std::ifstream &some_file, float &float_val)
 		return false;
 
 	if constexpr (std::endian::native == std::endian::big)
-		float_val = dsga::byteswap(float_val);
+	{
+		auto integral_float = std::bit_cast<unsigned int>(float_val);
+		integral_float = dsga::byteswap(integral_float);
+		float_val = std::bit_cast<float>(integral_float);
+	}
 
 	return true;
 }
