@@ -1725,6 +1725,10 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_copy_assignable_v<dwrap4>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<dwrap4>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<dwrap4>);
+		CHECK_UNARY(std::is_assignable_v<dwrap4 &, dwrap4 &>);
+		CHECK_UNARY(std::is_assignable_v<dwrap4 &, dwrap4 &&>);
+		CHECK_UNARY(std::is_assignable_v<dwrap4 &&, dwrap4 &>);
+		CHECK_UNARY(std::is_assignable_v<dwrap4 &&, dwrap4 &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<dwrap4>);
 
 		CHECK_UNARY(std::is_aggregate_v<dwrap4>);
@@ -1788,6 +1792,10 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_copy_assignable_v<dvec4>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<dvec4>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<dvec4>);
+		CHECK_UNARY(std::is_assignable_v<dvec4 &, dvec4 &>);
+		CHECK_UNARY(std::is_assignable_v<dvec4 &, dvec4 &&>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<dvec4 &&, dvec4 &>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<dvec4 &&, dvec4 &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<dvec4>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<dvec4>);
@@ -1821,6 +1829,14 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_copy_assignable_v<dswizzle4>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<dswizzle4>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<dswizzle4>);
+		CHECK_UNARY(std::is_assignable_v<dswizzle4 &, dswizzle4 &>);
+		CHECK_UNARY(std::is_assignable_v<dswizzle4 &, dswizzle4 &&>);
+
+		// this is true for rvalue indexed_vector assigned from other indexed_vector, just not from vector_base.
+		// this needs to be true for std::swap() on dsga::basic_vector to work -- dsga::indexed_vector must be std::is_move_assignable_v<>
+		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &>);
+		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &&>);
+
 		CHECK_UNARY(std::is_trivially_destructible_v<dswizzle4>);
 
 		CHECK_UNARY(std::is_aggregate_v<dswizzle1>);
@@ -1851,6 +1867,10 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_copy_assignable_v<const_iter_t>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<const_iter_t>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<const_iter_t>);
+		CHECK_UNARY(std::is_assignable_v<const_iter_t &, const_iter_t &>);
+		CHECK_UNARY(std::is_assignable_v<const_iter_t &, const_iter_t &&>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<const_iter_t &&, const_iter_t &>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<const_iter_t &&, const_iter_t &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<const_iter_t>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<const_iter_t>);
@@ -1874,6 +1894,10 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_copy_assignable_v<iter_t>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<iter_t>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<iter_t>);
+		CHECK_UNARY(std::is_assignable_v<iter_t &, iter_t &>);
+		CHECK_UNARY(std::is_assignable_v<iter_t &, iter_t &&>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<iter_t &&, iter_t &>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<iter_t &&, iter_t &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<iter_t>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<iter_t>);
@@ -1953,6 +1977,10 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_copy_assignable_v<dmat4>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<dmat4>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<dmat4>);
+		CHECK_UNARY(std::is_assignable_v<dmat4 &, dmat4 &>);
+		CHECK_UNARY(std::is_assignable_v<dmat4 &, dmat4 &&>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<dmat4 &&, dmat4 &>);
+		CHECK_UNARY_FALSE(std::is_assignable_v<dmat4 &&, dmat4 &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<dmat4>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<dmat4>);

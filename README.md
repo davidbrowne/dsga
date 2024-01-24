@@ -3,7 +3,7 @@
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Current Version
-v1.3.11
+v1.3.12
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -278,7 +278,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.3.11`
+Current version: `v1.3.12`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v1.3.0](https://github.com/davidbrowne/dsga/releases/tag/v1.3.0)
@@ -306,14 +306,14 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.8.3**
+* **MSVC 2022 - v17.8.5**
 
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2135 | 2135 passed | 0 failed |
+[doctest] assertions: 2159 | 2159 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -324,7 +324,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2135 | 2135 passed | 0 failed |
+[doctest] assertions: 2159 | 2159 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -337,7 +337,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2119 | 2119 passed | 0 failed |
+[doctest] assertions: 2143 | 2143 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -350,7 +350,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2135 | 2135 passed | 0 failed |
+[doctest] assertions: 2159 | 2159 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -363,7 +363,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2119 | 2119 passed | 0 failed |
+[doctest] assertions: 2143 | 2143 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -376,7 +376,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2135 | 2135 passed | 0 failed |
+[doctest] assertions: 2159 | 2159 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -389,7 +389,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2119 | 2119 passed | 0 failed |
+[doctest] assertions: 2143 | 2143 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

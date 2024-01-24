@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 11;
+constexpr inline int DSGA_PATCH_VERSION = 12;
 
 namespace dsga
 {
@@ -111,7 +111,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 1;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 0;
+		constexpr inline int CXCM_PATCH_VERSION = 1;
 
 		namespace dd_real
 		{
@@ -476,13 +476,13 @@ namespace dsga
 
 			// undefined behavior if value is std::numeric_limits<T>::min()
 			template <std::signed_integral T>
-			constexpr double abs(T value) noexcept
+			constexpr T abs(T value) noexcept
 			{
 				return (value < T(0)) ? -value : value;
 			}
 
 			template <std::unsigned_integral T>
-			constexpr double abs(T value) noexcept
+			constexpr T abs(T value) noexcept
 			{
 				return value;
 			}
@@ -1222,7 +1222,7 @@ namespace dsga
 			// don't know what to do if someone tries to negate the most negative number.
 			// standard says behavior is undefined if you can't represent the result by return type.
 			template <std::integral T>
-			constexpr double abs(T value) noexcept
+			constexpr T abs(T value) noexcept
 			{
 				cxcm_constexpr_assert(value != std::numeric_limits<T>::min(), "undefined behavior in abs()");
 
@@ -1925,13 +1925,13 @@ namespace dsga
 			auto copy = basic_vector<T, Count>(*this);
 			if (by > 0)
 			{
-				int count = by > max_val ? max_val : by;
+				int count = by;
 				std::ranges::rotate(copy, copy.begin() + count);
 			}
 			else if (by < 0)
 			{
-				int count = -by > max_val ? max_val : -by;
-				std::ranges::rotate(copy, copy.begin() + max_val - count);
+				int count = -by;
+				std::ranges::rotate(copy, copy.begin() + (max_val - count));
 			}
 
 			return copy;
@@ -2033,8 +2033,8 @@ namespace dsga
 		constexpr indexed_vector_const_iterator() noexcept = default;
 		constexpr indexed_vector_const_iterator(const indexed_vector_const_iterator &) noexcept = default;
 		constexpr indexed_vector_const_iterator(indexed_vector_const_iterator &&) noexcept = default;
-		constexpr indexed_vector_const_iterator &operator =(const indexed_vector_const_iterator &) noexcept = default;
-		constexpr indexed_vector_const_iterator &operator =(indexed_vector_const_iterator &&) noexcept = default;
+		constexpr indexed_vector_const_iterator &operator =(const indexed_vector_const_iterator &) & noexcept = default;
+		constexpr indexed_vector_const_iterator &operator =(indexed_vector_const_iterator &&) & noexcept = default;
 		constexpr ~indexed_vector_const_iterator() = default;
 
 		[[nodiscard]] constexpr reference operator *() const noexcept
@@ -2179,8 +2179,8 @@ namespace dsga
 		constexpr indexed_vector_iterator() noexcept = default;
 		constexpr indexed_vector_iterator(const indexed_vector_iterator &) noexcept = default;
 		constexpr indexed_vector_iterator(indexed_vector_iterator &&) noexcept = default;
-		constexpr indexed_vector_iterator &operator =(const indexed_vector_iterator &) noexcept = default;
-		constexpr indexed_vector_iterator &operator =(indexed_vector_iterator &&) noexcept = default;
+		constexpr indexed_vector_iterator &operator =(const indexed_vector_iterator &) & noexcept = default;
+		constexpr indexed_vector_iterator &operator =(indexed_vector_iterator &&) & noexcept = default;
 		constexpr ~indexed_vector_iterator() = default;
 
 		[[nodiscard]] constexpr reference operator *() const noexcept
@@ -2296,7 +2296,7 @@ namespace dsga
 		// copy assignment
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && implicitly_convertible_to<U, T>
-		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
+		constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept
 		{
 			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
@@ -2310,7 +2310,7 @@ namespace dsga
 		// assignment for some scalar type that converts to T and is only for indexed_vector of [Count == 1]
 		template <dimensional_scalar U>
 		requires Writable && implicitly_convertible_to<U, T> && (Count == 1)
-		constexpr indexed_vector &operator =(U other) noexcept
+		constexpr indexed_vector &operator =(U other) & noexcept
 		{
 			set(other);
 
@@ -2685,8 +2685,8 @@ namespace dsga
 
 		constexpr basic_vector(const basic_vector &) noexcept = default;
 		constexpr basic_vector(basic_vector &&) noexcept = default;
-		constexpr basic_vector &operator =(const basic_vector &) noexcept = default;
-		constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
+		constexpr basic_vector &operator =(const basic_vector &) & noexcept = default;
+		constexpr basic_vector &operator =(basic_vector &&) & noexcept = default;
 
 		//
 		// constructors
@@ -2725,7 +2725,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && implicitly_convertible_to<U, T>
-		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0]);
 			return *this;
@@ -2733,7 +2733,7 @@ namespace dsga
 
 		template <typename U>
 		requires Writable && implicitly_convertible_to<U, T>
-		constexpr basic_vector &operator =(U value) noexcept
+		constexpr basic_vector &operator =(U value) & noexcept
 		{
 			set(value);
 			return *this;
@@ -2884,8 +2884,8 @@ namespace dsga
 
 		constexpr basic_vector(const basic_vector &) noexcept = default;
 		constexpr basic_vector(basic_vector &&) noexcept = default;
-		constexpr basic_vector &operator =(const basic_vector &) noexcept = default;
-		constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
+		constexpr basic_vector &operator =(const basic_vector &) & noexcept = default;
+		constexpr basic_vector &operator =(basic_vector &&) & noexcept = default;
 
 		//
 		// constructors
@@ -2931,7 +2931,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && implicitly_convertible_to<U, T>
-		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0], other[1]);
 			return *this;
@@ -3158,8 +3158,8 @@ namespace dsga
 
 		constexpr basic_vector(const basic_vector &) noexcept = default;
 		constexpr basic_vector(basic_vector &&) noexcept = default;
-		constexpr basic_vector &operator =(const basic_vector &) noexcept = default;
-		constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
+		constexpr basic_vector &operator =(const basic_vector &) & noexcept = default;
+		constexpr basic_vector &operator =(basic_vector &&) & noexcept = default;
 
 		//
 		// constructors
@@ -3207,7 +3207,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && implicitly_convertible_to<U, T>
-		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0], other[1], other[2]);
 			return *this;
@@ -3654,8 +3654,8 @@ namespace dsga
 
 		constexpr basic_vector(const basic_vector &) noexcept = default;
 		constexpr basic_vector(basic_vector &&) noexcept = default;
-		constexpr basic_vector &operator =(const basic_vector &) noexcept = default;
-		constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
+		constexpr basic_vector &operator =(const basic_vector &) & noexcept = default;
+		constexpr basic_vector &operator =(basic_vector &&) & noexcept = default;
 
 		//
 		// constructors
@@ -3706,7 +3706,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && implicitly_convertible_to<U, T>
-		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept
+		constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0], other[1], other[2], other[3]);
 			return *this;
@@ -6132,8 +6132,8 @@ namespace dsga
 
 		constexpr basic_matrix(const basic_matrix &) noexcept = default;
 		constexpr basic_matrix(basic_matrix &&) noexcept = default;
-		constexpr basic_matrix &operator =(const basic_matrix &) noexcept = default;
-		constexpr basic_matrix &operator =(basic_matrix &&) noexcept = default;
+		constexpr basic_matrix &operator =(const basic_matrix &) & noexcept = default;
+		constexpr basic_matrix &operator =(basic_matrix &&) & noexcept = default;
 
 		//
 		// constructors
@@ -6236,7 +6236,7 @@ namespace dsga
 
 		template <floating_point_scalar U>
 		requires implicitly_convertible_to<U, T>
-		constexpr basic_matrix &operator =(const basic_matrix<U, C, R> &other) noexcept
+		constexpr basic_matrix &operator =(const basic_matrix<U, C, R> &other) & noexcept
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{

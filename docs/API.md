@@ -581,7 +581,7 @@ template <typename UnOp>
 requires (std::same_as<T, std::invoke_result_t<UnOp, T>> || std::same_as<T, std::invoke_result_t<UnOp, const T &>>)
 [[nodiscard]] constexpr basic_vector<T, Count> apply(UnOp op) const noexcept;
 ```
-Applies a lambda/function/function object/callable to every element of a vector. The callable must take either a ```T``` or ```const T &```, and it must return a ```T```. Returns a vector of the results.
+Applies a lambda/function/function object/callable to every element of a vector, in an unspecified order. The callable must take either a ```T``` or ```const T &```, and it must return a ```T```. Returns a vector of the results.
 
 ##### ```vector_base::shift```
 ```c++
@@ -690,9 +690,9 @@ Data access through the indexing operator. The indexing operator already takes t
 ```c++
 template <bool W, dimensional_scalar U, typename D>
 requires Writable && implicitly_convertible_to<U, T>
-constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept;
+constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept;
 ```
-The assignment operator. It can be assigned from objects that inherit from ```vector_base```.
+The assignment operator. It can be assigned from objects that inherit from ```vector_base```. Can assign only to lvalues.
 
 ##### ```indexed_vector::data```
 ```c++
@@ -927,9 +927,9 @@ Data access through the indexing operator. The indexing operator already takes t
 ```c++
 template <bool W, dimensional_scalar U, typename D>
 requires Writable && implicitly_convertible_to<U, T>
-constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) noexcept;
+constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept;
 ```
-The assignment operator. It can be assigned from objects that inherit from ```vector_base```.
+The assignment operator. It can be assigned from objects that inherit from ```vector_base```. Can assign only to lvalues.
 
 ##### ```basic_vector::data```
 ```c++
@@ -1138,9 +1138,9 @@ Data access through the indexing operator.
 ```c++
 template <floating_point_scalar U>
 requires implicitly_convertible_to<U, T>
-constexpr basic_matrix &operator =(const basic_matrix<U, C, R> &other) noexcept;
+constexpr basic_matrix &operator =(const basic_matrix<U, C, R> &other) & noexcept;
 ```
-The assignment operator.
+The assignment operator. Can assign only to lvalues.
 
 ##### ```basic_matrix::data```
 ```c++
