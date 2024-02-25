@@ -2245,8 +2245,8 @@ template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2
 ##### ```cross```
 ```c++
 template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
-[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &x,
-                                   const vector_base<W2, T2, 3, D2> &y) noexcept;
+[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &a,
+                                   const vector_base<W2, T2, 3, D2> &b) noexcept;
 ```
 
 ##### ```normalize```
@@ -2282,50 +2282,53 @@ template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2,
 
 ##### ```lessThan```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 [[nodiscard]] constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
                                       const vector_base<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```lessThanEqual```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 [[nodiscard]] constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
                                            const vector_base<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```greaterThan```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 [[nodiscard]] constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
                                          const vector_base<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```greaterThanEqual```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 [[nodiscard]] constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
                                               const vector_base<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```equal```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 [[nodiscard]] constexpr auto equal(const vector_base<W1, T, C, D1> &x,
                                    const vector_base<W2, T, C, D2> &y) noexcept;
+
+template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+[[nodiscard]] constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
+                                   const vector_base<W2, bool, C, D2> &y) noexcept;
 ```
 
 ##### ```notEqual```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 [[nodiscard]] constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
                                       const vector_base<W2, T, C, D2> &y) noexcept;
+
+template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+[[nodiscard]] constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
+                                      const vector_base<W2, bool, C, D2> &y) noexcept;
+
 ```
 
 ##### ```any```
@@ -2362,24 +2365,29 @@ This function takes the place of GLSL function ```not```. We can't define a func
 
 ##### ```within_distance```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 [[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
                                              const vector_base<W2, T, C, D2> &y,
                                              T tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
+                                             const vector_base<W2, T, C, D2> &y,
+                                             const vector_base<W3, T, 1, D3> &tolerance) noexcept;
+
 ```
 Not in GLSL. It compares the Euclidean distance between two vectors to see if they are within the tolerance. The tolerance is a strictly less-than comparison. Tolerances need to be non-negative.
 
 ##### ```within_box```
 ```c++
-template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 requires non_bool_scalar<T>
 [[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
                                         const vector_base<W2, T, C, D2> &y,
                                         T tolerance) noexcept;
 
-template <bool W1, dimensional_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
-requires ((C1 == C2) || (C2 == 1)) && non_bool_scalar<T>
+template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
+requires ((C1 == C2) || (C2 == 1))
 [[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
                                         const vector_base<W2, T, C1, D2> &y,
                                         const vector_base<W3, T, C2, D3> &tolerance) noexcept;

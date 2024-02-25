@@ -1,4 +1,4 @@
-//          Copyright David Browne 2020-2023.
+//          Copyright David Browne 2020-2024.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -95,8 +95,8 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
-constexpr inline int DSGA_MINOR_VERSION = 3;
-constexpr inline int DSGA_PATCH_VERSION = 12;
+constexpr inline int DSGA_MINOR_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
@@ -104,7 +104,7 @@ namespace dsga
 	{
 		// copyright for cxcm - https://github.com/davidbrowne/cxcm
 
-		//          Copyright David Browne 2020-2023.
+		//          Copyright David Browne 2020-2024.
 		// Distributed under the Boost Software License, Version 1.0.
 		//    (See accompanying file LICENSE_1_0.txt or copy at
 		//          https://www.boost.org/LICENSE_1_0.txt)
@@ -5713,21 +5713,17 @@ namespace dsga
 		}
 
 		template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
-		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &x,
-										   const vector_base<W2, T2, 3, D2> &y) noexcept
+		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &a,
+										   const vector_base<W2, T2, 3, D2> &b) noexcept
 		{
 			using Common = std::common_type_t<T1, T2>;
-			return basic_vector<Common, 3>((x[1] * y[2]) - (y[1] * x[2]),
-										   (x[2] * y[0]) - (y[2] * x[0]),
-										   (x[0] * y[1]) - (y[0] * x[1]));
-		}
+			return basic_vector<Common, 3>((a[1] * b[2]) - (b[1] * a[2]),
+										   (a[2] * b[0]) - (b[2] * a[0]),
+										   (a[0] * b[1]) - (b[0] * a[1]));
 
-//		template <floating_point_scalar T1, floating_point_scalar T2>
-//		[[nodiscard]] constexpr auto cross(const basic_vector<T1, 3> &a,
-//										   const basic_vector<T2, 3> &b) noexcept
-//		{
+//			using indexed_vector is much slower for gcc and clang
 //			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
-//		}
+		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto length(const vector_base<W, T, C, D> &x) noexcept
@@ -5806,50 +5802,45 @@ namespace dsga
 		// 8.7 - vector relational
 		//
 
-		constexpr inline auto less_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isless(x, y); };
+		constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isless(x, y); };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
 											  const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, less_op);
 		}
 
-		constexpr inline auto less_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::islessequal(x, y); };
+		constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::islessequal(x, y); };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
 												   const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, less_equal_op);
 		}
 
-		constexpr inline auto greater_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isgreater(x, y); };
+		constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isgreater(x, y); };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
 												 const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, greater_op);
 		}
 
-		constexpr inline auto greater_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isgreaterequal(x, y); };
+		constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isgreaterequal(x, y); };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
 													  const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, greater_equal_op);
 		}
 
-		constexpr inline auto equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? false : x == y; };
+		constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? false : x == y; };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto equal(const vector_base<W1, T, C, D1> &x,
 										   const vector_base<W2, T, C, D2> &y) noexcept
 		{
@@ -5865,10 +5856,9 @@ namespace dsga
 			return machinery::apply_unitype_make(x, y, bool_equal_op);
 		}
 
-		constexpr inline auto not_equal_op = []<dimensional_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? true : x != y; };
+		constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? true : x != y; };
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
 											  const vector_base<W2, T, C, D2> &y) noexcept
 		{
@@ -5947,7 +5937,7 @@ namespace dsga
 
 		// Euclidean distance check - strictly less than comparison, boundary is false
 
-		template <std::floating_point T>
+		template <non_bool_scalar T>
 		[[nodiscard]] constexpr bool within_distance(T x,
 													 T y,
 													 T tolerance) noexcept
@@ -5960,8 +5950,7 @@ namespace dsga
 #endif
 		}
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 													 const vector_base<W2, T, C, D2> &y,
 													 T tolerance) noexcept
@@ -5974,8 +5963,7 @@ namespace dsga
 #endif
 		}
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 													 const vector_base<W2, T, C, D2> &y,
 													 const vector_base<W3, T, 1, D3> &tolerance) noexcept
@@ -5985,8 +5973,7 @@ namespace dsga
 
 		// tolerance-box component check - strictly less than comparison, boundary is false
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
 												const vector_base<W2, T, C, D2> &y,
 												T tolerance) noexcept
@@ -5996,8 +5983,8 @@ namespace dsga
 			return all(comparison_vector);
 		}
 
-		template <bool W1, dimensional_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
-		requires ((C1 == C2) || (C2 == 1)) && non_bool_scalar<T>
+		template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
+		requires ((C1 == C2) || (C2 == 1))
 		[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
 												const vector_base<W2, T, C1, D2> &y,
 												const vector_base<W3, T, C2, D3> &tolerance) noexcept

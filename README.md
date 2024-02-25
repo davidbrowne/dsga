@@ -2,8 +2,11 @@
 
 **dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
+## Home
+[https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
+
 ## Current Version
-v1.3.12
+v1.4.0
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -278,10 +281,10 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.3.12`
+Current version: `v1.4.0`
 
 * Everything major has some tests, but code coverage is not 100%.
-* [Last Released: v1.3.0](https://github.com/davidbrowne/dsga/releases/tag/v1.3.0)
+* [Last Released: v1.4.0](https://github.com/davidbrowne/dsga/releases/tag/v1.4.0)
 
 ### The next steps
 * Refining API documentation.
@@ -306,7 +309,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.8.5**
+* **MSVC 2022 - v17.9.1**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -343,7 +346,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 ### Ubuntu Noble Numbat preview running in WSL2 for Windows 11
 
-* **gcc 13.2.0**
+* **gcc 14.0.1**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -405,7 +408,7 @@ It is a common pastime for people to write these kind of vector libraries. The t
 [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
 
 ```
-//          Copyright David Browne 2020-2023.
+//          Copyright David Browne 2020-2024.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -419,8 +422,9 @@ The libraries we use (some just occasionally):
 
 ```
 // cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
+// https://github.com/davidbrowne/cxcm
 //
-//          Copyright David Browne 2020-2023.
+//          Copyright David Browne 2020-2024.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -464,6 +468,7 @@ The libraries we use (some just occasionally):
 
 ```
 // doctest.h - the lightest feature-rich C++ single-header testing framework for unit tests and TDD
+// https://github.com/doctest/doctest
 //
 // Copyright (c) 2016-2023 Viktor Kirilov
 //
