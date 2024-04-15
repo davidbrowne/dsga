@@ -1,12 +1,17 @@
 # dsga : Data Structures for Geometric Algorithms
 
-**dsga** is a single header-only **c++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in c++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
+**dsga** is a single header-only **C++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in C++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Home
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v1.4.0
+v1.4.1
+
+## Minimum Version of Tested Compilers
+* Microsoft Visual Studio 2022 v17.x
+* gcc v12.3
+* clang v16
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -161,6 +166,31 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
     return dsga::normalize(dsga::cross(v2 - v1, v3 - v1));
 }
 ```
+
+```c++
+//
+// cross product
+//
+
+// arguments are of the vector base class type, and this function will be used if any passed argument is of type ```indexed_vector```
+template <bool W1, dsga::floating_point_scalar T1, typename D1, bool W2, dsga::floating_point_scalar T2, typename D2>
+[[nodiscard]] constexpr auto cross(const dsga::vector_base<W1, T1, 3, D1> &a,
+                                   const dsga::vector_base<W2, T2, 3, D2> &b) noexcept
+{
+    // CTAD gets us the type and size for the vector
+    return dsga::basic_vector((a[1] * b[2]) - (b[1] * a[2]),
+                              (a[2] * b[0]) - (b[2] * a[0]),
+                              (a[0] * b[1]) - (b[0] * a[1]));
+}
+
+// arguments are of type ```basic_vector```, and there is a compact swizzled implementation
+template <dsga::floating_point_scalar T1, dsga::floating_point_scalar T2>
+[[nodiscard]] constexpr auto cross(const dsga::basic_vector<T1, 3> &a,
+                                   const dsga::basic_vector<T2, 3> &b) noexcept
+{
+    return (a.yzx * b.zxy) - (a.zxy * b.yzx);
+}
+```
 ## Relevant GLSL Overview
 
 Our programming environment is ```c++20```, not a GLSL shader program, so the entire GLSL Shading language specification is a super-set of what we are trying to achieve. We really just want the vector and matrix data structures (and their corresponding functions and behavior) to be usable in a ```c++20``` environment.
@@ -281,7 +311,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.4.0`
+Current version: `v1.4.1`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v1.4.0](https://github.com/davidbrowne/dsga/releases/tag/v1.4.0)
@@ -309,7 +339,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.9.1**
+* **MSVC 2022 - v17.9.6**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -331,7 +361,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 17.0.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.6), with MSVC and/or gcc v13.2.0 installed:
+* **clang 18.1.3** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.3), with MSVC and/or gcc 13.2.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -357,7 +387,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 17.0.6**
+* **clang 18.1.0rc2**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -370,7 +400,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 22.04 running in WSL2 for Windows 11
+### Ubuntu 22.04.3 LTS running in WSL2 for Windows 11
 
 * **gcc 12.3.0**
 

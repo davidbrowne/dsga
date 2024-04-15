@@ -81,7 +81,21 @@ union
 };
 ```
 
-```operator []``` and ```set()``` (and of course ```at()``` and ```init()```) all take into account the indirect index access, so it manages the logical sequential nature of the vector.
+```operator []```, ```set()```, and the iterator interface take into account the indirect index access, so it manages the logical sequential nature of the vector.
+
+For an ```indexed_vector``` where Count == 1, there is a conversion operator to the underlying type of the vector element. This allow us to use the ```indexed_vector``` value directly without having to access it via ```operator []``` or ```data()``` or an iterator:
+
+```c++
+explicit(false) constexpr operator T() const noexcept requires (Count == 1)
+{
+    return base[offsets[0]];
+}
+
+...
+auto vec = dsga::dvec2(0.5, 0.866);
+auto val = std::asin(vec.x);
+...
+```
 
 Only a non-const ```indexed_vector``` that has unique indices, e.g., [3, 2, 0], as opposed to repeating indices, e.g., [1, 2, 1], is **writable**, which means it can be used as an lvalue for assignment, or you can modify it via its member functions.
 

@@ -2526,7 +2526,7 @@ template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_boo
 [[nodiscard]] constexpr auto operator *(const vector_base<W, U, R, D> &lhs,
                                         const basic_matrix<T, C, R> &rhs) noexcept;
 ```
-For performing a ```vector * matrix``` operation, the vector is treated as if it were transposed, i.e., a row vector.
+For performing a ```vector * matrix``` operation, the vector is treated as if it were transposed, i.e., a row vector, as is the result.
 
 ##### Matrix Linear Algebraic Matrix Times Vector
 ```c++
@@ -2534,13 +2534,14 @@ template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_boo
 [[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
                                         const vector_base<W, U, C, D> &rhs) noexcept;
 ```
+For performing a ```matrix * vector``` operation, the vector is treated as if it were a column vector, as is the result.
 
 ##### Matrix Linear Algebraic Matrix Times Matrix
 ```c++
-template <floating_point_scalar T, std::size_t C1, std::size_t R1, std::size_t C2, std::size_t R2>
+template <floating_point_scalar T, std::size_t C1, std::size_t R1, floating_point_scalar U, std::size_t C2, std::size_t R2>
 requires (C1 == R2)
 [[nodiscard]] constexpr auto operator *(const basic_matrix<T, C1, R1> &lhs,
-                                        const basic_matrix<T, C2, R2> &rhs) noexcept;
+                                        const basic_matrix<U, C2, R2> &rhs) noexcept;
 ```
 
 #### Matrix Comparison Operators

@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
 constexpr inline int DSGA_MINOR_VERSION = 4;
-constexpr inline int DSGA_PATCH_VERSION = 0;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
@@ -1710,7 +1710,6 @@ namespace dsga
 		using const_reverse_iterator = dimensional_storage_t<T, Size>::const_reverse_iterator;
 
 		[[nodiscard]] constexpr int length() const noexcept					{ return Count; }
-//		[[nodiscard]] constexpr std::size_t	size() const noexcept			{ return Count; }
 		static constexpr std::integral_constant<std::size_t, Count> size =	{};
 
 		// logical and physically contiguous access to data
@@ -1863,7 +1862,6 @@ namespace dsga
 		[[nodiscard]] constexpr int length() const noexcept							{ return Count; }
 
 		// not required by spec, but more c++ container-like
-//		[[nodiscard]] constexpr std::size_t	size() const noexcept					{ return Count; }
 		static constexpr std::integral_constant<std::size_t, Count> size =			{};
 
 		// support for range-for loop
@@ -1922,22 +1920,23 @@ namespace dsga
 		{
 			constexpr auto max_val = static_cast<int>(Count);
 			by %= max_val;
-			auto copy = basic_vector<T, Count>(*this);
+
+			basic_vector<T, Count> dest;
+			auto pivot = this->begin();
 			if (by > 0)
 			{
-				int count = by;
-				std::ranges::rotate(copy, copy.begin() + count);
+				pivot += by;
 			}
 			else if (by < 0)
 			{
-				int count = -by;
-				std::ranges::rotate(copy, copy.begin() + (max_val - count));
+				pivot += (max_val + by);
 			}
+			std::ranges::rotate_copy(*this, pivot, dest.begin());
 
-			return copy;
+			return dest;
 		}
 
-		// min value in vector - been through nanobench testing for current best implemention
+		// min value in vector
 		[[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>
 		{
 			T smallest = (*this)[0];
@@ -1950,7 +1949,7 @@ namespace dsga
 			return smallest;
 		}
 
-		// max value in vector - been through nanobench testing for current best implemention
+		// max value in vector
 		[[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>
 		{
 			T largest = (*this)[0];
@@ -1963,7 +1962,7 @@ namespace dsga
 			return largest;
 		}
 
-		// sum of values in vector - been through nanobench testing for current best implemention
+		// sum of values in vector
 		[[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -2274,7 +2273,7 @@ namespace dsga
 
 		//
 		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
-		// currently unused because at() does this logically for us.
+		// currently unused because operator[] does this logically for us.
 		//
 
 		// as a parameter pack
@@ -2647,7 +2646,7 @@ namespace dsga
 
 		//
 		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because at() does this logically for us.
+		// currently unused because operator[] does this logically for us.
 		//
 
 		// as a parameter pack
@@ -2820,7 +2819,7 @@ namespace dsga
 
 		//
 		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because at() does this logically for us.
+		// currently unused because operator[] does this logically for us.
 		//
 
 		// as a parameter pack
@@ -3004,7 +3003,7 @@ namespace dsga
 
 		//
 		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because at() does this logically for us.
+		// currently unused because operator[] does this logically for us.
 		//
 
 		// as a parameter pack
@@ -3280,7 +3279,7 @@ namespace dsga
 
 		//
 		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because at() does this logically for us.
+		// currently unused because operator[] does this logically for us.
 		//
 
 		// as a parameter pack
@@ -3823,7 +3822,6 @@ namespace dsga
 
 		// binary
 
-		// been through nanobench testing for current best implemention
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
 		constexpr auto apply_unitype_make(const vector_base<W1, T1, C, D1> &lhs,
 										  const vector_base<W2, T2, C, D2> &rhs,
@@ -5716,13 +5714,16 @@ namespace dsga
 		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &a,
 										   const vector_base<W2, T2, 3, D2> &b) noexcept
 		{
-			using Common = std::common_type_t<T1, T2>;
-			return basic_vector<Common, 3>((a[1] * b[2]) - (b[1] * a[2]),
-										   (a[2] * b[0]) - (b[2] * a[0]),
-										   (a[0] * b[1]) - (b[0] * a[1]));
+			return basic_vector((a[1] * b[2]) - (b[1] * a[2]),
+								(a[2] * b[0]) - (b[2] * a[0]),
+								(a[0] * b[1]) - (b[0] * a[1]));
+		}
 
-//			using indexed_vector is much slower for gcc and clang
-//			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
+		template <floating_point_scalar T1, floating_point_scalar T2>
+		[[nodiscard]] constexpr auto cross(const basic_vector<T1, 3> &a,
+										   const basic_vector<T2, 3> &b) noexcept
+		{
+			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -6051,26 +6052,18 @@ namespace dsga
 		static constexpr std::size_t ComponentCount = C * R;
 
 		// number of columns
-		[[nodiscard]] constexpr int length() const noexcept
-		{
-			return C;
-		}
+		[[nodiscard]] constexpr int length() const noexcept						{ return C; }
 
 		// number of rows
-		[[nodiscard]] constexpr int column_length() const noexcept
-		{
-			return R;
-		}
+		[[nodiscard]] constexpr int column_length() const noexcept				{ return R; }
 
 		// returns number of columns (row size), not number of elements
 		// not required by spec, but more c++ container-like
-//		[[nodiscard]] constexpr std::size_t	size() const noexcept				{ return C; }
-		static constexpr std::integral_constant<std::size_t, C> size = {};
+		static constexpr std::integral_constant<std::size_t, C> size =			{};
 
 		// returns number of rows
 		// not required by spec, but more c++ container-like
-//		[[nodiscard]] constexpr std::size_t	column_size() const noexcept		{ return R; }
-		static constexpr std::integral_constant<std::size_t, R> column_size = {};
+		static constexpr std::integral_constant<std::size_t, R> column_size =	{};
 
 		// data storage for matrix
 		std::array<basic_vector<T, R>, C> columns;
@@ -6330,7 +6323,7 @@ namespace dsga
 			}(std::make_index_sequence<C2>{});
 		}
 
-		// transpose a matrix - been through nanobench testing for current best implemention
+		// transpose a matrix
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
 		[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept
 		{
@@ -6714,7 +6707,7 @@ namespace dsga
 	}
 
 	//
-	// linear-algebriac binary ops - been through nanobench testing for current best implemention
+	// linear-algebriac binary ops
 	//
 
 	// matrix * (column) vector => (column) vector
@@ -6743,21 +6736,20 @@ namespace dsga
 
 	// matrix * matrix => matrix
 
-	template <floating_point_scalar T, std::size_t C1, std::size_t R1, std::size_t C2, std::size_t R2>
+	template <floating_point_scalar T, std::size_t C1, std::size_t R1, floating_point_scalar U, std::size_t C2, std::size_t R2>
 	requires (C1 == R2)
 	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C1, R1> &lhs,
-											const basic_matrix<T, C2, R2> &rhs) noexcept
+											const basic_matrix<U, C2, R2> &rhs) noexcept
 	{
-		auto val = basic_matrix<T, C2, R1>();
+		// functions::dot() is the core of a different implementation of this function,
+		// and is representative of the underlying multiplication and addition that occurs.
+		using element_type_t = decltype(functions::dot(std::declval<basic_vector<T, C1>>(), std::declval<basic_vector<U, R2>>()));
+		auto val = basic_matrix<element_type_t, C2, R1>();
 
-		for (std::size_t j = 0; j < R1; ++j)
+		[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			auto row = lhs.row(j);
-			for (std::size_t i = 0; i < C2; ++i)
-			{
-				val[i][j] = functions::dot(row, rhs[i]);
-			}
-		}
+			 ((val[Is] = lhs * rhs[Is]), ...);
+		}(std::make_index_sequence<C2>{});
 
 		return val;
 	}
