@@ -841,6 +841,11 @@ explicit constexpr basic_vector(const U &u, const Args & ...args) noexcept;
 ```
 Variadic constructor. Can take a combination of vectors, scalars, and matrixes as arguments to initialize the ```basic_vector```.
 
+```c++
+constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept;
+```
+An intializer list of values. If too few values for the vector, the rest of the elements will be set to 0. If too many values for the vector, the rest of the initialization list will be ignored.
+
 ##### ```basic_vector::base```
 ```c++
 storage_wrapper<T, Size> base;
@@ -1071,6 +1076,11 @@ requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept;
 ```
 Constructors that take a matrix as an argument, but not a normal copy constructor (see default constructors).
+
+```c++
+constexpr basic_matrix(const std::initializer_list<T> &init_list) noexcept;
+```
+An intializer list of values. If too few values for the matrix, the rest of the elements will be set to 0. If too many values for the matrix, the rest of the initialization list will be ignored.
 
 ##### ```basic_matrix::columns```
 ```c++

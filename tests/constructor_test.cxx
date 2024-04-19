@@ -261,6 +261,19 @@ TEST_SUITE("test vector constructors")
 		auto s1 = dsga::storage_wrapper{1.1, 2.2, 3, true};
 		CHECK_EQ(s1, dsga::storage_wrapper<double, 4>{1.1, 2.2, 3.0, 1.0});
 	}
+
+	TEST_CASE("initializer list vector constructor")
+	{
+		dsga::vec4 initlist_vec1 = {1, 2};
+		dsga::vec4 initlist_vec2 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+		dsga::vec4 initlist_vec3{1, 2};
+		dsga::vec4 initlist_vec4{};
+
+		CHECK_EQ(initlist_vec1, vec4(1, 2, 0, 0));
+		CHECK_EQ(initlist_vec2, vec4(1, 2, 3, 4));
+		CHECK_EQ(initlist_vec3, vec4(1, 2, 0, 0));
+		CHECK_EQ(initlist_vec4, vec4(0, 0, 0, 0));
+	}
 }
 
 TEST_SUITE("test matrix constructors")
@@ -552,5 +565,18 @@ TEST_SUITE("test matrix constructors")
 		CHECK_EQ(tm9, mat4x4(4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 4));
 		CHECK_EQ(tm10, mat4x4(9, 0, 0, 0, 0, 9, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
 		CHECK_EQ(tm11, dmat4x4(1, 2, 0, 0, 3, 4, 0, 0, 5, 6, 1, 0, 7, 8, 0, 1));
+	}
+
+	TEST_CASE("initializer list matrix constructor")
+	{
+		dsga::mat4 initlist_mat1 = {1, 2, 3, 4, 5, 6};
+		dsga::mat4 initlist_mat2 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+		dsga::mat4 initlist_mat3{1, 2, 3, 4, 5, 6};
+		dsga::mat4 initlist_mat4{};
+
+		CHECK_EQ(initlist_mat1, mat4(1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+		CHECK_EQ(initlist_mat2, mat4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
+		CHECK_EQ(initlist_mat3, mat4(1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+		CHECK_EQ(initlist_mat4, mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 	}
 }

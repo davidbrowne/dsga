@@ -95,8 +95,8 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 1;
-constexpr inline int DSGA_MINOR_VERSION = 4;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_MINOR_VERSION = 5;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
@@ -2014,16 +2014,16 @@ namespace dsga
 		using reference = const T &;
 
 		// range of valid values for mapper_index
-		constexpr static std::size_t begin_index = 0;
-		constexpr static std::size_t end_index = Count;
+		constexpr static int begin_index = 0;
+		constexpr static int end_index = Count;
 
 		// the data
 		const indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
-		std::size_t mapper_index;
+		int mapper_index;
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
-		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
+		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, int index) noexcept
 			: mapper_ptr(std::addressof(mapper)), mapper_index(index)
 		{
 			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index <= end_index), "index not in range");
@@ -2170,7 +2170,7 @@ namespace dsga
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
-		constexpr indexed_vector_iterator(indexed_vector<T, Size, Count, Is ...> &mapper, std::size_t index) noexcept
+		constexpr indexed_vector_iterator(indexed_vector<T, Size, Count, Is ...> &mapper, int index) noexcept
 			: base_iter(mapper, index)
 		{
 		}
@@ -2718,6 +2718,16 @@ namespace dsga
 			}(std::make_index_sequence<Count>{});
 		}
 
+		// initializer list constructor -- it will use the first Count number of elements of the list,
+		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
+		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
+		{
+			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
+			auto fill_size = Count - copy_size;
+			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
+			std::fill_n(fill_iter, fill_size, T(0));
+		}
+
 		//
 		// implicit assignment operators
 		//
@@ -2922,6 +2932,16 @@ namespace dsga
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
+		}
+
+		// initializer list constructor -- it will use the first Count number of elements of the list,
+		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
+		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
+		{
+			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
+			auto fill_size = Count - copy_size;
+			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
+			std::fill_n(fill_iter, fill_size, T(0));
 		}
 
 		//
@@ -3198,6 +3218,16 @@ namespace dsga
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
+		}
+
+		// initializer list constructor -- it will use the first Count number of elements of the list,
+		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
+		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
+		{
+			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
+			auto fill_size = Count - copy_size;
+			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
+			std::fill_n(fill_iter, fill_size, T(0));
 		}
 
 		//
@@ -3697,6 +3727,16 @@ namespace dsga
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
+		}
+
+		// initializer list constructor -- it will use the first Count number of elements of the list,
+		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
+		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
+		{
+			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
+			auto fill_size = Count - copy_size;
+			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
+			std::fill_n(fill_iter, fill_size, T(0));
 		}
 
 		//
@@ -6208,6 +6248,24 @@ namespace dsga
 					((columns[Is][Is] = T(1.0)), ...);
 				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
 			}
+		}
+
+		// initializer list constructor -- it will use the first ComponentCount number of elements of the list,
+		// and if list size is less than ComponentCount, it will initialize the rest of the matrix elements with 0
+		constexpr basic_matrix(const std::initializer_list<T> &init_list) noexcept
+		{
+			auto element_values = std::array<T, ComponentCount>{};
+			auto copy_size = (ComponentCount > init_list.size()) ? init_list.size() : ComponentCount;
+			std::copy_n(init_list.begin(), copy_size, element_values.begin());
+
+			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+				{
+					constexpr std::size_t Col = Is;
+					columns[Col].set(element_values[Col * R + Js] ...);
+				}(std::make_index_sequence<R>{})), ...);
+			}(std::make_index_sequence<C>{});
 		}
 
 		//

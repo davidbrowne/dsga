@@ -317,7 +317,11 @@ template <typename ... Args>
 constexpr basic_vector(const Args & ...args) noexcept;
 ```
 
-This approach is exactly what ```basic_matrix``` does.
+* An intializer list of values. If too few values for the vector, the rest of the elements will be set to 0. If too many values for the vector, the rest of the initialization list will be ignored.
+
+```c++
+constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept;
+```
 
 ### Vector Member Functions
 
@@ -528,6 +532,12 @@ constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept;
 template <typename ... Args>
 constexpr basic_matrix(const Args & ...args) noexcept;
 ``` 
+
+* An intializer list of values. If too few values for the matrix, the rest of the elements will be set to 0. If too many values for the matrix, the rest of the initialization list will be ignored.
+
+```c++
+constexpr basic_matrix(const std::initializer_list<T> &init_list) noexcept;
+```
 
 ### Matrix Member Functions
 

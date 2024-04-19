@@ -6,7 +6,7 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v1.4.1
+v1.5.0
 
 ## Minimum Version of Tested Compilers
 * Microsoft Visual Studio 2022 v17.x
@@ -172,7 +172,7 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 // cross product
 //
 
-// arguments are of the vector base class type, and this function will be used if any passed argument is of type ```indexed_vector```
+// arguments are of the vector base class type, and this function will be used if any passed argument is of type indexed_vector
 template <bool W1, dsga::floating_point_scalar T1, typename D1, bool W2, dsga::floating_point_scalar T2, typename D2>
 [[nodiscard]] constexpr auto cross(const dsga::vector_base<W1, T1, 3, D1> &a,
                                    const dsga::vector_base<W2, T2, 3, D2> &b) noexcept
@@ -183,7 +183,7 @@ template <bool W1, dsga::floating_point_scalar T1, typename D1, bool W2, dsga::f
                               (a[0] * b[1]) - (b[0] * a[1]));
 }
 
-// arguments are of type ```basic_vector```, and there is a compact swizzled implementation
+// arguments are of type basic_vector, and there is a compact swizzled implementation
 template <dsga::floating_point_scalar T1, dsga::floating_point_scalar T2>
 [[nodiscard]] constexpr auto cross(const dsga::basic_vector<T1, 3> &a,
                                    const dsga::basic_vector<T2, 3> &b) noexcept
@@ -278,7 +278,7 @@ To make the vectors and matrices as useful as possible in a C++ context, various
         * vector - pointer to scalars of concept type ```dsga::dimensional_scalar```
         * matrix - pointer to column vectors whose scalars are of concept type ```dsga::floating_point_scalar```
     * ```size```
-    * vector only - these allow logical use of ```data```
+    * vector only - these ordering facilities allow logical use of ```data```
         * ```offsets```
         * ```sequence```
 * Type Conversions
@@ -311,10 +311,10 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.4.1`
+Current version: `v1.5.0`
 
 * Everything major has some tests, but code coverage is not 100%.
-* [Last Released: v1.4.0](https://github.com/davidbrowne/dsga/releases/tag/v1.4.0)
+* [Last Released: v1.5.0](https://github.com/davidbrowne/dsga/releases/tag/v1.5.0)
 
 ### The next steps
 * Refining API documentation.
@@ -345,8 +345,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2159 | 2159 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2167 | 2167 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -356,8 +356,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2159 | 2159 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2167 | 2167 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -369,8 +369,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2143 | 2143 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2151 | 2151 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -382,8 +382,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2159 | 2159 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2167 | 2167 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -395,8 +395,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2143 | 2143 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2151 | 2151 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -408,8 +408,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2159 | 2159 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2167 | 2167 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -421,8 +421,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2143 | 2143 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2151 | 2151 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
