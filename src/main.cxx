@@ -7,7 +7,6 @@
 //#include "nanobench.h"
 #include "dsga.hxx"
 #include <iostream>
-#include <format>
 
 //
 //
@@ -20,7 +19,7 @@
 // print current version number
 void print_dsga_version()
 {
-	std::cout << std::format("\ndsga version: v{}.{}.{}\n\n", DSGA_MAJOR_VERSION, DSGA_MINOR_VERSION, DSGA_PATCH_VERSION);
+	std::cout << "\ndsga version: v" << DSGA_MAJOR_VERSION << "." << DSGA_MINOR_VERSION << "." << DSGA_PATCH_VERSION << "\n\n";
 }
 
 // this function is a place to just test out whatever
