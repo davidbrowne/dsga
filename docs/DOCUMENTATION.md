@@ -27,19 +27,19 @@ namespace dsga
     // specialized using types
 
     // boolean vectors
-    using bscal = dsga::basic_vector<bool, 1>;
+    using bscal = dsga::basic_vector<bool, 1>;        // not in glsl
     using bvec2 = dsga::basic_vector<bool, 2>;
     using bvec3 = dsga::basic_vector<bool, 3>;
     using bvec4 = dsga::basic_vector<bool, 4>;
 
     // int vectors
-    using iscal = dsga::basic_vector<int, 1>;
+    using iscal = dsga::basic_vector<int, 1>;         // not in glsl
     using ivec2 = dsga::basic_vector<int, 2>;
     using ivec3 = dsga::basic_vector<int, 3>;
     using ivec4 = dsga::basic_vector<int, 4>;
 
     // unsigned int vectors
-    using uscal = dsga::basic_vector<unsigned, 1>;
+    using uscal = dsga::basic_vector<unsigned, 1>;    // not in glsl
     using uvec2 = dsga::basic_vector<unsigned, 2>;
     using uvec3 = dsga::basic_vector<unsigned, 3>;
     using uvec4 = dsga::basic_vector<unsigned, 4>;
@@ -57,7 +57,7 @@ namespace dsga
     using ullvec4 = dsga::basic_vector<unsigned long long, 4>;
 
     // float vectors with out an 'f' prefix -- this is from glsl
-    using scal = dsga::basic_vector<float, 1>;
+    using scal = dsga::basic_vector<float, 1>;        // not in glsl
     using vec2 = dsga::basic_vector<float, 2>;
     using vec3 = dsga::basic_vector<float, 3>;
     using vec4 = dsga::basic_vector<float, 4>;
@@ -69,7 +69,7 @@ namespace dsga
     using fvec4 = dsga::basic_vector<float, 4>;
 
     // double vectors
-    using dscal = dsga::basic_vector<double, 1>;
+    using dscal = dsga::basic_vector<double, 1>;      // not in glsl
     using dvec2 = dsga::basic_vector<double, 2>;
     using dvec3 = dsga::basic_vector<double, 3>;
     using dvec4 = dsga::basic_vector<double, 4>;
@@ -115,11 +115,25 @@ namespace dsga
 
 ## Vector Types
 
-In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), the various dimensions of the vectors and matrices are between 2 and 4, inclusive. For ```dsga```, this is true for the matrices, but for the vectors we also can have length be 1. We don't call them "vectors", but we suffix their type with "scal" for scalar, as opposed to a suffix of "vec1".
+See [details](DETAILS.md) for more info.
 
-We have gone against the specification for a few reasons. Having length 1 vectors is a good way of dealing with how [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) has modifed the basic types, e.g., float, double, int. In GLSL, these basic types are not the same as they are in ```c++```. They behave as if they are vectors of length 1, including [swizzling](#swizzling). Since we can't change the basic types, we provide the "scalar" analog vector type that mimics what happens, e.g., ```bscal```, ```iscal```, ```fscal```, ```dscal```.
+In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), the vectors can only be of dimension 2 through 4, and same for the matrix rows and columns. For ```dsga```, this is true for the matrices, but for the vectors we also can have dimension of 1. They are not very useful, but play a couple roles in the library. Just like the vector types have a suffix of "vec2", "vec3", or "vec4", e.g., ivec2, vec3, dvec4, etc., for the dimension 1 vectors we have types suffixed with "scal" for scalar, e.g., iscal, fscal, bscal, dscal, etc.
 
-Since these "scalar" types are really vectors of length 1, they can use the vector functions. The functions don't discriminate based on size in dsga.
+We have gone against the specification for a few reasons. Having dimension 1 vectors is a good way of dealing with how GLSL has modifed the basic types, e.g., float, double, int. In GLSL, these basic types are not the same as they are in ```c++```. They behave as if they are vectors of dimension 1, including [swizzling](#swizzling). While GLSL 4.6 does this, note that [OpenGL ES Shading Language](https://www.khronos.org/files/opengles_shading_language.pdf) doesn't do this, so then neither does WebGL. Since we can't change the basic types, we provide the "scalar" vector type that mimics what happens, e.g., bscal, iscal, fscal, dscal, etc.
+
+```c++
+// glsl
+int some_int = 34;
+ivec3 some_vector = some_int.xxx;
+
+// c++20
+dsga::iscal some_scalar = 34;
+dsga::ivec3 some_vector = some_scalar.xxx;
+```
+
+The usual vectors that we create in ```dsga``` are of type ```basic_vector```. The "scalar" types are really ```basic_vector``` of dimension 1. The vectors used for swizzling, of type ```indexed_vector```, can be of dimension 1 through 4, so having the ability to have a ```basic_vector``` of dimension 1 is analogous to a 1 dimensional swizzle.
+
+There doesn't appear to be a a lot of utility for dimension 1 ```basic_vector```s, so in the future they may be removed. However, swizzling is very important for dimension 1 ```indexed_vector```s, so they will never be removed.
 
 ### Swizzling
 
@@ -134,55 +148,135 @@ vec3 smaller_vec(big_vec.zyx);
 
 Swizzling uses dot notation, e.g., ```foo.xy, bar.zw, baz.xxyy```. This gives you a type of vector that is a view on the data of the original vector. The swizzles are part of the original vector, and they have the same lifetime. The "x" index means the first value in the vector, "y" means the second, "z" means the third, and "w" means the fourth, so "xyzw" are the possible values in a swizzle, depending on the size of the original vector. In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), there are 3 different domains for swizzling: ```xyzw```, ```rgba```, and ```stpq```. We use "xyzw" when talking about spatial coordinates, "rgba" when talking about color coordinates, and "stpq" when talking about texture coordinates. Since dsga is intended for geometry and algebra, we only felt the need to support the "xyzw" set for swizzling.
 
-A length 1 vector can only refer to "x", but it can do so up to 4 times in a swizzle:
+Dot notation swizzle vectors (```indexed_vector```) _can not_ also be swizzled, only ```basic_vector``` types, e.g., dvec2, uvec3. You can create a ```basic_vector``` from a dot notation swizzle vector, and then that can be swizzled.
+
+```c++
+auto some_vec = uvec4(0, 1, 2, 3);      // 4 dimensional basic_vector
+auto some_swiz = some_vec.xyz;          // 3 dimensional indexed_vector
+auto swiz_twice1 = some_vec.xyz.yx;     // compile error, can't swizzle indexed_vector
+auto swiz_twice2 = some_swiz.yx;        // compile error, can't swizzle indexed_vector
+auto swiz_again = uvec2(some_swiz).yx;  // ok, converted to basic_vector first
+```
+
+A 1 dimensional vector can only refer to "x", but it can do so up to 4 times in a swizzle:
 ```c++
 fscal length_one_vec;
 ...
 auto length_four_vec = vec4(length_one_vec.xxxx);
 ```
 
-Similarly, length 2 vectors can refer to combinations of "xy", length 3 vectors can refer to combinations of "xyz", and length 4 vectors can refer to combinations of "xyzw". Since the maximum size of a vector is 4, that is the maximum number of swizzle characters you can use.
+Similarly, dimension 2 vectors can refer to combinations of "xy", dimension 3 vectors can refer to combinations of "xyz", and dimension 4 vectors can refer to combinations of "xyzw". Since the maximum size of a vector is 4, that is the maximum number of swizzle characters you can use.
 
-Swizzling to a size of 1 is another reason to allow vectors of length 1:
+Swizzling to a size of 1 may be another reason to allow ```basic_vector```s of dimension 1:
 ```c++
 vec4 big_vec;
 ...
 fscal z_val = big_vec.z;
 ```
 
-We try to let these length 1 vectors straddle the line between a vector and scalar. We do as much as possible to treat it like a real scalar value, but at the same time we also allow these to use the vector functions and operations.
+Dimension 1 vectors, whether ```basic_vector``` (e.g., iscal) or ```indexed_vector``` (from a dot-notation swizzle), are treated as scalar values in most all operations and functions. The values returned from the operations and functions, where only vectors of dimension 1 and fundamental types are arguments, return scalar values of fundamental types, e.g., float, double, bool, int, etc.
+```c++
+auto value1 = dsga::ivec2(34) + 8;             // value1 is of type dsga::basic_vector<int, 2>
+auto value2 = dsga::iscal(34) + 8;             // value2 is of type int
+
+auto some_vec = dsga::ivec4(12, 54, 88, 99);   // some_vec is of type dsga::basic_vector<int,4>
+auto value3 = dsga::iscal(34) + some_vec.y;    // value3 is of type int
+auto value4 = some_vec.z + some_vec.x;         // value4 is of type int
+auto value5 = 100 + some_vec.w;                // value5 is of type int
+```
 
 We can also assign to the swizzles if they meet certain criteria. If a swizzle uses an ordinate more than once, then that can't be assigned to, since we could potentially try to give that ordinate different values:
 ```c++
 vec4 big_vec;
 ...
-big_vec.xyx = vec3(1, 2, 3);    // error, trying to assign to position "x" more than once
+big_vec.xyx = vec3(1, 2, 3);    // compile error, trying to assign to position "x" more than once
 big_vec.zyx = big_vec.xzz;      // ok, data destinations are all unique even if sources are not
+```
+We also have ways to swizzle at runtime. The ```swizzle()``` function takes a vector and a variable number of indexes into the vector, and returns either a ```basic_vector``` if number of indexes > 1, or a scalar value for a single index applied to the vector. This is not in GLSL. Will return a scalar value if only one index argument. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
+```c++
+template <bool W, dimensional_scalar T, std::size_t C, typename D, typename Arg>
+requires std::convertible_to<Arg, std::size_t>
+inline auto swizzle(const vector_base<W, T, C, D> &v, const Arg &index);
+
+template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
+requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
+inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is);
+```
+
+For example:
+```c++
+auto some_vec = uvec3(0, 1, 2);                      // returns a basic_vector<unsigned int, 3>
+auto swiz_1d = swizzle(some_vec, 1);                 // returns an unsigned int
+auto swiz_2d = swizzle(some_vec, 2, 0);              // returns a basic_vector<unsigned int, 2>
+auto swiz_3d = swizzle(some_vec, 2, 0, 3);           // runtime error, all indexes must be less than Count (Count == 3 in this case) for some_vec
+auto swiz_4d = swizzle(some_vec, 2, 0, 0, 1);        // returns a basic_vector<unsigned int, 4>
+auto swiz_5d = swizzle(some_vec, 2, 0, 0, 1, 2);     // compile error, can't have dimension 5 vectors
+auto some_swiz = swizzle(some_vec, 1, 1, 1, 1).zxwy; // returns a copy of an indexed_vector - does not dangle
+
+// Equivalent, with runtime vs. compile time:
+// swizzle(some_vec, 2, 0, 0, 1) <==> uvec4(some_vec.zxxy)
+// swizzle(some_vec, 2, 0, 0, 1).xyzw <==> some_vec.zxxy
 ```
 
 ### Tolerance Checking
 
-GLSL doesn't provide functions for testing how close vectors are to each other within a tolerance. In our ```dsga``` implementation, we provide two types of tolerance checking:
+GLSL doesn't provide functions for testing how close vectors are to each other within a tolerance. In our ```dsga``` implementation, we provide a few types of tolerance checking:
+* General Tolerance Checking - this checks if one or more values is close to 0 within a scalar or vector of tolerances. Returns true if all the values are within tolerance. The tolerance checking is a less-than-or-equal comparison. Tolerances need to be non-negative, or the function will assert. We use ```vector_base``` as the vector argument type so as to cover both ```basic_vector``` and ```indexed_vector```.
+```c++
+template <non_bool_scalar T, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_tolerance(T x,
+                                              U tolerance) noexcept;
 
-* Euclidean Distance - this treats the vectors as mathematical vectors or points, and it compares the Euclidean distance between them to see if they are within the tolerance. The tolerance is a strictly less-than comparison. Tolerances need to be non-negative. The use of type ```vector_base``` is an advanced feature, and it is used to make sure it covers vectors and their swizzles. More can be learned about ```vector_base``` in the [details](DETAILS.md).
-```c++
-namespace dsga
-{
-    template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-    constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
-                                   const vector_base<W2, T, C, D2> &y,
-                                   T tolerance) noexcept;
-}
+template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_tolerance(const vector_base<W, T, C, D> &x,
+                                              U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, non_bool_scalar U, std::size_t C2, typename D2>
+requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_tolerance(const vector_base<W1, T, C1, D1> &x,
+                                              const vector_base<W2, U, C2, D2> &tolerance) noexcept;
 ```
-* Bounding Box - this is a component-wise tolerance check. There is a version of this function that takes a vector of tolerances as well. All the vector elements must be within tolerance or the whole answer is false. The tolerance is a strictly less-than comparison. All tolerances need to be non-negative. This function also uses ```vector_base``` like the other tolerance functions, and for the same reasons.
+* Euclidean Distance - this treats the vectors as mathematical vectors or points, and it compares the Euclidean distance between them to see if the distance is 0 within the tolerance. The tolerance checking is a less-than-or-equal comparison. Tolerances need to be non-negative, or the function will assert. The use of type ```vector_base``` is an advanced feature, and it is used to make sure it covers vectors and their swizzles. More can be learned about ```vector_base``` in the [details](DETAILS.md).
 ```c++
-namespace dsga
-{
-    template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-    constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
-                              const vector_base<W2, T, C, D2> &y,
-                              T tolerance) noexcept;
-}
+template <non_bool_scalar T, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_distance(T x,
+                                             T y,
+                                             U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
+                                             const vector_base<W2, T, C, D2> &y,
+                                             U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, typename D3>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
+                                             const vector_base<W2, T, C, D2> &y,
+                                             const vector_base<W3, U, 1, D3> &tolerance) noexcept;
+```
+* Bounding Box - this function performs a component-wise tolerance check, where the end result depends on all the checks. There is a version of this function that takes a vector of tolerances as well. This function checks if the difference of the value(s) are 0 within the tolerance(s). All the vector elements must be within tolerance or the whole answer is false. The tolerance checking is a less-than-or-equal comparison. All tolerances need to be non-negative, or the function will assert. This function also uses ```vector_base``` like the other tolerance functions, and for the same reasons.
+```c++
+template <non_bool_scalar T, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_box(T x,
+                                        T y,
+                                        U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
+                                        const vector_base<W2, T, C, D2> &y,
+                                        U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, std::size_t C2, typename D3>
+requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
+                                        const vector_base<W2, T, C1, D2> &y,
+                                        const vector_base<W3, U, C2, D3> &tolerance) noexcept;
 ```
 
 ## Matrix Types
@@ -271,7 +365,7 @@ The value returned by ```size()``` is not the length of the underlying ```data()
 // dscal - double
 ```
 
-These length 1 vectors are not officially in GLSL, but GLSL did change the fundamental types to behave as if they are. We try to automatically convert from these to the underlying scalar type when we can. If there is a problem, just cast it to the underlying type.
+These length 1 vectors are not officially in GLSL, but GLSL did change the fundamental types (e.g., int, float, double, etc.) to behave as if they are. We try to automatically convert from these to the underlying scalar type when we can. If there is a problem, just cast it to the underlying type.
 
 ```c++
 // length 2-4 vectors
@@ -309,6 +403,19 @@ template <typename U>
 explicit constexpr basic_vector(U value) noexcept;
 ```
 
+* **Multiple Scalar Arguments** - the scalar parameters must be convertible to the underlying type, and there is one for each element to initialize the vector. For example, where C == 4:
+
+```c++
+template <typename U1, typename U2, typename U3, typename U4>
+requires
+    std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
+    std::convertible_to<U3, T> && std::convertible_to<U4, T>
+explicit constexpr basic_vector(U1 xvalue,
+                                U2 yvalue,
+                                U3 zvalue,
+                                U4 wvalue) noexcept;
+```
+
 * **Variable Arguments** - any combination of scalar values, vectors, and matrices can be arguments to the constructor, as long as there is enough data to initialize all the vector elements, and as long as the types are convertible. It is fine if an argument has more data than necessary to complete the vector initialization, as long as some of the argument data is used. It is an error to pass unused arguments:
 
 ```c++
@@ -317,17 +424,14 @@ template <typename ... Args>
 constexpr basic_vector(const Args & ...args) noexcept;
 ```
 
-* An intializer list of values. If too few values for the vector, the rest of the elements will be set to 0. If too many values for the vector, the rest of the initialization list will be ignored.
-
-```c++
-constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept;
-```
+* **Intializer List of Values** - ```basic_vector``` has user-declared constructors, so it is not an aggregate struct/class, so we can't do aggregate initialization with an initializer list. We can use brace initialization to call the constructors. This is different from GLSL.
 
 ### Vector Member Functions
 
 These are the members that are not part of the [index interface](#index-interface), [iterator interface](#iterators), the [tuple protocol](#tuple-protocol), or the [pointer interface](#low-level-pointer-access).
 
-* ```operator =``` - assignment operator. The vector needs to be the same length and underlying types must be convertible.
+* ```operator =``` - assignment operator. The vector needs to be the same length and underlying types must be convertible. All ```basic_vector```s are writable, but not all ```indexed_vector```s.
+* ```set()``` - like assignment, but copies all the individual argument values into a vector. All ```basic_vector```s are writable, but not all ```indexed_vector```s.
 * ```int length()``` - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
 
 #### Valarray Functions
@@ -533,7 +637,7 @@ template <typename ... Args>
 constexpr basic_matrix(const Args & ...args) noexcept;
 ``` 
 
-* An intializer list of values. If too few values for the matrix, the rest of the elements will be set to 0. If too many values for the matrix, the rest of the initialization list will be ignored.
+* **Intializer List of Values** - ```basic_matrix``` has user-declared constructors, so it is not an aggregate struct/class, so we can't do aggregate initialization with an initializer list. We can use brace initialization to call the constructors. This is different from GLSL.
 
 ```c++
 constexpr basic_matrix(const std::initializer_list<T> &init_list) noexcept;

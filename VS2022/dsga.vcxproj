@@ -185,6 +185,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\docs\API.md" />
+    <None Include="..\docs\CHANGELOG.md" />
     <None Include="..\docs\DETAILS.md" />
     <None Include="..\docs\DOCUMENTATION.md" />
     <None Include="..\docs\dsga.puml" />

@@ -581,7 +581,7 @@ template <typename UnOp>
 requires (std::same_as<T, std::invoke_result_t<UnOp, T>> || std::same_as<T, std::invoke_result_t<UnOp, const T &>>)
 [[nodiscard]] constexpr basic_vector<T, Count> apply(UnOp op) const noexcept;
 ```
-Applies a lambda/function/function object/callable to every element of a vector, in an unspecified order. The callable must take either a ```T``` or ```const T &```, and it must return a ```T```. Returns a vector of the results.
+Applies a lambda/function/function object/callable to every element of a vector, in element order (order only matters if callable is side-effecting and/or has state). The callable must take either a ```T``` or ```const T &```, and it must return a ```T```. Returns a vector of the results.
 
 ##### ```vector_base::shift```
 ```c++
@@ -1822,6 +1822,7 @@ Most of the functions perform their operation component-wise. There are some fun
   * [```none```](#none)
   * [```logicalNot```](#logicalnot)
 * Tolerance Checking Functions
+  * [```within_tolerance```](#within_tolerance)
   * [```within_distance```](#within_distance)
   * [```within_box```](#within_box)
 * Other Vector Functions
@@ -1976,15 +1977,15 @@ Not in GLSL. May or may not actually be faster that ```rsqrt()```, for which thi
 
 ##### ```abs```
 ```c++
-template <bool W, dimensional_scalar T, std::size_t C, typename D>
-requires (!unsigned_scalar<T>) && non_bool_scalar<T>
+template <bool W, non_bool_scalar T, std::size_t C, typename D>
+requires (!unsigned_scalar<T>)
 [[nodiscard]] constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```sign```
 ```c++
-template <bool W, dimensional_scalar T, std::size_t C, typename D>
-requires (!unsigned_scalar<T>) && non_bool_scalar<T>
+template <bool W, non_bool_scalar T, std::size_t C, typename D>
+requires (!unsigned_scalar<T>)
 [[nodiscard]] constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept;
 ```
 
@@ -2257,17 +2258,23 @@ template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2
 template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
 [[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &a,
                                    const vector_base<W2, T2, 3, D2> &b) noexcept;
+
+template <floating_point_scalar T1, floating_point_scalar T2>
+[[nodiscard]] constexpr auto cross(const basic_vector<T1, 3> &a,
+                                   const basic_vector<T2, 3> &b) noexcept;
 ```
 
 ##### ```normalize```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
+requires (C > 1)
 [[nodiscard]] constexpr auto normalize(const vector_base<W, T, C, D> &x) noexcept;
 ```
 
 ##### ```faceforward```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+requires (C > 1)
 [[nodiscard]] constexpr auto faceforward(const vector_base<W1, T, C, D1> &n,
                                          const vector_base<W2, T, C, D2> &i,
                                          const vector_base<W3, T, C, D3> &nref) noexcept;
@@ -2276,6 +2283,7 @@ template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2,
 ##### ```reflect```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+requires (C > 1)
 [[nodiscard]] constexpr auto reflect(const vector_base<W1, T, C, D1> &i,
                                      const vector_base<W2, T, C, D2> &n) noexcept;
 ```
@@ -2283,6 +2291,7 @@ template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2,
 ##### ```refract```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+requires (C > 1)
 [[nodiscard]] constexpr auto refract(const vector_base<W1, T, C, D1> &i,
                                      const vector_base<W2, T, C, D2> &n,
                                      T eta) noexcept;
@@ -2373,44 +2382,80 @@ This function takes the place of GLSL function ```not```. We can't define a func
 
 #### Tolerance Checking Functions
 
+##### ```within_tolerance```
+```c++
+template <non_bool_scalar T, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_tolerance(T x,
+                                              U tolerance) noexcept;
+
+template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_tolerance(const vector_base<W, T, C, D> &x,
+                                              U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, non_bool_scalar U, std::size_t C2, typename D2>
+requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_tolerance(const vector_base<W1, T, C1, D1> &x,
+                                              const vector_base<W2, U, C2, D2> &tolerance) noexcept;
+```
+Not in GLSL. Is a vector of values (or a single value) the same as 0 within a tolerance (or vector of tolerances). The tolerance is a less-than-or-equal comparison. Tolerances need to be non-negative, or the function will assert.
+
 ##### ```within_distance```
 ```c++
-template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+template <non_bool_scalar T, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_distance(T x,
+                                             T y,
+                                             U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
 [[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
                                              const vector_base<W2, T, C, D2> &y,
-                                             T tolerance) noexcept;
+                                             U tolerance) noexcept;
 
-template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, typename D3>
+requires implicitly_convertible_to<U, T>
 [[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
                                              const vector_base<W2, T, C, D2> &y,
-                                             const vector_base<W3, T, 1, D3> &tolerance) noexcept;
-
+                                             const vector_base<W3, U, 1, D3> &tolerance) noexcept;
 ```
-Not in GLSL. It compares the Euclidean distance between two vectors to see if they are within the tolerance. The tolerance is a strictly less-than comparison. Tolerances need to be non-negative.
+Not in GLSL. It compares the Euclidean distance between two vectors to see if the distance is 0 within the tolerance. The tolerance is a less-than-or-equal comparison. Tolerances need to be non-negative, or the function will assert.
 
 ##### ```within_box```
 ```c++
-template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires non_bool_scalar<T>
+template <non_bool_scalar T, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
+[[nodiscard]] constexpr bool within_box(T x,
+                                        T y,
+                                        U tolerance) noexcept;
+
+template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
+requires implicitly_convertible_to<U, T>
 [[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
                                         const vector_base<W2, T, C, D2> &y,
-                                        T tolerance) noexcept;
+                                        U tolerance) noexcept;
 
-template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
-requires ((C1 == C2) || (C2 == 1))
+template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, std::size_t C2, typename D3>
+requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
 [[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
                                         const vector_base<W2, T, C1, D2> &y,
-                                        const vector_base<W3, T, C2, D3> &tolerance) noexcept;
+                                        const vector_base<W3, U, C2, D3> &tolerance) noexcept;
 ```
-Not in GLSL. This represents a bounding-box tolerance check, which aggregates the component-wise tolerance checks. These functions can take a single tolerance or a vector of tolerances. All the vector elements must be within tolerance or the whole answer is false. The tolerance is a strictly less-than comparison. All tolerances need to be non-negative.
+Not in GLSL. This represents a bounding-box tolerance check, which aggregates the component-wise tolerance checks. These functions can take a single tolerance or a vector of tolerances and check if the differences of the value(s) are 0 within the tolerance(s). All the vector elements must be within tolerance or the whole answer is false. The tolerance is a less-than-or-equal comparison. All tolerances need to be non-negative, or the function will assert.
 
 ##### ```swizzle```
 ```c++
+template <bool W, dimensional_scalar T, std::size_t C, typename D, typename Arg>
+requires std::convertible_to<Arg, std::size_t>
+inline auto swizzle(const vector_base<W, T, C, D> &v, const Arg &index);
+
 template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
 requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
 inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is);
 ```
-Not in GLSL. Runtime function for swizzling. Returns a stand-alone ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
+Not in GLSL. Runtime function for swizzling. Returns a stand-alone ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. Will return a scalar value if only one index argument. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
 
 ### Scalar Functions
 Scalar versions of most of the vector free functions exist. It is not recommended to use them if there is a function in the C++ Standard Library that does the same thing.

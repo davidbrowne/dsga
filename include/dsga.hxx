@@ -94,8 +94,8 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 // version info
 
-constexpr inline int DSGA_MAJOR_VERSION = 1;
-constexpr inline int DSGA_MINOR_VERSION = 5;
+constexpr inline int DSGA_MAJOR_VERSION = 2;
+constexpr inline int DSGA_MINOR_VERSION = 0;
 constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
@@ -111,7 +111,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 1;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 1;
+		constexpr inline int CXCM_PATCH_VERSION = 2;
 
 		namespace dd_real
 		{
@@ -455,6 +455,34 @@ namespace dsga
 			template <>
 			constexpr inline float largest_fractional_value<float> = 0x1.fffffep+22f;
 		}
+
+		//
+		// floating-point negative zero support
+		//
+
+		template <std::floating_point T>
+		constexpr bool is_negative_zero(T val) noexcept;
+
+		template<>
+		constexpr bool is_negative_zero<float>(float val) noexcept
+		{
+			return (0x80000000 == std::bit_cast<unsigned int>(val));
+		}
+
+		template<>
+		constexpr bool is_negative_zero<double>(double val) noexcept
+		{
+			return (0x8000000000000000 == std::bit_cast<unsigned long long>(val));
+		}
+
+		template <std::floating_point T>
+		constexpr inline T negative_zero = T(-0);
+
+		template <>
+		constexpr inline float negative_zero<float> = std::bit_cast<float>(0x80000000);
+
+		template <>
+		constexpr inline double negative_zero<double> = std::bit_cast<double>(0x8000000000000000);
 
 		// don't worry about esoteric input.
 		// much faster than strict or standard when non constant evaluated,
@@ -1883,14 +1911,19 @@ namespace dsga
 		// functions similar to std::valarray
 		//
 
-		// UnOp is a lambda or callable that takes either a "T" or a "const T &", and it returns a T
+		// UnOp is a lambda or callable that takes either a "T" or a "const T &", and it returns a T.
+		//
+		// Every initializer clause is sequenced before any initializer clause that follows it in the braced-init-list (i.e.,
+		// left-to-right). This is in contrast with the arguments of a function call expression, which are indeterminately
+		// sequenced (since C++17), e.g., MSVC and gcc appear to sequence function call arguments right-to-left, while clang
+		// appears to sequence function call arguments left-to-right.
 		template <typename UnOp>
 		requires (std::same_as<T, std::invoke_result_t<UnOp, T>> || std::same_as<T, std::invoke_result_t<UnOp, const T &>>)
 		[[nodiscard]] constexpr basic_vector<T, Count> apply(UnOp op) const noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, Count>(op((*this)[Is]) ...);
+				return basic_vector<T, Count>{ op((*this)[Is])... };		// braced init list is evaluated in element order
 			}(std::make_index_sequence<Count>{});
 		}
 
@@ -1921,7 +1954,7 @@ namespace dsga
 			constexpr auto max_val = static_cast<int>(Count);
 			by %= max_val;
 
-			basic_vector<T, Count> dest;
+			basic_vector<T, Count> dest{};
 			auto pivot = this->begin();
 			if (by > 0)
 			{
@@ -2718,16 +2751,6 @@ namespace dsga
 			}(std::make_index_sequence<Count>{});
 		}
 
-		// initializer list constructor -- it will use the first Count number of elements of the list,
-		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
-		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
-		{
-			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
-			auto fill_size = Count - copy_size;
-			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
-			std::fill_n(fill_iter, fill_size, T(0));
-		}
-
 		//
 		// implicit assignment operators
 		//
@@ -2932,16 +2955,6 @@ namespace dsga
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
-		}
-
-		// initializer list constructor -- it will use the first Count number of elements of the list,
-		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
-		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
-		{
-			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
-			auto fill_size = Count - copy_size;
-			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
-			std::fill_n(fill_iter, fill_size, T(0));
 		}
 
 		//
@@ -3218,16 +3231,6 @@ namespace dsga
 			{
 				((base[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
 			}(std::make_index_sequence<Count>{});
-		}
-
-		// initializer list constructor -- it will use the first Count number of elements of the list,
-		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
-		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
-		{
-			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
-			auto fill_size = Count - copy_size;
-			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
-			std::fill_n(fill_iter, fill_size, T(0));
 		}
 
 		//
@@ -3729,16 +3732,6 @@ namespace dsga
 			}(std::make_index_sequence<Count>{});
 		}
 
-		// initializer list constructor -- it will use the first Count number of elements of the list,
-		// and if list size is less than Count, it will initialize the rest of the vector elements with 0
-		constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept
-		{
-			auto copy_size = (Count > init_list.size()) ? init_list.size() : Count;
-			auto fill_size = Count - copy_size;
-			auto fill_iter = std::copy_n(init_list.begin(), copy_size, this->begin());
-			std::fill_n(fill_iter, fill_size, T(0));
-		}
-
 		//
 		// assignment operators
 		//
@@ -3840,11 +3833,11 @@ namespace dsga
 		//
 		// this machinery relies on vector_base::operator[] to be logically contiguous operation on a derived vector type,
 		// regardless of whether it is physically contiguous. apply the operation on components of vector_base arguments,
-		// either returning a new vector or modifying an existing one.
+		// either returning a new vector (or scalar) or modifying an existing vector.
 		//
-		// apply_make() - one argument, one type -- return a new vector
-		// apply_unitype_make() - all arguments are cast to their common type -- return a new vector
-		// apply_multitype_make() - all arguments keep their types -- return a new vector
+		// apply_make() - one argument, one type -- return a new vector or scalar
+		// apply_unitype_make() - all arguments are cast to their common type -- return a new vector or scalar
+		// apply_multitype_make() - all arguments keep their types -- return a new vector or scalar
 		// apply_unitype_modify() - all arguments are cast to their common type -- modify the first argument with new values
 		// apply_multitype_modify() - all arguments keep their types -- modify the first argument with new values
 
@@ -3854,10 +3847,17 @@ namespace dsga
 		constexpr auto apply_make(const vector_base<W, T, C, D> &arg,
 								  UnOp &op) noexcept
 		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			if  constexpr (C == 1)
 			{
-				return basic_vector<unop_return_t<UnOp, T>, C>(op(arg[Is])...);
-			}(std::make_index_sequence<C>{});
+				return op(arg[0]);
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<unop_return_t<UnOp, T>, C>{ op(arg[Is])... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		// binary
@@ -3868,12 +3868,18 @@ namespace dsga
 										  BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T1, T2>;
-			auto val = basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>();
 
-			for (std::size_t i = 0; i < C; ++i)
-				val[i] = op(static_cast<ArgT>(lhs[i]), static_cast<ArgT>(rhs[i]));
-
-			return val;
+			if constexpr (C == 1)
+			{
+				return op(static_cast<ArgT>(lhs[0]), static_cast<ArgT>(rhs[0]));
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>{ op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
@@ -3882,10 +3888,18 @@ namespace dsga
 										  BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U>;
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+
+			if constexpr (C == 1)
 			{
-				return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))...);
-			}(std::make_index_sequence<C>{});
+				return op(static_cast<ArgT>(lhs[0]), static_cast<ArgT>(rhs));
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>{ op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
@@ -3894,10 +3908,18 @@ namespace dsga
 										  BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U>;
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+
+			if constexpr (C == 1)
 			{
-				return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>(op(static_cast<ArgT>(lhs), static_cast<ArgT>(rhs[Is]))...);
-			}(std::make_index_sequence<C>{});
+				return op(static_cast<ArgT>(lhs), static_cast<ArgT>(rhs[0]));
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<binop_return_t<BinOp, ArgT, ArgT>, C>{ op(static_cast<ArgT>(lhs), static_cast<ArgT>(rhs[Is]))... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
@@ -3905,10 +3927,17 @@ namespace dsga
 											const vector_base<W2, T2, C, D2> &rhs,
 											BinOp &op) noexcept
 		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			if constexpr (C == 1)
 			{
-				return basic_vector<binop_return_t<BinOp, T1, T2>, C>(op(lhs[Is], rhs[Is])...);
-			}(std::make_index_sequence<C>{});
+				return op(lhs[0], rhs[0]);
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<binop_return_t<BinOp, T1, T2>, C>{ op(lhs[Is], rhs[Is])... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
@@ -3916,10 +3945,17 @@ namespace dsga
 											U rhs,
 											BinOp &op) noexcept
 		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			if constexpr (C == 1)
 			{
-				return basic_vector<binop_return_t<BinOp, T, U>, C>(op(lhs[Is], rhs)...);
-			}(std::make_index_sequence<C>{});
+				return op(lhs[0], rhs);
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<binop_return_t<BinOp, T, U>, C>{ op(lhs[Is], rhs)... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
@@ -3927,10 +3963,17 @@ namespace dsga
 											const vector_base<W, T, C, D> &rhs,
 											BinOp &op) noexcept
 		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			if constexpr (C == 1)
 			{
-				return basic_vector<binop_return_t<BinOp, U, T>, C>(op(lhs, rhs[Is])...);
-			}(std::make_index_sequence<C>{});
+				return op(lhs, rhs[0]);
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<binop_return_t<BinOp, U, T>, C>{ op(lhs, rhs[Is])... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
@@ -3942,7 +3985,7 @@ namespace dsga
 			using ArgT = std::common_type_t<T1, T2>;
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))...);
+				lhs.set( op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))... );
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3955,7 +3998,7 @@ namespace dsga
 			using ArgT = std::common_type_t<T, U>;
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))...);
+				lhs.set( op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))... );
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3967,7 +4010,7 @@ namespace dsga
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(op(lhs[Is], rhs[Is])...);
+				lhs.set( op(lhs[Is], rhs[Is])... );
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3979,7 +4022,7 @@ namespace dsga
 		{
 			[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				lhs.set(op(lhs[Is], rhs)...);
+				lhs.set( op(lhs[Is], rhs)... );
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -3993,10 +4036,18 @@ namespace dsga
 										  TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T1, T2, T3>;
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+
+			if constexpr (C == 1)
 			{
-				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z[Is]))...);
-			}(std::make_index_sequence<C>{});
+				return op(static_cast<ArgT>(x[0]), static_cast<ArgT>(y[0]), static_cast<ArgT>(z[0]));
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z[Is]))... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, dimensional_scalar U, typename TernOp>
@@ -4006,10 +4057,18 @@ namespace dsga
 										  TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T1, T2, U>;
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+
+			if constexpr (C == 1)
 			{
-				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))...);
-			}(std::make_index_sequence<C>{});
+				return op(static_cast<ArgT>(x[0]), static_cast<ArgT>(y[0]), static_cast<ArgT>(z));
+			}
+			else
+			{
+				return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, dimensional_scalar V, typename TernOp>
@@ -4019,10 +4078,18 @@ namespace dsga
 										  TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U, V>;
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+
+			if constexpr (C == 1)
 			{
-				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y), static_cast<ArgT>(z))...);
-			}(std::make_index_sequence<C>{});
+				return op(static_cast<ArgT>(x[0]), static_cast<ArgT>(y), static_cast<ArgT>(z));
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y), static_cast<ArgT>(z))... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, dimensional_scalar V, typename TernOp>
@@ -4032,10 +4099,18 @@ namespace dsga
 										  TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U, V>;
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+
+			if constexpr (C == 1)
 			{
-				return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>(op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[Is]))...);
-			}(std::make_index_sequence<C>{});
+				return op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[0]));
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[Is]))... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 
 		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
@@ -4047,10 +4122,17 @@ namespace dsga
 											const vector_base<W3, T3, C, D3> &z,
 											TernOp &op) noexcept
 		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			if constexpr (C == 1)
 			{
-				return basic_vector<ternop_return_t<TernOp, T1, T2, T3>, C>(op(x[Is], y[Is], z[Is])...);
-			}(std::make_index_sequence<C>{});
+				return op(x[0], y[0], z[0]);
+			}
+			else
+			{
+				return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				{
+					return basic_vector<ternop_return_t<TernOp, T1, T2, T3>, C>{ op(x[Is], y[Is], z[Is])... };
+				}(std::make_index_sequence<C>{});
+			}
 		}
 	}
 
@@ -4676,7 +4758,14 @@ namespace dsga
 	template <bool W, non_bool_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator +(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return basic_vector<T, C>(arg);					// no-op copy
+		if constexpr (C == 1)
+		{
+			return arg[0];
+		}
+		else
+		{
+			return basic_vector<T, C>(arg);					// no-op copy
+		}
 	}
 
 	// unary operator -
@@ -4801,6 +4890,136 @@ namespace dsga
 
 	namespace functions
 	{
+		//
+		// 8.7 - vector relational
+		//
+		// these are defined first as they don't depend on the other functions, and the other functions can depend on them.
+		//
+
+		constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+		{
+			return std::isless(x, y);
+		};
+
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
+											  const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, less_op);
+		}
+
+		constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+		{
+			return std::islessequal(x, y);
+		};
+
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
+												   const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, less_equal_op);
+		}
+
+		constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+		{
+			return std::isgreater(x, y);
+		};
+
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
+												 const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, greater_op);
+		}
+
+		constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+		{
+			return std::isgreaterequal(x, y);
+		};
+
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
+													  const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, greater_equal_op);
+		}
+
+		constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+		{
+			return std::isunordered(x, y) ? false : x == y;
+		};
+
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto equal(const vector_base<W1, T, C, D1> &x,
+										   const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, equal_op);
+		}
+
+		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept { return x == y; };
+
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
+										   const vector_base<W2, bool, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, bool_equal_op);
+		}
+
+		constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+		{
+			return std::isunordered(x, y) ? true : x != y;
+		};
+
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
+											  const vector_base<W2, T, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, not_equal_op);
+		}
+
+		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept { return x != y; };
+
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
+											  const vector_base<W2, bool, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, bool_not_equal_op);
+		}
+
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr bool any(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return (x[Is] || ...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr bool all(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return (x[Is] && ...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		constexpr inline auto logical_not_op = [](bool x) noexcept { return !x; };
+
+		// c++ does not allow a function named not()
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return machinery::apply_make(x, logical_not_op);
+		}
+
+		// not in GLSL
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return !any(x);
+		}
+
 		//
 		// 8.1 - angle and trigonometry
 		//
@@ -5158,15 +5377,15 @@ namespace dsga
 
 		constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept { return cxcm::abs(arg); };
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
+		template <bool W, non_bool_scalar T, std::size_t C, typename D>
+		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return machinery::apply_make(arg, abs_op);
 		}
 
-		template <dimensional_scalar T>
-		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
+		template <non_bool_scalar T>
+		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr auto abs(T arg) noexcept
 		{
 			return abs_op(arg);
@@ -5174,15 +5393,15 @@ namespace dsga
 
 		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(T(0) < arg) - T(arg < T(0))); };
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
+		template <bool W, non_bool_scalar T, std::size_t C, typename D>
+		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept
 		{
 			return machinery::apply_make(arg, sign_op);
 		}
 
-		template <dimensional_scalar T>
-		requires (!unsigned_scalar<T>) && non_bool_scalar<T>
+		template <non_bool_scalar T>
+		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr auto sign(T arg) noexcept
 		{
 			return sign_op(arg);
@@ -5302,7 +5521,11 @@ namespace dsga
 		[[nodiscard]] constexpr auto modf(const vector_base<W1, T, C, D1> &arg,
 										  vector_base<W2, T, C, D2> &i) noexcept
 		{
-			i.as_derived() = trunc(arg);
+			if constexpr (C == 1)
+				i.as_derived() = basic_vector<T, 1>(trunc(arg));
+			else
+				i.as_derived() = trunc(arg);
+
 			return machinery::apply_unitype_make(arg, i, modf_op);
 		}
 
@@ -5314,7 +5537,7 @@ namespace dsga
 			return modf_op(arg, i);
 		}
 
-		constexpr inline auto min_op = []<floating_point_scalar T>(T x, T y) noexcept { return y < x ? y : x; };
+		constexpr inline auto min_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? y : x; };
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto min(const vector_base<W1, T, C, D1> &x,
@@ -5337,7 +5560,7 @@ namespace dsga
 			return min_op(x, y);
 		}
 
-		constexpr inline auto max_op = []<floating_point_scalar T>(T x, T y) noexcept { return y < x ? x : y; };
+		constexpr inline auto max_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? x : y; };
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto max(const vector_base<W1, T, C, D1> &x,
@@ -5360,13 +5583,14 @@ namespace dsga
 			return max_op(x, y);
 		}
 
-		constexpr inline auto clamp_op = []<dimensional_scalar T>(T x, T min_val, T max_val) noexcept -> T { return std::clamp(x, min_val, max_val); };
+		constexpr inline auto clamp_op = []<non_bool_scalar T>(T x, T min_val, T max_val) noexcept -> T { return std::clamp(x, min_val, max_val); };
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr auto clamp(const vector_base<W1, T, C, D1> &x,
 										   const vector_base<W2, T, C, D2> &min_val,
 										   const vector_base<W3, T, C, D3> &max_val) noexcept
 		{
+			dsga_constexpr_assert(all(lessThanEqual(min_val, max_val)), "(max_val < min_val) is UB");
 			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
 		}
 
@@ -5375,6 +5599,7 @@ namespace dsga
 										   T min_val,
 										   T max_val) noexcept
 		{
+			dsga_constexpr_assert(min_val <= max_val, "(max_val < min_val) is UB");
 			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
 		}
 
@@ -5383,6 +5608,7 @@ namespace dsga
 										   T min_val,
 										   T max_val) noexcept
 		{
+			dsga_constexpr_assert(min_val <= max_val, "(max_val < min_val) is UB");
 			return clamp_op(x, min_val, max_val);
 		}
 
@@ -5526,6 +5752,15 @@ namespace dsga
 		{
 			return isinf_op(arg);
 		}
+
+		//
+		// guarantee the byte sizes of these primitives
+		//
+
+		static_assert(sizeof(float) == sizeof(int), "float and int must be same byte size");
+		static_assert(sizeof(float) == sizeof(unsigned int), "float and unsigned int must be same byte size");
+		static_assert(sizeof(double) == sizeof(long long), "double and long long must be same byte size");
+		static_assert(sizeof(double) == sizeof(unsigned long long), "double and unsigned long long must be same byte size");
 
 		constexpr inline auto float_bits_to_int_op = [](float arg) noexcept { return std::bit_cast<int>(arg); };
 
@@ -5778,14 +6013,28 @@ namespace dsga
 			return cxcm::abs(x[0]);
 		}
 
+		template <floating_point_scalar T>
+		[[nodiscard]] constexpr auto length(const T &x) noexcept
+		{
+			return cxcm::abs(x);
+		}
+
 		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
 		[[nodiscard]] constexpr auto distance(const vector_base<W1, T1, C, D1> &p0,
 											  const vector_base<W2, T2, C, D2> &p1) noexcept
 		{
-			return length(p1 - p0);
+			return length(p0 - p1);
+		}
+
+		template <floating_point_scalar T1, floating_point_scalar T2>
+		[[nodiscard]] constexpr auto distance(T1 p0,
+											  T2 p1) noexcept
+		{
+			return length(p0 - p1);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
+		requires (C > 1)
 		[[nodiscard]] constexpr auto normalize(const vector_base<W, T, C, D> &x) noexcept
 		{
 			auto len = length(x);
@@ -5795,21 +6044,12 @@ namespace dsga
 			[[likely]] return x / len;
 		}
 
-		template <bool W, floating_point_scalar T, typename D>
-		[[nodiscard]] constexpr auto normalize(const vector_base<W, T, 1, D> &x) noexcept
-		{
-			// can't normalize 0 -> 0/0
-			if (T(0.0) == x[0])
-				return basic_vector<T, 1>(std::numeric_limits<T>::quiet_NaN());
-
-			[[likely]] return basic_vector<T, 1>(T(1.0));
-		}
-
 		//
 		// vec4 ftransform() omitted
 		//
 		
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		requires (C > 1)
 		[[nodiscard]] constexpr auto faceforward(const vector_base<W1, T, C, D1> &n,
 												 const vector_base<W2, T, C, D2> &i,
 												 const vector_base<W3, T, C, D3> &nref) noexcept
@@ -5819,6 +6059,7 @@ namespace dsga
 
 		// n must be normalized in order to achieve desired results
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires (C > 1)
 		[[nodiscard]] constexpr auto reflect(const vector_base<W1, T, C, D1> &i,
 											 const vector_base<W2, T, C, D2> &n) noexcept
 		{
@@ -5827,6 +6068,7 @@ namespace dsga
 
 		// i and n must be normalized in order to achieve desired results
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		requires (C > 1)
 		[[nodiscard]] constexpr auto refract(const vector_base<W1, T, C, D1> &i,
 											 const vector_base<W2, T, C, D2> &n,
 											 T eta) noexcept
@@ -5840,124 +6082,31 @@ namespace dsga
 		}
 
 		//
-		// 8.7 - vector relational
-		//
-
-		constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isless(x, y); };
-
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
-											  const vector_base<W2, T, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, less_op);
-		}
-
-		constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::islessequal(x, y); };
-
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
-												   const vector_base<W2, T, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, less_equal_op);
-		}
-
-		constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isgreater(x, y); };
-
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
-												 const vector_base<W2, T, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, greater_op);
-		}
-
-		constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isgreaterequal(x, y); };
-
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
-													  const vector_base<W2, T, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, greater_equal_op);
-		}
-
-		constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? false : x == y; };
-
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto equal(const vector_base<W1, T, C, D1> &x,
-										   const vector_base<W2, T, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, equal_op);
-		}
-
-		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept { return x == y; };
-
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
-										   const vector_base<W2, bool, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, bool_equal_op);
-		}
-
-		constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool { return std::isunordered(x, y) ? true : x != y; };
-
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
-											  const vector_base<W2, T, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, not_equal_op);
-		}
-
-		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept { return x != y; };
-
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
-											  const vector_base<W2, bool, C, D2> &y) noexcept
-		{
-			return machinery::apply_unitype_make(x, y, bool_not_equal_op);
-		}
-
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool any(const vector_base<W, bool, C, D> &x) noexcept
-		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return (x[Is] || ...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool all(const vector_base<W, bool, C, D> &x) noexcept
-		{
-			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return (x[Is] && ...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		constexpr inline auto logical_not_op = [](bool x) noexcept { return !x; };
-
-		// c++ is not allowing a function named not()
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept
-		{
-			return machinery::apply_make(x, logical_not_op);
-		}
-
-		//
 		// 8.8 - 8.19 are omitted
 		//
 
-		// not in GLSL
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
-		{
-			return !any(x);
-		}
+		//
+		// runtime swizzle function -- if 1 < number of indexes <= 4, returns a stand-alone basic_vector as opposed to
+		// an indexed_vector union data member. If number of indexes == 1, returns a scalar value for that indexed value.
+		// return value is *not* bound to the lifetime of the input argument, unlike how v.xyz is a member of v.
+		// It will throw if the index arguments are out of bounds (arg must be < C) or if number of index arguments are
+		// not in range 1 <= num args <= 4.
+		//
+		// Not in GLSL -- inspired by the Odin Programming Language.
+		//
 
-		//
-		// runtime swizzle function -- returns a stand-alone basic_vector as opposed to an indexed_vector union data member.
-		// return value is *not* linked to input argument, unlike how v.xyz is a member of v. It will throw if the index
-		// arguments are out of bounds. Not in GLSL -- inspired by the Odin Programming Language.
-		//
+		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename Arg>
+		requires std::convertible_to<Arg, std::size_t>
+		inline auto swizzle(const vector_base<W, T, C, D> &v, const Arg &index)
+		{
+			bool index_valid = (static_cast<std::size_t>(index) < C);
+			dsga_constexpr_assert(index_valid, "index out of range");
+
+			if (!index_valid)
+				throw std::out_of_range("swizzle() index out of range");
+
+			return v[index];
+		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
 		requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
@@ -5969,72 +6118,131 @@ namespace dsga
 			if (!indexes_valid)
 				throw std::out_of_range("swizzle() indexes out of range");
 
-			return basic_vector<T, sizeof...(Args)>(v[Is] ...);
+			return basic_vector<T, sizeof...(Args)>{ v[Is]... };
 		}
 
 		//
-		// basic tolerance comparisons
+		// basic tolerance comparisons -- will assert if tolerance has any negative values.
+		// these functions do not give component-wise results -- they return a single bool value about the situation.
 		//
 
-		// Euclidean distance check - strictly less than comparison, boundary is false
+		template <non_bool_scalar T, non_bool_scalar U>
+		requires implicitly_convertible_to<U, T>
+		[[nodiscard]] constexpr bool within_tolerance(T x,
+													  U tolerance) noexcept
+		{
+			dsga_constexpr_assert(tolerance >= U(0), "tolerance should not be negative");
+			return cxcm::abs(x) <= static_cast<T>(tolerance);
+		}
 
-		template <non_bool_scalar T>
+		template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
+		requires implicitly_convertible_to<U, T>
+		[[nodiscard]] constexpr bool within_tolerance(const vector_base<W, T, C, D> &x,
+													  U tolerance) noexcept
+		{
+			if constexpr (C == 1)
+			{
+				return within_tolerance(x[0], tolerance);
+			}
+			else
+			{
+				dsga_constexpr_assert(tolerance >= U(0), "tolerance should not be negative");
+				return all(lessThanEqual(abs(x), basic_vector<T, C>(static_cast<T>(tolerance))));
+			}
+		}
+
+		template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, non_bool_scalar U, std::size_t C2, typename D2>
+		requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
+		[[nodiscard]] constexpr bool within_tolerance(const vector_base<W1, T, C1, D1> &x,
+													  const vector_base<W2, U, C2, D2> &tolerance) noexcept
+		{
+			if constexpr (C1 == C2)
+			{
+				if constexpr (C1 == 1 && C2 == 1)
+				{
+					return within_tolerance(x[0], tolerance[0]);
+				}
+				else
+				{
+					dsga_constexpr_assert(all(greaterThanEqual(tolerance, basic_vector<U, C2>(0))), "tolerance should not be negative");
+					if constexpr (std::same_as<T, U>)
+					{
+						return all(lessThanEqual(abs(x), tolerance));
+					}
+					else
+					{
+						return all(lessThanEqual(abs(x), static_cast<basic_vector<T, C2>>(tolerance)));
+					}
+				}
+			}
+			else		// (C2 == 1)
+			{
+				return within_tolerance(x, tolerance[0]);
+			}
+		}
+
+		// Euclidean distance check - imagine x in the center of a region (offset number line, circle, sphere, hypersphere)
+		// whose diameter is 2 * tolerance, return whether y is also in the region.
+		// uses less than or equal comparison: if y is on region boundary, that counts as within.
+
+		template <non_bool_scalar T, non_bool_scalar U>
+		requires implicitly_convertible_to<U, T>
 		[[nodiscard]] constexpr bool within_distance(T x,
 													 T y,
-													 T tolerance) noexcept
+													 U tolerance) noexcept
 		{
-#if 1
-			return cxcm::fabs(x - y) < tolerance;
-#else
-			auto delta = x - y;
-			return (delta * delta) < (tolerance * tolerance);
-#endif
+			return within_tolerance(x - y, tolerance);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
+		requires implicitly_convertible_to<U, T>
 		[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 													 const vector_base<W2, T, C, D2> &y,
-													 T tolerance) noexcept
+													 U tolerance) noexcept
 		{
-#if 0
-			return distance(x - y) < tolerance;
-#else
-			auto direction_vector = x - y;
-			return dot(direction_vector, direction_vector) < (tolerance * tolerance);
-#endif
+			return within_tolerance(distance(x, y), tolerance);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, typename D3>
+		requires implicitly_convertible_to<U, T>
 		[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
 													 const vector_base<W2, T, C, D2> &y,
-													 const vector_base<W3, T, 1, D3> &tolerance) noexcept
+													 const vector_base<W3, U, 1, D3> &tolerance) noexcept
 		{
 			return within_distance(x, y, tolerance[0]);
 		}
 
-		// tolerance-box component check - strictly less than comparison, boundary is false
+		// tolerance-box component check - imagine x in the center of an orthogonal region (offset number line, rectangle, box, hyperbox)
+		// whose side lengths are 2 * tolerance, return whether y is also in the orthogonal region.
+		// uses less than or equal comparison: if y is on the region boundary, that counts as within
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
-												const vector_base<W2, T, C, D2> &y,
-												T tolerance) noexcept
+		template <non_bool_scalar T, non_bool_scalar U>
+		requires implicitly_convertible_to<U, T>
+		[[nodiscard]] constexpr bool within_box(T x,
+												T y,
+												U tolerance) noexcept
 		{
-			auto deltas = abs(x - y);
-			auto comparison_vector = lessThan(deltas, decltype(deltas)(tolerance));
-			return all(comparison_vector);
+			return within_tolerance(x - y, tolerance);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, std::size_t C2, typename D3>
-		requires ((C1 == C2) || (C2 == 1))
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
+		requires implicitly_convertible_to<U, T>
+		[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
+												const vector_base<W2, T, C, D2> &y,
+												U tolerance) noexcept
+		{
+			return within_tolerance(x - y, tolerance);
+		}
+
+		template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, std::size_t C2, typename D3>
+		requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
 		[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
 												const vector_base<W2, T, C1, D2> &y,
-												const vector_base<W3, T, C2, D3> &tolerance) noexcept
+												const vector_base<W3, U, C2, D3> &tolerance) noexcept
 		{
 			if constexpr (C1 == C2)
 			{
-				auto deltas = abs(x - y);
-				auto comparison_vector = lessThan(deltas, tolerance);
-				return all(comparison_vector);
+				return within_tolerance(x - y, tolerance);
 			}
 			else		// (C2 == 1)
 			{
@@ -6139,7 +6347,7 @@ namespace dsga
 			// these components up into a vector that represents the row
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, C>(columns[Is][row_index]...);
+				return basic_vector<T, C>{ columns[Is][row_index]... };
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6171,7 +6379,7 @@ namespace dsga
 				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					columns[Col].set(std::get<Col * R + Js>(arg_tuple) ...);
+					columns[Col].set( std::get<Col * R + Js>(arg_tuple)... );
 				}(std::make_index_sequence<R>{})), ...);
 			}(std::make_index_sequence<C>{});
 		}
@@ -6248,24 +6456,6 @@ namespace dsga
 					((columns[Is][Is] = T(1.0)), ...);
 				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
 			}
-		}
-
-		// initializer list constructor -- it will use the first ComponentCount number of elements of the list,
-		// and if list size is less than ComponentCount, it will initialize the rest of the matrix elements with 0
-		constexpr basic_matrix(const std::initializer_list<T> &init_list) noexcept
-		{
-			auto element_values = std::array<T, ComponentCount>{};
-			auto copy_size = (ComponentCount > init_list.size()) ? init_list.size() : ComponentCount;
-			std::copy_n(init_list.begin(), copy_size, element_values.begin());
-
-			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
-			{
-				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
-				{
-					constexpr std::size_t Col = Is;
-					columns[Col].set(element_values[Col * R + Js] ...);
-				}(std::make_index_sequence<R>{})), ...);
-			}(std::make_index_sequence<C>{});
 		}
 
 		//
@@ -6361,7 +6551,7 @@ namespace dsga
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] * rhs[Is])...);
+				return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] * rhs[Is])... };
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6373,11 +6563,11 @@ namespace dsga
 		{
 			return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 			{
-				return basic_matrix<std::common_type_t<T1, T2>, C1, C2>(
+				return basic_matrix<std::common_type_t<T1, T2>, C1, C2>{
 					[&]<std::size_t ...Is>(std::index_sequence <Is...>, auto row) noexcept
 					{
-						return basic_vector<std::common_type_t<T1, T2>, C1>((lhs[Is] * row)...);
-					}(std::make_index_sequence<C1>{}, rhs[Js]) ...);
+						return basic_vector<std::common_type_t<T1, T2>, C1>{ (lhs[Is] * row)... };
+					}(std::make_index_sequence<C1>{}, rhs[Js]) ... };
 			}(std::make_index_sequence<C2>{});
 		}
 
@@ -6385,7 +6575,7 @@ namespace dsga
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
 		[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept
 		{
-			auto val = basic_matrix<T, R, C>();
+			auto val = basic_matrix<T, R, C>{};
 
 			[&] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
@@ -6447,15 +6637,15 @@ namespace dsga
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 2, 2> &arg) noexcept
 		{
-			return basic_matrix<T, 2, 2>( arg[1][1], -arg[0][1],
-										 -arg[1][0],  arg[0][0]) / determinant(arg);
+			return basic_matrix<T, 2, 2>{ arg[1][1], -arg[0][1],
+										 -arg[1][0],  arg[0][0] } / determinant(arg);
 		}
 
 		// going for efficiency
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 3, 3> &arg) noexcept
 		{
-			return basic_matrix<T, 3, 3>(
+			return basic_matrix<T, 3, 3>{
 				+(arg[1][1] * arg[2][2] - arg[2][1] * arg[1][2]),
 				-(arg[0][1] * arg[2][2] - arg[2][1] * arg[0][2]),
 				+(arg[0][1] * arg[1][2] - arg[1][1] * arg[0][2]),
@@ -6465,14 +6655,14 @@ namespace dsga
 				+(arg[1][0] * arg[2][1] - arg[2][0] * arg[1][1]),
 				-(arg[0][0] * arg[2][1] - arg[2][0] * arg[0][1]),
 				+(arg[0][0] * arg[1][1] - arg[1][0] * arg[0][1])
-				) / determinant(arg);
+				} / determinant(arg);
 		}
 
 		// going for efficiency
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr auto inverse(const basic_matrix<T, 4, 4> &arg) noexcept
 		{
-			return basic_matrix<T, 4, 4>(
+			return basic_matrix<T, 4, 4>{
 				+ arg[1][1] * arg[2][2] * arg[3][3] + arg[2][1] * arg[3][2] * arg[1][3] + arg[3][1] * arg[1][2] * arg[2][3]
 				- arg[3][1] * arg[2][2] * arg[1][3] - arg[2][1] * arg[1][2] * arg[3][3] - arg[1][1] * arg[3][2] * arg[2][3],
 
@@ -6523,7 +6713,7 @@ namespace dsga
 
 				+ arg[0][0] * arg[1][1] * arg[2][2] + arg[1][0] * arg[2][1] * arg[0][2] + arg[2][0] * arg[0][1] * arg[1][2]
 				- arg[2][0] * arg[1][1] * arg[0][2] - arg[1][0] * arg[0][1] * arg[2][2] - arg[0][0] * arg[2][1] * arg[1][2]
-				) / determinant(arg);
+				} / determinant(arg);
 		}
 
 		// not in glsl
@@ -6534,9 +6724,9 @@ namespace dsga
 		template <bool W, floating_point_scalar T, typename D>
 		[[nodiscard]] constexpr basic_matrix<T, 3, 3> cross_matrix(const vector_base<W, T, 3, D> &vec) noexcept
 		{
-			return basic_matrix<T, 3, 3>(   T(0),  vec[2], -vec[1],
+			return basic_matrix<T, 3, 3>{   T(0),  vec[2], -vec[1],
 										 -vec[2],    T(0),  vec[0],
-										  vec[1], -vec[0],    T(0));
+										  vec[1], -vec[0],    T(0) };
 		}
 
 		// not in glsl
@@ -6548,7 +6738,7 @@ namespace dsga
 		requires (C > 1)
 		[[nodiscard]] constexpr basic_matrix<T, C, C> diagonal_matrix(const vector_base<W, T, C, D> &vec) noexcept
 		{
-			auto square_mat = basic_matrix<T, C, C>();
+			auto square_mat = basic_matrix<T, C, C>{};
 
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -6590,7 +6780,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>((-arg[Is])...);
+			return basic_matrix<T, C, R>{ (-arg[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6648,7 +6838,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] + rhs)...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] + rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6658,7 +6848,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs + rhs[Is])...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs + rhs[Is])...};
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6670,7 +6860,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] - rhs)...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] - rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6680,7 +6870,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs - rhs[Is])...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs - rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6692,7 +6882,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] * rhs)...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] * rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6702,7 +6892,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs * rhs[Is])...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs * rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6714,7 +6904,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] / rhs)...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] / rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6724,7 +6914,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs / rhs[Is])...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs / rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6736,7 +6926,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] + rhs[Is])...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] + rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6748,7 +6938,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] - rhs[Is])...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] - rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6760,7 +6950,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>((lhs[Is] / rhs[Is])...);
+			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] / rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6788,7 +6978,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_vector(functions::dot(lhs, rhs[Is])...);
+			return basic_vector{ functions::dot(lhs, rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6802,7 +6992,7 @@ namespace dsga
 		// functions::dot() is the core of a different implementation of this function,
 		// and is representative of the underlying multiplication and addition that occurs.
 		using element_type_t = decltype(functions::dot(std::declval<basic_vector<T, C1>>(), std::declval<basic_vector<U, R2>>()));
-		auto val = basic_matrix<element_type_t, C2, R1>();
+		auto val = basic_matrix<element_type_t, C2, R1>{};
 
 		[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
@@ -6909,7 +7099,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return basic_vector<T, S>(arg[Is]...);
+			return basic_vector<T, S>{ arg[Is]... };
 		}(std::make_index_sequence<S>{});
 	}
 
@@ -6919,7 +7109,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return basic_vector<T, S>(arg[Is]...);
+			return basic_vector<T, S>{ arg[Is]... };
 		}(std::make_index_sequence<S>{});
 	}
 
@@ -6930,7 +7120,7 @@ namespace dsga
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
 		{
-			return {arg[Is]...};
+			return { arg[Is]... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6946,7 +7136,7 @@ namespace dsga
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 				{
 					constexpr auto cols = Js;
-					return basic_vector<T, R>(arg[cols * R + Is]...);
+					return basic_vector<T, R>{ arg[cols * R + Is]... };
 				}(std::make_index_sequence<R>{}) ...);
 		}(std::make_index_sequence<C>{});
 	}
@@ -6961,7 +7151,7 @@ namespace dsga
 				[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 				{
 					constexpr auto cols = Js;
-					return basic_vector<T, R>(arg[cols * R + Is]...);
+					return basic_vector<T, R>{ arg[cols * R + Is]... };
 				}(std::make_index_sequence<R>{}) ...);
 		}(std::make_index_sequence<C>{});
 	}
@@ -6979,7 +7169,7 @@ namespace dsga
 
 		return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 		{
-			return std::array<T, C * R>{std::get<Js>(matrix_tuple) ...};
+			return std::array<T, C * R>{ std::get<Js>(matrix_tuple)... };
 		}(std::make_index_sequence<C * R>{});
 	}
 

@@ -64,6 +64,7 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\docs\API.md" />
+    <None Include="..\docs\CHANGELOG.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\LICENSE_1_0.txt" />

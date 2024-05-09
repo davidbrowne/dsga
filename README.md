@@ -1,12 +1,23 @@
 # dsga : Data Structures for Geometric Algorithms
 
-**dsga** is a single header-only **C++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in C++20. It is not intended to be used for rendering, just for sharing the fundamental data structures and associated functions. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does not use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
+**dsga** is a single header-only **C++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in C++20. It is intended to be used for [array programming](https://en.wikipedia.org/wiki/Array_programming) other than rendering. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does _not_ use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ## Home
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v1.5.0
+v2.0.0
+
+## [Latest Major Changes](docs/CHANGELOG.md)
+
+* v2.0.0
+    * Large __Breaking Change__ - minimized how vectors of length == 1 behave as vectors. Most dsga operations and functions treat length == 1 vectors as scalars, returning scalar results (mostly through refactoring the underlying execution machinery). Use of the non-GLSL types iscal, uscal, bscal, scal, fscal, dscal, etc., is generally discouraged.
+    * Small __Breaking Change__ - reverted/removed ```std::initializer_list``` constructors added in v1.5.0.
+    * Added ```within_tolerance()``` comparison functions, that fit well with ```within_distance()``` and ```within_box()```.
+
+* v1.5.0
+    * Small __Breaking Change__ - added ```std::initializer_list``` constructors to ```basic_vector``` and ```basic_matrix``` - if not enough components, then fill rest with zeros - if too many components, just use the components necessary to fill the vector or matrix.
+    * Fixed ```indexed_vector``` iterator classes to use signed types for indexing into storage (fixes iterator subtraction and ```reverse_iterator``` usage, as the iterators are random-access).
 
 ## Minimum Version of Tested Compilers
 * Microsoft Visual Studio 2022 v17.x
@@ -193,7 +204,7 @@ template <dsga::floating_point_scalar T1, dsga::floating_point_scalar T2>
 ```
 ## Relevant GLSL Overview
 
-Our programming environment is ```c++20```, not a GLSL shader program, so the entire GLSL Shading language specification is a super-set of what we are trying to achieve. We really just want the vector and matrix data structures (and their corresponding functions and behavior) to be usable in a ```c++20``` environment.
+Our programming environment is ```C++20```, not a GLSL shader program, so the entire GLSL Shading language specification is a super-set of what we are trying to achieve. We really just want the vector and matrix data structures (and their corresponding functions and behavior) to be usable in a ```C++20``` environment. Another term for this type of programming is [array programming](https://en.wikipedia.org/wiki/Array_programming).
 
 The following links to the shading specification should help with understanding what we are trying to implement with this header-only library.
 
@@ -311,10 +322,11 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v1.5.0`
+Current version: `v2.0.0`
 
 * Everything major has some tests, but code coverage is not 100%.
-* [Last Released: v1.5.0](https://github.com/davidbrowne/dsga/releases/tag/v1.5.0)
+* [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
+* [Change Log](docs/CHANGELOG.md)
 
 ### The next steps
 * Refining API documentation.
@@ -361,7 +373,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 18.1.3** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.3), with MSVC and/or gcc 13.2.0 installed:
+* **clang 18.1.5** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.5), with MSVC and/or gcc 13.2.0 installed:
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -374,7 +386,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu Noble Numbat preview running in WSL2 for Windows 11
+### Ubuntu 24.04 LTS running in WSL2 for Windows 11
 
 * **gcc 14.0.1**
 
@@ -387,7 +399,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 18.1.0rc2**
+* **clang 18.1.3**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

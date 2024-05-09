@@ -496,14 +496,6 @@ TEST_SUITE("test functions")
 			auto zeros = dvec4(0.0);
 			auto nan_normed = normalize(zeros);
 			CHECK_UNARY(all(isnan(nan_normed)));
-
-			auto single_val = scal(-3.5);
-			auto single_normed = normalize(single_val);
-			CHECK_EQ(single_normed, scal(1));
-
-			auto single_zero = dscal(0.0);
-			auto single_nan_normed = normalize(single_zero);
-			CHECK_UNARY(all(isnan(single_nan_normed)));
 		}
 
 		SUBCASE("'normal' vector functions")
