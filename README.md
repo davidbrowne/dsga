@@ -10,6 +10,9 @@ v2.0.0
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
 
+* v2.0.0 (no version change as no change to dsga.hxx)
+    * Updated example ```iostream``` and ```std::format``` output to look like the c++23 std::format style for ranges.
+    * Updated the MSVC debugger visualizer (dsga.natvis) to look like the c++23 std::format style for ranges.
 * v2.0.0
     * Large __Breaking Change__ - minimized how vectors of length == 1 behave as vectors. Most dsga operations and functions treat length == 1 vectors as scalars, returning scalar results (mostly through refactoring the underlying execution machinery). Use of the non-GLSL types iscal, uscal, bscal, scal, fscal, dscal, etc., is generally discouraged.
     * Small __Breaking Change__ - reverted/removed ```std::initializer_list``` constructors added in v1.5.0.
@@ -357,8 +360,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2167 | 2167 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2157 | 2157 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -368,8 +371,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2167 | 2167 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2157 | 2157 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -381,8 +384,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2151 | 2151 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2141 | 2141 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -394,8 +397,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2167 | 2167 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2157 | 2157 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -407,8 +410,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2151 | 2151 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2141 | 2141 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -420,8 +423,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2167 | 2167 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2157 | 2157 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -433,8 +436,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2151 | 2151 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2141 | 2141 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

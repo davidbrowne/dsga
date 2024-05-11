@@ -198,7 +198,6 @@
     <Text Include="..\LICENSE_1_0.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\examples\stl.cxx" />
     <ClCompile Include="..\src\main.cxx" />
     <ClCompile Include="..\src\nanobench.cxx" />
     <ClCompile Include="..\tests\assignment_test.cxx" />

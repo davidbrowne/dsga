@@ -60,11 +60,11 @@ struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
 	{
 		if constexpr (N == 0)
 		{
-			return std::format_to(ctx.out(), "{{ }}");
+			return std::format_to(ctx.out(), "[]");
 		}
 		else
 		{
-			std::format_to(ctx.out(), "{{ ");
+			std::format_to(ctx.out(), "[");
 
 			std::formatter<T, CharT>::format(arr[0], ctx);
 			if constexpr (N > 1)
@@ -75,7 +75,7 @@ struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
 				}(dsga::make_index_range<1, N>{});
 			}
 
-			std::format_to(ctx.out(), " }}");
+			std::format_to(ctx.out(), "]");
 
 			return ctx.out();
 		}
@@ -88,7 +88,7 @@ struct std::formatter<dsga::storage_wrapper<T, Size>, CharT> : std::formatter<T,
 	template <typename FormatContext>
 	auto format(const dsga::storage_wrapper<T, Size> &sw, FormatContext &ctx) const
 	{
-		std::format_to(ctx.out(), "{{ ");
+		std::format_to(ctx.out(), "[");
 
 		std::formatter<T, CharT>::format(sw[0], ctx);
 		if constexpr (Size > 1)
@@ -99,7 +99,7 @@ struct std::formatter<dsga::storage_wrapper<T, Size>, CharT> : std::formatter<T,
 			}(dsga::make_index_range<1, Size>{});
 		}
 
-		std::format_to(ctx.out(), " }}");
+		std::format_to(ctx.out(), "]");
 
 		return ctx.out();
 	}
@@ -111,7 +111,7 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : s
 	template <typename FormatContext>
 	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, FormatContext &ctx) const
 	{
-		std::format_to(ctx.out(), "{{ ");
+		std::format_to(ctx.out(), "[");
 
 		std::formatter<T, CharT>::format(v[0], ctx);
 		if constexpr (Count > 1)
@@ -122,7 +122,7 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : s
 			}(dsga::make_index_range<1, Count>{});
 		}
 
-		std::format_to(ctx.out(), " }}");
+		std::format_to(ctx.out(), "]");
 
 		return ctx.out();
 	}
@@ -146,7 +146,7 @@ struct std::formatter<dsga::basic_matrix<T, C, R>, CharT> : std::formatter<dsga:
 	template <typename FormatContext>
 	auto format(const dsga::basic_matrix<T, C, R> &m, FormatContext &ctx) const
 	{
-		std::format_to(ctx.out(), "[ ");
+		std::format_to(ctx.out(), "[");
 
 		std::formatter<dsga::basic_vector<T, R>, CharT>::format(m[0], ctx);
 		if constexpr (C > 1)
@@ -157,7 +157,7 @@ struct std::formatter<dsga::basic_matrix<T, C, R>, CharT> : std::formatter<dsga:
 			}(dsga::make_index_range<1, C>{});
 		}
 
-		std::format_to(ctx.out(), " ]");
+		std::format_to(ctx.out(), "]");
 
 		return ctx.out();
 	}

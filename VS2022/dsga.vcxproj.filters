@@ -98,9 +98,6 @@
     <ClCompile Include="..\tests\swizzle_test.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\examples\stl.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\tests\utility_test.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>

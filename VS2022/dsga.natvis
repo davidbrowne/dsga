@@ -2,10 +2,10 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
 	<Type Name="std::array&lt;*,*&gt;" IncludeView="dsga">
-		<DisplayString Condition="$T2 == 1">{{ {_Elems[0],g} }}</DisplayString>
-		<DisplayString Condition="$T2 == 2">{{ {_Elems[0],g}, {_Elems[1],g} }}</DisplayString>
-		<DisplayString Condition="$T2 == 3">{{ {_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g} }}</DisplayString>
-		<DisplayString Condition="$T2 == 4">{{ {_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g}, {_Elems[3],g} }}</DisplayString>
+		<DisplayString Condition="$T2 == 1">[{_Elems[0],g}]</DisplayString>
+		<DisplayString Condition="$T2 == 2">[{_Elems[0],g}, {_Elems[1],g}]</DisplayString>
+		<DisplayString Condition="$T2 == 3">[{_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g}]</DisplayString>
+		<DisplayString Condition="$T2 == 4">[{_Elems[0],g}, {_Elems[1],g}, {_Elems[2],g}, {_Elems[3],g}]</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Synthetic Name="values"><DisplayString>{{ size = {$T2} }}</DisplayString></Synthetic>
@@ -40,11 +40,11 @@
 	</Type>
 
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {base[$T4],g} }}</DisplayString>
+		<DisplayString>[{base[$T4],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[ {$T4} ]</DisplayString>
+				<DisplayString>[{$T4}]</DisplayString>
 				<Expand>
 					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
@@ -64,11 +64,11 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {base[$T4],g}, {base[$T5],g} }}</DisplayString>
+		<DisplayString>[{base[$T4],g}, {base[$T5],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[ {$T4}, {$T5} ]</DisplayString>
+				<DisplayString>[{$T4}, {$T5}]</DisplayString>
 				<Expand>
 					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
@@ -90,11 +90,11 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {base[$T4],g}, {base[$T5],g}, {base[$T6],g} }}</DisplayString>
+		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[ {$T4}, {$T5}, {$T6} ]</DisplayString>
+				<DisplayString>[{$T4}, {$T5}, {$T6}]</DisplayString>
 				<Expand>
 					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
@@ -118,11 +118,11 @@
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>{{ {base[$T4],g}, {base[$T5],g}, {base[$T6],g}, {base[$T7],g} }}</DisplayString>
+		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}, {base[$T7],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[ {$T4}, {$T5}, {$T6}, {$T7} ]</DisplayString>
+				<DisplayString>[{$T4}, {$T5}, {$T6}, {$T7}]</DisplayString>
 				<Expand>
 					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 					<Item Name="[0]">$T4</Item>
@@ -256,8 +256,11 @@
 	</Type>
 
 	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
-		<DisplayString>{{ cols={$T2}, rows={$T3} }}</DisplayString>
+		<DisplayString Condition="$T2 == 2">[{columns[0]}, {columns[1]}]</DisplayString>
+		<DisplayString Condition="$T2 == 3">[{columns[0]}, {columns[1]}, {columns[2]}]</DisplayString>
+		<DisplayString Condition="$T2 == 4">[{columns[0]}, {columns[1]}, {columns[2]}, {columns[3]}]</DisplayString>
 		<Expand>
+			<Synthetic Name="values"><DisplayString>{{ cols = {$T2}, rows = {$T3} }}</DisplayString></Synthetic>
 			<ExpandedItem>columns</ExpandedItem>
 		</Expand>
 	</Type>

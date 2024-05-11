@@ -170,7 +170,7 @@ template <typename T, std::size_t E, std::size_t ...Is>
 requires (E != std::dynamic_extent) && dsga::dimensional_scalar<std::remove_cvref_t<T>> && dsga::dimensional_size<sizeof...(Is)> && dsga::detail::valid_range_indexes<E, Is...>
 [[nodiscard]] constexpr auto make_vector(std::span<T, E> s, std::index_sequence<Is...> ) noexcept
 {
-	return dsga::basic_vector<std::remove_cvref_t<T>, sizeof...(Is)>(s[Is]...);
+	return dsga::basic_vector<std::remove_cvref_t<T>, sizeof...(Is)>{ s[Is]... };
 }
 
 //
@@ -189,7 +189,7 @@ requires (E != std::dynamic_extent) && (((C >= 2u) && (C <= 4u)) && ((R >= 2u) &
 			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
 				constexpr auto cols = Js;
-				return dsga::basic_vector<std::remove_cvref_t<T>, R>(s[cols * R + Is]...);
+				return dsga::basic_vector<std::remove_cvref_t<T>, R>{ s[cols * R + Is]... };
 			}(std::make_index_sequence<R>{}) ...);
 	}(std::make_index_sequence<C>{});
 }

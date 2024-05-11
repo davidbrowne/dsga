@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.0.0 (no version change as no change to dsga.hxx)
+* Updated example ```iostream``` and ```std::format``` output to look like the c++23 std::format style for ranges.
+* Updated the MSVC debugger visualizer (dsga.natvis) to look like the c++23 std::format style for ranges.
+* Minor refactoring of some examples.
+
 ### v2.0.0
 * Large __Breaking Change__ - minimized how vectors of length == 1 behave as vectors. Most dsga operations and functions treat length == 1 vectors as scalars, returning scalar results (mostly through refactoring the underlying execution machinery). Use of the non-GLSL types iscal, uscal, bscal, scal, fscal, dscal, etc., is generally discouraged.
 * Small __Breaking Change__ - reverted/removed ```std::initializer_list``` constructors added in v1.5.0.
