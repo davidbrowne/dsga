@@ -6,11 +6,13 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.0.0
+v2.0.1
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
 
-* v2.0.0 (no version change as no change to dsga.hxx)
+* v2.0.1
+    * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
+* (no version change as no change to dsga.hxx)
     * Updated example ```iostream``` and ```std::format``` output to look like the c++23 std::format style for ranges.
     * Updated the MSVC debugger visualizer (dsga.natvis) to look like the c++23 std::format style for ranges.
 * v2.0.0
@@ -24,8 +26,8 @@ v2.0.0
 
 ## Minimum Version of Tested Compilers
 * Microsoft Visual Studio 2022 v17.x
-* gcc v12.3
-* clang v16
+* gcc v11.4
+* clang v16.0.6
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -325,7 +327,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.0.0`
+Current version: `v2.0.1`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
@@ -425,6 +427,19 @@ Performs all the unit tests except where there is lack of support for ```std::is
 ===============================================================================
 [doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
 [doctest] assertions: 2157 | 2157 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+* **gcc 11.4.0**
+
+Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+
+```
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2141 | 2141 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

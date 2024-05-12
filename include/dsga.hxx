@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 0;
+constexpr inline int DSGA_PATCH_VERSION = 1;
 
 namespace dsga
 {
@@ -111,7 +111,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 1;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 2;
+		constexpr inline int CXCM_PATCH_VERSION = 3;
 
 		namespace dd_real
 		{
@@ -789,9 +789,9 @@ namespace dsga
 
 		// make sure this isn't optimized away if used with fast-math
 
-	#if defined(_MSC_VER) || defined(__clang__)
-	#pragma float_control(precise, on, push)
-	#endif
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(precise, on, push)
+#endif
 
 		template <std::floating_point T>
 		#if defined(__GNUC__) && !defined(__clang__)
@@ -802,19 +802,32 @@ namespace dsga
 			return (value != value);
 		}
 
-	#if defined(_MSC_VER) || defined(__clang__)
-	#pragma float_control(pop)
-	#endif
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(pop)
+#endif
 
 		//
 		// isinf()
 		//
 
+	// make sure this isn't optimized away if used with fast-math
+
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(precise, on, push)
+#endif
+
 		template <std::floating_point T>
+		#if defined(__GNUC__) && !defined(__clang__)
+			__attribute__((optimize("-fno-fast-math")))
+		#endif
 		constexpr bool isinf(T value) noexcept
 		{
 			return (value == -std::numeric_limits<T>::infinity()) || (value == std::numeric_limits<T>::infinity());
 		}
+
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(pop)
+#endif
 
 		//
 		// fpclassify()
@@ -1087,7 +1100,16 @@ namespace dsga
 				// constexpr_sqrt()
 				//
 
+				// make sure this isn't optimized away if used with fast-math
+
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(precise, on, push)
+#endif
+
 				template <std::floating_point T>
+				#if defined(__GNUC__) && !defined(__clang__)
+					__attribute__((optimize("-fno-fast-math")))
+				#endif
 				constexpr T constexpr_sqrt(T value) noexcept
 				{
 					// screen out unnecessary input
@@ -1133,11 +1155,24 @@ namespace dsga
 					return relaxed::sqrt(value);
 				}
 
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(pop)
+#endif
+
 				//
 				// constexpr_inverse_sqrt()
 				//
 
+				// make sure this isn't optimized away if used with fast-math
+
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(precise, on, push)
+#endif
+
 				template <std::floating_point T>
+				#if defined(__GNUC__) && !defined(__clang__)
+					__attribute__((optimize("-fno-fast-math")))
+				#endif
 				constexpr T constexpr_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
@@ -1183,7 +1218,20 @@ namespace dsga
 					return relaxed::rsqrt(value);
 				}
 
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(pop)
+#endif
+
+				// make sure this isn't optimized away if used with fast-math
+
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(precise, on, push)
+#endif
+
 				template <std::floating_point T>
+				#if defined(__GNUC__) && !defined(__clang__)
+					__attribute__((optimize("-fno-fast-math")))
+				#endif
 				constexpr T constexpr_fast_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
@@ -1228,6 +1276,10 @@ namespace dsga
 
 					return relaxed::fast_rsqrt(value);
 				}
+
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma float_control(pop)
+#endif
 
 			} // namespace detail
 
@@ -1924,6 +1976,16 @@ namespace dsga
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return basic_vector<T, Count>{ op((*this)[Is])... };		// braced init list is evaluated in element order
+			}(std::make_index_sequence<Count>{});
+		}
+
+		template <typename UnOp>
+		requires (std::same_as<bool, std::invoke_result_t<UnOp, T>> || std::same_as<bool, std::invoke_result_t<UnOp, const T &>>)
+		[[nodiscard]] constexpr basic_vector<bool, Count> query(UnOp op) const noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return basic_vector<bool, Count>{ op((*this)[Is])... };		// braced init list is evaluated in element order
 			}(std::make_index_sequence<Count>{});
 		}
 

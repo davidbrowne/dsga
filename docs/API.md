@@ -495,6 +495,7 @@ This [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) 
     * [```min```](#vector_basemin)
     * [```max```](#vector_basemax)
     * [```sum```](#vector_basesum)
+    * [```query```](#vector_basequery) - ```not in std::valarray```
 * [Vector Operators](#vector-operators)
 * [Vector Free Functions](#vector-free-functions)
 
@@ -612,6 +613,14 @@ Returns the largest element.
 [[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>;
 ```
 Returns the sum of all elements.
+
+##### ```vector_base::query```
+```c++
+template <typename UnOp>
+requires (std::same_as<bool, std::invoke_result_t<UnOp, T>> || std::same_as<bool, std::invoke_result_t<UnOp, const T &>>)
+[[nodiscard]] constexpr basic_vector<bool, Count> query(UnOp op) const noexcept;
+```
+Applies a predicate lambda/function/function object/callable to every element of a vector, in element order (order only matters if callable is side-effecting and/or has state). The callable must take either a ```T``` or ```const T &```, and it must return a ```bool```. Returns a vector of the results. Not in GLSL or ```std::valarray```.
 
 #### ```indexed_vector```
 ```c++

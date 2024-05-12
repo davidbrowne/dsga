@@ -1,6 +1,11 @@
 # Change Log
 
-### v2.0.0 (no version change as no change to dsga.hxx)
+### v2.0.1
+* Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
+* Upgraded to cxcm v1.1.3.
+* Minor refactoring.
+
+### (no version change as no change to dsga.hxx)
 * Updated example ```iostream``` and ```std::format``` output to look like the c++23 std::format style for ranges.
 * Updated the MSVC debugger visualizer (dsga.natvis) to look like the c++23 std::format style for ranges.
 * Minor refactoring of some examples.

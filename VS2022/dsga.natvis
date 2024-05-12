@@ -260,7 +260,7 @@
 		<DisplayString Condition="$T2 == 3">[{columns[0]}, {columns[1]}, {columns[2]}]</DisplayString>
 		<DisplayString Condition="$T2 == 4">[{columns[0]}, {columns[1]}, {columns[2]}, {columns[3]}]</DisplayString>
 		<Expand>
-			<Synthetic Name="values"><DisplayString>{{ cols = {$T2}, rows = {$T3} }}</DisplayString></Synthetic>
+			<Synthetic Name="values"><DisplayString>{{ columns = {$T2}, rows = {$T3} }}</DisplayString></Synthetic>
 			<ExpandedItem>columns</ExpandedItem>
 		</Expand>
 	</Type>

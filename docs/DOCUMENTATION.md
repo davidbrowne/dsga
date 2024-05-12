@@ -444,6 +444,7 @@ There is conceptual overlap between the vector structs and ```std::valarray```. 
 * ```min()```
 * ```max()```
 * ```sum()```
+* ```query()``` - not in GLSL nor ```std::valarray``` - like ```apply()``` but for boolean predicates
 
 ### Vector Operators
 The vector operators all work component-wise.
