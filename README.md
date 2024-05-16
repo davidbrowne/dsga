@@ -6,13 +6,15 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.0.1
+v2.0.2
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.0.2
+    * Potentially breaking change: removed an implicit ```dsga::basic_matrix``` constructor, now requiring the use of a constructor that is explicit.
 
 * v2.0.1
     * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
-* (no version change as no change to dsga.hxx)
+* no version change
     * Updated example ```iostream``` and ```std::format``` output to look like the c++23 std::format style for ranges.
     * Updated the MSVC debugger visualizer (dsga.natvis) to look like the c++23 std::format style for ranges.
 * v2.0.0
@@ -28,6 +30,7 @@ v2.0.1
 * Microsoft Visual Studio 2022 v17.x
 * gcc v11.4
 * clang v16.0.6
+* icx v2023.1.0 - using [Compiler Explorer](https://compiler-explorer.com/) for basic compilation test, but test suite not run
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -307,6 +310,7 @@ To make the vectors and matrices as useful as possible in a C++ context, various
     * [```std::formatter``` example](examples/format_output.hxx)
 * ```std::valarray``` API (vector only)
     * ```apply```
+    * ```query``` - not in ```std::valarray``` nor GLSL - like ```apply()``` but for boolean predicates
     * ```shift```
     * ```cshift```
     * ```min```
@@ -327,7 +331,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.0.1`
+Current version: `v2.0.2`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
@@ -356,14 +360,14 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.9.6**
+* **MSVC 2022 - v17.9.7**
 
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2157 | 2157 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2160 | 2160 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -373,12 +377,12 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2157 | 2157 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2160 | 2160 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 18.1.5** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.5), with MSVC and/or gcc 13.2.0 installed:
+* **clang 18.1.5** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.5):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -386,8 +390,21 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2141 | 2141 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2144 | 2144 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+* **icpx 2024.1.0** on Windows, [official binaries](https://www.intel.com/content/www/us/en/developer/articles/tool/oneapi-standalone-components.html#dpcpp-cpp):
+
+Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+
+```
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2144 | 2144 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -399,8 +416,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2157 | 2157 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2160 | 2160 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -412,8 +429,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2141 | 2141 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2144 | 2144 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -425,8 +442,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2157 | 2157 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2160 | 2160 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -438,8 +455,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2141 | 2141 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2144 | 2144 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -451,8 +468,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2141 | 2141 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2144 | 2144 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

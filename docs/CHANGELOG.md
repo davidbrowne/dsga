@@ -1,5 +1,12 @@
 # Change Log
 
+### v2.0.2
+* Upgraded to cxcm v1.1.4.
+* Updated example iostream formatters for boolalpha output when appropriate.
+* Added Intel's icx/icpx compiler (for Windows) as one of the test compilers.
+* Potentially breaking change: removed an implicit ```dsga::basic_matrix``` constructor, now requiring the use of a constructor that is explicit.
+* Minor doc and repo maintenance.
+
 ### v2.0.1
 * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
 * Upgraded to cxcm v1.1.3.

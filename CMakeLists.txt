@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(dsga VERSION 1.1.0)
+project(dsga VERSION 2.0.2)
 
 # file(GLOB SRC_FILES  CONFIGURE_DEPENDS src/*.cxx)
 # file(GLOB TEST_FILES CONFIGURE_DEPENDS tests/*.cxx)

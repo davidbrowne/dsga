@@ -117,6 +117,7 @@ We want operations and functions to work the same on a ```basic_vector``` or a s
 We have also added some of the member functions found in the ```std::valarray``` API. We want these to work with both vector types, and since we can use the functions already in ```vector_base```, they are implemented here instead of the derived vector structs:
 
 * ```apply()```
+* ```query()``` - not in ```std::valarray``` - like ```apply()``` but with boolean predicates
 * ```shift()```
 * ```cshift()```
 * ```min()```

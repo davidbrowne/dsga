@@ -303,7 +303,7 @@ TEST_SUITE("test functions")
 			
 			// first version
 			vec4 vector_mix_steps(0, .5, .75, 1);
-			float scalar_mix_step{0.25};
+			float scalar_mix_step{ 0.25f };
 			
 			auto vector_mix_vals = mix(x, y, vector_mix_steps);
 			CHECK_EQ(vector_mix_vals, vec4(10, -8.5, 4, 1));
@@ -322,7 +322,7 @@ TEST_SUITE("test functions")
 			CHECK_EQ(vector_step_vals, vec4(0, 0, 1, 1));
 			CHECK_EQ(vec4(step(10.f, 7.f), step(-8.f, -9.f), step(4.f, 4.f), step(0.f, 1.f)), vector_step_vals);
 
-			float edge{ 3.75 };
+			float edge{ 3.75f };
 			auto scalar_step_vals = step(edge, x);
 			CHECK_EQ(scalar_step_vals, vec4(1, 0, 1, 0));
 
@@ -702,6 +702,20 @@ TEST_SUITE("valarray-style vector member functions")
 		// T func(const T&)
 		CHECK_EQ(apply_input.apply([](const double &val) -> double { return val * 25; }), dsga::dvec4(0, 25, 50, 75));
 		CHECK_EQ(apply_input.apply(apply_test_func), dsga::dvec4(0, 25, 50, 75));
+	}
+
+	TEST_CASE("vector query()")
+	{
+		auto v1 = dsga::ivec4{1, 2, 3, 4};
+		auto v2 = dsga::ivec4{60, 70, 80, 90};
+		auto v3 = dsga::dvec4{-std::numeric_limits<double>::infinity(), 500.0, 55.0, std::numeric_limits<double>::quiet_NaN()};
+		auto q1 = v1.query([](auto val) {return (val % 2) == 0; });
+		auto q2 = v2.query([](auto val) {return (val % 4) == 0; });
+		auto q3 = v3.query(dsga::cxcm::isfinite<double>);
+
+		CHECK_EQ(q1, dsga::bvec4{false, true, false, true});
+		CHECK_EQ(q2, dsga::bvec4{true, false, true, false});
+		CHECK_EQ(q3, dsga::bvec4{false, true, true, false});
 	}
 
 	TEST_CASE("vector shift()")

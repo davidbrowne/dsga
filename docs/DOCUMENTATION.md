@@ -424,8 +424,6 @@ template <typename ... Args>
 constexpr basic_vector(const Args & ...args) noexcept;
 ```
 
-* **Intializer List of Values** - ```basic_vector``` has user-declared constructors, so it is not an aggregate struct/class, so we can't do aggregate initialization with an initializer list. We can use brace initialization to call the constructors. This is different from GLSL.
-
 ### Vector Member Functions
 
 These are the members that are not part of the [index interface](#index-interface), [iterator interface](#iterators), the [tuple protocol](#tuple-protocol), or the [pointer interface](#low-level-pointer-access).
@@ -439,12 +437,12 @@ These are the members that are not part of the [index interface](#index-interfac
 There is conceptual overlap between the vector structs and ```std::valarray```. Much of this conceptual overlap is implemented in ```dsga``` in terms of operators and vector free functions. The following functions have been implemented as vector member functions. These functions are part of the [```std::valarray``` API](https://en.cppreference.com/w/cpp/numeric/valarray).
 
 * ```apply()```
+* ```query()``` - not in ```std::valarray``` nor GLSL - like ```apply()``` but for boolean predicates
 * ```shift()```
 * ```cshift()```
 * ```min()```
 * ```max()```
 * ```sum()```
-* ```query()``` - not in GLSL nor ```std::valarray``` - like ```apply()``` but for boolean predicates
 
 ### Vector Operators
 The vector operators all work component-wise.
@@ -637,12 +635,6 @@ constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept;
 template <typename ... Args>
 constexpr basic_matrix(const Args & ...args) noexcept;
 ``` 
-
-* **Intializer List of Values** - ```basic_matrix``` has user-declared constructors, so it is not an aggregate struct/class, so we can't do aggregate initialization with an initializer list. We can use brace initialization to call the constructors. This is different from GLSL.
-
-```c++
-constexpr basic_matrix(const std::initializer_list<T> &init_list) noexcept;
-```
 
 ### Matrix Member Functions
 

@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -111,7 +111,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 1;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 3;
+		constexpr inline int CXCM_PATCH_VERSION = 4;
 
 		namespace dd_real
 		{
@@ -464,13 +464,13 @@ namespace dsga
 		constexpr bool is_negative_zero(T val) noexcept;
 
 		template<>
-		constexpr bool is_negative_zero<float>(float val) noexcept
+		constexpr bool is_negative_zero(float val) noexcept
 		{
 			return (0x80000000 == std::bit_cast<unsigned int>(val));
 		}
 
 		template<>
-		constexpr bool is_negative_zero<double>(double val) noexcept
+		constexpr bool is_negative_zero(double val) noexcept
 		{
 			return (0x8000000000000000 == std::bit_cast<unsigned long long>(val));
 		}
@@ -6470,34 +6470,8 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		// implicit constructor from a matrix
+		// explicit constructor from a matrix
 		template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
-		requires implicitly_convertible_to<U, T> && (Cols != C || Rows != R)
-		explicit(false) constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
-			: columns{}
-		{
-			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
-			{
-				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
-				{
-					constexpr std::size_t Col = Is;
-					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
-				}(std::make_index_sequence<std::min(R, Rows)>{})), ...);
-			}(std::make_index_sequence<std::min(C, Cols)>{});
-
-			// for square matrix, extend identity diagonal as needed
-			if constexpr (C == R)
-			{
-				[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					((columns[Is][Is] = T(1.0)), ...);
-				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
-			}
-		}
-
-		// explicit constructor from a matrix - doesn't matter if (C == Cols) or (R == Rows)
-		template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
-		requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
 		explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept
 			: columns{}
 		{

@@ -24,6 +24,7 @@
 		+ size()
 		+ as_derived()
 		+ apply()
+		+ query()
 		+ shift()
 		+ cshift()
 		+ min()
