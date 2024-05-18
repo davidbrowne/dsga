@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.0.3
+* Tolerance checking functions moved to examples/tolerance.hxx.
+
 ### v2.0.2
 * Upgraded to cxcm v1.1.4.
 * Updated example iostream formatters for boolalpha output when appropriate.

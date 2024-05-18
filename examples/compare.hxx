@@ -32,7 +32,7 @@ namespace dsga
 											   const vector_base<W1, T1, C, D1> &lhs,
 											   const vector_base<W2, T2, C, D2> &rhs) noexcept
 		{
-			return binary_op_execute_no_convert(std::make_index_sequence<C>{}, lhs, rhs, lambda);
+			return machinery::apply_multitype_make(lhs, rhs, lambda);
 		}
 
 		// comparison lambdas that return -1 for less than, 0 for equal, and 1 for greater than.

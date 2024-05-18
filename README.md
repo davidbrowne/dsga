@@ -6,12 +6,13 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.0.2
+v2.0.3
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.0.3
+    * Tolerance checking functions moved to examples/tolerance.hxx.
 * v2.0.2
     * Potentially breaking change: removed an implicit ```dsga::basic_matrix``` constructor, now requiring the use of a constructor that is explicit.
-
 * v2.0.1
     * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
 * no version change
@@ -21,10 +22,6 @@ v2.0.2
     * Large __Breaking Change__ - minimized how vectors of length == 1 behave as vectors. Most dsga operations and functions treat length == 1 vectors as scalars, returning scalar results (mostly through refactoring the underlying execution machinery). Use of the non-GLSL types iscal, uscal, bscal, scal, fscal, dscal, etc., is generally discouraged.
     * Small __Breaking Change__ - reverted/removed ```std::initializer_list``` constructors added in v1.5.0.
     * Added ```within_tolerance()``` comparison functions, that fit well with ```within_distance()``` and ```within_box()```.
-
-* v1.5.0
-    * Small __Breaking Change__ - added ```std::initializer_list``` constructors to ```basic_vector``` and ```basic_matrix``` - if not enough components, then fill rest with zeros - if too many components, just use the components necessary to fill the vector or matrix.
-    * Fixed ```indexed_vector``` iterator classes to use signed types for indexing into storage (fixes iterator subtraction and ```reverse_iterator``` usage, as the iterators are random-access).
 
 ## Minimum Version of Tested Compilers
 * Microsoft Visual Studio 2022 v17.x
@@ -331,7 +328,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.0.2`
+Current version: `v2.0.3`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)

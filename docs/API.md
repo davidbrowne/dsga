@@ -1830,10 +1830,6 @@ Most of the functions perform their operation component-wise. There are some fun
   * [```all```](#all)
   * [```none```](#none)
   * [```logicalNot```](#logicalnot)
-* Tolerance Checking Functions
-  * [```within_tolerance```](#within_tolerance)
-  * [```within_distance```](#within_distance)
-  * [```within_box```](#within_box)
 * Other Vector Functions
   * [```swizzle```](#swizzle)
 
@@ -2388,71 +2384,6 @@ template <bool W, std::size_t C, typename D>
 [[nodiscard]] constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept;
 ```
 This function takes the place of GLSL function ```not```. We can't define a function named ```not``` in C++ because it is a reserved keyword.
-
-#### Tolerance Checking Functions
-
-##### ```within_tolerance```
-```c++
-template <non_bool_scalar T, non_bool_scalar U>
-requires implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_tolerance(T x,
-                                              U tolerance) noexcept;
-
-template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-requires implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_tolerance(const vector_base<W, T, C, D> &x,
-                                              U tolerance) noexcept;
-
-template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, non_bool_scalar U, std::size_t C2, typename D2>
-requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_tolerance(const vector_base<W1, T, C1, D1> &x,
-                                              const vector_base<W2, U, C2, D2> &tolerance) noexcept;
-```
-Not in GLSL. Is a vector of values (or a single value) the same as 0 within a tolerance (or vector of tolerances). The tolerance is a less-than-or-equal comparison. Tolerances need to be non-negative, or the function will assert.
-
-##### ```within_distance```
-```c++
-template <non_bool_scalar T, non_bool_scalar U>
-requires implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_distance(T x,
-                                             T y,
-                                             U tolerance) noexcept;
-
-template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
-requires implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
-                                             const vector_base<W2, T, C, D2> &y,
-                                             U tolerance) noexcept;
-
-template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, typename D3>
-requires implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_distance(const vector_base<W1, T, C, D1> &x,
-                                             const vector_base<W2, T, C, D2> &y,
-                                             const vector_base<W3, U, 1, D3> &tolerance) noexcept;
-```
-Not in GLSL. It compares the Euclidean distance between two vectors to see if the distance is 0 within the tolerance. The tolerance is a less-than-or-equal comparison. Tolerances need to be non-negative, or the function will assert.
-
-##### ```within_box```
-```c++
-template <non_bool_scalar T, non_bool_scalar U>
-requires implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_box(T x,
-                                        T y,
-                                        U tolerance) noexcept;
-
-template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, non_bool_scalar U>
-requires implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C, D1> &x,
-                                        const vector_base<W2, T, C, D2> &y,
-                                        U tolerance) noexcept;
-
-template <bool W1, non_bool_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, non_bool_scalar U, std::size_t C2, typename D3>
-requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
-[[nodiscard]] constexpr bool within_box(const vector_base<W1, T, C1, D1> &x,
-                                        const vector_base<W2, T, C1, D2> &y,
-                                        const vector_base<W3, U, C2, D3> &tolerance) noexcept;
-```
-Not in GLSL. This represents a bounding-box tolerance check, which aggregates the component-wise tolerance checks. These functions can take a single tolerance or a vector of tolerances and check if the differences of the value(s) are 0 within the tolerance(s). All the vector elements must be within tolerance or the whole answer is false. The tolerance is a less-than-or-equal comparison. All tolerances need to be non-negative, or the function will assert.
 
 ##### ```swizzle```
 ```c++

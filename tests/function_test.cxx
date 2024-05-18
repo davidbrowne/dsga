@@ -606,7 +606,7 @@ TEST_SUITE("test functions")
 		CHECK_EQ(runtime_swizzle, basic_vector(4.0, 3.0, 2.0));
 		CHECK_EQ(member_swizzle_swizzle, basic_vector(1.0, 2.0, 3.0));
 		CHECK_EQ(runtime_swizzle1, basic_vector(4.0, 4.0, 4.0));
-		CHECK_EQ(runtime_swizzle2, basic_vector(3.0));
+		CHECK_EQ(runtime_swizzle2, 3.0);
 	}
 
 	TEST_CASE("general utility functions")
