@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 3;
+constexpr inline int DSGA_PATCH_VERSION = 4;
 
 namespace dsga
 {
@@ -4970,6 +4970,13 @@ namespace dsga
 			return machinery::apply_unitype_make(x, y, less_op);
 		}
 
+		template <non_bool_scalar T>
+		[[nodiscard]] constexpr auto lessThan(T x,
+											  T y) noexcept
+		{
+			return less_op(x, y);
+		}
+
 		constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
 		{
 			return std::islessequal(x, y);
@@ -4980,6 +4987,13 @@ namespace dsga
 												   const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, less_equal_op);
+		}
+
+		template <non_bool_scalar T>
+		[[nodiscard]] constexpr auto lessThanEqual(T x,
+												   T y) noexcept
+		{
+			return less_equal_op(x, y);
 		}
 
 		constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
@@ -4994,6 +5008,13 @@ namespace dsga
 			return machinery::apply_unitype_make(x, y, greater_op);
 		}
 
+		template <non_bool_scalar T>
+		[[nodiscard]] constexpr auto greaterThan(T x,
+												 T y) noexcept
+		{
+			return greater_op(x, y);
+		}
+
 		constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
 		{
 			return std::isgreaterequal(x, y);
@@ -5004,6 +5025,13 @@ namespace dsga
 													  const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, greater_equal_op);
+		}
+
+		template <non_bool_scalar T>
+		[[nodiscard]] constexpr auto greaterThanEqual(T x,
+													  T y) noexcept
+		{
+			return greater_equal_op(x, y);
 		}
 
 		constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
@@ -5018,13 +5046,26 @@ namespace dsga
 			return machinery::apply_unitype_make(x, y, equal_op);
 		}
 
-		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept { return x == y; };
+		template <non_bool_scalar T>
+		[[nodiscard]] constexpr auto equal(T x,
+										   T y) noexcept
+		{
+			return equal_op(x, y);
+		}
+
+		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept -> bool { return x == y; };
 
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
 										   const vector_base<W2, bool, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, bool_equal_op);
+		}
+
+		[[nodiscard]] constexpr auto equal(bool x,
+											   bool y) noexcept
+		{
+			return bool_equal_op(x, y);
 		}
 
 		constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
@@ -5039,13 +5080,26 @@ namespace dsga
 			return machinery::apply_unitype_make(x, y, not_equal_op);
 		}
 
-		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept { return x != y; };
+		template <non_bool_scalar T>
+		[[nodiscard]] constexpr auto notEqual(T x,
+											  T y) noexcept
+		{
+			return not_equal_op(x, y);
+		}
+
+		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept -> bool { return x != y; };
 
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
 											  const vector_base<W2, bool, C, D2> &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, bool_not_equal_op);
+		}
+
+		[[nodiscard]] constexpr auto notEqual(bool x,
+												  bool y) noexcept
+		{
+			return bool_not_equal_op(x, y);
 		}
 
 		template <bool W, std::size_t C, typename D>
@@ -5057,6 +5111,11 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
+		[[nodiscard]] constexpr bool any(bool x) noexcept
+		{
+			return x;
+		}
+
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr bool all(const vector_base<W, bool, C, D> &x) noexcept
 		{
@@ -5066,13 +5125,67 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		constexpr inline auto logical_not_op = [](bool x) noexcept { return !x; };
-
-		// c++ does not allow a function named not()
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept
+		[[nodiscard]] constexpr bool all(bool x) noexcept
 		{
-			return machinery::apply_make(x, logical_not_op);
+			return x;
+		}
+
+		constexpr inline auto comp_not_op = [](bool x) noexcept -> bool { return !x; };
+
+		// c++ does not allow a function named not() as in GLSL, so this is our alternate name
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr auto compNot(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return machinery::apply_make(x, comp_not_op);
+		}
+
+		// c++ does not allow a function named not() as in GLSL, so this is our alternate name
+		[[nodiscard]] constexpr auto compNot(bool x) noexcept
+		{
+			return comp_not_op(x);
+		}
+
+		template <bool W, std::size_t C, typename D>
+		[[deprecated("Deprecated. Use compNot()")]] [[nodiscard]] constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return compNot(x);
+		}
+
+		[[deprecated("Deprecated. Use compNot()")]] [[nodiscard]] constexpr auto logicalNot(bool x) noexcept
+		{
+			return compNot(x);
+		}
+
+		constexpr inline auto comp_and_op = [](bool x, bool y) noexcept -> bool { return x && y; };
+
+		// not in GLSL
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto compAnd(const vector_base<W1, bool, C, D1> &x,
+											 const vector_base<W2, bool, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, comp_and_op);
+		}
+
+		[[nodiscard]] constexpr auto compAnd(bool x,
+												 bool y) noexcept
+		{
+			return comp_and_op(x, y);
+		}
+
+		constexpr inline auto comp_or_op = [](bool x, bool y) noexcept -> bool { return x || y; };
+
+		// not in GLSL
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto compOr(const vector_base<W1, bool, C, D1> &x,
+											const vector_base<W2, bool, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, comp_or_op);
+		}
+
+		[[nodiscard]] constexpr auto compOr(bool x,
+												bool y) noexcept
+		{
+			return comp_or_op(x, y);
 		}
 
 		// not in GLSL
@@ -5080,6 +5193,11 @@ namespace dsga
 		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
 		{
 			return !any(x);
+		}
+
+		[[nodiscard]] constexpr bool none(bool x) noexcept
+		{
+			return !x;
 		}
 
 		//
@@ -5311,6 +5429,11 @@ namespace dsga
 		[[nodiscard]] inline auto pow(const vector_base<W1, T, C, D1> &base,
 									  const vector_base<W2, T, C, D2> &exp) noexcept
 		{
+			dsga_constexpr_assert(all(greaterThanEqual(base, basic_vector<T, C>(0))), "(base < 0) is UB");
+			dsga_constexpr_assert(
+				all(compNot(compAnd(equal(base, basic_vector<T, C>(0)), lessThanEqual(exp, basic_vector<T, C>(0))))),
+				"(base == 0 && exp <= 0) is UB"
+			);
 			return machinery::apply_unitype_make(base, exp, pow_op);
 		}
 
@@ -5318,6 +5441,8 @@ namespace dsga
 		[[nodiscard]] inline auto pow(T base,
 									  T exp) noexcept
 		{
+			dsga_constexpr_assert(base >= T(0), "(base < 0) is UB");
+			dsga_constexpr_assert(!(base == T(0) && exp <= T(0)), "(base == 0 && exp <= 0) is UB");
 			return pow_op(base, exp);
 		}
 
@@ -5752,6 +5877,7 @@ namespace dsga
 												const vector_base<W2, T, C, D2> &edge1,
 												const vector_base<W3, T, C, D3> &x) noexcept
 		{
+			dsga_constexpr_assert(all(lessThan(edge0, edge1)), "(edge0 >= edge1) is UB");
 			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
 		}
 
@@ -5760,6 +5886,7 @@ namespace dsga
 												T edge1,
 												const vector_base<W, T, C, D> &x) noexcept
 		{
+			dsga_constexpr_assert(edge0 < edge1, "(edge0 >= edge1) is UB");
 			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
 		}
 
@@ -5768,10 +5895,11 @@ namespace dsga
 												T edge1,
 												T x) noexcept
 		{
+			dsga_constexpr_assert(edge0 < edge1, "(edge0 >= edge1) is UB");
 			return smoothstep_op(edge0, edge1, x);
 		}
 
-		constexpr inline auto isnan_op = [](floating_point_scalar auto arg) noexcept { return cxcm::isnan(arg); };
+		constexpr inline auto isnan_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isnan(arg); };
 
 		// MSVC has a problem when I try to implement this with vector_base -- don't know about gcc or clang
 
@@ -5793,7 +5921,7 @@ namespace dsga
 			return isnan_op(arg);
 		}
 
-		constexpr inline auto isinf_op = [](floating_point_scalar auto arg) noexcept { return cxcm::isinf(arg); };
+		constexpr inline auto isinf_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isinf(arg); };
 
 		// MSVC has a problem when I try to implement this with vector_base -- don't know about gcc or clang
 

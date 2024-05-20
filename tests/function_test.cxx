@@ -578,11 +578,27 @@ TEST_SUITE("test functions")
 			auto some_of_them = none(greaterThan(v0, v2));
 			CHECK_UNARY_FALSE(some_of_them);
 
-			// not() - c++ doesn't allow not(), so logicalNot()
-			auto not_true = all(logicalNot(lessThan(v1, v2)));
+			// not() - c++ doesn't allow not(), so compNot()
+			auto not_true = all(compNot(lessThan(v1, v2)));
 			CHECK_UNARY(not_true);
-			auto not_not_true = all(logicalNot(lessThan(v0, v2)));
+			auto not_not_true = all(compNot(lessThan(v0, v2)));
 			CHECK_UNARY_FALSE(not_not_true);
+
+			auto bool_data = dsga::bvec3(false, true, false);
+
+			// compAnd()
+			auto and_opposites = dsga::compAnd(bool_data, dsga::compNot(bool_data));
+			auto and_with_true = dsga::compAnd(bool_data, dsga::bvec3(true));
+
+			CHECK_EQ(and_opposites, dsga::bvec3(false));
+			CHECK_EQ(and_with_true, bool_data);
+
+			// compOr()
+			auto or_opposites = dsga::compOr(bool_data, dsga::compNot(bool_data));
+			auto or_with_false = dsga::compOr(bool_data, dsga::bvec3(false));
+
+			CHECK_EQ(or_opposites, dsga::bvec3(true));
+			CHECK_EQ(or_with_false, bool_data);
 		}
 	}
 

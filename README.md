@@ -6,9 +6,14 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.0.3
+v2.0.4
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.0.4
+    * Renamed ```logicalNot()``` to ```compNot()```. Deprecated ```logicalNot()```.
+    * Added ```compAnd()``` and ```compOr()``` functions to complement ```compNot()```.
+    * Added missing scalar versions of non-geometric vector functions.
+
 * v2.0.3
     * Tolerance checking functions moved to examples/tolerance.hxx.
 * v2.0.2
@@ -328,7 +333,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.0.3`
+Current version: `v2.0.4`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
@@ -364,7 +369,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2160 | 2160 passed | 0 failed |
+[doctest] assertions: 2164 | 2164 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -375,7 +380,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2160 | 2160 passed | 0 failed |
+[doctest] assertions: 2164 | 2164 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -388,7 +393,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2144 | 2144 passed | 0 failed |
+[doctest] assertions: 2148 | 2148 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -401,7 +406,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2144 | 2144 passed | 0 failed |
+[doctest] assertions: 2148 | 2148 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -414,7 +419,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2160 | 2160 passed | 0 failed |
+[doctest] assertions: 2164 | 2164 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -427,7 +432,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2144 | 2144 passed | 0 failed |
+[doctest] assertions: 2148 | 2148 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -440,7 +445,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2160 | 2160 passed | 0 failed |
+[doctest] assertions: 2164 | 2164 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -453,7 +458,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2144 | 2144 passed | 0 failed |
+[doctest] assertions: 2148 | 2148 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -466,7 +471,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2144 | 2144 passed | 0 failed |
+[doctest] assertions: 2148 | 2148 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

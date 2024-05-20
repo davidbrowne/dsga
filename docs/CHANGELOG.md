@@ -1,5 +1,12 @@
 # Change Log
 
+### v2.0.4
+* Added bool return types for a few lambdas.
+* Renamed ```logicalNot()``` to ```compNot()```. Deprecated ```logicalNot()```.
+* Added ```compAnd()``` and ```compOr()``` functions to complement ```compNot()```.
+* Added missing scalar versions of non-geometric vector functions.
+* Added some asserts.
+
 ### v2.0.3
 * Tolerance checking functions moved to examples/tolerance.hxx.
 

@@ -1829,7 +1829,9 @@ Most of the functions perform their operation component-wise. There are some fun
   * [```any```](#any)
   * [```all```](#all)
   * [```none```](#none)
-  * [```logicalNot```](#logicalnot)
+  * [```compNot```](#compnot)
+  * [```compAnd```](#compand)
+  * [```compOr```](#compor)
 * Other Vector Functions
   * [```swizzle```](#swizzle)
 
@@ -2378,12 +2380,28 @@ Not in GLSL. Same effect as ```!any(vec)```.
 
 Not a component-wise operation. Relies on all values.
 
-##### ```logicalNot```
+##### ```compNot```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto logicalNot(const vector_base<W, bool, C, D> &x) noexcept;
+[[nodiscard]] constexpr auto compNot(const vector_base<W, bool, C, D> &x) noexcept;
 ```
-This function takes the place of GLSL function ```not```. We can't define a function named ```not``` in C++ because it is a reserved keyword.
+This function takes the place of GLSL function ```not```. We can't define a function named ```not``` in C++ because it is a reserved keyword. This performs a component-wise ```not`` operation on the boolean inputs.
+
+##### ```compAnd```
+```c++
+template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+[[nodiscard]] constexpr auto compAnd(const vector_base<W1, bool, C, D1> &x,
+                                     const vector_base<W2, bool, C, D2> &y) noexcept;
+```
+Not in GLSL. The function returns a vector from performing component-wise ```and``` operations of the boolean inputs.
+
+##### ```compOr```
+```c++
+template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+[[nodiscard]] constexpr auto compOr(const vector_base<W1, bool, C, D1> &x,
+                                    const vector_base<W2, bool, C, D2> &y) noexcept;
+```
+Not in GLSL. The function returns a vector from performing component-wise ```or``` operations of the boolean inputs.
 
 ##### ```swizzle```
 ```c++

@@ -510,7 +510,9 @@ The vector component type must be floating-point.
 * ```any()``` - result relies on the components' relationship with each other
 * ```all()``` - result relies on the components' relationship with each other
 * ```none()``` - result relies on the components' relationship with each other - not in GLSL
-* ```logicalNot()``` - can't use keyword ```not``` as a function name in ```c++```, so using ```logicalNot()```
+* ```compNot()``` - can't use keyword ```not``` as a function name in ```c++```, so using ```compNot()```
+* ```compAnd()``` - not in GLSL - component-wise ```and``` operation between bool vectors
+* ```compOr()``` - not in GLSL - component-wise ```or``` operation between bool vectors
 
 #### The Rest of the Specification
 
