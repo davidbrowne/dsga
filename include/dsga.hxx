@@ -96,7 +96,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
 constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 4;
+constexpr inline int DSGA_PATCH_VERSION = 5;
 
 namespace dsga
 {
@@ -810,7 +810,7 @@ namespace dsga
 		// isinf()
 		//
 
-	// make sure this isn't optimized away if used with fast-math
+		// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__)
 #pragma float_control(precise, on, push)
@@ -6368,11 +6368,11 @@ namespace dsga
 
 		// returns number of columns (row size), not number of elements
 		// not required by spec, but more c++ container-like
-		static constexpr std::integral_constant<std::size_t, C> size =			{};
+		static constexpr std::integral_constant<std::size_t, C> size = {};
 
 		// returns number of rows
 		// not required by spec, but more c++ container-like
-		static constexpr std::integral_constant<std::size_t, R> column_size =	{};
+		static constexpr std::integral_constant<std::size_t, R> column_size = {};
 
 		// data storage for matrix
 		std::array<basic_vector<T, R>, C> columns;
@@ -6596,14 +6596,14 @@ namespace dsga
 		[[nodiscard]] constexpr auto outerProduct(const vector_base<W1, T1, C1, D1> &lhs,
 												  const vector_base<W2, T2, C2, D2> &rhs) noexcept
 		{
-			return [&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+			auto val = basic_matrix<std::common_type_t<T1, T2>, C2, C1>{};
+
+			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				return basic_matrix<std::common_type_t<T1, T2>, C1, C2>{
-					[&]<std::size_t ...Is>(std::index_sequence <Is...>, auto row) noexcept
-					{
-						return basic_vector<std::common_type_t<T1, T2>, C1>{ (lhs[Is] * row)... };
-					}(std::make_index_sequence<C1>{}, rhs[Js]) ... };
+				((val[Is] = (lhs * rhs[Is])), ...);
 			}(std::make_index_sequence<C2>{});
+
+			return val;
 		}
 
 		// transpose a matrix

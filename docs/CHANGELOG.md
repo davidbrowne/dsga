@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.0.5
+* Fixed wrong type being returned from ```outerProduct()```.
+
 ### v2.0.4
 * Added bool return types for a few lambdas.
 * Renamed ```logicalNot()``` to ```compNot()```. Deprecated ```logicalNot()```.

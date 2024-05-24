@@ -6,14 +6,15 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.0.4
+v2.0.5
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.0.5
+    * Fixed wrong type being returned from ```outerProduct()```.
 * v2.0.4
     * Renamed ```logicalNot()``` to ```compNot()```. Deprecated ```logicalNot()```.
     * Added ```compAnd()``` and ```compOr()``` functions to complement ```compNot()```.
     * Added missing scalar versions of non-geometric vector functions.
-
 * v2.0.3
     * Tolerance checking functions moved to examples/tolerance.hxx.
 * v2.0.2
@@ -333,7 +334,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.0.4`
+Current version: `v2.0.5`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
@@ -362,14 +363,14 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.9.7**
+* **MSVC 2022 - v17.10.0**
 
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2164 | 2164 passed | 0 failed |
+[doctest] assertions: 2165 | 2165 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -380,11 +381,11 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2164 | 2164 passed | 0 failed |
+[doctest] assertions: 2165 | 2165 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 18.1.5** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.5):
+* **clang 18.1.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.6):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -393,7 +394,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2148 | 2148 passed | 0 failed |
+[doctest] assertions: 2149 | 2149 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -406,7 +407,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2148 | 2148 passed | 0 failed |
+[doctest] assertions: 2149 | 2149 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -419,7 +420,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2164 | 2164 passed | 0 failed |
+[doctest] assertions: 2165 | 2165 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -432,7 +433,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2148 | 2148 passed | 0 failed |
+[doctest] assertions: 2149 | 2149 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -445,7 +446,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2164 | 2164 passed | 0 failed |
+[doctest] assertions: 2165 | 2165 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -458,7 +459,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2148 | 2148 passed | 0 failed |
+[doctest] assertions: 2149 | 2149 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -471,7 +472,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2148 | 2148 passed | 0 failed |
+[doctest] assertions: 2149 | 2149 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

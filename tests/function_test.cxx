@@ -652,6 +652,8 @@ TEST_SUITE("test functions")
 		// outerProduct()
 		const auto op = outerProduct(dvec3(3, 5, 7), dvec3(2, 4, 6));
 		CHECK_EQ(op, dmat3(6, 10, 14, 12, 20, 28, 18, 30, 42));
+		auto op_mat = dsga::outerProduct(dsga::vec3(2, 4, 6), dsga::vec2(5, 7));
+		CHECK_EQ(op_mat, mat2x3(10, 20, 30, 14, 28, 42));
 
 		// transpose()
 		const dmat4 nums(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);

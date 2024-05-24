@@ -180,7 +180,6 @@
     <ClInclude Include="..\examples\hash.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
-    <ClInclude Include="..\examples\stl.hxx" />
     <ClInclude Include="..\examples\tolerance.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />
   </ItemGroup>
