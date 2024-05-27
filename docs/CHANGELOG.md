@@ -1,7 +1,11 @@
 # Change Log
 
+###  Ancillary Changes
+* Updated/refacatored some examples.
+* Minor README refactoring.
+
 ### v2.0.5
-* Fixed wrong type being returned from ```outerProduct()```.
+* Fixed wrong matrix type (reversed dimensions) being returned from ```outerProduct()```.
 
 ### v2.0.4
 * Added bool return types for a few lambdas.
@@ -25,7 +29,7 @@
 * Upgraded to cxcm v1.1.3.
 * Minor refactoring.
 
-### (no version change as no change to dsga.hxx)
+### Ancillary Changes
 * Updated example ```iostream``` and ```std::format``` output to look like the c++23 std::format style for ranges.
 * Updated the MSVC debugger visualizer (dsga.natvis) to look like the c++23 std::format style for ranges.
 * Minor refactoring of some examples.

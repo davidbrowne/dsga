@@ -167,7 +167,7 @@ auto make_const_span(const dsga::basic_matrix<T, C, R> &&m) noexcept = delete;
 // create a basic_vector from parts of a span, the parts (indexes) described in a std::index_sequence
 // use like:	make_vector(vector_input_span, std::make_index_sequence<4>{})
 template <typename T, std::size_t E, std::size_t ...Is>
-requires (E != std::dynamic_extent) && dsga::dimensional_scalar<std::remove_cvref_t<T>> && dsga::dimensional_size<sizeof...(Is)> && dsga::detail::valid_range_indexes<E, Is...>
+requires (E != std::dynamic_extent) && dsga::dimensional_scalar<std::remove_cvref_t<T>> && dsga::dimensional_size<sizeof...(Is)> && ((Is < E) && ...)
 [[nodiscard]] constexpr auto make_vector(std::span<T, E> s, std::index_sequence<Is...> ) noexcept
 {
 	return dsga::basic_vector<std::remove_cvref_t<T>, sizeof...(Is)>{ s[Is]... };

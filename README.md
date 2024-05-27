@@ -10,24 +10,17 @@ v2.0.5
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
 * v2.0.5
-    * Fixed wrong type being returned from ```outerProduct()```.
+    * Fixed wrong matrix type (reversed dimensions) being returned from ```outerProduct()```.
 * v2.0.4
     * Renamed ```logicalNot()``` to ```compNot()```. Deprecated ```logicalNot()```.
     * Added ```compAnd()``` and ```compOr()``` functions to complement ```compNot()```.
     * Added missing scalar versions of non-geometric vector functions.
 * v2.0.3
-    * Tolerance checking functions moved to examples/tolerance.hxx.
+    * Tolerance checking functions moved to ```examples/tolerance.hxx```.
 * v2.0.2
     * Potentially breaking change: removed an implicit ```dsga::basic_matrix``` constructor, now requiring the use of a constructor that is explicit.
 * v2.0.1
     * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
-* no version change
-    * Updated example ```iostream``` and ```std::format``` output to look like the c++23 std::format style for ranges.
-    * Updated the MSVC debugger visualizer (dsga.natvis) to look like the c++23 std::format style for ranges.
-* v2.0.0
-    * Large __Breaking Change__ - minimized how vectors of length == 1 behave as vectors. Most dsga operations and functions treat length == 1 vectors as scalars, returning scalar results (mostly through refactoring the underlying execution machinery). Use of the non-GLSL types iscal, uscal, bscal, scal, fscal, dscal, etc., is generally discouraged.
-    * Small __Breaking Change__ - reverted/removed ```std::initializer_list``` constructors added in v1.5.0.
-    * Added ```within_tolerance()``` comparison functions, that fit well with ```within_distance()``` and ```within_box()```.
 
 ## Minimum Version of Tested Compilers
 * Microsoft Visual Studio 2022 v17.x
@@ -102,13 +95,31 @@ constexpr auto project_to_line2(const dsga::dvec3 &point,
 // evaluate a 2D cubic bezier curve at t
 //
 
+#if LINEAR_INTERPOLATE
+
 // cubic bezier linear interpolation, one ordinate at a time, e.g., x, y, z, or w
-constexpr auto single_ordinate_cubic_bezier_eval(dsga::vec4 cubic_control_points, float t) noexcept
+// very slow implementation, but illustrates the library
+constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control_points, float t) noexcept
 {
     auto quadratic_control_points = dsga::mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
     auto linear_control_points = dsga::mix(quadratic_control_points.xy, quadratic_control_points.yz, t);
     return dsga::mix(linear_control_points.x, linear_control_points.y, t);
 }
+
+#else
+
+// ~10-25x faster
+constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control_points, T t) noexcept
+{
+    auto t_complement = T(1) - t;
+    return
+        t_complement * t_complement * t_complement * cubic_control_points[0] +
+        T(3) * t * t_complement * t_complement * cubic_control_points[1] +
+        T(3) * t * t * t_complement * cubic_control_points[2] +
+        t * t * t * cubic_control_points[3];
+}
+
+#endif
 
 // main cubic bezier eval function -- takes 2D control points with float values.
 // returns the 2D point on the curve at t
@@ -138,10 +149,10 @@ requires ((C > 1) && (C < 4))
 auto angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
                    const dsga::vector_base<W2, T, C, D2> &v2)
 {
-    auto v1_mag = dsga::length(v1);
-    auto v2_mag = dsga::length(v2);
-    auto numerator = dsga::length(v1 * v2_mag - v2 * v1_mag);
-    auto denominator = dsga::length(v1 * v2_mag + v2 * v1_mag);
+    auto a = v1 * dsga::length(v2);
+    auto b = v2 * dsga::length(v1);
+    auto numerator = dsga::length(a - b);
+    auto denominator = dsga::length(a + b);
 
     if (numerator == T(0))
         return T(0);

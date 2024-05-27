@@ -16,10 +16,10 @@ requires ((C == 2) || (C == 3))
 auto angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
 				   const dsga::vector_base<W2, T, C, D2> &v2) noexcept
 {
-	auto v1_mag = dsga::length(v1);
-	auto v2_mag = dsga::length(v2);
-	auto numerator = dsga::length(v1 * v2_mag - v2 * v1_mag);
-	auto denominator = dsga::length(v1 * v2_mag + v2 * v1_mag);
+	auto a = v1 * dsga::length(v2);
+	auto b = v2 * dsga::length(v1);
+	auto numerator = dsga::length(a - b);
+	auto denominator = dsga::length(a + b);
 
 	if (numerator == T(0))
 		return T(0);
