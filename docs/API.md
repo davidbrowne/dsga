@@ -283,7 +283,7 @@ Not a vector or matrix function. Not in GLSL. This functionality was added to ``
 
 This diagram explores the relationships between the various ```dsga``` template classes, which are actually all structs. The main two template structs are ```basic_vector``` and ```basic_matrix```. The other structs are in support of those two primary components.
 
-![dsga class diagram](./dsga.svg)
+[![dsga class diagram](./dsga.svg)](./dsga.png)
 
 #### ```storage_wrapper```
 ```c++

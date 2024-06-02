@@ -9,6 +9,7 @@
 #if !defined(DSGA_DSGA_HXX)
 #define DSGA_DSGA_HXX
 
+#include <utility>
 #include <type_traits>				// requirements
 #include <concepts>					// requirements
 #include <array>					// underlying storage
@@ -95,8 +96,8 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
-constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_MINOR_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
@@ -111,7 +112,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 1;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 4;
+		constexpr inline int CXCM_PATCH_VERSION = 5;
 
 		namespace dd_real
 		{
@@ -1064,7 +1065,7 @@ namespace dsga
 						return x;
 
 					if (x == T(0) && y != T(0))
-						return 0;
+						return x;
 
 					if (y == 0)
 						return std::numeric_limits<T>::quiet_NaN();
@@ -1759,12 +1760,13 @@ namespace dsga
 	// this struct is an aggregate
 	//
 
-	template <dimensional_scalar T, std::size_t Size>
-	requires dimensional_storage<T, Size>
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
 	struct storage_wrapper
 	{
 		// number of indexable elements
-		static constexpr std::size_t Count = Size;
+		static constexpr std::size_t Size = S;
+		static constexpr std::size_t Count = S;
 
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
@@ -1844,21 +1846,21 @@ namespace dsga
 		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 	};
 
-	template <dimensional_scalar T, std::size_t Size>
-	constexpr void swap(storage_wrapper<T, Size> &lhs, storage_wrapper<T, Size> &rhs) noexcept
+	template <dimensional_scalar T, std::size_t S>
+	constexpr void swap(storage_wrapper<T, S> &lhs, storage_wrapper<T, S> &rhs) noexcept
 	{
 		lhs.swap(rhs);
 	}
 
-	template <dimensional_scalar T1, std::size_t C, dimensional_scalar T2>
+	template <dimensional_scalar T1, std::size_t S, dimensional_scalar T2>
 	requires implicitly_convertible_to<T2, T1>
-	constexpr bool operator ==(const storage_wrapper<T1, C> &first,
-							   const storage_wrapper<T2, C> &second) noexcept
+	constexpr bool operator ==(const storage_wrapper<T1, S> &first,
+							   const storage_wrapper<T2, S> &second) noexcept
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
 			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
-		}(std::make_index_sequence<C>{});
+		}(std::make_index_sequence<S>{});
 	}
 
 	//
@@ -1868,21 +1870,159 @@ namespace dsga
 	template <dimensional_scalar T, dimensional_scalar ...U>
 	storage_wrapper(T, U...) -> storage_wrapper<T, 1 + sizeof...(U)>;
 
-	// basic_vector will act as the primary vector class in this library.
+	//
+	//
+	//
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
+	struct view_wrapper
+	{
+		// number of indexable elements
+		static constexpr std::size_t Size = S;
+		static constexpr std::size_t Count = S;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		//
+		// the underlying ordered storage sequence for this physical storage - logical contiguous order is same as physical contiguous order.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Count>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
+
+		// underlying storage - NON-OWNING pointer - uses external array for its data
+		T * const store;
+
+		// using directives related to storage
+		using value_type = T;
+		using iterator = T *;
+		using const_iterator = const T *;
+		using reverse_iterator = std::reverse_iterator<T *>;
+		using const_reverse_iterator = std::reverse_iterator<const T *>;
+
+		[[nodiscard]] constexpr int length() const noexcept								{ return Count; }
+		static constexpr std::integral_constant<std::size_t, Count> size =				{};
+
+		constexpr view_wrapper() noexcept = delete;
+		constexpr view_wrapper(const view_wrapper &) noexcept = default;
+		constexpr view_wrapper(view_wrapper &&) noexcept = default;
+		constexpr ~view_wrapper() noexcept = default;
+
+		explicit view_wrapper(T *view_ptr) noexcept : store(view_ptr)
+		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+		}
+
+		// logical and physically contiguous access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable
+		{
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			return store[static_cast<std::size_t>(index)];
+		}
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
+		{
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			return store[static_cast<std::size_t>(index)];
+		}
+
+		// in general, data() should be used with sequence() as the "logically contiguous" offsets
+		[[nodiscard]] constexpr T *data() noexcept requires Writable					{ return store; }
+		[[nodiscard]] constexpr const T *data() const noexcept							{ return store; }
+
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		[[nodiscard]] static constexpr auto sequence() noexcept 						{ return sequence_pack{}; }
+
+		template <typename ...Args>
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...>, As ...same_args) noexcept
+			{
+				((store[Js] = static_cast<T>(same_args)), ...);
+			}(std::make_index_sequence<Count>{}, args...);
+		}
+
+		constexpr void swap(view_wrapper &sw) noexcept requires Writable
+		{
+			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				((std::iter_swap(store + Is, sw.store + Is)), ...);
+			}(std::make_index_sequence<S>{});
+		}
+
+		// support for range-for loop
+		[[nodiscard]] constexpr iterator begin() noexcept requires Writable				{ return store; }
+		[[nodiscard]] constexpr const_iterator begin() const noexcept					{ return store; }
+		[[nodiscard]] constexpr const_iterator cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr iterator end() noexcept requires Writable				{ return store + Count; }
+		[[nodiscard]] constexpr const_iterator end() const noexcept						{ return store + Count; }
+		[[nodiscard]] constexpr const_iterator cend() const noexcept					{ return end(); }
+
+		[[nodiscard]] constexpr reverse_iterator rbegin() noexcept requires Writable	{ return std::reverse_iterator(end()); }
+		[[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept			{ return std::reverse_iterator(end()); }
+		[[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept			{ return rbegin(); }
+		[[nodiscard]] constexpr reverse_iterator rend() noexcept requires Writable		{ return std::reverse_iterator(begin()); }
+		[[nodiscard]] constexpr const_reverse_iterator rend() const noexcept			{ return std::reverse_iterator(begin()); }
+		[[nodiscard]] constexpr const_reverse_iterator crend() const noexcept			{ return rend(); }
+	};
+
+	template <dimensional_scalar T, std::size_t S>
+	constexpr void swap(view_wrapper<T, S> &lhs, view_wrapper<T, S> &rhs) noexcept
+	{
+		lhs.swap(rhs);
+	}
+
+	template <dimensional_scalar T1, std::size_t S, dimensional_scalar T2>
+	requires implicitly_convertible_to<T2, T1>
+	constexpr bool operator ==(const view_wrapper<T1, S> &first,
+							   const view_wrapper<T2, S> &second) noexcept
+	{
+		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
+		}(std::make_index_sequence<S>{});
+	}
+
+	// basic_vector will act as the primary standalone vector class in this library.
+	// This means that it has its own storage.
 	//
 	// T is the type of the elements stored in the vector/storage
-	// Size is number of elements referencable in vector/storage
+	// S is number of elements referencable in vector/storage
 
-	// the foundational vector type for dsga
-	// 
-	// template parameters:
-	//
-	//		T - the scalar type stored
-	//		Size - the number of actual elements in storage
-	//
-	template <dimensional_scalar T, std::size_t Size>
-	requires dimensional_storage<T, Size>
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
 	struct basic_vector;
+
+	// basic_view will act as the primary adapter vector class in this library.
+	// This means that it adapts an external T * as if it were its own storage.
+	//
+	// T is the type of the elements stored in the external storage
+	// S is number of elements referencable in vector/external storage
+
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
+	struct basic_view;
+
+	// view_vector will act as the experimental standalone vector class in this library.
+	// This inherits from basic_view, but it provides the external storage.
+	// This makes it like basic_vector, but there is extra indirection, plus there is
+	// an extra pointer stored that basic_vector doesn't have.
+	//
+	// T is the type of the elements stored in the vector/storage
+	// S is number of elements referencable in vector/storage
+
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
+	struct view_vector;
 
 	//
 	// This is a CRTP base struct for the vector structs, primarily for data access.
@@ -1911,13 +2051,13 @@ namespace dsga
 	struct vector_base
 	{
 		// CRTP access to Derived class
-		[[nodiscard]] constexpr Derived &as_derived() noexcept requires Writable	{ return static_cast<Derived &>(*this); }
-		[[nodiscard]] constexpr const Derived &as_derived() const noexcept			{ return static_cast<const Derived &>(*this); }
+		[[nodiscard]] constexpr Derived &as_derived() noexcept requires Writable			{ return static_cast<Derived &>(*this); }
+		[[nodiscard]] constexpr const Derived &as_derived() const noexcept					{ return static_cast<const Derived &>(*this); }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-		constexpr void set(Args ...args) noexcept									{ this->as_derived().set(args...); }
+		constexpr void set(Args ...args) noexcept											{ this->as_derived().set(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
 		template <typename U>
@@ -1931,33 +2071,33 @@ namespace dsga
 		// physically contiguous access via pointer.
 		// DON"T ASSSUME data() contiguous order is same as operator[] "logically contiguous" order
 		// data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr T * data() noexcept requires Writable				{ return this->as_derived().data(); }
-		[[nodiscard]] constexpr const T * data() const noexcept						{ return this->as_derived().data(); }
+		[[nodiscard]] constexpr T * data() noexcept requires Writable						{ return this->as_derived().data(); }
+		[[nodiscard]] constexpr const T * data() const noexcept								{ return this->as_derived().data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
 		// this is only really helpful if you use data() in your API, because operator [] already adjusts for sequencing.
-		[[nodiscard]] static constexpr auto sequence() noexcept						{ return Derived::sequence(); }
+		[[nodiscard]] static constexpr auto sequence() noexcept								{ return Derived::sequence(); }
 
 		// number of accessible T elements - required by spec
-		[[nodiscard]] constexpr int length() const noexcept							{ return Count; }
+		[[nodiscard]] constexpr int length() const noexcept									{ return Count; }
 
 		// not required by spec, but more c++ container-like
-		static constexpr std::integral_constant<std::size_t, Count> size =			{};
+		static constexpr std::integral_constant<std::size_t, Count> size =					{};
 
 		// support for range-for loop
-		[[nodiscard]] constexpr auto begin() noexcept requires Writable				{ return this->as_derived().begin(); }
-		[[nodiscard]] constexpr auto begin() const noexcept							{ return this->as_derived().cbegin(); }
-		[[nodiscard]] constexpr auto cbegin() const noexcept						{ return begin(); }
-		[[nodiscard]] constexpr auto end() noexcept requires Writable				{ return this->as_derived().end(); }
-		[[nodiscard]] constexpr auto end() const noexcept							{ return this->as_derived().cend(); }
-		[[nodiscard]] constexpr auto cend() const noexcept							{ return end(); }
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable						{ return this->as_derived().begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept									{ return this->as_derived().cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept								{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable						{ return this->as_derived().end(); }
+		[[nodiscard]] constexpr auto end() const noexcept									{ return this->as_derived().cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept									{ return end(); }
 
-		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable			{ return this->as_derived().rbegin(); }
-		[[nodiscard]] constexpr auto rbegin() const noexcept						{ return this->as_derived().crbegin(); }
-		[[nodiscard]] constexpr auto crbegin() const noexcept						{ return rbegin(); }
-		[[nodiscard]] constexpr auto rend() noexcept requires Writable				{ return this->as_derived().rend(); }
-		[[nodiscard]] constexpr auto rend() const noexcept							{ return this->as_derived().crend(); }
-		[[nodiscard]] constexpr auto crend() const noexcept							{ return rend(); }
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable					{ return this->as_derived().rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept								{ return this->as_derived().crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept								{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable						{ return this->as_derived().rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept									{ return this->as_derived().crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept									{ return rend(); }
 
 		//
 		// functions similar to std::valarray
@@ -2068,11 +2208,12 @@ namespace dsga
 	};
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
+	// both indexed_vector and basic_vector have their own storage (linked via anonymous union and common initial sequence).
 	//
 	// T is the type of the elements stored in the underlying storage
 	// Size relates to the number of elements in the underlying storage, which informs the values the Is can hold
 	// Count is the number of elements accessible in swizzle -- often works alongside with basic_vector's Size
-	// Is... are the number of swizzlable values available -- there are Count of them, and their values are in the range:  0 <= Indexes < Size
+	// Is... are the number of swizzlable values available -- there are Count of them, and their values are in the range:  0 <= Is < Size
 
 	// we want indexed_vector (vector swizzles) to have length from 1 to 4 (1 is just a sneaky type of T swizzle) in order
 	// to work with the basic_vector which also has these lengths. The number of indexes is the same as the Count, between 1 and 4.
@@ -2090,10 +2231,19 @@ namespace dsga
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 	struct indexed_vector;
 
+	// all the above description for indexed_vector pretty much applies to indexed_view as well.
+	// the main difference is that indexed_vector instances are used in the anonymous union for
+	// basic_vector, while indexed_view instances are used in the anonymous union for basic_view.
 	//
-	// random-access iterators for indexed_vector so it can participate in range-for loop amongst other things.
-	// make sure that it doesn't out-live it's indexed_vector or there will be
-	// a dangling pointer.
+	// Like all the *_view classes, they wrap external storage by taking a T * in the constructor.
+	// both indexed_view and basic_view have pointers to external storage (linked via anonymous union and common initial sequence).
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	struct indexed_view;
+
+	//
+	// random-access iterators for indexed_vector and indexed_view so they can participate in range-for loop amongst other things.
+	// make sure that it doesn't out-live it's indexed_vector or there will be a dangling pointer.
 	//
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
@@ -2109,12 +2259,12 @@ namespace dsga
 		using reference = const T &;
 
 		// range of valid values for mapper_index
-		constexpr static int begin_index = 0;
-		constexpr static int end_index = Count;
+		constexpr static std::ptrdiff_t begin_index = 0;
+		constexpr static std::ptrdiff_t end_index = Count;
 
 		// the data
 		const indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
-		int mapper_index;
+		std::ptrdiff_t mapper_index;
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
@@ -2353,6 +2503,263 @@ namespace dsga
 		}
 	};
 
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
+	requires indexable<Size, Count, Is...>
+	struct indexed_view_const_iterator
+	{
+		// publicly need these type using declarations or typedefs in iterator class,
+		// since c++17 deprecated std::iterator
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = T;
+		using difference_type = int;
+		using pointer = const T *;
+		using reference = const T &;
+
+		// range of valid values for mapper_index
+		constexpr static std::ptrdiff_t begin_index = 0;
+		constexpr static std::ptrdiff_t end_index = Count;
+
+		// the data
+		const indexed_view<T, Size, Count, Is ...> *mapper_ptr;
+		std::ptrdiff_t mapper_index;
+
+		// index == 0 is begin iterator
+		// index == Count is end iterator -- clamp index in [0, Count] range
+		constexpr indexed_view_const_iterator(const indexed_view<T, Size, Count, Is ...> &mapper, int index) noexcept
+			: mapper_ptr(std::addressof(mapper)), mapper_index(index)
+		{
+			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index <= end_index), "index not in range");
+		}
+
+		constexpr indexed_view_const_iterator() noexcept = default;
+		constexpr indexed_view_const_iterator(const indexed_view_const_iterator &) noexcept = default;
+		constexpr indexed_view_const_iterator(indexed_view_const_iterator &&) noexcept = default;
+		constexpr indexed_view_const_iterator &operator =(const indexed_view_const_iterator &) &noexcept = default;
+		constexpr indexed_view_const_iterator &operator =(indexed_view_const_iterator &&) &noexcept = default;
+		constexpr ~indexed_view_const_iterator() = default;
+
+		[[nodiscard]] constexpr reference operator *() const noexcept
+		{
+			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
+			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+
+			return (*mapper_ptr)[mapper_index];
+		}
+
+		[[nodiscard]] constexpr pointer operator ->() const noexcept
+		{
+			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
+			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+
+			return std::addressof((*mapper_ptr)[mapper_index]);
+		}
+
+		constexpr indexed_view_const_iterator &operator ++() noexcept
+		{
+			dsga_constexpr_assert(mapper_index < end_index, "don't increment past end_index");
+
+			++mapper_index;
+			return *this;
+		}
+
+		constexpr indexed_view_const_iterator operator ++(int) noexcept
+		{
+			dsga_constexpr_assert(mapper_index < end_index, "don't increment past end_index");
+
+			indexed_view_const_iterator temp = *this;
+			++mapper_index;
+			return temp;
+		}
+
+		constexpr indexed_view_const_iterator &operator --() noexcept
+		{
+			dsga_constexpr_assert(mapper_index > begin_index, "don't decrement past begin_index");
+
+			--mapper_index;
+			return *this;
+		}
+
+		constexpr indexed_view_const_iterator operator --(int) noexcept
+		{
+			dsga_constexpr_assert(mapper_index > begin_index, "don't decrement past begin_index");
+
+			indexed_view_const_iterator temp = *this;
+			--mapper_index;
+			return temp;
+		}
+
+		constexpr indexed_view_const_iterator &operator +=(const int offset) noexcept
+		{
+			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+
+			mapper_index += offset;
+			return *this;
+		}
+
+		constexpr indexed_view_const_iterator &operator -=(const int offset) noexcept
+		{
+			dsga_constexpr_assert(((mapper_index - offset) >= begin_index) && ((mapper_index - offset) < end_index), "offset not in range");
+
+			mapper_index -= offset;
+			return *this;
+		}
+
+		[[nodiscard]] constexpr int operator -(const indexed_view_const_iterator &iter) const noexcept
+		{
+			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+
+			return static_cast<int>(mapper_index) - static_cast<int>(iter.mapper_index);
+		}
+
+		[[nodiscard]] constexpr bool operator ==(const indexed_view_const_iterator &iter) const noexcept
+		{
+			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+
+			return ((mapper_ptr == iter.mapper_ptr) && (mapper_index == iter.mapper_index));
+		}
+
+		[[nodiscard]] constexpr std::strong_ordering operator <=>(const indexed_view_const_iterator &iter) const noexcept
+		{
+			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+
+			return mapper_index <=> iter.mapper_index;
+		}
+
+		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
+		{
+			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
+			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+
+			return (*mapper_ptr)[mapper_index + offset];
+		}
+
+		[[nodiscard]] constexpr indexed_view_const_iterator operator +(const int offset) const noexcept
+		{
+			indexed_view_const_iterator temp = *this;
+			temp += offset;
+			return temp;
+		}
+
+		[[nodiscard]] constexpr indexed_view_const_iterator operator -(const int offset) const noexcept
+		{
+			indexed_view_const_iterator temp = *this;
+			temp -= offset;
+			return temp;
+		}
+
+		[[nodiscard]] friend constexpr indexed_view_const_iterator operator +(const int offset, indexed_view_const_iterator iter) noexcept
+		{
+			iter += offset;
+			return iter;
+		}
+	};
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
+	requires indexable<Size, Count, Is...>
+	struct indexed_view_iterator : indexed_view_const_iterator<T, Size, Count, Is...>
+	{
+		// let base class do all the work
+		using base_iter = indexed_view_const_iterator<T, Size, Count, Is...>;
+
+		// publicly need these type using declarations or typedefs in iterator class,
+		// since c++17 deprecated std::iterator
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = T;
+		using difference_type = int;
+		using pointer = T *;
+		using reference = T &;
+		using const_reference = const T &;
+
+		// index == 0 is begin iterator
+		// index == Count is end iterator -- clamp index in [0, Count] range
+		constexpr indexed_view_iterator(indexed_view<T, Size, Count, Is ...> &mapper, int index) noexcept
+			: base_iter(mapper, index)
+		{
+		}
+
+		constexpr indexed_view_iterator() noexcept = default;
+		constexpr indexed_view_iterator(const indexed_view_iterator &) noexcept = default;
+		constexpr indexed_view_iterator(indexed_view_iterator &&) noexcept = default;
+		constexpr indexed_view_iterator &operator =(const indexed_view_iterator &) &noexcept = default;
+		constexpr indexed_view_iterator &operator =(indexed_view_iterator &&) &noexcept = default;
+		constexpr ~indexed_view_iterator() = default;
+
+		[[nodiscard]] constexpr reference operator *() const noexcept
+		{
+			return const_cast<reference>(base_iter::operator*());
+		}
+
+		[[nodiscard]] constexpr pointer operator ->() const noexcept
+		{
+			return const_cast<pointer>(base_iter::operator->());
+		}
+
+		constexpr indexed_view_iterator &operator ++() noexcept
+		{
+			base_iter::operator++();
+			return *this;
+		}
+
+		constexpr indexed_view_iterator operator ++(int) noexcept
+		{
+			indexed_view_iterator temp = *this;
+			base_iter::operator++();
+			return temp;
+		}
+
+		constexpr indexed_view_iterator &operator --() noexcept
+		{
+			base_iter::operator--();
+			return *this;
+		}
+
+		constexpr indexed_view_iterator operator --(int) noexcept
+		{
+			indexed_view_iterator temp = *this;
+			base_iter::operator--();
+			return temp;
+		}
+
+		constexpr indexed_view_iterator &operator +=(const int offset) noexcept
+		{
+			base_iter::operator+=(offset);
+			return *this;
+		}
+
+		constexpr indexed_view_iterator &operator -=(const int offset) noexcept
+		{
+			base_iter::operator-=(offset);
+			return *this;
+		}
+
+		[[nodiscard]] constexpr indexed_view_iterator operator +(const int offset) const noexcept
+		{
+			indexed_view_iterator temp = *this;
+			temp += offset;
+			return temp;
+		}
+
+		[[nodiscard]] friend constexpr indexed_view_iterator operator +(const int offset, indexed_view_iterator iter) noexcept
+		{
+			iter += offset;
+			return iter;
+		}
+
+		using base_iter::operator-;
+
+		[[nodiscard]] constexpr indexed_view_iterator operator -(const int offset) const noexcept
+		{
+			indexed_view_iterator temp = *this;
+			temp -= offset;
+			return temp;
+		}
+
+		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
+		{
+			return const_cast<reference>(base_iter::operator[](offset));
+		}
+	};
+
 	//
 	// indexed_vector - swizzle classes that are types of union members in basic_vector
 	//
@@ -2365,6 +2772,8 @@ namespace dsga
 	{
 		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
 		static constexpr bool Writable = writable_swizzle<Size, Count, Is...>;
+
+		using Derived = indexed_vector<T, Size, Count, Is...>;
 
 		//
 		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
@@ -2504,6 +2913,171 @@ namespace dsga
 	using dexvec4 = indexed_vector<T, Size, 4, Is...>;
 
 	//
+	// indexed_view - swizzle classes that are types of union members in basic_view
+	//
+
+	// for swizzling 1D-4D parts of basic_vector
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	requires indexable<Size, Count, Is...>
+	struct indexed_view<T, Size, Count, Is...>
+		: vector_base<writable_swizzle<Size, Count, Is...>, T, Count, indexed_view<T, Size, Count, Is...>>
+	{
+		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
+		static constexpr bool Writable = writable_swizzle<Size, Count, Is...>;
+
+		using Derived = indexed_view<T, Size, Count, Is...>;
+
+		//
+		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
+		// currently unused because operator[] does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::index_sequence<Is...>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
+
+		// common initial sequence data - the storage is Size in length, not Count which is number of indexes - NON-OWNING pointer - uses external array for its data
+		T *base;
+
+		// using directives related to storage
+		using value_type = dimensional_storage_t<T, Size>::value_type;
+		using iterator = indexed_view_iterator<T, Size, Count, Is...> ;
+		using const_iterator = indexed_view_const_iterator<T, Size, Count, Is...>;
+		using reverse_iterator = std::reverse_iterator<indexed_view_iterator<T, Size, Count, Is...>>;
+		using const_reverse_iterator = std::reverse_iterator<indexed_view_const_iterator<T, Size, Count, Is...>>;
+
+		// copy assignment
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr indexed_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			{
+				set(other[Js]...);
+			}(std::make_index_sequence<Count>{});
+
+			return *this;
+		}
+
+		// scalar assignment
+		// assignment for some scalar type that converts to T and is only for indexed_view of [Count == 1]
+		template <dimensional_scalar U>
+		requires Writable && implicitly_convertible_to<U, T> && (Count == 1)
+		constexpr indexed_view &operator =(U other) & noexcept
+		{
+			set(other);
+
+			return *this;
+		}
+
+		//
+		// scalar conversion operators
+		//
+
+		// this is extremely important and is only for indexed_vector of [Count == 1]
+		explicit(false) constexpr operator T() const noexcept requires (Count == 1)
+		{
+			return base[offsets[0]];
+		}
+
+		template <typename U>
+		requires std::convertible_to<T, U> && (Count == 1)
+		explicit constexpr operator U() const noexcept
+		{
+			return static_cast<U>(base[offsets[0]]);
+		}
+
+		constexpr indexed_view() noexcept = delete;
+		constexpr indexed_view(const indexed_view &) noexcept = default;
+		constexpr indexed_view(indexed_view &&) noexcept = default;
+		constexpr ~indexed_view() noexcept = default;
+		constexpr indexed_view &operator =(const indexed_view &) &noexcept = delete;
+		constexpr indexed_view &operator =(indexed_view &&) &noexcept = delete;
+
+
+		explicit indexed_view(T *view_ptr) noexcept : base(view_ptr)
+		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+		}
+
+		// logically contiguous - used by operator [] for read/write access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable
+		{
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			return base[offsets[static_cast<std::size_t>(index)]];
+		}
+
+		// logically contiguous - used by operator [] for read access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
+		{
+			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			return base[offsets[static_cast<std::size_t>(index)]];
+		}
+
+		// physically contiguous
+		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base; }
+
+		// physically contiguous
+		[[nodiscard]] constexpr const T *data() const noexcept				{ return base; }
+
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+
+		// support for range-for loop
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return indexed_view_iterator<T, Size, Count, Is...>(*this, 0); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return indexed_view_const_iterator<T, Size, Count, Is...>(*this, 0); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return indexed_view_iterator<T, Size, Count, Is...>(*this, Count); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return indexed_view_const_iterator<T, Size, Count, Is...>(*this, Count); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return std::reverse_iterator<indexed_view_iterator<T, Size, Count, Is...>>(end()); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return std::reverse_iterator<indexed_view_const_iterator<T, Size, Count, Is...>>(end()); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_view_iterator<T, Size, Count, Is...>>(begin()); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return std::reverse_iterator<indexed_view_const_iterator<T, Size, Count, Is...>>(begin()); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
+
+		// logically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ... Args>
+		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
+		constexpr void set(Args ...args) noexcept
+		{
+			// these Is are likely not sequential as they are in indexable order,
+			// and we are accessing the view storage directly. we are not using
+			// the indirection built into indexed_view::operator []() for this function.
+			((base[Is] = static_cast<T>(args)), ...);
+		}
+	};
+
+	//
+	// convenience using types for indexed_view as members of basic_view
+	//
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t I>
+	requires indexable<Size, 1, I>
+	using dexview1 = indexed_view<T, Size, 1, I>;
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+	requires indexable<Size, 2, Is...>
+	using dexview2 = indexed_view<T, Size, 2, Is...>;
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+	requires indexable<Size, 3, Is...>
+	using dexview3 = indexed_view<T, Size, 3, Is...>;
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+	requires indexable<Size, 4, Is...>
+	using dexview4 = indexed_view<T, Size, 4, Is...>;
+
+	//
 	// basic_matrix will act as the primary matrix class in this library.
 	//
 	// T is the type of the elements stored in the matrix
@@ -2543,6 +3117,24 @@ namespace dsga
 		struct component_count<indexed_vector<T, S, C, Is...>>
 		{
 			static constexpr std::size_t value = C;
+		};
+
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		struct component_count<indexed_view<T, S, C, Is...>>
+		{
+			static constexpr std::size_t value = C;
+		};
+
+		template <dimensional_scalar T, std::size_t S>
+		struct component_count<basic_view<T, S>>
+		{
+			static constexpr std::size_t value = S;
+		};
+
+		template <dimensional_scalar T, std::size_t S>
+		struct component_count<view_vector<T, S>>
+		{
+			static constexpr std::size_t value = S;
 		};
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
@@ -2614,13 +3206,13 @@ namespace dsga
 
 		// create a tuple from a vector
 
-		template <dimensional_scalar T, std::size_t C>
-		constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
+		template <dimensional_scalar T, std::size_t S>
+		constexpr auto to_tuple(const basic_vector<T, S> &arg) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return std::tuple(arg[Is]...);
-			}(std::make_index_sequence<C>{});
+			}(std::make_index_sequence<S>{});
 		}
 
 		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
@@ -2630,6 +3222,33 @@ namespace dsga
 			{
 				return std::tuple(arg[Js]...);
 			}(std::make_index_sequence<C>{});
+		}
+
+		template <dimensional_scalar T, std::size_t S>
+		constexpr auto to_tuple(const basic_view<T, S> &arg) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return std::tuple(arg[Is]...);
+			}(std::make_index_sequence<S>{});
+		}
+
+		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		constexpr auto to_tuple(const indexed_view<T, S, C, Is...> &arg) noexcept
+		{
+			return[&]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
+			{
+				return std::tuple(arg[Js]...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		template <dimensional_scalar T, std::size_t S>
+		constexpr auto to_tuple(const view_vector<T, S> &arg) noexcept
+		{
+			return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				return std::tuple(arg[Is]...);
+			}(std::make_index_sequence<S>{});
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D>
@@ -2669,9 +3288,27 @@ namespace dsga
 		{
 		};
 
-		template <dimensional_scalar U, std::size_t C, floating_point_scalar T>
+		template <dimensional_scalar U, std::size_t S, floating_point_scalar T>
 		requires std::convertible_to<U, T>
-		struct valid_matrix_component<basic_vector<U, C>, T> : std::true_type
+		struct valid_matrix_component<basic_view<U, S>, T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar U, std::size_t S, std::size_t C, std::size_t ...Is, floating_point_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_matrix_component<indexed_view<U, S, C, Is...>, T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar U, std::size_t S, floating_point_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_matrix_component<view_vector<U, S>, T> : std::true_type
+		{
+		};
+
+		template <dimensional_scalar U, std::size_t S, floating_point_scalar T>
+		requires std::convertible_to<U, T>
+		struct valid_matrix_component<basic_vector<U, S>, T> : std::true_type
 		{
 		};
 
@@ -2752,7 +3389,7 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 
@@ -2925,7 +3562,7 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 			dexvec1<T, Size, 1>					y;				// Writable
@@ -3109,7 +3746,7 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 			dexvec1<T, Size, 1>					y;				// Writable
@@ -3385,7 +4022,7 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
 			dexvec1<T, Size, 0>					x;				// Writable
 			dexvec1<T, Size, 1>					y;				// Writable
@@ -3874,6 +4511,1134 @@ namespace dsga
 
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	basic_vector(const vector_base<W, T, C, D> &) -> basic_vector<T, C>;
+
+	//
+	// basic_view - the fundamental vector class
+	//
+
+	template <dimensional_scalar T>
+	struct basic_view<T, 1> : vector_base<true, T, 1, basic_view<T, 1>>
+	{
+		// number of physical storage elements
+		static constexpr std::size_t Size = 1;
+
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because operator[] does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Count>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
+
+		union
+		{
+			view_wrapper<T, Size>				base;
+
+			dexview1<T, Size, 0>				x;				// Writable
+
+			dexview2<T, Size, 0, 0>				xx;
+
+			dexview3<T, Size, 0, 0, 0>			xxx;
+
+			dexview4<T, Size, 0, 0, 0, 0>		xxxx;
+		};
+
+		// using directives related to storage
+		using value_type = view_wrapper<T, Size>::value_type;
+		using iterator = view_wrapper<T, Size>::iterator;
+		using const_iterator = view_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = view_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = view_wrapper<T, Size>::const_reverse_iterator;
+
+		//
+		// defaulted functions
+		//
+
+		constexpr basic_view() noexcept = delete;
+		constexpr ~basic_view() noexcept = default;
+
+		constexpr basic_view(const basic_view &) noexcept = default;
+		constexpr basic_view(basic_view &&) noexcept = default;
+		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
+		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
+
+		//
+		// constructors
+		//
+
+		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		{
+			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+		}
+
+		//
+		// implicit assignment operators
+		//
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			set(other[0]);
+			return *this;
+		}
+
+		template <typename U>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(U value) & noexcept
+		{
+			set(value);
+			return *this;
+		}
+
+		//
+		// scalar conversion operators
+		//
+
+		// this is extremely important and is only for basic_vector of [Size == 1]
+		explicit(false) constexpr operator T() const noexcept
+		{
+			return base[0];
+		}
+
+		template <typename U>
+		requires std::convertible_to<T, U>
+		explicit constexpr operator U() const noexcept
+		{
+			return static_cast<U>(base[0]);
+		}
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+
+		// physically contiguous
+		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+
+		// physically contiguous
+		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+
+		constexpr void swap(basic_view &bv) noexcept requires Writable	{ base.swap(bv.base); }
+
+		// support for range-for loop
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
+
+		//
+		// data access
+		//
+
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename U>
+		requires Writable && std::convertible_to<U, T>
+		constexpr void set(U value) noexcept
+		{
+			base[0] = static_cast<T>(value);
+		}
+	};
+
+	template <dimensional_scalar T>
+	struct basic_view<T, 2> : vector_base<true, T, 2, basic_view<T, 2>>
+	{
+		// number of physical storage elements
+		static constexpr std::size_t Size = 2;
+
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because operator[] does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Count>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
+
+		union
+		{
+			view_wrapper<T, Size>				base;
+
+			dexview1<T, Size, 0>				x;				// Writable
+			dexview1<T, Size, 1>				y;				// Writable
+
+			dexview2<T, Size, 0, 0>				xx;
+			dexview2<T, Size, 0, 1>				xy;				// Writable
+			dexview2<T, Size, 1, 0>				yx;				// Writable
+			dexview2<T, Size, 1, 1>				yy;
+
+			dexview3<T, Size, 0, 0, 0>			xxx;
+			dexview3<T, Size, 0, 0, 1>			xxy;
+			dexview3<T, Size, 0, 1, 0>			xyx;
+			dexview3<T, Size, 0, 1, 1>			xyy;
+			dexview3<T, Size, 1, 0, 0>			yxx;
+			dexview3<T, Size, 1, 0, 1>			yxy;
+			dexview3<T, Size, 1, 1, 0>			yyx;
+			dexview3<T, Size, 1, 1, 1>			yyy;
+
+			dexview4<T, Size, 0, 0, 0, 0>		xxxx;
+			dexview4<T, Size, 0, 0, 0, 1>		xxxy;
+			dexview4<T, Size, 0, 0, 1, 0>		xxyx;
+			dexview4<T, Size, 0, 0, 1, 1>		xxyy;
+			dexview4<T, Size, 0, 1, 0, 0>		xyxx;
+			dexview4<T, Size, 0, 1, 0, 1>		xyxy;
+			dexview4<T, Size, 0, 1, 1, 0>		xyyx;
+			dexview4<T, Size, 0, 1, 1, 1>		xyyy;
+			dexview4<T, Size, 1, 0, 0, 0>		yxxx;
+			dexview4<T, Size, 1, 0, 0, 1>		yxxy;
+			dexview4<T, Size, 1, 0, 1, 0>		yxyx;
+			dexview4<T, Size, 1, 0, 1, 1>		yxyy;
+			dexview4<T, Size, 1, 1, 0, 0>		yyxx;
+			dexview4<T, Size, 1, 1, 0, 1>		yyxy;
+			dexview4<T, Size, 1, 1, 1, 0>		yyyx;
+			dexview4<T, Size, 1, 1, 1, 1>		yyyy;
+		};
+
+		// using directives related to storage
+		using value_type = view_wrapper<T, Size>::value_type;
+		using iterator = view_wrapper<T, Size>::iterator;
+		using const_iterator = view_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = view_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = view_wrapper<T, Size>::const_reverse_iterator;
+
+		//
+		// defaulted functions
+		//
+
+		constexpr basic_view() noexcept = delete;
+		constexpr ~basic_view() noexcept = default;
+
+		constexpr basic_view(const basic_view &) noexcept = default;
+		constexpr basic_view(basic_view &&) noexcept = default;
+		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
+		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
+
+		//
+		// constructors
+		//
+
+		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		{
+			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+		}
+
+		//
+		// assignment operator
+		//
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			set(other[0], other[1]);
+			return *this;
+		}
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+
+		// physically contiguous
+		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+
+		// physically contiguous
+		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+
+		constexpr void swap(basic_view &bv) noexcept requires Writable	{ base.swap(bv.base); }
+
+		// support for range-for loop
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
+
+		//
+		// data access
+		//
+
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ...Args>
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			{
+				((base[Js] = static_cast<T>(args)), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+	};
+
+	template <dimensional_scalar T>
+	struct basic_view<T, 3> : vector_base<true, T, 3, basic_view<T, 3>>
+	{
+		// number of physical storage elements
+		static constexpr std::size_t Size = 3;
+
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because operator[] does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Count>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
+
+		union
+		{
+			view_wrapper<T, Size>				base;
+
+			dexview1<T, Size, 0>				x;				// Writable
+			dexview1<T, Size, 1>				y;				// Writable
+			dexview1<T, Size, 2>				z;				// Writable
+
+			dexview2<T, Size, 0, 0>				xx;
+			dexview2<T, Size, 0, 1>				xy;				// Writable
+			dexview2<T, Size, 0, 2>				xz;				// Writable
+			dexview2<T, Size, 1, 0>				yx;				// Writable
+			dexview2<T, Size, 1, 1>				yy;
+			dexview2<T, Size, 1, 2>				yz;				// Writable
+			dexview2<T, Size, 2, 0>				zx;				// Writable
+			dexview2<T, Size, 2, 1>				zy;				// Writable
+			dexview2<T, Size, 2, 2>				zz;
+
+			dexview3<T, Size, 0, 0, 0>			xxx;
+			dexview3<T, Size, 0, 0, 1>			xxy;
+			dexview3<T, Size, 0, 0, 2>			xxz;
+			dexview3<T, Size, 0, 1, 0>			xyx;
+			dexview3<T, Size, 0, 1, 1>			xyy;
+			dexview3<T, Size, 0, 1, 2>			xyz;			// Writable
+			dexview3<T, Size, 0, 2, 0>			xzx;
+			dexview3<T, Size, 0, 2, 1>			xzy;			// Writable
+			dexview3<T, Size, 0, 2, 2>			xzz;
+			dexview3<T, Size, 1, 0, 0>			yxx;
+			dexview3<T, Size, 1, 0, 1>			yxy;
+			dexview3<T, Size, 1, 0, 2>			yxz;			// Writable
+			dexview3<T, Size, 1, 1, 0>			yyx;
+			dexview3<T, Size, 1, 1, 1>			yyy;
+			dexview3<T, Size, 1, 1, 2>			yyz;
+			dexview3<T, Size, 1, 2, 0>			yzx;			// Writable
+			dexview3<T, Size, 1, 2, 1>			yzy;
+			dexview3<T, Size, 1, 2, 2>			yzz;
+			dexview3<T, Size, 2, 0, 0>			zxx;
+			dexview3<T, Size, 2, 0, 1>			zxy;			// Writable
+			dexview3<T, Size, 2, 0, 2>			zxz;
+			dexview3<T, Size, 2, 1, 0>			zyx;			// Writable
+			dexview3<T, Size, 2, 1, 1>			zyy;
+			dexview3<T, Size, 2, 1, 2>			zyz;
+			dexview3<T, Size, 2, 2, 0>			zzx;
+			dexview3<T, Size, 2, 2, 1>			zzy;
+			dexview3<T, Size, 2, 2, 2>			zzz;
+
+			dexview4<T, Size, 0, 0, 0, 0>		xxxx;
+			dexview4<T, Size, 0, 0, 0, 1>		xxxy;
+			dexview4<T, Size, 0, 0, 0, 2>		xxxz;
+			dexview4<T, Size, 0, 0, 1, 0>		xxyx;
+			dexview4<T, Size, 0, 0, 1, 1>		xxyy;
+			dexview4<T, Size, 0, 0, 1, 2>		xxyz;
+			dexview4<T, Size, 0, 0, 2, 0>		xxzx;
+			dexview4<T, Size, 0, 0, 2, 1>		xxzy;
+			dexview4<T, Size, 0, 0, 2, 2>		xxzz;
+			dexview4<T, Size, 0, 1, 0, 0>		xyxx;
+			dexview4<T, Size, 0, 1, 0, 1>		xyxy;
+			dexview4<T, Size, 0, 1, 0, 2>		xyxz;
+			dexview4<T, Size, 0, 1, 1, 0>		xyyx;
+			dexview4<T, Size, 0, 1, 1, 1>		xyyy;
+			dexview4<T, Size, 0, 1, 1, 2>		xyyz;
+			dexview4<T, Size, 0, 1, 2, 0>		xyzx;
+			dexview4<T, Size, 0, 1, 2, 1>		xyzy;
+			dexview4<T, Size, 0, 1, 2, 2>		xyzz;
+			dexview4<T, Size, 0, 2, 0, 0>		xzxx;
+			dexview4<T, Size, 0, 2, 0, 1>		xzxy;
+			dexview4<T, Size, 0, 2, 0, 2>		xzxz;
+			dexview4<T, Size, 0, 2, 1, 0>		xzyx;
+			dexview4<T, Size, 0, 2, 1, 1>		xzyy;
+			dexview4<T, Size, 0, 2, 1, 2>		xzyz;
+			dexview4<T, Size, 0, 2, 2, 0>		xzzx;
+			dexview4<T, Size, 0, 2, 2, 1>		xzzy;
+			dexview4<T, Size, 0, 2, 2, 2>		xzzz;
+			dexview4<T, Size, 1, 0, 0, 0>		yxxx;
+			dexview4<T, Size, 1, 0, 0, 1>		yxxy;
+			dexview4<T, Size, 1, 0, 0, 2>		yxxz;
+			dexview4<T, Size, 1, 0, 1, 0>		yxyx;
+			dexview4<T, Size, 1, 0, 1, 1>		yxyy;
+			dexview4<T, Size, 1, 0, 1, 2>		yxyz;
+			dexview4<T, Size, 1, 0, 2, 0>		yxzx;
+			dexview4<T, Size, 1, 0, 2, 1>		yxzy;
+			dexview4<T, Size, 1, 0, 2, 2>		yxzz;
+			dexview4<T, Size, 1, 1, 0, 0>		yyxx;
+			dexview4<T, Size, 1, 1, 0, 1>		yyxy;
+			dexview4<T, Size, 1, 1, 0, 2>		yyxz;
+			dexview4<T, Size, 1, 1, 1, 0>		yyyx;
+			dexview4<T, Size, 1, 1, 1, 1>		yyyy;
+			dexview4<T, Size, 1, 1, 1, 2>		yyyz;
+			dexview4<T, Size, 1, 1, 2, 0>		yyzx;
+			dexview4<T, Size, 1, 1, 2, 1>		yyzy;
+			dexview4<T, Size, 1, 1, 2, 2>		yyzz;
+			dexview4<T, Size, 1, 2, 0, 0>		yzxx;
+			dexview4<T, Size, 1, 2, 0, 1>		yzxy;
+			dexview4<T, Size, 1, 2, 0, 2>		yzxz;
+			dexview4<T, Size, 1, 2, 1, 0>		yzyx;
+			dexview4<T, Size, 1, 2, 1, 1>		yzyy;
+			dexview4<T, Size, 1, 2, 1, 2>		yzyz;
+			dexview4<T, Size, 1, 2, 2, 0>		yzzx;
+			dexview4<T, Size, 1, 2, 2, 1>		yzzy;
+			dexview4<T, Size, 1, 2, 2, 2>		yzzz;
+			dexview4<T, Size, 2, 0, 0, 0>		zxxx;
+			dexview4<T, Size, 2, 0, 0, 1>		zxxy;
+			dexview4<T, Size, 2, 0, 0, 2>		zxxz;
+			dexview4<T, Size, 2, 0, 1, 0>		zxyx;
+			dexview4<T, Size, 2, 0, 1, 1>		zxyy;
+			dexview4<T, Size, 2, 0, 1, 2>		zxyz;
+			dexview4<T, Size, 2, 0, 2, 0>		zxzx;
+			dexview4<T, Size, 2, 0, 2, 1>		zxzy;
+			dexview4<T, Size, 2, 0, 2, 2>		zxzz;
+			dexview4<T, Size, 2, 1, 0, 0>		zyxx;
+			dexview4<T, Size, 2, 1, 0, 1>		zyxy;
+			dexview4<T, Size, 2, 1, 0, 2>		zyxz;
+			dexview4<T, Size, 2, 1, 1, 0>		zyyx;
+			dexview4<T, Size, 2, 1, 1, 1>		zyyy;
+			dexview4<T, Size, 2, 1, 1, 2>		zyyz;
+			dexview4<T, Size, 2, 1, 2, 0>		zyzx;
+			dexview4<T, Size, 2, 1, 2, 1>		zyzy;
+			dexview4<T, Size, 2, 1, 2, 2>		zyzz;
+			dexview4<T, Size, 2, 2, 0, 0>		zzxx;
+			dexview4<T, Size, 2, 2, 0, 1>		zzxy;
+			dexview4<T, Size, 2, 2, 0, 2>		zzxz;
+			dexview4<T, Size, 2, 2, 1, 0>		zzyx;
+			dexview4<T, Size, 2, 2, 1, 1>		zzyy;
+			dexview4<T, Size, 2, 2, 1, 2>		zzyz;
+			dexview4<T, Size, 2, 2, 2, 0>		zzzx;
+			dexview4<T, Size, 2, 2, 2, 1>		zzzy;
+			dexview4<T, Size, 2, 2, 2, 2>		zzzz;
+		};
+
+		// using directives related to storage
+		using value_type = view_wrapper<T, Size>::value_type;
+		using iterator = view_wrapper<T, Size>::iterator;
+		using const_iterator = view_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = view_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = view_wrapper<T, Size>::const_reverse_iterator;
+
+		//
+		// defaulted functions
+		//
+
+		constexpr basic_view() noexcept = delete;
+		constexpr ~basic_view() noexcept = default;
+
+		constexpr basic_view(const basic_view &) noexcept = default;
+		constexpr basic_view(basic_view &&) noexcept = default;
+		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
+		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
+
+		//
+		// constructors
+		//
+
+		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		{
+			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+		}
+
+		//
+		// assignment operators
+		//
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			set(other[0], other[1], other[2]);
+			return *this;
+		}
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+
+		// physically contiguous
+		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+
+		// physically contiguous
+		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+
+		constexpr void swap(basic_view &bv) noexcept requires Writable	{ base.swap(bv.base); }
+
+		// support for range-for loop
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
+
+		//
+		// data access
+		//
+
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ...Args>
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			{
+				((base[Js] = static_cast<T>(args)), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+	};
+
+	template <dimensional_scalar T>
+	struct basic_view<T, 4> : vector_base<true, T, 4, basic_view<T, 4>>
+	{
+		// number of physical storage elements
+		static constexpr std::size_t Size = 4;
+
+		// number of indexable elements
+		static constexpr std::size_t Count = Size;
+
+		// this can be used as an lvalue
+		static constexpr bool Writable = true;
+
+		//
+		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
+		// currently unused because operator[] does this logically for us.
+		//
+
+		// as a parameter pack
+		using sequence_pack = std::make_index_sequence<Count>;
+
+		// as an array
+		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
+
+		union
+		{
+			view_wrapper<T, Size>				base;
+
+			dexview1<T, Size, 0>				x;				// Writable
+			dexview1<T, Size, 1>				y;				// Writable
+			dexview1<T, Size, 2>				z;				// Writable
+			dexview1<T, Size, 3>				w;				// Writable
+
+			dexview2<T, Size, 0, 0>				xx;
+			dexview2<T, Size, 0, 1>				xy;				// Writable
+			dexview2<T, Size, 0, 2>				xz;				// Writable
+			dexview2<T, Size, 0, 3>				xw;				// Writable
+			dexview2<T, Size, 1, 0>				yx;				// Writable
+			dexview2<T, Size, 1, 1>				yy;
+			dexview2<T, Size, 1, 2>				yz;				// Writable
+			dexview2<T, Size, 1, 3>				yw;				// Writable
+			dexview2<T, Size, 2, 0>				zx;				// Writable
+			dexview2<T, Size, 2, 1>				zy;				// Writable
+			dexview2<T, Size, 2, 2>				zz;
+			dexview2<T, Size, 2, 3>				zw;				// Writable
+			dexview2<T, Size, 3, 0>				wx;				// Writable
+			dexview2<T, Size, 3, 1>				wy;				// Writable
+			dexview2<T, Size, 3, 2>				wz;				// Writable
+			dexview2<T, Size, 3, 3>				ww;
+
+			dexview3<T, Size, 0, 0, 0>			xxx;
+			dexview3<T, Size, 0, 0, 1>			xxy;
+			dexview3<T, Size, 0, 0, 2>			xxz;
+			dexview3<T, Size, 0, 0, 3>			xxw;
+			dexview3<T, Size, 0, 1, 0>			xyx;
+			dexview3<T, Size, 0, 1, 1>			xyy;
+			dexview3<T, Size, 0, 1, 2>			xyz;			// Writable
+			dexview3<T, Size, 0, 1, 3>			xyw;			// Writable
+			dexview3<T, Size, 0, 2, 0>			xzx;
+			dexview3<T, Size, 0, 2, 1>			xzy;			// Writable
+			dexview3<T, Size, 0, 2, 2>			xzz;
+			dexview3<T, Size, 0, 2, 3>			xzw;			// Writable
+			dexview3<T, Size, 0, 3, 0>			xwx;
+			dexview3<T, Size, 0, 3, 1>			xwy;			// Writable
+			dexview3<T, Size, 0, 3, 2>			xwz;			// Writable
+			dexview3<T, Size, 0, 3, 3>			xww;
+			dexview3<T, Size, 1, 0, 0>			yxx;
+			dexview3<T, Size, 1, 0, 1>			yxy;
+			dexview3<T, Size, 1, 0, 2>			yxz;			// Writable
+			dexview3<T, Size, 1, 0, 3>			yxw;			// Writable
+			dexview3<T, Size, 1, 1, 0>			yyx;
+			dexview3<T, Size, 1, 1, 1>			yyy;
+			dexview3<T, Size, 1, 1, 2>			yyz;
+			dexview3<T, Size, 1, 1, 3>			yyw;
+			dexview3<T, Size, 1, 2, 0>			yzx;			// Writable
+			dexview3<T, Size, 1, 2, 1>			yzy;
+			dexview3<T, Size, 1, 2, 2>			yzz;
+			dexview3<T, Size, 1, 2, 3>			yzw;			// Writable
+			dexview3<T, Size, 1, 3, 0>			ywx;			// Writable
+			dexview3<T, Size, 1, 3, 1>			ywy;
+			dexview3<T, Size, 1, 3, 2>			ywz;			// Writable
+			dexview3<T, Size, 1, 3, 3>			yww;
+			dexview3<T, Size, 2, 0, 0>			zxx;
+			dexview3<T, Size, 2, 0, 1>			zxy;			// Writable
+			dexview3<T, Size, 2, 0, 2>			zxz;
+			dexview3<T, Size, 2, 0, 3>			zxw;			// Writable
+			dexview3<T, Size, 2, 1, 0>			zyx;			// Writable
+			dexview3<T, Size, 2, 1, 1>			zyy;
+			dexview3<T, Size, 2, 1, 2>			zyz;
+			dexview3<T, Size, 2, 1, 3>			zyw;			// Writable
+			dexview3<T, Size, 2, 2, 0>			zzx;
+			dexview3<T, Size, 2, 2, 1>			zzy;
+			dexview3<T, Size, 2, 2, 2>			zzz;
+			dexview3<T, Size, 2, 2, 3>			zzw;
+			dexview3<T, Size, 2, 3, 0>			zwx;			// Writable
+			dexview3<T, Size, 2, 3, 1>			zwy;			// Writable
+			dexview3<T, Size, 2, 3, 2>			zwz;
+			dexview3<T, Size, 2, 3, 3>			zww;
+			dexview3<T, Size, 3, 0, 0>			wxx;
+			dexview3<T, Size, 3, 0, 1>			wxy;			// Writable
+			dexview3<T, Size, 3, 0, 2>			wxz;			// Writable
+			dexview3<T, Size, 3, 0, 3>			wxw;
+			dexview3<T, Size, 3, 1, 0>			wyx;			// Writable
+			dexview3<T, Size, 3, 1, 1>			wyy;
+			dexview3<T, Size, 3, 1, 2>			wyz;			// Writable
+			dexview3<T, Size, 3, 1, 3>			wyw;
+			dexview3<T, Size, 3, 2, 0>			wzx;			// Writable
+			dexview3<T, Size, 3, 2, 1>			wzy;
+			dexview3<T, Size, 3, 2, 2>			wzz;			// Writable
+			dexview3<T, Size, 3, 2, 3>			wzw;
+			dexview3<T, Size, 3, 3, 0>			wwx;
+			dexview3<T, Size, 3, 3, 1>			wwy;
+			dexview3<T, Size, 3, 3, 2>			wwz;
+			dexview3<T, Size, 3, 3, 3>			www;
+
+			dexview4<T, Size, 0, 0, 0, 0>		xxxx;
+			dexview4<T, Size, 0, 0, 0, 1>		xxxy;
+			dexview4<T, Size, 0, 0, 0, 2>		xxxz;
+			dexview4<T, Size, 0, 0, 0, 3>		xxxw;
+			dexview4<T, Size, 0, 0, 1, 0>		xxyx;
+			dexview4<T, Size, 0, 0, 1, 1>		xxyy;
+			dexview4<T, Size, 0, 0, 1, 2>		xxyz;
+			dexview4<T, Size, 0, 0, 1, 3>		xxyw;
+			dexview4<T, Size, 0, 0, 2, 0>		xxzx;
+			dexview4<T, Size, 0, 0, 2, 1>		xxzy;
+			dexview4<T, Size, 0, 0, 2, 2>		xxzz;
+			dexview4<T, Size, 0, 0, 2, 3>		xxzw;
+			dexview4<T, Size, 0, 0, 3, 0>		xxwx;
+			dexview4<T, Size, 0, 0, 3, 1>		xxwy;
+			dexview4<T, Size, 0, 0, 3, 2>		xxwz;
+			dexview4<T, Size, 0, 0, 3, 3>		xxww;
+			dexview4<T, Size, 0, 1, 0, 0>		xyxx;
+			dexview4<T, Size, 0, 1, 0, 1>		xyxy;
+			dexview4<T, Size, 0, 1, 0, 2>		xyxz;
+			dexview4<T, Size, 0, 1, 0, 3>		xyxw;
+			dexview4<T, Size, 0, 1, 1, 0>		xyyx;
+			dexview4<T, Size, 0, 1, 1, 1>		xyyy;
+			dexview4<T, Size, 0, 1, 1, 2>		xyyz;
+			dexview4<T, Size, 0, 1, 1, 3>		xyyw;
+			dexview4<T, Size, 0, 1, 2, 0>		xyzx;
+			dexview4<T, Size, 0, 1, 2, 1>		xyzy;
+			dexview4<T, Size, 0, 1, 2, 2>		xyzz;
+			dexview4<T, Size, 0, 1, 2, 3>		xyzw;			// Writable
+			dexview4<T, Size, 0, 1, 3, 0>		xywx;
+			dexview4<T, Size, 0, 1, 3, 1>		xywy;
+			dexview4<T, Size, 0, 1, 3, 2>		xywz;			// Writable
+			dexview4<T, Size, 0, 1, 3, 3>		xyww;
+			dexview4<T, Size, 0, 2, 0, 0>		xzxx;
+			dexview4<T, Size, 0, 2, 0, 1>		xzxy;
+			dexview4<T, Size, 0, 2, 0, 2>		xzxz;
+			dexview4<T, Size, 0, 2, 0, 3>		xzxw;
+			dexview4<T, Size, 0, 2, 1, 0>		xzyx;
+			dexview4<T, Size, 0, 2, 1, 1>		xzyy;
+			dexview4<T, Size, 0, 2, 1, 2>		xzyz;
+			dexview4<T, Size, 0, 2, 1, 3>		xzyw;			// Writable
+			dexview4<T, Size, 0, 2, 2, 0>		xzzx;
+			dexview4<T, Size, 0, 2, 2, 1>		xzzy;
+			dexview4<T, Size, 0, 2, 2, 2>		xzzz;
+			dexview4<T, Size, 0, 2, 2, 3>		xzzw;
+			dexview4<T, Size, 0, 2, 3, 0>		xzwx;
+			dexview4<T, Size, 0, 2, 3, 1>		xzwy;			// Writable
+			dexview4<T, Size, 0, 2, 3, 2>		xzwz;
+			dexview4<T, Size, 0, 2, 3, 3>		xzww;
+			dexview4<T, Size, 0, 3, 0, 0>		xwxx;
+			dexview4<T, Size, 0, 3, 0, 1>		xwxy;
+			dexview4<T, Size, 0, 3, 0, 2>		xwxz;
+			dexview4<T, Size, 0, 3, 0, 3>		xwxw;
+			dexview4<T, Size, 0, 3, 1, 0>		xwyx;
+			dexview4<T, Size, 0, 3, 1, 1>		xwyy;
+			dexview4<T, Size, 0, 3, 1, 2>		xwyz;			// Writable
+			dexview4<T, Size, 0, 3, 1, 3>		xwyw;
+			dexview4<T, Size, 0, 3, 2, 0>		xwzx;
+			dexview4<T, Size, 0, 3, 2, 1>		xwzy;			// Writable
+			dexview4<T, Size, 0, 3, 2, 2>		xwzz;
+			dexview4<T, Size, 0, 3, 2, 3>		xwzw;
+			dexview4<T, Size, 0, 3, 3, 0>		xwwx;
+			dexview4<T, Size, 0, 3, 3, 1>		xwwy;
+			dexview4<T, Size, 0, 3, 3, 2>		xwwz;
+			dexview4<T, Size, 0, 3, 3, 3>		xwww;
+			dexview4<T, Size, 1, 0, 0, 0>		yxxx;
+			dexview4<T, Size, 1, 0, 0, 1>		yxxy;
+			dexview4<T, Size, 1, 0, 0, 2>		yxxz;
+			dexview4<T, Size, 1, 0, 0, 3>		yxxw;
+			dexview4<T, Size, 1, 0, 1, 0>		yxyx;
+			dexview4<T, Size, 1, 0, 1, 1>		yxyy;
+			dexview4<T, Size, 1, 0, 1, 2>		yxyz;
+			dexview4<T, Size, 1, 0, 1, 3>		yxyw;
+			dexview4<T, Size, 1, 0, 2, 0>		yxzx;
+			dexview4<T, Size, 1, 0, 2, 1>		yxzy;
+			dexview4<T, Size, 1, 0, 2, 2>		yxzz;
+			dexview4<T, Size, 1, 0, 2, 3>		yxzw;			// Writable
+			dexview4<T, Size, 1, 0, 3, 0>		yxwx;
+			dexview4<T, Size, 1, 0, 3, 1>		yxwy;
+			dexview4<T, Size, 1, 0, 3, 2>		yxwz;			// Writable
+			dexview4<T, Size, 1, 0, 3, 3>		yxww;
+			dexview4<T, Size, 1, 1, 0, 0>		yyxx;
+			dexview4<T, Size, 1, 1, 0, 1>		yyxy;
+			dexview4<T, Size, 1, 1, 0, 2>		yyxz;
+			dexview4<T, Size, 1, 1, 0, 3>		yyxw;
+			dexview4<T, Size, 1, 1, 1, 0>		yyyx;
+			dexview4<T, Size, 1, 1, 1, 1>		yyyy;
+			dexview4<T, Size, 1, 1, 1, 2>		yyyz;
+			dexview4<T, Size, 1, 1, 1, 3>		yyyw;
+			dexview4<T, Size, 1, 1, 2, 0>		yyzx;
+			dexview4<T, Size, 1, 1, 2, 1>		yyzy;
+			dexview4<T, Size, 1, 1, 2, 2>		yyzz;
+			dexview4<T, Size, 1, 1, 2, 3>		yyzw;
+			dexview4<T, Size, 1, 1, 3, 0>		yywx;
+			dexview4<T, Size, 1, 1, 3, 1>		yywy;
+			dexview4<T, Size, 1, 1, 3, 2>		yywz;
+			dexview4<T, Size, 1, 1, 3, 3>		yyww;
+			dexview4<T, Size, 1, 2, 0, 0>		yzxx;
+			dexview4<T, Size, 1, 2, 0, 1>		yzxy;
+			dexview4<T, Size, 1, 2, 0, 2>		yzxz;
+			dexview4<T, Size, 1, 2, 0, 3>		yzxw;			// Writable
+			dexview4<T, Size, 1, 2, 1, 0>		yzyx;
+			dexview4<T, Size, 1, 2, 1, 1>		yzyy;
+			dexview4<T, Size, 1, 2, 1, 2>		yzyz;
+			dexview4<T, Size, 1, 2, 1, 3>		yzyw;
+			dexview4<T, Size, 1, 2, 2, 0>		yzzx;
+			dexview4<T, Size, 1, 2, 2, 1>		yzzy;
+			dexview4<T, Size, 1, 2, 2, 2>		yzzz;
+			dexview4<T, Size, 1, 2, 2, 3>		yzzw;
+			dexview4<T, Size, 1, 2, 3, 0>		yzwx;			// Writable
+			dexview4<T, Size, 1, 2, 3, 1>		yzwy;
+			dexview4<T, Size, 1, 2, 3, 2>		yzwz;
+			dexview4<T, Size, 1, 2, 3, 3>		yzww;
+			dexview4<T, Size, 1, 3, 0, 0>		ywxx;
+			dexview4<T, Size, 1, 3, 0, 1>		ywxy;
+			dexview4<T, Size, 1, 3, 0, 2>		ywxz;			// Writable
+			dexview4<T, Size, 1, 3, 0, 3>		ywxw;
+			dexview4<T, Size, 1, 3, 1, 0>		ywyx;
+			dexview4<T, Size, 1, 3, 1, 1>		ywyy;
+			dexview4<T, Size, 1, 3, 1, 2>		ywyz;
+			dexview4<T, Size, 1, 3, 1, 3>		ywyw;
+			dexview4<T, Size, 1, 3, 2, 0>		ywzx;			// Writable
+			dexview4<T, Size, 1, 3, 2, 1>		ywzy;
+			dexview4<T, Size, 1, 3, 2, 2>		ywzz;
+			dexview4<T, Size, 1, 3, 2, 3>		ywzw;
+			dexview4<T, Size, 1, 3, 3, 0>		ywwx;
+			dexview4<T, Size, 1, 3, 3, 1>		ywwy;
+			dexview4<T, Size, 1, 3, 3, 2>		ywwz;
+			dexview4<T, Size, 1, 3, 3, 3>		ywww;
+			dexview4<T, Size, 2, 0, 0, 0>		zxxx;
+			dexview4<T, Size, 2, 0, 0, 1>		zxxy;
+			dexview4<T, Size, 2, 0, 0, 2>		zxxz;
+			dexview4<T, Size, 2, 0, 0, 3>		zxxw;
+			dexview4<T, Size, 2, 0, 1, 0>		zxyx;
+			dexview4<T, Size, 2, 0, 1, 1>		zxyy;
+			dexview4<T, Size, 2, 0, 1, 2>		zxyz;
+			dexview4<T, Size, 2, 0, 1, 3>		zxyw;			// Writable
+			dexview4<T, Size, 2, 0, 2, 0>		zxzx;
+			dexview4<T, Size, 2, 0, 2, 1>		zxzy;
+			dexview4<T, Size, 2, 0, 2, 2>		zxzz;
+			dexview4<T, Size, 2, 0, 2, 3>		zxzw;
+			dexview4<T, Size, 2, 0, 3, 0>		zxwx;
+			dexview4<T, Size, 2, 0, 3, 1>		zxwy;			// Writable
+			dexview4<T, Size, 2, 0, 3, 2>		zxwz;
+			dexview4<T, Size, 2, 0, 3, 3>		zxww;
+			dexview4<T, Size, 2, 1, 0, 0>		zyxx;
+			dexview4<T, Size, 2, 1, 0, 1>		zyxy;
+			dexview4<T, Size, 2, 1, 0, 2>		zyxz;
+			dexview4<T, Size, 2, 1, 0, 3>		zyxw;			// Writable
+			dexview4<T, Size, 2, 1, 1, 0>		zyyx;
+			dexview4<T, Size, 2, 1, 1, 1>		zyyy;
+			dexview4<T, Size, 2, 1, 1, 2>		zyyz;
+			dexview4<T, Size, 2, 1, 1, 3>		zyyw;
+			dexview4<T, Size, 2, 1, 2, 0>		zyzx;
+			dexview4<T, Size, 2, 1, 2, 1>		zyzy;
+			dexview4<T, Size, 2, 1, 2, 2>		zyzz;
+			dexview4<T, Size, 2, 1, 2, 3>		zyzw;
+			dexview4<T, Size, 2, 1, 3, 0>		zywx;			// Writable
+			dexview4<T, Size, 2, 1, 3, 1>		zywy;
+			dexview4<T, Size, 2, 1, 3, 2>		zywz;
+			dexview4<T, Size, 2, 1, 3, 3>		zyww;
+			dexview4<T, Size, 2, 2, 0, 0>		zzxx;
+			dexview4<T, Size, 2, 2, 0, 1>		zzxy;
+			dexview4<T, Size, 2, 2, 0, 2>		zzxz;
+			dexview4<T, Size, 2, 2, 0, 3>		zzxw;
+			dexview4<T, Size, 2, 2, 1, 0>		zzyx;
+			dexview4<T, Size, 2, 2, 1, 1>		zzyy;
+			dexview4<T, Size, 2, 2, 1, 2>		zzyz;
+			dexview4<T, Size, 2, 2, 1, 3>		zzyw;
+			dexview4<T, Size, 2, 2, 2, 0>		zzzx;
+			dexview4<T, Size, 2, 2, 2, 1>		zzzy;
+			dexview4<T, Size, 2, 2, 2, 2>		zzzz;
+			dexview4<T, Size, 2, 2, 2, 3>		zzzw;
+			dexview4<T, Size, 2, 2, 3, 0>		zzwx;
+			dexview4<T, Size, 2, 2, 3, 1>		zzwy;
+			dexview4<T, Size, 2, 2, 3, 2>		zzwz;
+			dexview4<T, Size, 2, 2, 3, 3>		zzww;
+			dexview4<T, Size, 2, 3, 0, 0>		zwxx;
+			dexview4<T, Size, 2, 3, 0, 1>		zwxy;			// Writable
+			dexview4<T, Size, 2, 3, 0, 2>		zwxz;
+			dexview4<T, Size, 2, 3, 0, 3>		zwxw;
+			dexview4<T, Size, 2, 3, 1, 0>		zwyx;			// Writable
+			dexview4<T, Size, 2, 3, 1, 1>		zwyy;
+			dexview4<T, Size, 2, 3, 1, 2>		zwyz;
+			dexview4<T, Size, 2, 3, 1, 3>		zwyw;
+			dexview4<T, Size, 2, 3, 2, 0>		zwzx;
+			dexview4<T, Size, 2, 3, 2, 1>		zwzy;
+			dexview4<T, Size, 2, 3, 2, 2>		zwzz;
+			dexview4<T, Size, 2, 3, 2, 3>		zwzw;
+			dexview4<T, Size, 2, 3, 3, 0>		zwwx;
+			dexview4<T, Size, 2, 3, 3, 1>		zwwy;
+			dexview4<T, Size, 2, 3, 3, 2>		zwwz;
+			dexview4<T, Size, 2, 3, 3, 3>		zwww;
+			dexview4<T, Size, 3, 0, 0, 0>		wxxx;
+			dexview4<T, Size, 3, 0, 0, 1>		wxxy;
+			dexview4<T, Size, 3, 0, 0, 2>		wxxz;
+			dexview4<T, Size, 3, 0, 0, 3>		wxxw;
+			dexview4<T, Size, 3, 0, 1, 0>		wxyx;
+			dexview4<T, Size, 3, 0, 1, 1>		wxyy;
+			dexview4<T, Size, 3, 0, 1, 2>		wxyz;			// Writable
+			dexview4<T, Size, 3, 0, 1, 3>		wxyw;
+			dexview4<T, Size, 3, 0, 2, 0>		wxzx;
+			dexview4<T, Size, 3, 0, 2, 1>		wxzy;			// Writable
+			dexview4<T, Size, 3, 0, 2, 2>		wxzz;
+			dexview4<T, Size, 3, 0, 2, 3>		wxzw;
+			dexview4<T, Size, 3, 0, 3, 0>		wxwx;
+			dexview4<T, Size, 3, 0, 3, 1>		wxwy;
+			dexview4<T, Size, 3, 0, 3, 2>		wxwz;
+			dexview4<T, Size, 3, 0, 3, 3>		wxww;
+			dexview4<T, Size, 3, 1, 0, 0>		wyxx;
+			dexview4<T, Size, 3, 1, 0, 1>		wyxy;
+			dexview4<T, Size, 3, 1, 0, 2>		wyxz;			// Writable
+			dexview4<T, Size, 3, 1, 0, 3>		wyxw;
+			dexview4<T, Size, 3, 1, 1, 0>		wyyx;
+			dexview4<T, Size, 3, 1, 1, 1>		wyyy;
+			dexview4<T, Size, 3, 1, 1, 2>		wyyz;
+			dexview4<T, Size, 3, 1, 1, 3>		wyyw;
+			dexview4<T, Size, 3, 1, 2, 0>		wyzx;			// Writable
+			dexview4<T, Size, 3, 1, 2, 1>		wyzy;
+			dexview4<T, Size, 3, 1, 2, 2>		wyzz;
+			dexview4<T, Size, 3, 1, 2, 3>		wyzw;
+			dexview4<T, Size, 3, 1, 3, 0>		wywx;
+			dexview4<T, Size, 3, 1, 3, 1>		wywy;
+			dexview4<T, Size, 3, 1, 3, 2>		wywz;
+			dexview4<T, Size, 3, 1, 3, 3>		wyww;
+			dexview4<T, Size, 3, 2, 0, 0>		wzxx;
+			dexview4<T, Size, 3, 2, 0, 1>		wzxy;			// Writable
+			dexview4<T, Size, 3, 2, 0, 2>		wzxz;
+			dexview4<T, Size, 3, 2, 0, 3>		wzxw;
+			dexview4<T, Size, 3, 2, 1, 0>		wzyx;			// Writable
+			dexview4<T, Size, 3, 2, 1, 1>		wzyy;
+			dexview4<T, Size, 3, 2, 1, 2>		wzyz;
+			dexview4<T, Size, 3, 2, 1, 3>		wzyw;
+			dexview4<T, Size, 3, 2, 2, 0>		wzzx;
+			dexview4<T, Size, 3, 2, 2, 1>		wzzy;
+			dexview4<T, Size, 3, 2, 2, 2>		wzzz;
+			dexview4<T, Size, 3, 2, 2, 3>		wzzw;
+			dexview4<T, Size, 3, 2, 3, 0>		wzwx;
+			dexview4<T, Size, 3, 2, 3, 1>		wzwy;
+			dexview4<T, Size, 3, 2, 3, 2>		wzwz;
+			dexview4<T, Size, 3, 2, 3, 3>		wzww;
+			dexview4<T, Size, 3, 3, 0, 0>		wwxx;
+			dexview4<T, Size, 3, 3, 0, 1>		wwxy;
+			dexview4<T, Size, 3, 3, 0, 2>		wwxz;
+			dexview4<T, Size, 3, 3, 0, 3>		wwxw;
+			dexview4<T, Size, 3, 3, 1, 0>		wwyx;
+			dexview4<T, Size, 3, 3, 1, 1>		wwyy;
+			dexview4<T, Size, 3, 3, 1, 2>		wwyz;
+			dexview4<T, Size, 3, 3, 1, 3>		wwyw;
+			dexview4<T, Size, 3, 3, 2, 0>		wwzx;
+			dexview4<T, Size, 3, 3, 2, 1>		wwzy;
+			dexview4<T, Size, 3, 3, 2, 2>		wwzz;
+			dexview4<T, Size, 3, 3, 2, 3>		wwzw;
+			dexview4<T, Size, 3, 3, 3, 0>		wwwx;
+			dexview4<T, Size, 3, 3, 3, 1>		wwwy;
+			dexview4<T, Size, 3, 3, 3, 2>		wwwz;
+			dexview4<T, Size, 3, 3, 3, 3>		wwww;
+		};
+
+		// using directives related to storage
+		using value_type = view_wrapper<T, Size>::value_type;
+		using iterator = view_wrapper<T, Size>::iterator;
+		using const_iterator = view_wrapper<T, Size>::const_iterator;
+		using reverse_iterator = view_wrapper<T, Size>::reverse_iterator;
+		using const_reverse_iterator = view_wrapper<T, Size>::const_reverse_iterator;
+
+		//
+		// defaulted functions
+		//
+
+		constexpr basic_view() noexcept = delete;
+		constexpr ~basic_view() noexcept = default;
+
+		constexpr basic_view(const basic_view &) noexcept = default;
+		constexpr basic_view(basic_view &&) noexcept = default;
+		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
+		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
+
+		//
+		// constructors
+		//
+
+		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		{
+			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+		}
+
+		//
+		// assignment operators
+		//
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			set(other[0], other[1], other[2], other[3]);
+			return *this;
+		}
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+
+		// logically and physically contiguous - used by operator [] for access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+
+		// physically contiguous
+		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+
+		// physically contiguous
+		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+
+		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
+		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+
+		constexpr void swap(basic_view &bv) noexcept requires Writable	{ base.swap(bv.base); }
+
+		// support for range-for loop
+		[[nodiscard]] constexpr auto begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr auto begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr auto cbegin() const noexcept				{ return begin(); }
+		[[nodiscard]] constexpr auto end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr auto end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr auto cend() const noexcept					{ return end(); }
+
+		[[nodiscard]] constexpr auto rbegin() noexcept requires Writable	{ return base.rbegin(); }
+		[[nodiscard]] constexpr auto rbegin() const noexcept				{ return base.crbegin(); }
+		[[nodiscard]] constexpr auto crbegin() const noexcept				{ return rbegin(); }
+		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr auto rend() const noexcept					{ return base.crend(); }
+		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
+
+		//
+		// data access
+		//
+
+		// logically and physically contiguous - used by set() for write access to data
+		// allows for self-assignment without aliasing issues
+		template <typename ...Args>
+		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		constexpr void set(Args ...args) noexcept
+		{
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			{
+				((base[Js] = static_cast<T>(args)), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+	};
+
+	template <dimensional_scalar T, std::size_t Size>
+	constexpr void swap(basic_view<T, Size> &lhs, basic_view<T, Size> &rhs) noexcept
+	{
+		lhs.swap(rhs);
+	}
+
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
+	struct view_vector : basic_view<T, S>
+	{
+		static constexpr bool Writable = true;
+		constexpr static std::size_t Size = S;
+		constexpr static std::size_t Count = S;
+
+		// would rather use std::array here, but there is initialization order issue with the constructors
+		T store[Size]{};
+
+		//
+		// constructors
+		//
+
+		constexpr view_vector() noexcept : basic_view<T, Size>(store) {}
+
+		constexpr view_vector(const view_vector &v) noexcept : basic_view<T, Size>(store)
+		{
+			std::copy(v.store, v.store + Size, store);
+		}
+		constexpr view_vector(view_vector &&v) noexcept : basic_view<T, Size>(store)
+		{
+			std::copy(v.store, v.store + Size, store);
+		}
+
+		template <typename U>
+		requires std::convertible_to<U, T>
+		explicit constexpr view_vector(U value) noexcept : basic_view<T, Size>(store)
+		{
+			[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				((store[Is] = static_cast<T>(value)), ...);
+			}(std::make_index_sequence<Size>{});
+		}
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires implicitly_convertible_to<U, T>
+		explicit(true) constexpr view_vector(const vector_base<W, U, Count, D> &other) noexcept : basic_view<T, Size>(store)
+		{
+			[&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				((store[Is] = static_cast<T>(other[Is])), ...);
+			}(std::make_index_sequence<Size>{});
+		}
+
+		// variadic constructor of scalar and vector arguments
+		template <typename U, typename ... Args>
+		requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
+		explicit constexpr view_vector(const U &u, const Args & ...args) noexcept : basic_view<T, Size>(store)
+		{
+			auto arg_tuple = detail::flatten_args_to_tuple(u, args...);
+			[this, &arg_tuple] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				((store[Is] = static_cast<T>(std::get<Is>(arg_tuple))), ...);
+			}(std::make_index_sequence<Count>{});
+		}
+
+
+		constexpr ~view_vector() noexcept = default;
+
+		// assignment operators
+
+
+		constexpr view_vector & operator =(const view_vector &v) & noexcept
+		{
+			std::copy(v.store, v.store + Size, store);
+			return *this;
+		}
+		constexpr view_vector & operator =(view_vector &&v) & noexcept
+		{
+			std::copy(v.store, v.store + Size, store);
+			return *this;
+		}
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr view_vector & operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			std::copy(other.begin(), other.end(), store);
+			return *this;
+		}
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && implicitly_convertible_to<U, T>
+		constexpr view_vector & operator =(vector_base<W, U, Count, D> &&other) & noexcept
+		{
+			std::copy(other.begin(), other.end(), store);
+			return *this;
+		}
+	};
+
+	//
+	// CTAD deduction guides for view_vector
+	//
+
+	template <dimensional_scalar T, dimensional_scalar ...U>
+	view_vector(T, U...) -> view_vector<T, 1 + sizeof...(U)>;
+
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	view_vector(const vector_base<W, T, C, D> &) -> view_vector<T, C>;
 
 	//
 	// machinery for vector operators and functions
@@ -5915,6 +7680,18 @@ namespace dsga
 			return machinery::apply_make(arg, isnan_op);
 		}
 
+		template <floating_point_scalar T, std::size_t C>
+		[[nodiscard]] constexpr auto isnan(const basic_view<T, C> &arg) noexcept
+		{
+			return machinery::apply_make(arg, isnan_op);
+		}
+
+		template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		[[nodiscard]] constexpr auto isnan(const indexed_view<T, S, C, Is...> &arg) noexcept
+		{
+			return machinery::apply_make(arg, isnan_op);
+		}
+
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr auto isnan(T arg) noexcept
 		{
@@ -5933,6 +7710,18 @@ namespace dsga
 
 		template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 		[[nodiscard]] constexpr auto isinf(const indexed_vector<T, S, C, Is...> &arg) noexcept
+		{
+			return machinery::apply_make(arg, isinf_op);
+		}
+
+		template <floating_point_scalar T, std::size_t C>
+		[[nodiscard]] constexpr auto isinf(const basic_view<T, C> &arg) noexcept
+		{
+			return machinery::apply_make(arg, isinf_op);
+		}
+
+		template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+		[[nodiscard]] constexpr auto isinf(const indexed_view<T, S, C, Is...> &arg) noexcept
 		{
 			return machinery::apply_make(arg, isinf_op);
 		}
@@ -7226,12 +9015,45 @@ struct std::tuple_element<I, dsga::storage_wrapper<T, S>>
 };
 
 template<dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_size<dsga::view_wrapper<T, S>> : std::integral_constant<std::size_t, S>
+{
+};
+
+template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_element<I, dsga::view_wrapper<T, S>>
+{
+	using type = T;
+};
+
+template<dsga::dimensional_scalar T, std::size_t S>
 struct std::tuple_size<dsga::basic_vector<T, S>> : std::integral_constant<std::size_t, S>
 {
 };
 
 template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
 struct std::tuple_element<I, dsga::basic_vector<T, S>>
+{
+	using type = T;
+};
+
+template<dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_size<dsga::basic_view<T, S>> : std::integral_constant<std::size_t, S>
+{
+};
+
+template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_element<I, dsga::basic_view<T, S>>
+{
+	using type = T;
+};
+
+template<dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_size<dsga::view_vector<T, S>> : std::integral_constant<std::size_t, S>
+{
+};
+
+template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
+struct std::tuple_element<I, dsga::view_vector<T, S>>
 {
 	using type = T;
 };
@@ -7243,6 +9065,17 @@ struct std::tuple_size<dsga::indexed_vector<T, S, C, Is...>> : std::integral_con
 
 template <std::size_t I, dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 struct std::tuple_element<I, dsga::indexed_vector<T, S, C, Is...>>
+{
+	using type = T;
+};
+
+template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+struct std::tuple_size<dsga::indexed_view<T, S, C, Is...>> : std::integral_constant<std::size_t, C>
+{
+};
+
+template <std::size_t I, dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+struct std::tuple_element<I, dsga::indexed_view<T, S, C, Is...>>
 {
 	using type = T;
 };

@@ -7,7 +7,7 @@
 		+ {abstract} operator[]()
 		+ {abstract} data()
 		+ {abstract} sequence()
-		+ {abstract} iterator functions()
+		+ {abstract} iterator access()
 	}
 	note left of "CRTP duck type"
 		Conceptual interface, not real :
@@ -19,7 +19,7 @@
 		+ CRTP operator[]()
 		+ CRTP data()
 		+ CRTP sequence()
-		+ CRTP iterator functions()
+		+ CRTP iterator access()
 		+ length()
 		+ size()
 		+ as_derived()
@@ -31,16 +31,49 @@
 		+ max()
 		+ sum()
 	}
+	struct indexed_vector_const_iterator<T, Size, Count, ...Is>
+	{
+		+ mapper_ptr : const indexed_vector<T, Size, Count, Is ...> *
+		+ mapper_index : std::ptrdiff_t
+		+ iterator functions()
+	}
+	struct indexed_vector_iterator<T, Size, Count, ...Is>
+	{
+		+ iterator functions()
+	}
+	struct indexed_view_const_iterator<T, Size, Count, ...Is>
+	{
+		+ mapper_ptr : const indexed_view<T, Size, Count, Is ...> *
+		+ mapper_index : std::ptrdiff_t
+		+ iterator functions()
+	}
+	struct indexed_view_iterator<T, Size, Count, ...Is>
+	{
+		+ iterator functions()
+	}
 	struct basic_vector<T, Size>
 	{
 		+ union
-		+ {static} offsets : std::array<std::size_t, Size>
+		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
 		+ operator=()
 		+ data()
 		+ sequence()
-		+ iterator functions()
+		+ iterator access()
+		+ swap()
+	}
+	struct basic_view<T, Size>
+	{
+		+ union
+		+ {static} offsets : std::array<T, Size>
+		+ basic_view(T *)
+		+ set()
+		+ operator[]()
+		+ operator=()
+		+ data()
+		+ sequence()
+		+ iterator access()
 		+ swap()
 	}
 	annotation basic_vector::anonymous_union
@@ -48,30 +81,67 @@
 		+ base
 		+ swizzles
 	}
+	annotation basic_view::anonymous_union
+	{
+		+ base
+		+ swizzles
+	}
 	struct storage_wrapper<T, Size>
 	{
 		+ store : std::array<T, Size>
-		+ {static} offsets : std::array<std::size_t, Size>
+		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
 		+ operator=()
 		+ data()
 		+ sequence()
-		+ iterator functions()
+		+ iterator access()
 		+ length()
 		+ size()
 		+ swap()
 	}
-	struct indexed_vector<T, Size, Count, ...Is>
+	struct view_wrapper<T, Size>
 	{
-		+ base : std::array<T, Size>
-		+ {static} offsets : std::array<std::size_t, Count>
+		+ store : T *
+		+ {static} offsets : std::array<T, Size>
+		+ view_wrapper(T *)
 		+ set()
 		+ operator[]()
 		+ operator=()
 		+ data()
 		+ sequence()
-		+ iterator functions()
+		+ iterator access()
+		+ length()
+		+ size()
+		+ swap()
+	}
+	struct view_vector<T, Size>
+	{
+		+ store : T[Size]
+		+ operator=()
+	}
+	struct indexed_vector<T, Size, Count, ...Is>
+	{
+		+ base : std::array<T, Size>
+		+ {static} offsets : std::array<T, Count>
+		+ set()
+		+ operator[]()
+		+ operator=()
+		+ data()
+		+ sequence()
+		+ iterator access()
+	}
+	struct indexed_view<T, Size, Count, ...Is>
+	{
+		+ base : T *
+		+ {static} offsets : std::array<T, Count>
+		+ indexed_view(T *)
+		+ set()
+		+ operator[]()
+		+ operator=()
+		+ data()
+		+ sequence()
+		+ iterator access()
 	}
 	struct basic_matrix<T, Cols, Rows>
 	{
@@ -80,7 +150,7 @@
 		+ operator[]()
 		+ operator=()
 		+ data()
-		+ iterator functions()
+		+ iterator access()
 		+ length()
 		+ column_length()
 		+ size()
@@ -88,9 +158,16 @@
 		+ swap()
 	}
 	vector_base <|-- basic_vector: CRTP inherits
+	vector_base <|-- basic_view: CRTP inherits
 	vector_base <|-- indexed_vector : CRTP inherits
+	vector_base <|-- indexed_view : CRTP inherits
+	basic_view <|-- view_vector
+	indexed_vector_const_iterator <|-- indexed_vector_iterator : const_cast<>
+	indexed_view_const_iterator <|-- indexed_view_iterator : const_cast<>
 	"CRTP duck type" ^.. basic_vector : duck implements
+	"CRTP duck type" ^.. basic_view : duck implements
 	"CRTP duck type" ^.. indexed_vector : duck implements
+	"CRTP duck type" ^.. indexed_view : duck implements
 	basic_vector::anonymous_union::base "1" *-- "1" storage_wrapper : base
 	basic_vector::anonymous_union::swizzles "1" *-- "many" indexed_vector : swizzles
 	basic_vector::union "1" *-- "1" basic_vector::anonymous_union
@@ -99,8 +176,18 @@
 	  all members have a common initial
 	  sequence with each other
 	end note
+	indexed_vector_const_iterator::mapper_ptr "1" *-- "many" indexed_vector : mapper_ptr
+	indexed_vector_iterator::mapper_ptr "1" *-- "many" indexed_vector : mapper_ptr
+	indexed_view_const_iterator::mapper_ptr "1" *-- "many" indexed_view : mapper_ptr
+	indexed_view_iterator::mapper_ptr "1" *-- "many" indexed_view : mapper_ptr
+	basic_view::anonymous_union::base "1" *-- "1" view_wrapper : base
+	basic_view::anonymous_union::swizzles "1" *-- "many" indexed_view : swizzles
+	basic_view::union "1" *-- "1" basic_view::anonymous_union
+	note right on link
+	  Nested anonymous union where
+	  all members have a common initial
+	  sequence with each other
+	end note
 	"CRTP duck type" <. vector_base : Derived CRTP
 	basic_matrix::columns "1" *-- "Cols" basic_vector : columns
-	basic_vector -[hidden]left- indexed_vector
-	storage_wrapper .[hidden]right. basic_matrix
 @enduml

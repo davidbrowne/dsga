@@ -140,6 +140,23 @@ struct std::formatter<dsga::basic_vector<T, Size>, CharT>
 {
 };
 
+template <typename CharT, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+struct std::formatter<dsga::indexed_view<T, Size, Count, Is...>, CharT>
+	: std::formatter<dsga::vector_base<dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::indexed_view<T, Size, Count, Is...>>, CharT>
+{
+};
+
+template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
+struct std::formatter<dsga::basic_view<T, Size>, CharT>
+	: std::formatter<dsga::vector_base<true, T, Size, dsga::basic_view<T, Size>>, CharT>
+{
+};
+
+template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
+struct std::formatter<dsga::view_vector<T, Size>, CharT> : std::formatter<dsga::basic_view<T, Size>, CharT>
+{
+};
+
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R, typename CharT>
 struct std::formatter<dsga::basic_matrix<T, C, R>, CharT> : std::formatter<dsga::basic_vector<T, R>, CharT>
 {

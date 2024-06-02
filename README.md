@@ -6,9 +6,11 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.0.5
+v2.1.0
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.1.0
+    * MAJOR EXPERIMENTAL ADDITION: there are now vector types, ```basic_view``` and ```indexed_view``` (and similarly ```view_wrapper```), that don't own their data. They are meant to work on a contiguous external data source, e.g., a slice of an array, instead of internal data storage, e.g., the storage in a ```basic_vector```. ```view_vector``` is similar to ```basic_vector```, but it is a ```basic_view``` with an internal array for its data source.
 * v2.0.5
     * Fixed wrong matrix type (reversed dimensions) being returned from ```outerProduct()```.
 * v2.0.4
@@ -17,12 +19,15 @@ v2.0.5
     * Added missing scalar versions of non-geometric vector functions.
 * v2.0.3
     * Tolerance checking functions moved to ```examples/tolerance.hxx```.
-* v2.0.2
-    * Potentially breaking change: removed an implicit ```dsga::basic_matrix``` constructor, now requiring the use of a constructor that is explicit.
-* v2.0.1
-    * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
 
-## Minimum Version of Tested Compilers
+## Tested Compilers
+### Regularly Tested
+* Microsoft Visual Studio 2022 v17.10.1
+* gcc v14
+* clang v18.1.6
+* icx v2024.1.0
+
+### Minimum Version
 * Microsoft Visual Studio 2022 v17.x
 * gcc v11.4
 * clang v16.0.6
@@ -345,7 +350,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.0.5`
+Current version: `v2.1.0`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
@@ -374,25 +379,27 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.10.0**
+* **MSVC 2022 - v17.10.1**
 
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2332 | 2332 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **gcc 13.2.0** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
+Performs all unit tests except for gcc's ```std::is_trivial_v<>``` doesn't work for struct/classes with deleted default constructors.
+
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2329 | 2329 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -404,8 +411,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2303 | 2303 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -417,8 +424,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2303 | 2303 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -426,12 +433,14 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 * **gcc 14.0.1**
 
+Performs all unit tests except for gcc's ```std::is_trivial_v<>``` doesn't work for struct/classes with deleted default constructors.
+
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2329 | 2329 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -443,8 +452,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2303 | 2303 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -452,25 +461,29 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 * **gcc 12.3.0**
 
+Performs all unit tests except for gcc's ```std::is_trivial_v<>``` doesn't work for struct/classes with deleted default constructors.
+
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2329 | 2329 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **gcc 11.4.0**
 
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+Performs all unit tests except for gcc's ```std::is_trivial_v<>``` doesn't work for struct/classes with deleted default constructors.
+
+Also, does not perform the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2300 | 2300 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -482,8 +495,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.4.11"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] test cases:  116 |  116 passed | 0 failed | 0 skipped
+[doctest] assertions: 2303 | 2303 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 

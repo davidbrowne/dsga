@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.1.0
+* MAJOR EXPERIMENTAL ADDITION: there are now vector types, ```basic_view``` and ```indexed_view``` (and similarly ```view_wrapper```), that don't own their data. They are meant to work on a contiguous external data source, e.g., a slice of an array, instead of internal data storage, e.g., the storage in a ```basic_vector```. ```view_vector``` is similar to ```basic_vector```, but it is a ```basic_view``` with an internal array for its data source.
+* Upgraded to cxcm v1.1.5.
+
 ###  Ancillary Changes
 * Updated/refacatored some examples.
 * Minor README refactoring.

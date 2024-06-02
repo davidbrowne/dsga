@@ -207,10 +207,14 @@
     <ClCompile Include="..\tests\function_test.cxx" />
     <ClCompile Include="..\tests\operator_test.cxx" />
     <ClCompile Include="..\tests\swizzle_test.cxx" />
+    <ClCompile Include="..\tests\traits_test.cxx" />
     <ClCompile Include="..\tests\utility_test.cxx" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dsga.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\docs\dsga.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
