@@ -36,7 +36,7 @@ TEST_SUITE("type traits tests")
 {
 	TEST_CASE("type traits for storage_wrapper")
 	{
-		using dwrap4 = dsga::storage_wrapper<double, 4u>;
+		using dwrap4 = dsga::storage_wrapper<true, double, 4u>;
 		auto dwrap4_var = dwrap4{};
 
 		CHECK_UNARY(std::is_standard_layout_v<dwrap4>);
@@ -74,7 +74,7 @@ TEST_SUITE("type traits tests")
 	TEST_CASE("type traits for view_wrapper")
 	{
 		double backing[8]{};
-		using dwrap4 = dsga::view_wrapper<double, 4u>;
+		using dwrap4 = dsga::view_wrapper<true, double, 4u>;
 		auto dwrap4_var = dwrap4{backing + 4};
 
 		CHECK_UNARY(std::is_standard_layout_v<dwrap4>);
@@ -116,9 +116,9 @@ TEST_SUITE("type traits tests")
 	TEST_CASE("type traits for vector_base")
 	{
 		using vb1 = vector_base<true, double, 4, dsga::basic_vector<double, 4>>;
-		using vb2 = vector_base<true, double, 4, dsga::indexed_vector<double, 4, 4, 0, 1, 2, 3>>;
-		using vb3 = vector_base<true, double, 4, dsga::basic_view<double, 4>>;
-		using vb4 = vector_base<true, double, 4, dsga::indexed_view<double, 4, 4, 0, 1, 2, 3>>;
+		using vb2 = vector_base<true, double, 4, dsga::indexed_vector<true, double, 4, 4, 0, 1, 2, 3>>;
+		using vb3 = vector_base<true, double, 4, dsga::basic_view<true, double, 4>>;
+		using vb4 = vector_base<true, double, 4, dsga::indexed_view<true, double, 4, 4, 0, 1, 2, 3>>;
 
 		// iterator concepts
 		CHECK_UNARY(std::contiguous_iterator<decltype(std::declval<vb1>().begin())>);
@@ -204,7 +204,7 @@ TEST_SUITE("type traits tests")
 	TEST_CASE("type traits for basic_view")
 	{
 		double backing[8]{};
-		using nvec4 = dsga::basic_view<double, 4u>;
+		using nvec4 = dsga::basic_view<true, double, 4u>;
 		auto nvec4_var = nvec4(backing + 2);
 
 		CHECK_UNARY(std::is_standard_layout_v<nvec4>);
@@ -282,8 +282,8 @@ TEST_SUITE("type traits tests")
 
 	TEST_CASE("type traits for indexed_vector")
 	{
-		using dswizzle1 = dsga::indexed_vector<double, 1u, 1u, 0u>;
-		using dswizzle4 = dsga::indexed_vector<double, 4u, 4u, 0u, 1u, 2u, 3u>;
+		using dswizzle1 = dsga::indexed_vector<true, double, 1u, 1u, 0u>;
+		using dswizzle4 = dsga::indexed_vector<true, double, 4u, 4u, 0u, 1u, 2u, 3u>;
 
 		CHECK_UNARY(std::is_standard_layout_v<dswizzle4>);
 		CHECK_UNARY(std::is_default_constructible_v<dswizzle4>);
@@ -321,8 +321,8 @@ TEST_SUITE("type traits tests")
 
 	TEST_CASE("type traits for indexed_view")
 	{
-		using dswizzle1 = dsga::indexed_view<double, 1u, 1u, 0u>;
-		using dswizzle4 = dsga::indexed_view<double, 4u, 4u, 0u, 1u, 2u, 3u>;
+		using dswizzle1 = dsga::indexed_view<true, double, 1u, 1u, 0u>;
+		using dswizzle4 = dsga::indexed_view<true, double, 4u, 4u, 0u, 1u, 2u, 3u>;
 
 		CHECK_UNARY(std::is_standard_layout_v<dswizzle4>);
 		CHECK_UNARY_FALSE(std::is_default_constructible_v<dswizzle4>);
@@ -364,7 +364,7 @@ TEST_SUITE("type traits tests")
 
 	TEST_CASE("type traits for indexed_vector_const_iterator")
 	{
-		using const_iter_t = dsga::indexed_vector_const_iterator<double, 4, 4, 3, 0, 1, 2>;
+		using const_iter_t = dsga::indexed_vector_const_iterator<true, double, 4, 4, 3, 0, 1, 2>;
 
 		CHECK_UNARY(std::is_standard_layout_v<const_iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<const_iter_t>);
@@ -391,7 +391,7 @@ TEST_SUITE("type traits tests")
 
 	TEST_CASE("type traits for indexed_vector_iterator")
 	{
-		using iter_t = dsga::indexed_vector_iterator<double, 4, 4, 3, 0, 1, 2>;
+		using iter_t = dsga::indexed_vector_iterator<true, double, 4, 4, 3, 0, 1, 2>;
 
 		CHECK_UNARY(std::is_standard_layout_v<iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<iter_t>);
@@ -418,7 +418,7 @@ TEST_SUITE("type traits tests")
 
 	TEST_CASE("type traits for indexed_view_const_iterator")
 	{
-		using const_iter_t = dsga::indexed_view_const_iterator<double, 4, 4, 3, 0, 1, 2>;
+		using const_iter_t = dsga::indexed_view_const_iterator<true, double, 4, 4, 3, 0, 1, 2>;
 
 		CHECK_UNARY(std::is_standard_layout_v<const_iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<const_iter_t>);
@@ -445,7 +445,7 @@ TEST_SUITE("type traits tests")
 
 	TEST_CASE("type traits for indexed_view_iterator")
 	{
-		using iter_t = dsga::indexed_view_iterator<double, 4, 4, 3, 0, 1, 2>;
+		using iter_t = dsga::indexed_view_iterator<true, double, 4, 4, 3, 0, 1, 2>;
 
 		CHECK_UNARY(std::is_standard_layout_v<iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<iter_t>);
@@ -545,33 +545,33 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY_FALSE(std::is_corresponding_member(&array_storage_a::i, &faux_vector::k));		// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
 		CHECK_UNARY(std::is_corresponding_member(&faux_wrapper::l, &faux_vector::k));	// analogous to using dsga::base_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
 
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::store, &dsga::indexed_vector<int, 1, 1, 0>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::store, &dsga::indexed_vector<int, 2, 2, 1, 0>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 3>::store, &dsga::indexed_vector<int, 3, 3, 2, 0, 1>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 1, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 2, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 2, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::base, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<true, int, 1>::store, &dsga::indexed_vector<true, int, 1, 1, 0>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<true, int, 2>::store, &dsga::indexed_vector<true, int, 2, 2, 1, 0>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<true, int, 3>::store, &dsga::indexed_vector<true, int, 3, 3, 2, 0, 1>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<true, int, 4>::store, &dsga::indexed_vector<true, int, 4, 1, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<true, int, 4>::store, &dsga::indexed_vector<true, int, 4, 2, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<true, int, 4>::store, &dsga::indexed_vector<true, int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<true, int, 4>::store, &dsga::indexed_vector<true, int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<true, int, 4, 1, 3>::base, &dsga::indexed_vector<true, int, 4, 2, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<true, int, 4, 1, 3>::base, &dsga::indexed_vector<true, int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<true, int, 4, 1, 3>::base, &dsga::indexed_vector<true, int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<true, int, 4, 2, 3, 3>::base, &dsga::indexed_vector<true, int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<true, int, 4, 2, 3, 3>::base, &dsga::indexed_vector<true, int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<true, int, 4, 3, 3, 3, 3>::base, &dsga::indexed_vector<true, int, 4, 4, 3, 3, 3, 3>::base));
 
-		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<int, 1>::store, &dsga::indexed_view<int, 1, 1, 0>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<int, 2>::store, &dsga::indexed_view<int, 2, 2, 1, 0>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<int, 3>::store, &dsga::indexed_view<int, 3, 3, 2, 0, 1>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<int, 4>::store, &dsga::indexed_view<int, 4, 1, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<int, 4>::store, &dsga::indexed_view<int, 4, 2, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<int, 4>::store, &dsga::indexed_view<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<int, 4>::store, &dsga::indexed_view<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<int, 4, 1, 3>::base, &dsga::indexed_view<int, 4, 2, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<int, 4, 1, 3>::base, &dsga::indexed_view<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<int, 4, 1, 3>::base, &dsga::indexed_view<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<int, 4, 2, 3, 3>::base, &dsga::indexed_view<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<int, 4, 2, 3, 3>::base, &dsga::indexed_view<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<int, 4, 3, 3, 3, 3>::base, &dsga::indexed_view<int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<true, int, 1>::store, &dsga::indexed_view<true, int, 1, 1, 0>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<true, int, 2>::store, &dsga::indexed_view<true, int, 2, 2, 1, 0>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<true, int, 3>::store, &dsga::indexed_view<true, int, 3, 3, 2, 0, 1>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<true, int, 4>::store, &dsga::indexed_view<true, int, 4, 1, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<true, int, 4>::store, &dsga::indexed_view<true, int, 4, 2, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<true, int, 4>::store, &dsga::indexed_view<true, int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::view_wrapper<true, int, 4>::store, &dsga::indexed_view<true, int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<true, int, 4, 1, 3>::base, &dsga::indexed_view<true, int, 4, 2, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<true, int, 4, 1, 3>::base, &dsga::indexed_view<true, int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<true, int, 4, 1, 3>::base, &dsga::indexed_view<true, int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<true, int, 4, 2, 3, 3>::base, &dsga::indexed_view<true, int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<true, int, 4, 2, 3, 3>::base, &dsga::indexed_view<true, int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_view<true, int, 4, 3, 3, 3, 3>::base, &dsga::indexed_view<true, int, 4, 4, 3, 3, 3, 3>::base));
 
 #endif
 	}

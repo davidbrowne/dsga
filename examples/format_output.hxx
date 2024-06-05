@@ -82,11 +82,11 @@ struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
 	}
 };
 
-template<typename T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::storage_wrapper<T, Size>, CharT> : std::formatter<T, CharT>
+template<bool M, typename T, std::size_t Size, typename CharT>
+struct std::formatter<dsga::storage_wrapper<M, T, Size>, CharT> : std::formatter<T, CharT>
 {
 	template <typename FormatContext>
-	auto format(const dsga::storage_wrapper<T, Size> &sw, FormatContext &ctx) const
+	auto format(const dsga::storage_wrapper<M, T, Size> &sw, FormatContext &ctx) const
 	{
 		std::format_to(ctx.out(), "[");
 
@@ -128,9 +128,9 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : s
 	}
 };
 
-template <typename CharT, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>, CharT>
-	: std::formatter<dsga::vector_base<dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::indexed_vector<T, Size, Count, Is...>>, CharT>
+template <typename CharT, bool M, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+struct std::formatter<dsga::indexed_vector<M, T, Size, Count, Is...>, CharT>
+	: std::formatter<dsga::vector_base<M && dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::indexed_vector<M, T, Size, Count, Is...>>, CharT>
 {
 };
 
@@ -140,20 +140,20 @@ struct std::formatter<dsga::basic_vector<T, Size>, CharT>
 {
 };
 
-template <typename CharT, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-struct std::formatter<dsga::indexed_view<T, Size, Count, Is...>, CharT>
-	: std::formatter<dsga::vector_base<dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::indexed_view<T, Size, Count, Is...>>, CharT>
+template <typename CharT, bool M, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+struct std::formatter<dsga::indexed_view<M, T, Size, Count, Is...>, CharT>
+	: std::formatter<dsga::vector_base<M && dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::indexed_view<M, T, Size, Count, Is...>>, CharT>
+{
+};
+
+template <bool M, dsga::dimensional_scalar T, std::size_t Size, typename CharT>
+struct std::formatter<dsga::basic_view<M, T, Size>, CharT>
+	: std::formatter<dsga::vector_base<M, T, Size, dsga::basic_view<M, T, Size>>, CharT>
 {
 };
 
 template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::basic_view<T, Size>, CharT>
-	: std::formatter<dsga::vector_base<true, T, Size, dsga::basic_view<T, Size>>, CharT>
-{
-};
-
-template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::view_vector<T, Size>, CharT> : std::formatter<dsga::basic_view<T, Size>, CharT>
+struct std::formatter<dsga::view_vector<T, Size>, CharT> : std::formatter<dsga::basic_view<true, T, Size>, CharT>
 {
 };
 
@@ -231,8 +231,8 @@ inline void test_format_array(const std::array<T, Size> &arr)
 	}
 }
 
-template <typename T, std::size_t Size>
-inline void test_format_storage_wrapper(const dsga::storage_wrapper<T, Size> &sw)
+template <bool M, typename T, std::size_t Size>
+inline void test_format_storage_wrapper(const dsga::storage_wrapper<M, T, Size> &sw)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", sw);
@@ -257,8 +257,8 @@ inline void test_format_vector(const dsga::basic_vector<T, Size> &v)
 	}
 }
 
-template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-inline void test_format_indexed_vector(const dsga::indexed_vector<T, Size, Count, Is...> &v)
+template <bool M, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+inline void test_format_indexed_vector(const dsga::indexed_vector<M, T, Size, Count, Is...> &v)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", v);

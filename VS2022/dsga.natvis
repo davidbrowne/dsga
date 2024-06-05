@@ -16,25 +16,28 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
+	<Type Name="dsga::storage_wrapper&lt;*,*,*&gt;">
 		<DisplayString>{store,view(dsga)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values"><DisplayString>{{ size = {$T2} }}</DisplayString></Synthetic>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
 			<ExpandedItem>store</ExpandedItem>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::view_wrapper&lt;*,*&gt;">
-		<DisplayString Condition="$T2 == 1">[{store[0],g}]</DisplayString>
-		<DisplayString Condition="$T2 == 2">[{store[0],g}, {store[1],g}]</DisplayString>
-		<DisplayString Condition="$T2 == 3">[{store[0],g}, {store[1],g}, {store[2],g}]</DisplayString>
-		<DisplayString Condition="$T2 == 4">[{store[0],g}, {store[1],g}, {store[2],g}, {store[3],g}]</DisplayString>
+	<Type Name="dsga::view_wrapper&lt;*,*,*&gt;">
+		<DisplayString Condition="$T3 == 1">[{store[0],g}]</DisplayString>
+		<DisplayString Condition="$T3 == 2">[{store[0],g}, {store[1],g}]</DisplayString>
+		<DisplayString Condition="$T3 == 3">[{store[0],g}, {store[1],g}, {store[2],g}]</DisplayString>
+		<DisplayString Condition="$T3 == 4">[{store[0],g}, {store[1],g}, {store[2],g}, {store[3],g}]</DisplayString>
 		<Expand>
-			<Synthetic Name="values">
-				<DisplayString>{{ size = {$T2} }}</DisplayString>
+			<Synthetic Condition="$T1 == false" Name="const values">
+				<DisplayString>{{ size = {$T3} }}</DisplayString>
+			</Synthetic>
+			<Synthetic Condition="$T1 == true" Name="values">
+				<DisplayString>{{ size = {$T3} }}</DisplayString>
 			</Synthetic>
 			<ArrayItems>
-				<Size>$T2</Size>
+				<Size>$T3</Size>
 				<ValuePointer>store</ValuePointer>
 			</ArrayItems>
 		</Expand>
@@ -55,7 +58,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::basic_view&lt;*,*&gt;">
+	<Type Name="dsga::basic_view&lt;*,*,*&gt;">
 		<DisplayString>{base}</DisplayString>
 		<Expand>
 			<ExpandedItem>base</ExpandedItem>
@@ -81,40 +84,15 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}]</DisplayString>
-		<Expand HideRawView="true">
-			<Item Name="base">base,view(dsga)</Item>
-			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}]</DisplayString>
-				<Expand>
-					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-					<Item Name="[0]">$T4</Item>
-				</Expand>
-			</Synthetic>
-			<Item Name="writable">Writable</Item>
-		</Expand>
-	</Type>
-	
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" ExcludeView="indexed">
-		<DisplayString>{*this,view(indexed)}</DisplayString>
-		<Expand>
-			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
-			<Item Name="[Index View]">*this,view(indexed)</Item>
-		</Expand>
-	</Type>
-	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}, {base[$T5],g}]</DisplayString>
+		<DisplayString>[{base[$T5],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}, {$T5}]</DisplayString>
+				<DisplayString>[{$T5}]</DisplayString>
 				<Expand>
-					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-					<Item Name="[0]">$T4</Item>
-					<Item Name="[1]">$T5</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+					<Item Name="[0]">$T5</Item>
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
@@ -124,24 +102,22 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
-			<Item Name="[1]">base[$T5]</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}]</DisplayString>
+		<DisplayString>[{base[$T5],g}, {base[$T6],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}, {$T5}, {$T6}]</DisplayString>
+				<DisplayString>[{$T5}, {$T6}]</DisplayString>
 				<Expand>
-					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-					<Item Name="[0]">$T4</Item>
-					<Item Name="[1]">$T5</Item>
-					<Item Name="[2]">$T6</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+					<Item Name="[0]">$T5</Item>
+					<Item Name="[1]">$T6</Item>
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
@@ -151,106 +127,93 @@
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
-			<Item Name="[1]">base[$T5]</Item>
-			<Item Name="[2]">base[$T6]</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
+			<Item Name="[1]">base[$T6]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}, {base[$T7],g}]</DisplayString>
+		<DisplayString>[{base[$T5],g}, {base[$T6],g}, {base[$T7],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}, {$T5}, {$T6}, {$T7}]</DisplayString>
+				<DisplayString>[{$T5}, {$T6}, {$T7}]</DisplayString>
 				<Expand>
-					<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-					<Item Name="[0]">$T4</Item>
-					<Item Name="[1]">$T5</Item>
-					<Item Name="[2]">$T6</Item>
-					<Item Name="[3]">$T7</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+					<Item Name="[0]">$T5</Item>
+					<Item Name="[1]">$T6</Item>
+					<Item Name="[2]">$T7</Item>
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
 		</Expand>
 	</Type>
-
+	
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
-			<Item Name="[1]">base[$T5]</Item>
-			<Item Name="[2]">base[$T6]</Item>
-			<Item Name="[3]">base[$T7]</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
+			<Item Name="[1]">base[$T6]</Item>
+			<Item Name="[2]">base[$T7]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
-
-	<Type Name="dsga::indexed_view&lt;*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}]</DisplayString>
+	
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*,*&gt;" IncludeView="indexed">
+		<DisplayString>[{base[$T5],g}, {base[$T6],g}, {base[$T7],g}, {base[$T8],g}]</DisplayString>
 		<Expand HideRawView="true">
-			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">[{base[0],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
-				<Expand>
-					<ArrayItems>
-						<Size>$T2</Size>
-						<ValuePointer>base</ValuePointer>
-					</ArrayItems>
-				</Expand>
-			</Synthetic>
+			<Item Name="base">base,view(dsga)</Item>
 			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}]</DisplayString>
+				<DisplayString>[{$T5}, {$T6}, {$T7}, {$T8}]</DisplayString>
 				<Expand>
-					<Synthetic Name="values">
-						<DisplayString>{{ size = {$T3} }}</DisplayString>
-					</Synthetic>
-					<Item Name="[0]">$T4</Item>
+					<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+					<Item Name="[0]">$T5</Item>
+					<Item Name="[1]">$T6</Item>
+					<Item Name="[2]">$T7</Item>
+					<Item Name="[3]">$T8</Item>
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_view&lt;*,*,*,*&gt;" ExcludeView="indexed">
+	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values">
-				<DisplayString>{{ size = {$T3} }}</DisplayString>
-			</Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
+			<Synthetic Name="values"><DisplayString>{{ size = {$T4} }}</DisplayString></Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
+			<Item Name="[1]">base[$T6]</Item>
+			<Item Name="[2]">base[$T7]</Item>
+			<Item Name="[3]">base[$T8]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_view&lt;*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}, {base[$T5],g}]</DisplayString>
+		<DisplayString>[{base[$T4],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">[{base[0],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 1">[{base[0],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
 				<Expand>
 					<ArrayItems>
-						<Size>$T2</Size>
+						<Size>$T3</Size>
 						<ValuePointer>base</ValuePointer>
 					</ArrayItems>
 				</Expand>
 			</Synthetic>
 			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}, {$T5}]</DisplayString>
+				<DisplayString>[{$T5}]</DisplayString>
 				<Expand>
 					<Synthetic Name="values">
-						<DisplayString>{{ size = {$T3} }}</DisplayString>
+						<DisplayString>{{ size = {$T4} }}</DisplayString>
 					</Synthetic>
-					<Item Name="[0]">$T4</Item>
-					<Item Name="[1]">$T5</Item>
+					<Item Name="[0]">$T5</Item>
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
@@ -260,39 +223,40 @@
 	<Type Name="dsga::indexed_view&lt;*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values">
-				<DisplayString>{{ size = {$T3} }}</DisplayString>
+			<Synthetic Condition="$T1 == false" Name="const values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
 			</Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
-			<Item Name="[1]">base[$T5]</Item>
+			<Synthetic Condition="$T1 == true" Name="values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
+			</Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_view&lt;*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}]</DisplayString>
+		<DisplayString>[{base[$T5],g}, {base[$T6],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">[{base[0],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 1">[{base[0],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
 				<Expand>
 					<ArrayItems>
-						<Size>$T2</Size>
+						<Size>$T3</Size>
 						<ValuePointer>base</ValuePointer>
 					</ArrayItems>
 				</Expand>
 			</Synthetic>
 			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}, {$T5}, {$T6}]</DisplayString>
+				<DisplayString>[{$T5}, {$T6}]</DisplayString>
 				<Expand>
 					<Synthetic Name="values">
-						<DisplayString>{{ size = {$T3} }}</DisplayString>
+						<DisplayString>{{ size = {$T4} }}</DisplayString>
 					</Synthetic>
-					<Item Name="[0]">$T4</Item>
-					<Item Name="[1]">$T5</Item>
-					<Item Name="[2]">$T6</Item>
+					<Item Name="[0]">$T5</Item>
+					<Item Name="[1]">$T6</Item>
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
@@ -302,41 +266,42 @@
 	<Type Name="dsga::indexed_view&lt;*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values">
-				<DisplayString>{{ size = {$T3} }}</DisplayString>
+			<Synthetic Condition="$T1 == false" Name="const values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
 			</Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
-			<Item Name="[1]">base[$T5]</Item>
-			<Item Name="[2]">base[$T6]</Item>
+			<Synthetic Condition="$T1 == true" Name="values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
+			</Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
+			<Item Name="[1]">base[$T6]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_view&lt;*,*,*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}, {base[$T7],g}]</DisplayString>
+		<DisplayString>[{base[$T5],g}, {base[$T6],g}, {base[$T7],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Synthetic Name="base">
-				<DisplayString Condition="$T2 == 1">[{base[0],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
-				<DisplayString Condition="$T2 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 1">[{base[0],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
 				<Expand>
 					<ArrayItems>
-						<Size>$T2</Size>
+						<Size>$T3</Size>
 						<ValuePointer>base</ValuePointer>
 					</ArrayItems>
 				</Expand>
 			</Synthetic>
 			<Synthetic Name="offsets">
-				<DisplayString>[{$T4}, {$T5}, {$T6}, {$T7}]</DisplayString>
+				<DisplayString>[{$T5}, {$T6}, {$T7}]</DisplayString>
 				<Expand>
 					<Synthetic Name="values">
-						<DisplayString>{{ size = {$T3} }}</DisplayString>
+						<DisplayString>{{ size = {$T4} }}</DisplayString>
 					</Synthetic>
-					<Item Name="[0]">$T4</Item>
-					<Item Name="[1]">$T5</Item>
-					<Item Name="[2]">$T6</Item>
-					<Item Name="[3]">$T7</Item>
+					<Item Name="[0]">$T5</Item>
+					<Item Name="[1]">$T6</Item>
+					<Item Name="[2]">$T7</Item>
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
@@ -346,37 +311,74 @@
 	<Type Name="dsga::indexed_view&lt;*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
-			<Synthetic Name="values">
-				<DisplayString>{{ size = {$T3} }}</DisplayString>
+			<Synthetic Condition="$T1 == false" Name="const values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
 			</Synthetic>
-			<Item Name="[0]">base[$T4]</Item>
-			<Item Name="[1]">base[$T5]</Item>
-			<Item Name="[2]">base[$T6]</Item>
-			<Item Name="[3]">base[$T7]</Item>
+			<Synthetic Condition="$T1 == true" Name="values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
+			</Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
+			<Item Name="[1]">base[$T6]</Item>
+			<Item Name="[2]">base[$T7]</Item>
 			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*&gt;">
-		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
-		<DisplayString>{{ ??? }}</DisplayString>
+	<Type Name="dsga::indexed_view&lt;*,*,*,*,*,*,*,*&gt;" IncludeView="indexed">
+		<DisplayString>[{base[$T5],g}, {base[$T6],g}, {base[$T7],g}, {base[$T8],g}]</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
-			<Item Name="base">*mapper_ptr</Item>
-			<Item Name="[Raw Index]">mapper_index</Item>
+			<Synthetic Name="base">
+				<DisplayString Condition="$T3 == 1">[{base[0],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 2">[{base[0],g}, {base[1],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 3">[{base[0],g}, {base[1],g}, {base[2],g}]</DisplayString>
+				<DisplayString Condition="$T3 == 4">[{base[0],g}, {base[1],g}, {base[2],g}, {base[3],g}]</DisplayString>
+				<Expand>
+					<ArrayItems>
+						<Size>$T3</Size>
+						<ValuePointer>base</ValuePointer>
+					</ArrayItems>
+				</Expand>
+			</Synthetic>
+			<Synthetic Name="offsets">
+				<DisplayString>[{$T5}, {$T6}, {$T7}, {$T8}]</DisplayString>
+				<Expand>
+					<Synthetic Name="values">
+						<DisplayString>{{ size = {$T4} }}</DisplayString>
+					</Synthetic>
+					<Item Name="[0]">$T5</Item>
+					<Item Name="[1]">$T6</Item>
+					<Item Name="[2]">$T7</Item>
+					<Item Name="[3]">$T8</Item>
+				</Expand>
+			</Synthetic>
+			<Item Name="writable">Writable</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="dsga::indexed_view&lt;*,*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
+		<DisplayString>{*this,view(indexed)}</DisplayString>
+		<Expand>
+			<Synthetic Condition="$T1 == false" Name="const values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
+			</Synthetic>
+			<Synthetic Condition="$T1 == true" Name="values">
+				<DisplayString>{{ size = {$T4} }}</DisplayString>
+			</Synthetic>
+			<Item Name="[0]">base[$T5]</Item>
+			<Item Name="[1]">base[$T6]</Item>
+			<Item Name="[2]">base[$T7]</Item>
+			<Item Name="[3]">base[$T8]</Item>
+			<Item Name="[Index View]">*this,view(indexed)</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
@@ -384,13 +386,12 @@
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 3">{{ end }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
@@ -398,36 +399,37 @@
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 3">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 4">{{ end }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*&gt; &gt;">
-		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt; &gt;" />
-		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
+	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*,*&gt;">
+		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*,*&gt;" />
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ value = {(*mapper_ptr).base[$T8]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 4">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
-			<Item Name="base">*current.mapper_ptr</Item>
-			<Item Name="[Raw Index]">current.mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
+			<Item Name="base">*mapper_ptr</Item>
+			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -439,9 +441,8 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -453,10 +454,9 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 4">{{ value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -465,26 +465,29 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_view_iterator&lt;*,*,*,*&gt;">
-		<AlternativeType Name="dsga::indexed_view_const_iterator&lt;*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*,*&gt; &gt;">
+		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*,*&gt; &gt;" />
+		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 4">{{ value = {(*current.mapper_ptr).base[$T8]} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
-			<Item Name="base">*mapper_ptr</Item>
-			<Item Name="[Raw Index]">mapper_index</Item>
+			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
+			<Item Name="base">*current.mapper_ptr</Item>
+			<Item Name="[Raw Index]">current.mapper_index</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="dsga::indexed_view_iterator&lt;*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_view_const_iterator&lt;*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
@@ -492,13 +495,14 @@
 
 	<Type Name="dsga::indexed_view_iterator&lt;*,*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_view_const_iterator&lt;*,*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 3">{{ end }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
@@ -506,36 +510,45 @@
 
 	<Type Name="dsga::indexed_view_iterator&lt;*,*,*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_view_const_iterator&lt;*,*,*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 3">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 4">{{ end }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
 	</Type>
 
-	<Type Name="std::reverse_iterator&lt;dsga::indexed_view_iterator&lt;*,*,*,*&gt; &gt;">
-		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_view_const_iterator&lt;*,*,*,*&gt; &gt;" />
-		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
+	<Type Name="dsga::indexed_view_iterator&lt;*,*,*,*,*,*,*,*&gt;">
+		<AlternativeType Name="dsga::indexed_view_const_iterator&lt;*,*,*,*,*,*,*,*&gt;" />
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3 &amp;&amp; $T1 == true">{{ value = {(*mapper_ptr).base[$T8]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3 &amp;&amp; $T1 == false">{{ const value = {(*mapper_ptr).base[$T8]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 4">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
-			<Item Name="base">*current.mapper_ptr</Item>
-			<Item Name="[Raw Index]">current.mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T4">mapper_index</Item>
+			<Item Name="base">*mapper_ptr</Item>
+			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
 	</Type>
 
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_view_iterator&lt;*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_view_const_iterator&lt;*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -547,9 +560,10 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_view_iterator&lt;*,*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_view_const_iterator&lt;*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -561,10 +575,31 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_view_iterator&lt;*,*,*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_view_const_iterator&lt;*,*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 4">{{ value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
+			<Item Name="base">*current.mapper_ptr</Item>
+			<Item Name="[Raw Index]">current.mapper_index</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="std::reverse_iterator&lt;dsga::indexed_view_iterator&lt;*,*,*,*,*,*,*,*&gt; &gt;">
+		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_view_const_iterator&lt;*,*,*,*,*,*,*,*&gt; &gt;" />
+		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 4 &amp;&amp; $T1 == true">{{ value = {(*current.mapper_ptr).base[$T8]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 4 &amp;&amp; $T1 == false">{{ const value = {(*current.mapper_ptr).base[$T8]} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>

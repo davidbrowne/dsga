@@ -259,7 +259,7 @@ TEST_SUITE("test vector constructors")
 
 		// CTAD for dsga::storage_wrapper
 		auto s1 = dsga::storage_wrapper{1.1, 2.2, 3, true};
-		CHECK_EQ(s1, dsga::storage_wrapper<double, 4>{1.1, 2.2, 3.0, 1.0});
+		CHECK_EQ(s1, dsga::storage_wrapper<true, double, 4>{1.1, 2.2, 3.0, 1.0});
 	}
 }
 

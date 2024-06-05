@@ -1,8 +1,12 @@
 
-//          Copyright David Browne 2020-2023.
+//          Copyright David Browne 2020-2024.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
+
+#if defined(_MSC_VER) && defined(_DEBUG)
+#include <crtdbg.h>
+#endif
 
 //#include "nanobench.h"
 #include "dsga.hxx"
@@ -37,8 +41,15 @@ void sandbox_function()
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"
 
-int main(int argc, char *argv[])
+int main([[ maybe_unused ]] int argc, [[ maybe_unused ]] char *argv[])
 {
+#if defined(_MSC_VER) && defined(_DEBUG)
+	// watch window:
+	// {,,ucrtbased.dll}_crtBreakAlloc
+	// {,,ucrtbased.dll}__acrt_current_request_number
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
 	print_dsga_version();
 
 	sandbox_function();

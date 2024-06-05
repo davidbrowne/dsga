@@ -31,23 +31,23 @@
 		+ max()
 		+ sum()
 	}
-	struct indexed_vector_const_iterator<T, Size, Count, ...Is>
+	struct indexed_vector_const_iterator<Mutable, T, Size, Count, ...Is>
 	{
 		+ mapper_ptr : const indexed_vector<T, Size, Count, Is ...> *
 		+ mapper_index : std::ptrdiff_t
 		+ iterator functions()
 	}
-	struct indexed_vector_iterator<T, Size, Count, ...Is>
+	struct indexed_vector_iterator<Mutable, T, Size, Count, ...Is>
 	{
 		+ iterator functions()
 	}
-	struct indexed_view_const_iterator<T, Size, Count, ...Is>
+	struct indexed_view_const_iterator<Mutable, T, Size, Count, ...Is>
 	{
 		+ mapper_ptr : const indexed_view<T, Size, Count, Is ...> *
 		+ mapper_index : std::ptrdiff_t
 		+ iterator functions()
 	}
-	struct indexed_view_iterator<T, Size, Count, ...Is>
+	struct indexed_view_iterator<Mutable, T, Size, Count, ...Is>
 	{
 		+ iterator functions()
 	}
@@ -63,11 +63,12 @@
 		+ iterator access()
 		+ swap()
 	}
-	struct basic_view<T, Size>
+	struct basic_view<Mutable, T, Size>
 	{
 		+ union
 		+ {static} offsets : std::array<T, Size>
 		+ basic_view(T *)
+		+ basic_view(const T *)
 		+ set()
 		+ operator[]()
 		+ operator=()
@@ -86,13 +87,12 @@
 		+ base
 		+ swizzles
 	}
-	struct storage_wrapper<T, Size>
+	struct storage_wrapper<Mutable, T, Size>
 	{
 		+ store : std::array<T, Size>
 		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
-		+ operator=()
 		+ data()
 		+ sequence()
 		+ iterator access()
@@ -100,14 +100,13 @@
 		+ size()
 		+ swap()
 	}
-	struct view_wrapper<T, Size>
+	struct view_wrapper<Mutable, T, Size>
 	{
-		+ store : T *
+		+ store : const T const *
 		+ {static} offsets : std::array<T, Size>
-		+ view_wrapper(T *)
+		+ view_wrapper(const T *)
 		+ set()
 		+ operator[]()
-		+ operator=()
 		+ data()
 		+ sequence()
 		+ iterator access()
@@ -120,7 +119,7 @@
 		+ store : T[Size]
 		+ operator=()
 	}
-	struct indexed_vector<T, Size, Count, ...Is>
+	struct indexed_vector<Mutable, T, Size, Count, ...Is>
 	{
 		+ base : std::array<T, Size>
 		+ {static} offsets : std::array<T, Count>
@@ -131,11 +130,11 @@
 		+ sequence()
 		+ iterator access()
 	}
-	struct indexed_view<T, Size, Count, ...Is>
+	struct indexed_view<Mutable, T, Size, Count, ...Is>
 	{
-		+ base : T *
+		+ base : const T const *
 		+ {static} offsets : std::array<T, Count>
-		+ indexed_view(T *)
+		+ indexed_view(const T *)
 		+ set()
 		+ operator[]()
 		+ operator=()

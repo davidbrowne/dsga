@@ -41,10 +41,10 @@ struct std::hash<dsga::basic_vector<T, S>>
 	}
 };
 
-template <dsga::dimensional_scalar T, std::size_t S>
-struct std::hash<dsga::basic_view<T, S>>
+template <bool M, dsga::dimensional_scalar T, std::size_t S>
+struct std::hash<dsga::basic_view<M, T, S>>
 {
-	std::size_t operator()(const dsga::basic_view<T, S> &v) const noexcept
+	std::size_t operator()(const dsga::basic_view<M, T, S> &v) const noexcept
 	{
 		std::size_t seed = 0;
 
@@ -73,10 +73,10 @@ struct std::hash<dsga::view_vector<T, S>>
 	}
 };
 
-template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct std::hash<dsga::indexed_vector<T, S, C, Is...>>
+template <bool M, dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+struct std::hash<dsga::indexed_vector<M, T, S, C, Is...>>
 {
-	std::size_t operator()(const dsga::indexed_vector<T, S, C, Is...> &v) const noexcept
+	std::size_t operator()(const dsga::indexed_vector<M, T, S, C, Is...> &v) const noexcept
 	{
 		std::size_t seed = 0;
 
@@ -89,10 +89,10 @@ struct std::hash<dsga::indexed_vector<T, S, C, Is...>>
 	}
 };
 
-template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct std::hash<dsga::indexed_view<T, S, C, Is...>>
+template <bool M, dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
+struct std::hash<dsga::indexed_view<M, T, S, C, Is...>>
 {
-	std::size_t operator()(const dsga::indexed_view<T, S, C, Is...> &v) const noexcept
+	std::size_t operator()(const dsga::indexed_view<M, T, S, C, Is...> &v) const noexcept
 	{
 		std::size_t seed = 0;
 
