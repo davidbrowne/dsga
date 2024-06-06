@@ -152,6 +152,29 @@ struct std::formatter<dsga::basic_view<M, T, Size>, CharT>
 {
 };
 
+template<bool M, typename T, std::size_t Size, typename CharT>
+struct std::formatter<dsga::view_wrapper<M, T, Size>, CharT> : std::formatter<T, CharT>
+{
+	template <typename FormatContext>
+	auto format(const dsga::view_wrapper<M, T, Size> &sw, FormatContext &ctx) const
+	{
+		std::format_to(ctx.out(), "[");
+
+		std::formatter<T, CharT>::format(sw[0], ctx);
+		if constexpr (Size > 1)
+		{
+			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(sw[Is], ctx)), ...);
+			}(dsga::make_index_range<1, Size>{});
+		}
+
+		std::format_to(ctx.out(), "]");
+
+		return ctx.out();
+	}
+};
+
 template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
 struct std::formatter<dsga::view_vector<T, Size>, CharT> : std::formatter<dsga::basic_view<true, T, Size>, CharT>
 {

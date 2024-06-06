@@ -97,7 +97,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
 constexpr inline int DSGA_MINOR_VERSION = 1;
-constexpr inline int DSGA_PATCH_VERSION = 1;
+constexpr inline int DSGA_PATCH_VERSION = 2;
 
 namespace dsga
 {
@@ -2065,6 +2065,10 @@ namespace dsga
 		// CRTP access to Derived class
 		[[nodiscard]] constexpr Derived &as_derived() noexcept requires Writable			{ return static_cast<Derived &>(*this); }
 		[[nodiscard]] constexpr const Derived &as_derived() const noexcept					{ return static_cast<const Derived &>(*this); }
+
+		// for debugging and testing
+		[[nodiscard]] constexpr auto &as_base() noexcept requires Writable					{ return *this; }
+		[[nodiscard]] constexpr const auto &as_base() const noexcept						{ return *this; }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
@@ -6727,29 +6731,59 @@ namespace dsga
 	//
 
 	template <int N, bool M, dimensional_scalar T, std::size_t S>
-	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr auto & get(storage_wrapper<M, T, S> & arg) noexcept
+		requires (N >= 0) && (N < S) && M
+	[[nodiscard]] constexpr auto &get(storage_wrapper<M, T, S> &arg) noexcept
+	{
+		return arg[N];
+	}
+
+	template <int N, bool M, dimensional_scalar T, std::size_t S>
+		requires (N >= 0) && (N < S)
+	[[nodiscard]] constexpr const auto &get(const storage_wrapper<M, T, S> &arg) noexcept
+	{
+		return arg[N];
+	}
+
+	template <int N, bool M, dimensional_scalar T, std::size_t S>
+		requires (N >= 0) && (N < S) && M
+	[[nodiscard]] constexpr auto &&get(storage_wrapper<M, T, S> &&arg) noexcept
+	{
+		return std::move(arg[N]);
+	}
+
+	template <int N, bool M, dimensional_scalar T, std::size_t S>
+		requires (N >= 0) && (N < S)
+	[[nodiscard]] constexpr const auto &&get(const storage_wrapper<M, T, S> &&arg) noexcept
+	{
+		return std::move(arg[N]);
+	}
+
+	//
+
+	template <int N, bool M, dimensional_scalar T, std::size_t S>
+	requires (N >= 0) && (N < S) && M
+	[[nodiscard]] constexpr auto & get(view_wrapper<M, T, S> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, bool M, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr const auto & get(const storage_wrapper<M, T, S> & arg) noexcept
+	[[nodiscard]] constexpr const auto & get(const view_wrapper<M, T, S> & arg) noexcept
 	{
 		return arg[N];
 	}
 
 	template <int N, bool M, dimensional_scalar T, std::size_t S>
-	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr auto && get(storage_wrapper<M, T, S> && arg) noexcept
+	requires (N >= 0) && (N < S) && M
+	[[nodiscard]] constexpr auto && get(view_wrapper<M, T, S> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
 
 	template <int N, bool M, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr const auto && get(const storage_wrapper<M, T, S> && arg) noexcept
+	[[nodiscard]] constexpr const auto && get(const view_wrapper<M, T, S> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -6757,7 +6791,7 @@ namespace dsga
 	//
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires W && (N >= 0) && (N < C)
+	requires W && (N >= 0) && (N < C) && W
 	[[nodiscard]] constexpr auto & get(vector_base<W, T, C, D> & arg) noexcept
 	{
 		return arg[N];
@@ -6771,7 +6805,7 @@ namespace dsga
 	}
 
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires (N >= 0) && (N < C)
+	requires (N >= 0) && (N < C) && W
 	[[nodiscard]] constexpr auto && get(vector_base<W, T, C, D> && arg) noexcept
 	{
 		return std::move(arg[N]);

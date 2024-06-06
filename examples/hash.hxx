@@ -57,6 +57,38 @@ struct std::hash<dsga::basic_view<M, T, S>>
 	}
 };
 
+template <bool M, dsga::dimensional_scalar T, std::size_t S>
+struct std::hash<dsga::storage_wrapper<M, T, S>>
+{
+	std::size_t operator()(const dsga::storage_wrapper<M, T, S> &v) const noexcept
+	{
+		std::size_t seed = 0;
+
+		[&] <std::size_t ...Js>(std::index_sequence<Js ...>)
+		{
+			((seed = hash_combine(seed, v[Js])), ...);
+		}(std::make_index_sequence<S>{});
+
+		return seed;
+	}
+};
+
+template <bool M, dsga::dimensional_scalar T, std::size_t S>
+struct std::hash<dsga::view_wrapper<M, T, S>>
+{
+	std::size_t operator()(const dsga::view_wrapper<M, T, S> &v) const noexcept
+	{
+		std::size_t seed = 0;
+
+		[&] <std::size_t ...Js>(std::index_sequence<Js ...>)
+		{
+			((seed = hash_combine(seed, v[Js])), ...);
+		}(std::make_index_sequence<S>{});
+
+		return seed;
+	}
+};
+
 template <dsga::dimensional_scalar T, std::size_t S>
 struct std::hash<dsga::view_vector<T, S>>
 {

@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.1.2
+* Added ```get<>``` for ```view_wrapper```.
+* Added ```as_base()``` to ```vector_base_``` for debugging and testing purposes.
+
 ### v2.1.1
 * Further experimental additions: adding a boolean ```Mutable``` template parameter to the classes for when they can be logically "const" (false means "const", true means "non const"), for both vectors (currently Mutable == true for the vectors) but mostly for the vector views that wrap an external storage pointer (const pointer vs non-const pointer). This is different from ```Writable```, which is used to determine if an indexed vector/indexed view is able to be an lvalue due to swizzle restrictions
 

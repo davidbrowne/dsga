@@ -193,7 +193,7 @@
 	</Type>
 
 	<Type Name="dsga::indexed_view&lt;*,*,*,*,*&gt;" IncludeView="indexed">
-		<DisplayString>[{base[$T4],g}]</DisplayString>
+		<DisplayString>[{base[$T5],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Synthetic Name="base">
 				<DisplayString Condition="$T3 == 1">[{base[0],g}]</DisplayString>

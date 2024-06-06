@@ -23,6 +23,7 @@
 		+ length()
 		+ size()
 		+ as_derived()
+		+ as_base()
 		+ apply()
 		+ query()
 		+ shift()

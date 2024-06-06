@@ -6,9 +6,12 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.1.1
+v2.1.2
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.1.2
+    * Added ```get<>``` for ```view_wrapper```.
+    * Added ```as_base()``` to ```vector_base``` for debugging and testing purposes.
 * v2.1.1
     * Further experimental additions: adding a boolean ```Mutable``` template parameter to the classes for when they can be logically "const" (false means "const", true means "non const"), for both vectors (currently Mutable == true for the vectors) but mostly for the vector views that wrap an external storage pointer (const pointer vs non-const pointer). This is different from ```Writable```, which is used to determine if an indexed vector/indexed view is able to be an lvalue due to swizzle restrictions.
 * v2.1.0
@@ -352,7 +355,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.1.1`
+Current version: `v2.1.2`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
