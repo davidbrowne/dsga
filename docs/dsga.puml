@@ -194,4 +194,5 @@
 	end note
 	"CRTP duck type" <. vector_base : Derived CRTP
 	basic_matrix::columns "1" *-- "Cols" basic_vector : columns
+	basic_view::anonymous_union -[hidden]> view_vector
 @enduml
