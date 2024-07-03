@@ -1,8 +1,15 @@
 # Change Log
 
+### v2.1.3
+* Added ability to change the underlying data pointer of a ```basic_view```, which also affects ```view_wrapper``` and ```indexed_view```. This will lead to asserts in various functions when a view is wrapping the null pointer.
+* When using ```swap``` with views that have aliasing overlap, e.g., ```view_wrapper``` or ```basic_view```, an exception will be thrown.
+* Much refactoring of view structs/classes related to the above changes, including having to allow the null pointer as the underlying data pointer (with all functions that require use of the pointer will assert if it is null).
+* Added a new constructor to ```basic_matrix``` that takes a raw pointer to an array of data. The constructor will throw if it is passed nullptr. The constructor does not wrap the pointer, rather it copies the array data into ```basic_matrix```'s own storage.
+* Added a ```slice()``` function, to give you a contiguous sub-range of the data object. It works for arguments of type ```basic_vector```, ```basic_view```, and ```vector_view```. The function template argument is the length of the sub-range. The function will return a ```basic_view``` on the argument vector or view. The second argument is the offset into that vector or view, which is where the sub-range starts. The lifetime of the returned object depends on the lifetime of the vector or view argument, so it will have a dangling-pointer if it lives beyond the argument. This function can throw if the template parameter argument for length and the offset argument would result in a buffer overrun.
+
 ### v2.1.2
 * Added ```get<>``` for ```view_wrapper```.
-* Added ```as_base()``` to ```vector_base_``` for debugging and testing purposes.
+* Added ```as_base()``` to ```vector_base``` for debugging and testing purposes.
 
 ### v2.1.1
 * Further experimental additions: adding a boolean ```Mutable``` template parameter to the classes for when they can be logically "const" (false means "const", true means "non const"), for both vectors (currently Mutable == true for the vectors) but mostly for the vector views that wrap an external storage pointer (const pointer vs non-const pointer). This is different from ```Writable```, which is used to determine if an indexed vector/indexed view is able to be an lvalue due to swizzle restrictions

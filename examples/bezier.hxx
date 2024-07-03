@@ -10,7 +10,7 @@
 // quadratic bezier evaluator
 //
 
-// recursive interpolation approach to show off vector functions and swizzling
+// recursive interpolation approach (de Casteljau algorithm) to show off vector functions and swizzling
 template <bool W, dsga::floating_point_scalar T, typename D>
 constexpr auto quadratic_bezier_ordinate_eval(const dsga::vector_base<W, T, 3, D> &control_points, T t) noexcept
 {
@@ -103,7 +103,7 @@ constexpr auto quadratic_bezier_eval2(const dsga::vector_base<W1, T, 1, D1> &p0,
 // cubic bezier evaluator
 //
 
-// recursive interpolation approach to show off vector functions and swizzling
+// recursive interpolation approach (de Casteljau algorithm) to show off vector functions and swizzling
 template <bool W, dsga::floating_point_scalar T, typename D>
 constexpr auto cubic_bezier_ordinate_eval(const dsga::vector_base<W, T, 4, D> &control_points, T t) noexcept
 {

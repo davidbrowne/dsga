@@ -78,7 +78,7 @@ TEST_SUITE("type traits tests")
 		auto dwrap4_var = dwrap4{backing + 4};
 
 		CHECK_UNARY(std::is_standard_layout_v<dwrap4>);
-		CHECK_UNARY_FALSE(std::is_default_constructible_v<dwrap4>);
+		CHECK_UNARY(std::is_default_constructible_v<dwrap4>);
 		CHECK_UNARY_FALSE(std::is_trivially_constructible_v<dwrap4>);
 		CHECK_UNARY_FALSE(std::is_trivially_default_constructible_v<dwrap4>);
 		CHECK_UNARY(std::is_trivially_copy_constructible_v<dwrap4>);
@@ -208,7 +208,7 @@ TEST_SUITE("type traits tests")
 		auto nvec4_var = nvec4(backing + 2);
 
 		CHECK_UNARY(std::is_standard_layout_v<nvec4>);
-		CHECK_UNARY_FALSE(std::is_default_constructible_v<nvec4>);
+		CHECK_UNARY(std::is_default_constructible_v<nvec4>);
 		CHECK_UNARY_FALSE(std::is_trivially_constructible_v<nvec4>);
 		CHECK_UNARY_FALSE(std::is_trivially_default_constructible_v<nvec4>);
 		CHECK_UNARY(std::is_trivially_copy_constructible_v<nvec4>);
@@ -224,8 +224,8 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY_FALSE(std::is_trivially_move_assignable_v<nvec4>);
 		CHECK_UNARY_FALSE(std::is_assignable_v<nvec4 &, nvec4 &>);
 		CHECK_UNARY_FALSE(std::is_assignable_v<nvec4 &, nvec4 &&>);
-		CHECK_UNARY_FALSE(std::is_assignable_v<nvec4 &&, nvec4 &>);
-		CHECK_UNARY_FALSE(std::is_assignable_v<nvec4 &&, nvec4 &&>);
+		CHECK_UNARY(std::is_assignable_v<nvec4 &&, nvec4 &>);
+		CHECK_UNARY(std::is_assignable_v<nvec4 &&, nvec4 &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<nvec4>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<nvec4>);
@@ -325,7 +325,7 @@ TEST_SUITE("type traits tests")
 		using dswizzle4 = dsga::indexed_view<true, double, 4u, 4u, 0u, 1u, 2u, 3u>;
 
 		CHECK_UNARY(std::is_standard_layout_v<dswizzle4>);
-		CHECK_UNARY_FALSE(std::is_default_constructible_v<dswizzle4>);
+		CHECK_UNARY(std::is_default_constructible_v<dswizzle4>);
 		CHECK_UNARY_FALSE(std::is_trivially_constructible_v<dswizzle4>);
 		CHECK_UNARY_FALSE(std::is_trivially_default_constructible_v<dswizzle4>);
 		CHECK_UNARY(std::is_trivially_copy_constructible_v<dswizzle4>);
@@ -344,8 +344,8 @@ TEST_SUITE("type traits tests")
 
 		// this is true for rvalue indexed_vector assigned from other indexed_vector, just not from vector_base.
 		// this needs to be true for std::swap() on dsga::basic_vector to work -- dsga::indexed_vector must be std::is_move_assignable_v<>
-		CHECK_UNARY_FALSE(std::is_assignable_v<dswizzle4 &&, dswizzle4 &>);
-		CHECK_UNARY_FALSE(std::is_assignable_v<dswizzle4 &&, dswizzle4 &&>);
+		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &>);
+		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &&>);
 
 		CHECK_UNARY(std::is_trivially_destructible_v<dswizzle4>);
 

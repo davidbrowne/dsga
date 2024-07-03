@@ -6,9 +6,13 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.1.2
+v2.1.3
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.1.3
+    * Added ability to change the underlying data pointer of a ```basic_view```, which also affects ```view_wrapper``` and ```indexed_view```. Much refactoring was required for this, including having to allow the null pointer as the underlying data pointer (all functions that require use of the pointer will assert if the pointer is null).
+    * Added a new constructor to ```basic_matrix``` that takes a raw pointer to an array of data. The constructor will throw if it is passed nullptr. The constructor does not wrap the pointer, rather it copies the array data into ```basic_matrix```'s own storage.
+    * Added a ```slice()``` function, to give you a contiguous sub-range of the data object. It works for arguments of type ```basic_vector```, ```basic_view```, and ```vector_view```. It returns a ```basic_view``` on the argument vector or view. The lifetime of the returned object depends on the lifetime of the vector or view argument, so it will have a dangling-pointer if it lives beyond the argument. This function can throw if the template parameter argument for length and the offset argument would result in a buffer overrun.
 * v2.1.2
     * Added ```get<>``` for ```view_wrapper```.
     * Added ```as_base()``` to ```vector_base``` for debugging and testing purposes.
@@ -16,20 +20,12 @@ v2.1.2
     * Further experimental additions: adding a boolean ```Mutable``` template parameter to the classes for when they can be logically "const" (false means "const", true means "non const"), for both vectors (currently Mutable == true for the vectors) but mostly for the vector views that wrap an external storage pointer (const pointer vs non-const pointer). This is different from ```Writable```, which is used to determine if an indexed vector/indexed view is able to be an lvalue due to swizzle restrictions.
 * v2.1.0
     * MAJOR EXPERIMENTAL ADDITION: there are now vector types, ```basic_view``` and ```indexed_view``` (and similarly ```view_wrapper```), that don't own their data. They are meant to work on a contiguous external data source, e.g., a slice of an array, instead of internal data storage, e.g., the storage in a ```basic_vector```. ```view_vector``` is similar to ```basic_vector```, but it is a ```basic_view``` with an internal array for its data source.
-* v2.0.5
-    * Fixed wrong matrix type (reversed dimensions) being returned from ```outerProduct()```.
-* v2.0.4
-    * Renamed ```logicalNot()``` to ```compNot()```. Deprecated ```logicalNot()```.
-    * Added ```compAnd()``` and ```compOr()``` functions to complement ```compNot()```.
-    * Added missing scalar versions of non-geometric vector functions.
-* v2.0.3
-    * Tolerance checking functions moved to ```examples/tolerance.hxx```.
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2022 v17.10.1
+* Microsoft Visual Studio 2022 v17.10.3
 * gcc v14
-* clang v18.1.6
+* clang v18.1.8
 * icx v2024.1.0
 
 ### Minimum Version
@@ -108,7 +104,7 @@ constexpr auto project_to_line2(const dsga::dvec3 &point,
 #if LINEAR_INTERPOLATE
 
 // cubic bezier linear interpolation, one ordinate at a time, e.g., x, y, z, or w
-// very slow implementation, but illustrates the library
+// very slow implementation (de Casteljau algorithm), but illustrates the library
 constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control_points, float t) noexcept
 {
     auto quadratic_control_points = dsga::mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
@@ -118,7 +114,7 @@ constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control
 
 #else
 
-// ~10-25x faster
+// ~10-25x faster - Bernstein polynomials
 constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control_points, T t) noexcept
 {
     auto t_complement = T(1) - t;
@@ -215,7 +211,7 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 // cross product
 //
 
-// arguments are of the vector base class type, and this function will be used if any passed argument is of type indexed_vector
+// arguments are of the vector_base class type, and this function will be used if any passed argument is of type indexed_vector
 template <bool W1, dsga::floating_point_scalar T1, typename D1, bool W2, dsga::floating_point_scalar T2, typename D2>
 [[nodiscard]] constexpr auto cross(const dsga::vector_base<W1, T1, 3, D1> &a,
                                    const dsga::vector_base<W2, T2, 3, D2> &b) noexcept
@@ -234,6 +230,73 @@ template <dsga::floating_point_scalar T1, dsga::floating_point_scalar T2>
     return (a.yzx * b.zxy) - (a.zxy * b.yzx);
 }
 ```
+
+```c++
+// simple example converting a 2D cartesian point (x, y) into polar coordinates (r, theta)
+// using arrays instead of structures
+
+// simple example - convert (x, y) to (r, theta)
+template <dsga::floating_point_scalar T, std::size_t S>
+void cartesian_to_polar(dsga::basic_view<true, T, S> r, dsga::basic_view<true, T, S> theta,
+                        dsga::basic_view<false, T, S> x, dsga::basic_view<false, T, S> y)
+{
+    theta = dsga::atan(y, x);
+
+    for (std::size_t i = 0; i < S; ++i)
+        r[i] = dsga::length(dsga::basic_vector<T, 2>(x[i], y[i]));
+}
+
+// example that works with arrays of data for input and output instead of using point structure
+void converter(std::vector<double> &radial_dist, std::vector<double> &polar_angle,
+               const std::vector<double> &x, const std::vector<double> &y)
+{
+    constexpr std::size_t vector_size = 4;
+    auto len = dsga::min(x.size(), y.size());
+    auto div = len / vector_size;
+    auto mod = len % vector_size;
+    radial_dist.resize(len);
+    polar_angle.resize(len);
+
+    // chunk up the array into vectors of length 4 and process
+    for (std::size_t i = 0; i < div; ++i)
+    {
+        cartesian_to_polar(dsga::dview4(radial_dist.data() + i * vector_size),
+                           dsga::dview4(polar_angle.data() + i * vector_size),
+                           dsga::cdview4(x.data() + i * vector_size),
+                           dsga::cdview4(y.data() + i * vector_size));
+    }
+
+    // process the remainder of the array data (leftover data < 4 elements)
+    switch (mod)
+    {
+        case 1:
+            cartesian_to_polar(dsga::dview1(radial_dist.data() + div * vector_size),
+                               dsga::dview1(polar_angle.data() + div * vector_size),
+                               dsga::cdview1(x.data() + div * vector_size),
+                               dsga::cdview1(y.data() + div * vector_size));
+            break;
+
+        case 2:
+            cartesian_to_polar(dsga::dview2(radial_dist.data() + div * vector_size),
+                               dsga::dview2(polar_angle.data() + div * vector_size),
+                               dsga::cdview2(x.data() + div * vector_size),
+                               dsga::cdview2(y.data() + div * vector_size));
+            break;
+
+        case 3:
+            cartesian_to_polar(dsga::dview3(radial_dist.data() + div * vector_size),
+                               dsga::dview3(polar_angle.data() + div * vector_size),
+                               dsga::cdview3(x.data() + div * vector_size),
+                               dsga::cdview3(y.data() + div * vector_size));
+            break;
+
+        case 0:
+        default:
+            break;
+    }
+}
+```
+
 ## Relevant GLSL Overview
 
 Our programming environment is ```C++20```, not a GLSL shader program, so the entire GLSL Shading language specification is a super-set of what we are trying to achieve. We really just want the vector and matrix data structures (and their corresponding functions and behavior) to be usable in a ```C++20``` environment. Another term for this type of programming is [array programming](https://en.wikipedia.org/wiki/Array_programming).
@@ -355,7 +418,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.1.2`
+Current version: `v2.1.3`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
@@ -384,7 +447,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.10.1**
+* **MSVC 2022 - v17.10.3**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -408,7 +471,7 @@ Performs all unit tests except for gcc's ```std::is_trivial_v<>``` doesn't work 
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 18.1.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.6):
+* **clang 18.1.8** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.8):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

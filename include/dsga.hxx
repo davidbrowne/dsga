@@ -97,7 +97,7 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
 constexpr inline int DSGA_MINOR_VERSION = 1;
-constexpr inline int DSGA_PATCH_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 3;
 
 namespace dsga
 {
@@ -1901,7 +1901,7 @@ namespace dsga
 		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		// underlying storage - NON-OWNING pointer - uses external array for its data
-		const T * const store;
+		const T * store;
 
 		// using directives related to storage
 		using value_type = T;
@@ -1913,14 +1913,17 @@ namespace dsga
 		[[nodiscard]] constexpr int length() const noexcept											{ return Count; }
 		static constexpr std::integral_constant<std::size_t, Count> size =							{};
 
-		constexpr view_wrapper() noexcept = delete;
 		constexpr view_wrapper(const view_wrapper &) noexcept = default;
 		constexpr view_wrapper(view_wrapper &&) noexcept = default;
 		constexpr ~view_wrapper() noexcept = default;
 
-		explicit view_wrapper(const T *view_ptr) noexcept : store(view_ptr)
+		constexpr view_wrapper() noexcept : store(nullptr)											{}
+		constexpr explicit view_wrapper(const T *view_ptr) noexcept : store(view_ptr)				{}
+
+		// change the base pointer used for the storage
+		constexpr void reset(const T *view_ptr) noexcept
 		{
-			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			store = view_ptr;
 		}
 
 		// logical and physically contiguous access to data
@@ -1928,8 +1931,9 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable && Mutable
 		{
-			T *mstore = const_cast<T *>(store);
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			T *mstore = const_cast<T *>(store);
 			return mstore[static_cast<std::size_t>(index)];
 		}
 
@@ -1937,13 +1941,23 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
 		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return store[static_cast<std::size_t>(index)];
 		}
 
 		// in general, data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr T *data() noexcept requires Writable && Mutable						{ return const_cast<T *>(store); }
-		[[nodiscard]] constexpr const T *data() const noexcept										{ return store; }
+		[[nodiscard]] constexpr T *data() noexcept requires Writable && Mutable
+		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			return const_cast<T *>(store);
+		}
+
+		[[nodiscard]] constexpr const T *data() const noexcept
+		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			return store;
+		}
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept 									{ return sequence_pack{}; }
@@ -1952,6 +1966,7 @@ namespace dsga
 		requires Writable && Mutable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void set(Args ...args) noexcept
 		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
 			T *mstore = const_cast<T *>(store);
 			[&] <std::size_t ...Js, typename ...As>(std::index_sequence<Js ...>, As ...same_args) noexcept
 			{
@@ -1959,10 +1974,29 @@ namespace dsga
 			}(std::make_index_sequence<Count>{}, args...);
 		}
 
-		constexpr void swap(view_wrapper &sw) noexcept requires Writable && Mutable
+		constexpr void swap(view_wrapper &sw) requires Writable && Mutable
 		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			dsga_constexpr_assert(sw.store != nullptr, "sw view pointer is nullptr");
+
 			T *mstore1 = const_cast<T *>(store);
 			T *mstore2 = const_cast<T *>(sw.store);
+
+			// identity swap is no-op
+			if (mstore1 == mstore2)
+				return;
+
+			// lambda that aids in checking for pointer overlap
+			auto in_range = [count_offset = Count - 1](auto ptr, auto ptr_to_check)
+			{
+				return ((ptr <= ptr_to_check) && (ptr_to_check <= (ptr + count_offset)));
+			};
+
+			// make sure pointers are not overlapping the same data
+			if (in_range(mstore1, mstore2) || in_range(mstore2, mstore1))
+				throw std::range_error("pointer overlap for view_wrapper::swap()");
+
+			// do the swap
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
 				((std::iter_swap(mstore1 + Is, mstore2 + Is)), ...);
@@ -1970,11 +2004,27 @@ namespace dsga
 		}
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator begin() noexcept requires Writable && Mutable				{ return const_cast<T *>(store); }
-		[[nodiscard]] constexpr const_iterator begin() const noexcept								{ return store; }
+		[[nodiscard]] constexpr iterator begin() noexcept requires Writable && Mutable
+		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			return const_cast<T *>(store);
+		}
+		[[nodiscard]] constexpr const_iterator begin() const noexcept
+		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			return store;
+		}
 		[[nodiscard]] constexpr const_iterator cbegin() const noexcept								{ return begin(); }
-		[[nodiscard]] constexpr iterator end() noexcept requires Writable && Mutable				{ return const_cast<T *>(store) + Count; }
-		[[nodiscard]] constexpr const_iterator end() const noexcept									{ return store + Count; }
+		[[nodiscard]] constexpr iterator end() noexcept requires Writable && Mutable
+		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			return const_cast<T *>(store) + Count;
+		}
+		[[nodiscard]] constexpr const_iterator end() const noexcept
+		{
+			dsga_constexpr_assert(store != nullptr, "view pointer is nullptr");
+			return store + Count;
+		}
 		[[nodiscard]] constexpr const_iterator cend() const noexcept								{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator rbegin() noexcept requires Writable && Mutable		{ return std::reverse_iterator(end()); }
@@ -2970,7 +3020,7 @@ namespace dsga
 		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		// common initial sequence data - the storage is Size in length, not Count which is number of indexes - NON-OWNING pointer - uses external array for its data
-		const T * const base;
+		const T * base;
 
 		// using directives related to storage
 		using value_type = dimensional_storage_t<T, Size>::value_type;
@@ -2984,6 +3034,24 @@ namespace dsga
 		requires Writable && Mutable && implicitly_convertible_to<U, T>
 		constexpr indexed_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
 		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+
+			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
+			{
+				set(other[Js]...);
+			}(std::make_index_sequence<Count>{});
+
+			return *this;
+		}
+
+		// assigning to rvalue ref still lets us modify what is pointed at
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && Mutable && implicitly_convertible_to<U, T>
+		constexpr indexed_view &operator =(const vector_base<W, U, Count, D> &other) && noexcept
+		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+
 			[&]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				set(other[Js]...);
@@ -2998,6 +3066,21 @@ namespace dsga
 		requires Writable && Mutable && implicitly_convertible_to<U, T> && (Count == 1)
 		constexpr indexed_view &operator =(U other) & noexcept
 		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+
+			set(other);
+
+			return *this;
+		}
+
+		// assigning to rvalue ref still lets us modify what is pointed at
+
+		template <dimensional_scalar U>
+		requires Writable && Mutable && implicitly_convertible_to<U, T> && (Count == 1)
+		constexpr indexed_view &operator =(U other) && noexcept
+		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+
 			set(other);
 
 			return *this;
@@ -3010,6 +3093,7 @@ namespace dsga
 		// this is extremely important and is only for indexed_vector of [Count == 1]
 		explicit(false) constexpr operator T() const noexcept requires (Count == 1)
 		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
 			return base[offsets[0]];
 		}
 
@@ -3017,20 +3101,25 @@ namespace dsga
 		requires std::convertible_to<T, U> && (Count == 1)
 		explicit constexpr operator U() const noexcept
 		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
 			return static_cast<U>(base[offsets[0]]);
 		}
 
-		constexpr indexed_view() noexcept = delete;
 		constexpr indexed_view(const indexed_view &) noexcept = default;
 		constexpr indexed_view(indexed_view &&) noexcept = default;
 		constexpr ~indexed_view() noexcept = default;
+
+		// don't want to automatically copy the underlying pointer
 		constexpr indexed_view &operator =(const indexed_view &) &noexcept = delete;
 		constexpr indexed_view &operator =(indexed_view &&) &noexcept = delete;
 
+		constexpr indexed_view() noexcept : base(nullptr)									{}
+		constexpr explicit indexed_view(const T *view_ptr) noexcept : base(view_ptr)		{}
 
-		explicit indexed_view(const T *view_ptr) noexcept : base(view_ptr)
+		// change the base pointer used for the storage
+		constexpr void reset(const T *view_ptr) noexcept
 		{
-			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+			base = view_ptr;
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
@@ -3038,6 +3127,8 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable && Mutable
 		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+
 			T *mbase = const_cast<T *>(base);
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
 			return mbase[offsets[static_cast<std::size_t>(index)]];
@@ -3049,14 +3140,23 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
 		{
 			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable && Mutable			{ return const_cast<T *>(base); }
+		[[nodiscard]] constexpr T *data() noexcept requires Writable && Mutable
+		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+			return const_cast<T *>(base);
+		}
 
 		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept							{ return base; }
+		[[nodiscard]] constexpr const T *data() const noexcept
+		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+			return base;
+		}
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept							{ return sequence_pack{}; }
@@ -3082,6 +3182,8 @@ namespace dsga
 		requires Writable && Mutable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
 		constexpr void set(Args ...args) noexcept
 		{
+			dsga_constexpr_assert(base != nullptr, "view pointer is nullptr");
+
 			// these Is are likely not sequential as they are in indexable order,
 			// and we are accessing the view storage directly. we are not using
 			// the indirection built into indexed_view::operator []() for this function.
@@ -4611,11 +4713,12 @@ namespace dsga
 		// defaulted functions
 		//
 
-		constexpr basic_view() noexcept = delete;
 		constexpr ~basic_view() noexcept = default;
 
 		constexpr basic_view(const basic_view &) noexcept = default;
 		constexpr basic_view(basic_view &&) noexcept = default;
+
+		// don't want to automatically copy the underlying pointer
 		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
 		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
 
@@ -4623,14 +4726,20 @@ namespace dsga
 		// constructors
 		//
 
-		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		constexpr basic_view() noexcept : base(nullptr)															{}
+		constexpr explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)								{}
+		constexpr explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)	{}
+
+		// change the base pointer used for the storage
+		constexpr void reset(T *view_ptr) noexcept
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
-		explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)
+		// change the base pointer used for the storage
+		constexpr void reset(const T *view_ptr) noexcept requires (!Mutable)
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
 		//
@@ -4645,9 +4754,29 @@ namespace dsga
 			return *this;
 		}
 
+		// assigning to rvalue ref still lets us modify what is pointed at
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && Mutable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) && noexcept
+		{
+			set(other[0]);
+			return *this;
+		}
+
 		template <typename U>
 		requires Writable && Mutable && implicitly_convertible_to<U, T>
 		constexpr basic_view &operator =(U value) & noexcept
+		{
+			set(value);
+			return *this;
+		}
+
+		// assigning to rvalue ref still lets us modify what is pointed at
+
+		template <typename U>
+		requires Writable && Mutable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(U value) && noexcept
 		{
 			set(value);
 			return *this;
@@ -4689,7 +4818,7 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept											{ return sequence_pack{}; }
 
-		constexpr void swap(basic_view &bv) noexcept requires Writable && Mutable						{ base.swap(bv.base); }
+		constexpr void swap(basic_view &bv) requires Writable && Mutable								{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable && Mutable						{ return base.begin(); }
@@ -4796,11 +4925,12 @@ namespace dsga
 		// defaulted functions
 		//
 
-		constexpr basic_view() noexcept = delete;
 		constexpr ~basic_view() noexcept = default;
 
 		constexpr basic_view(const basic_view &) noexcept = default;
 		constexpr basic_view(basic_view &&) noexcept = default;
+
+		// don't want to automatically copy the underlying pointer
 		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
 		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
 
@@ -4808,14 +4938,20 @@ namespace dsga
 		// constructors
 		//
 
-		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		constexpr basic_view() noexcept : base(nullptr)															{}
+		constexpr explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)								{}
+		constexpr explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)	{}
+
+		// change the base pointer used for the storage
+		constexpr void reset(T *view_ptr) noexcept
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
-		explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)
+		// change the base pointer used for the storage
+		constexpr void reset(const T *view_ptr) noexcept requires (!Mutable)
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
 		//
@@ -4825,6 +4961,16 @@ namespace dsga
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && Mutable && implicitly_convertible_to<U, T>
 		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			set(other[0], other[1]);
+			return *this;
+		}
+
+		// assigning to rvalue ref still lets us modify what is pointed at
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && Mutable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) && noexcept
 		{
 			set(other[0], other[1]);
 			return *this;
@@ -4849,7 +4995,7 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept											{ return sequence_pack{}; }
 
-		constexpr void swap(basic_view &bv) noexcept requires Writable && Mutable						{ base.swap(bv.base); }
+		constexpr void swap(basic_view &bv) requires Writable && Mutable								{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable && Mutable						{ return base.begin(); }
@@ -5049,11 +5195,12 @@ namespace dsga
 		// defaulted functions
 		//
 
-		constexpr basic_view() noexcept = delete;
 		constexpr ~basic_view() noexcept = default;
 
 		constexpr basic_view(const basic_view &) noexcept = default;
 		constexpr basic_view(basic_view &&) noexcept = default;
+
+		// don't want to automatically copy the underlying pointer
 		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
 		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
 
@@ -5061,14 +5208,20 @@ namespace dsga
 		// constructors
 		//
 
-		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		constexpr basic_view() noexcept : base(nullptr)															{}
+		constexpr explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)								{}
+		constexpr explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)	{}
+
+		// change the base pointer used for the storage
+		constexpr void reset(T *view_ptr) noexcept
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
-		explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)
+		// change the base pointer used for the storage
+		constexpr void reset(const T *view_ptr) noexcept requires (!Mutable)
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
 		//
@@ -5078,6 +5231,16 @@ namespace dsga
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && Mutable && implicitly_convertible_to<U, T>
 		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			set(other[0], other[1], other[2]);
+			return *this;
+		}
+
+		// assigning to rvalue ref still lets us modify what is pointed at
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && Mutable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) && noexcept
 		{
 			set(other[0], other[1], other[2]);
 			return *this;
@@ -5102,7 +5265,7 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept											{ return sequence_pack{}; }
 
-		constexpr void swap(basic_view &bv) noexcept requires Writable									{ base.swap(bv.base); }
+		constexpr void swap(basic_view &bv) requires Writable && Mutable								{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable && Mutable						{ return base.begin(); }
@@ -5522,11 +5685,12 @@ namespace dsga
 		// defaulted functions
 		//
 
-		constexpr basic_view() noexcept = delete;
 		constexpr ~basic_view() noexcept = default;
 
 		constexpr basic_view(const basic_view &) noexcept = default;
 		constexpr basic_view(basic_view &&) noexcept = default;
+
+		// don't want to automatically copy the underlying pointer
 		constexpr basic_view &operator =(const basic_view &) & noexcept = delete;
 		constexpr basic_view &operator =(basic_view &&) & noexcept = delete;
 
@@ -5534,14 +5698,20 @@ namespace dsga
 		// constructors
 		//
 
-		explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)
+		constexpr basic_view() noexcept : base(nullptr)															{}
+		constexpr explicit(false) basic_view(T *view_ptr) noexcept : base(view_ptr)								{}
+		constexpr explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)	{}
+
+		// change the base pointer used for the storage
+		constexpr void reset(T *view_ptr) noexcept
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
-		explicit(false) basic_view(const T *view_ptr) noexcept requires (!Mutable) : base(view_ptr)
+		// change the base pointer used for the storage
+		constexpr void reset(const T *view_ptr) noexcept requires (!Mutable)
 		{
-			dsga_constexpr_assert(view_ptr != nullptr, "view pointer is nullptr");
+			base.reset(view_ptr);
 		}
 
 		//
@@ -5551,6 +5721,16 @@ namespace dsga
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && Mutable && implicitly_convertible_to<U, T>
 		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) & noexcept
+		{
+			set(other[0], other[1], other[2], other[3]);
+			return *this;
+		}
+
+		// assigning to rvalue ref still lets us modify what is pointed at
+
+		template <bool W, dimensional_scalar U, typename D>
+		requires Writable && Mutable && implicitly_convertible_to<U, T>
+		constexpr basic_view &operator =(const vector_base<W, U, Count, D> &other) && noexcept
 		{
 			set(other[0], other[1], other[2], other[3]);
 			return *this;
@@ -5575,7 +5755,7 @@ namespace dsga
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept											{ return sequence_pack{}; }
 
-		constexpr void swap(basic_view &bv) noexcept requires Writable && Mutable						{ base.swap(bv.base); }
+		constexpr void swap(basic_view &bv) requires Writable && Mutable								{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr auto begin() noexcept requires Writable && Mutable						{ return base.begin(); }
@@ -5611,7 +5791,7 @@ namespace dsga
 
 	template <bool Mutable, dimensional_scalar T, std::size_t Size>
 	requires Mutable
-	constexpr void swap(basic_view<Mutable, T, Size> &lhs, basic_view<Mutable, T, Size> &rhs) noexcept
+	constexpr void swap(basic_view<Mutable, T, Size> &lhs, basic_view<Mutable, T, Size> &rhs)
 	{
 		lhs.swap(rhs);
 	}
@@ -8089,6 +8269,13 @@ namespace dsga
 			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
 		}
 
+		template <bool M1, floating_point_scalar T1, bool M2, floating_point_scalar T2>
+		[[nodiscard]] constexpr auto cross(const basic_view<M1, T1, 3> &a,
+										   const basic_view<M2, T2, 3> &b) noexcept
+		{
+			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
+		}
+
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto length(const vector_base<W, T, C, D> &x) noexcept
 		{
@@ -8174,11 +8361,11 @@ namespace dsga
 		//
 
 		//
-		// runtime swizzle function -- if 1 < number of indexes <= 4, returns a stand-alone basic_vector as opposed to
-		// an indexed_vector union data member. If number of indexes == 1, returns a scalar value for that indexed value.
-		// return value is *not* bound to the lifetime of the input argument, unlike how v.xyz is a member of v.
-		// It will throw if the index arguments are out of bounds (arg must be < C) or if number of index arguments are
-		// not in range 1 <= num args <= 4.
+		// runtime swizzle function -- if 1 < number of indexes <= 4, returns a stand-alone basic_vector
+		// as opposed to an indexed_vector union data member. If number of indexes == 1, returns a scalar
+		// value for that indexed value. return value is *not* bound to the lifetime of the input argument,
+		// unlike how v.xyz is a member of v. It will throw if the index arguments are out of bounds (index
+		// arguments must be < C) or if the number of index arguments are not in range 1 <= num args <= 4.
 		//
 		// Not in GLSL -- inspired by the Odin Programming Language.
 		//
@@ -8208,6 +8395,151 @@ namespace dsga
 
 			return basic_vector<T, sizeof...(Args)>{ v[static_cast<std::size_t>(Is)]... };
 		}
+
+		// 
+		// The slice() function gives you a contiguous view on a sub-range of the data object.
+		// It works for arguments of type basic_vector, basic_view, and vector_view. It returns
+		// a basic_view into the same data of the underlying vector/view. There is a template
+		// argument that tells how many of the vector/view elements are in the sub-range. The
+		// function also takes an offset argument on where in the vector/view to start the return
+		// sub-range. If the combination of the length of the new basic_view and the offset are
+		// illegal, i.e., they would lead to buffer overrun, then it will assert and throw an
+		// exception.
+		// 
+		// The returned basic_view holds a pointer to the underlying data. It therefore has a
+		// lifetime that depends on the vector/view argument. Make sure that the basic_view
+		// that is returned ends its lifetime or use before the vector/view argument's lifetime
+		// is over, otherwise it will have a dangling pointer.
+		//
+		// Not in GLSL
+		//
+
+		// basic_vector
+
+		// delete rvalue reference version -- we don't want to have a dangling pointer
+		template <std::size_t Length, dimensional_scalar T, std::size_t S>
+		auto slice(basic_vector<T, S> &&v, std::size_t offset) = delete;
+
+		// pass in a non-const vector
+		template <std::size_t Length, dimensional_scalar T, std::size_t S>
+		requires (Length <= S) && (0 < Length)
+		auto slice(basic_vector<T, S> &v, std::size_t offset)
+		{
+			bool length_valid = Length <= S;
+			bool offset_valid = offset < S;
+			bool length_and_offset_valid = (offset + Length) <= S;
+			dsga_constexpr_assert(length_valid, "Length is longer than vector length");
+			dsga_constexpr_assert(offset_valid, "offset is longer than end index of vector");
+			dsga_constexpr_assert(length_and_offset_valid, "Length + offset is longer than vector length");
+
+			if (!length_valid || !offset_valid || !length_and_offset_valid)
+				throw std::out_of_range("slice() Length with offset are out of range");
+
+			return basic_view<true, T, Length>(v.data() + offset);
+		}
+
+		// pass in a const vector, create a non-const vector that is internally const
+		template <std::size_t Length, dimensional_scalar T, std::size_t S>
+		requires (Length <= S) && (0 < Length)
+		auto slice(const basic_vector<T, S> &v, std::size_t offset)
+		{
+			bool length_valid = Length <= S;
+			bool offset_valid = offset < S;
+			bool length_and_offset_valid = (offset + Length) <= S;
+			dsga_constexpr_assert(length_valid, "Length is longer than vector length");
+			dsga_constexpr_assert(offset_valid, "offset is longer than end index of vector");
+			dsga_constexpr_assert(length_and_offset_valid, "Length + offset is longer than vector length");
+
+			if (!length_valid || !offset_valid || !length_and_offset_valid)
+				throw std::out_of_range("slice() Length with offset are out of range");
+
+			return basic_view<false, T, Length>(v.data() + offset);
+		}
+
+		// view_vector
+
+		// delete rvalue reference version -- we don't want to have a dangling pointer
+		template <std::size_t Length, dimensional_scalar T, std::size_t S>
+		auto slice(view_vector<T, S> &&v, std::size_t offset) = delete;
+
+		// pass in a non-const vector
+		template <std::size_t Length, dimensional_scalar T, std::size_t S>
+		requires (Length <= S) && (0 < Length)
+		auto slice(view_vector<T, S> &v, std::size_t offset)
+		{
+			bool length_valid = Length <= S;
+			bool offset_valid = offset < S;
+			bool length_and_offset_valid = (offset + Length) <= S;
+			dsga_constexpr_assert(length_valid, "Length is longer than vector length");
+			dsga_constexpr_assert(offset_valid, "offset is longer than end index of vector");
+			dsga_constexpr_assert(length_and_offset_valid, "Length + offset is longer than vector length");
+
+			if (!length_valid || !offset_valid || !length_and_offset_valid)
+				throw std::out_of_range("slice() Length with offset are out of range");
+
+			return basic_view<true, T, Length>(v.data() + offset);
+		}
+
+		// pass in a const vector, create a non-const vector that is internally const
+		template <std::size_t Length, dimensional_scalar T, std::size_t S>
+		requires (Length <= S) && (0 < Length)
+		auto slice(const view_vector<T, S> &v, std::size_t offset)
+		{
+			bool length_valid = Length <= S;
+			bool offset_valid = offset < S;
+			bool length_and_offset_valid = (offset + Length) <= S;
+			dsga_constexpr_assert(length_valid, "Length is longer than vector length");
+			dsga_constexpr_assert(offset_valid, "offset is longer than end index of vector");
+			dsga_constexpr_assert(length_and_offset_valid, "Length + offset is longer than vector length");
+
+			if (!length_valid || !offset_valid || !length_and_offset_valid)
+				throw std::out_of_range("slice() Length with offset are out of range");
+
+			return basic_view<false, T, Length>(v.data() + offset);
+		}
+
+		// basic_view
+
+		// delete rvalue reference version -- we don't want to have a dangling pointer
+		template <std::size_t Length, bool M, dimensional_scalar T, std::size_t S>
+		auto slice(basic_view<M, T, S> &&v, std::size_t offset) = delete;
+
+		// pass in a non-const view, but it might be internally const depending on M
+		template <std::size_t Length, bool M, dimensional_scalar T, std::size_t S>
+		requires (Length <= S) && (0 < Length)
+		auto slice(basic_view<M, T, S> &v, std::size_t offset)
+		{
+			bool length_valid = Length <= S;
+			bool offset_valid = offset < S;
+			bool length_and_offset_valid = (offset + Length) <= S;
+			dsga_constexpr_assert(length_valid, "Length is longer than view length");
+			dsga_constexpr_assert(offset_valid, "offset is longer than end index of view");
+			dsga_constexpr_assert(length_and_offset_valid, "Length + offset is longer than view length");
+
+			if (!length_valid || !offset_valid || !length_and_offset_valid)
+				throw std::out_of_range("slice() Length with offset are out of range");
+
+			return basic_view<M, T, Length>(v.data() + offset);
+		}
+
+		// pass in a const view, create a non-const view that is internally const
+		template <std::size_t Length, bool M, dimensional_scalar T, std::size_t S>
+		requires (Length <= S) && (0 < Length)
+		auto slice(const basic_view<M, T, S> &v, std::size_t offset)
+		{
+			bool length_valid = Length <= S;
+			bool offset_valid = offset < S;
+			bool length_and_offset_valid = (offset + Length) <= S;
+			dsga_constexpr_assert(length_valid, "Length is longer than view length");
+			dsga_constexpr_assert(offset_valid, "offset is longer than end index of view");
+			dsga_constexpr_assert(length_and_offset_valid, "Length + offset is longer than view length");
+
+			if (!length_valid || !offset_valid || !length_and_offset_valid)
+				throw std::out_of_range("slice() Length with offset are out of range");
+
+			return basic_view<false, T, Length>(v.data() + offset);
+		}
+
 	}
 
 	//
@@ -8325,6 +8657,25 @@ namespace dsga
 		//
 		// constructors
 		//
+
+		// import data from a pointer -- constructor will throw if input is nullptr.
+		// pointer better point to data that is at least R*C elements
+		template <floating_point_scalar U>
+		explicit(false) constexpr basic_matrix(const U *input_data)
+			: columns{}
+		{
+			if (nullptr == input_data)
+				throw std::invalid_argument("pointer can't be null");
+
+			[&]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			{
+				(([&]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
+				{
+					constexpr std::size_t Col = Is;
+					columns[Col].set(static_cast<T>(*(Col * R + Js + input_data))...);
+				}(std::make_index_sequence<R>{})), ...);
+			}(std::make_index_sequence<C>{});
+		}
 
 		// variadic constructor of scalar and vector arguments
 		template <typename U, typename ... Args>
@@ -9070,56 +9421,56 @@ namespace dsga
 	using dview4 = basic_view<true, double, 4>;
 
 	//
-	// speicalized constant views
+	// specialized constant views
 	//
 
 	// const boolean views
-	using const_bview1 = basic_view<false, bool, 1>;
-	using const_bview2 = basic_view<false, bool, 2>;
-	using const_bview3 = basic_view<false, bool, 3>;
-	using const_bview4 = basic_view<false, bool, 4>;
+	using cbview1 = basic_view<false, bool, 1>;
+	using cbview2 = basic_view<false, bool, 2>;
+	using cbview3 = basic_view<false, bool, 3>;
+	using cbview4 = basic_view<false, bool, 4>;
 
 	// const int views
-	using const_iview1 = basic_view<false, int, 1>;
-	using const_iview2 = basic_view<false, int, 2>;
-	using const_iview3 = basic_view<false, int, 3>;
-	using const_iview4 = basic_view<false, int, 4>;
+	using ciview1 = basic_view<false, int, 1>;
+	using ciview2 = basic_view<false, int, 2>;
+	using ciview3 = basic_view<false, int, 3>;
+	using ciview4 = basic_view<false, int, 4>;
 
 	// const unsigned int views
-	using const_uview1 = basic_view<false, unsigned, 1>;
-	using const_uview2 = basic_view<false, unsigned, 2>;
-	using const_uview3 = basic_view<false, unsigned, 3>;
-	using const_uview4 = basic_view<false, unsigned, 4>;
+	using cuview1 = basic_view<false, unsigned, 1>;
+	using cuview2 = basic_view<false, unsigned, 2>;
+	using cuview3 = basic_view<false, unsigned, 3>;
+	using cuview4 = basic_view<false, unsigned, 4>;
 
 	// const long long views
-	using const_llview1 = basic_view<false, long long, 1>;
-	using const_llview2 = basic_view<false, long long, 2>;
-	using const_llview3 = basic_view<false, long long, 3>;
-	using const_llview4 = basic_view<false, long long, 4>;
+	using cllview1 = basic_view<false, long long, 1>;
+	using cllview2 = basic_view<false, long long, 2>;
+	using cllview3 = basic_view<false, long long, 3>;
+	using cllview4 = basic_view<false, long long, 4>;
 
 	// const unsigned long long views
-	using const_ullview1 = basic_view<false, unsigned long long, 1>;
-	using const_ullview2 = basic_view<false, unsigned long long, 2>;
-	using const_ullview3 = basic_view<false, unsigned long long, 3>;
-	using const_ullview4 = basic_view<false, unsigned long long, 4>;
+	using cullview1 = basic_view<false, unsigned long long, 1>;
+	using cullview2 = basic_view<false, unsigned long long, 2>;
+	using cullview3 = basic_view<false, unsigned long long, 3>;
+	using cullview4 = basic_view<false, unsigned long long, 4>;
 
 	// const float views with out an 'f' prefix -- this is from glsl
-	using const_view1 = basic_view<false, float, 1>;
-	using const_view2 = basic_view<false, float, 2>;
-	using const_view3 = basic_view<false, float, 3>;
-	using const_view4 = basic_view<false, float, 4>;
+	using cview1 = basic_view<false, float, 1>;
+	using cview2 = basic_view<false, float, 2>;
+	using cview3 = basic_view<false, float, 3>;
+	using cview4 = basic_view<false, float, 4>;
 
 	// also const float views, but using the same naming convention as the other views do
-	using const_fview1 = basic_view<false, float, 1>;
-	using const_fview2 = basic_view<false, float, 2>;
-	using const_fview3 = basic_view<false, float, 3>;
-	using const_fview4 = basic_view<false, float, 4>;
+	using cfview1 = basic_view<false, float, 1>;
+	using cfview2 = basic_view<false, float, 2>;
+	using cfview3 = basic_view<false, float, 3>;
+	using cfview4 = basic_view<false, float, 4>;
 
 	// const double views
-	using const_dview1 = basic_view<false, double, 1>;
-	using const_dview2 = basic_view<false, double, 2>;
-	using const_dview3 = basic_view<false, double, 3>;
-	using const_dview4 = basic_view<false, double, 4>;
+	using cdview1 = basic_view<false, double, 1>;
+	using cdview2 = basic_view<false, double, 2>;
+	using cdview3 = basic_view<false, double, 3>;
+	using cdview4 = basic_view<false, double, 4>;
 
 	//
 	// bring the vector and matrix free functions into the dsga namespace

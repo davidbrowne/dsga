@@ -70,6 +70,7 @@
 		+ {static} offsets : std::array<T, Size>
 		+ basic_view(T *)
 		+ basic_view(const T *)
+		+ reset()
 		+ set()
 		+ operator[]()
 		+ operator=()
@@ -103,9 +104,10 @@
 	}
 	struct view_wrapper<Mutable, T, Size>
 	{
-		+ store : const T const *
+		+ store : const T *
 		+ {static} offsets : std::array<T, Size>
 		+ view_wrapper(const T *)
+		+ reset()
 		+ set()
 		+ operator[]()
 		+ data()
@@ -133,9 +135,10 @@
 	}
 	struct indexed_view<Mutable, T, Size, Count, ...Is>
 	{
-		+ base : const T const *
+		+ base : const T *
 		+ {static} offsets : std::array<T, Count>
 		+ indexed_view(const T *)
+		+ reset()
 		+ set()
 		+ operator[]()
 		+ operator=()
@@ -147,6 +150,7 @@
 	{
 		+ columns : std::array<basic_vector<T, Rows>, Cols>
 		+ row()
+		+ basic_matrix(const U *)
 		+ operator[]()
 		+ operator=()
 		+ data()
