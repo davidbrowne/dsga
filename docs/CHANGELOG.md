@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.1.4
+* Moved slice() functions to their own example file.
+
 ### v2.1.3
 * Added ability to change the underlying data pointer of a ```basic_view```, which also affects ```view_wrapper``` and ```indexed_view```. This will lead to asserts in various functions when a view is wrapping the null pointer.
 * When using ```swap``` with views that have aliasing overlap, e.g., ```view_wrapper``` or ```basic_view```, an exception will be thrown.

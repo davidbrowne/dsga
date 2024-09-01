@@ -179,6 +179,7 @@
     <ClInclude Include="..\examples\format_output.hxx" />
     <ClInclude Include="..\examples\hash.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
+    <ClInclude Include="..\examples\slice.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
     <ClInclude Include="..\examples\tolerance.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />

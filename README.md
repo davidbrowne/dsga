@@ -6,9 +6,12 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.1.3
+v2.1.4
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.1.4
+    * Moved slice() functions to their own example file.
+
 * v2.1.3
     * Added ability to change the underlying data pointer of a ```basic_view```, which also affects ```view_wrapper``` and ```indexed_view```. Much refactoring was required for this, including having to allow the null pointer as the underlying data pointer (all functions that require use of the pointer will assert if the pointer is null).
     * Added a new constructor to ```basic_matrix``` that takes a raw pointer to an array of data. The constructor will throw if it is passed nullptr. The constructor does not wrap the pointer, rather it copies the array data into ```basic_matrix```'s own storage.
@@ -19,11 +22,11 @@ v2.1.3
 * v2.1.1
     * Further experimental additions: adding a boolean ```Mutable``` template parameter to the classes for when they can be logically "const" (false means "const", true means "non const"), for both vectors (currently Mutable == true for the vectors) but mostly for the vector views that wrap an external storage pointer (const pointer vs non-const pointer). This is different from ```Writable```, which is used to determine if an indexed vector/indexed view is able to be an lvalue due to swizzle restrictions.
 * v2.1.0
-    * MAJOR EXPERIMENTAL ADDITION: there are now vector types, ```basic_view``` and ```indexed_view``` (and similarly ```view_wrapper```), that don't own their data. They are meant to work on a contiguous external data source, e.g., a slice of an array, instead of internal data storage, e.g., the storage in a ```basic_vector```. ```view_vector``` is similar to ```basic_vector```, but it is a ```basic_view``` with an internal array for its data source.
+    * MAJOR EXPERIMENTAL ADDITION: there are now vector types, ```basic_view``` and ```indexed_view``` (and similarly ```view_wrapper```), that don't own their data. They are meant to work on a contiguous external data source, e.g., a slice of an array, instead of internal data storage, like the storage in a ```basic_vector```. ```view_vector``` is similar to ```basic_vector```, but it is a ```basic_view``` with an internal array for its data source.
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2022 v17.10.3
+* Microsoft Visual Studio 2022 v17.11.2
 * gcc v14
 * clang v18.1.8
 * icx v2024.1.0
@@ -41,6 +44,7 @@ v2.1.3
 * [General documentation](docs/DOCUMENTATION.md)
 * [Detailed API documentation](docs/API.md)
 * [```dsga``` Implementation Details](docs/DETAILS.md)
+* [Vector and Matrix Types](#types)
 * [Installation](#installation)
 * [Status](#status)
 * [Usage and Documentation](#usage)
@@ -404,6 +408,99 @@ To make the vectors and matrices as useful as possible in a C++ context, various
     * ```max```
     * ```sum```
 
+## Types
+The high level structs that are used are for vector types and matrix types.
+
+### Vector Types
+
+There are 3 primary vector types:
+* Vectors, which are of type ```basic_vector```, and they have their own internal storage.
+* Views, which are of type ```basic_view```, and they wrap a pointer from some external storage. They have the same interface as vectors.
+* Constant views, which are just like the views, but they are internally const or immutable. This is for wrapping an external const pointer, or a non-const pointer that you want to treat as being internally const or immutable. They have the same interface as vectors.
+
+Each of the vector types have between 1 and 4 elements, inclusive. For most situations, when dealing with a length 1 vector type, we treat it as a scalar. This is true for both the vector types and the vector swizzle types.
+
+Below are the aliases for the three primary vector types:
+
+| Size/Element Type | Vector | View | Const View |
+|:---:|:---:|:---:|:---:|
+| 1 bool | bscal | bview1 | cbview1 |
+| 2 bool | bvec2 | bview2 | cbview2 |
+| 3 bool | bvec3 | bview3 | cbview3 |
+| 4 bool | bvec4 | bview4 | cbview4 |
+| 1 int | iscal | iview1 | ciview1 |
+| 2 int | ivec2 | iview2 | ciview2 |
+| 3 int | ivec3 | iview3 | ciview3 |
+| 4 int | ivec4 | iview4 | ciview4 |
+| 1 unsigned int | uscal | uview1 | cuview1 |
+| 2 unsigned int | uvec2 | uview2 | cuview2 |
+| 3 unsigned int | uvec3 | uview3 | cuview3 |
+| 4 unsigned int | uvec4 | uview4 | cuview4 |
+| 1 long long | llscal | llview1 | cllview1 |
+| 2 long long | llvec2 | llview2 | cllview2 |
+| 3 long long | llvec3 | llview3 | cllview3 |
+| 4 long long | llvec4 | llview4 | cllview4 |
+| 1 unsigned long long | ullscal | ullview1 | cullview1 |
+| 2 unsigned long long | ullvec2 | ullview2 | cullview2 |
+| 3 unsigned long long | ullvec3 | ullview3 | cullview3 |
+| 4 unsigned long long | ullvec4 | ullview4 | cullview4 |
+| 1 float | scal | view1 | cview1 |
+| 2 float | vec2 | view2 | cview2 |
+| 3 float | vec3 | view3 | cview3 |
+| 4 float | vec4 | view4 | cview4 |
+| 1 float | fscal | fview1 | cfview1 |
+| 2 float | fvec2 | fview2 | cfview2 |
+| 3 float | fvec3 | fview3 | cfview3 |
+| 4 float | fvec4 | fview4 | cfview4 |
+| 1 double | dscal | dview1 | cdview1 |
+| 2 double | dvec2 | dview2 | cdview2 |
+| 3 double | dvec3 | dview3 | cdview3 |
+| 4 double | dvec4 | dview4 | cdview4 |
+
+There are two other types that are returned when swizzling a vector type:
+* Vectors have swizzle types of struct ```indexed_vector```. They have most of the interface of a vector. They share the memory of the vector that they came from.
+* Views have swizzle types of struct ```indexed_view```. They have most of the interface of a vector. They share the external pointer of the view that they came from.
+
+You can mix and match the primary vector types and the swizzle vector types in expressions. They all inherit from the same base class, ```vector_base```.
+
+You should not try to directly create instances of these helper struct types. Use them like you would use a vector or view.
+
+### Matrix Types
+The matrix types have elements of type float or double. Each of their dimensions is between 2 to 4, inclusive.
+
+Recall that for glsl matrices, the numbers represent ***columns X rows***, as opposed to the mathemetical convention of ***rows X columns***.
+
+| Size/Element Type | Matrix |
+|:---:|:---:|
+| 2x2 float | mat2x2 |
+| 2x3 float | mat2x3 |
+| 2x4 float | mat2x4 |
+| 3x2 float | mat3x2 |
+| 3x3 float | mat3x3 |
+| 3x4 float | mat3x4 |
+| 4x2 float | mat4x2 |
+| 4x3 float | mat4x3 |
+| 4x4 float | mat4x4 |
+| 2x2 float | mat2 |
+| 3x3 float | mat3 |
+| 4x4 float | mat4 |
+| 2x2 double | dmat2x2 |
+| 2x3 double | dmat2x3 |
+| 2x4 double | dmat2x4 |
+| 3x2 double | dmat3x2 |
+| 3x3 double | dmat3x3 |
+| 3x4 double | dmat3x4 |
+| 4x2 double | dmat4x2 |
+| 4x3 double | dmat4x3 |
+| 4x4 double | dmat4x4 |
+| 2x2 double | dmat2 |
+| 3x3 double | dmat3 |
+| 4x4 double | dmat4 |
+
+
+
+
+
 ## Installation
 
 This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). Things are defined in the ```dsga``` namespace. The types provided by this library can be seen summarized in the [documentation](docs/DOCUMENTATION.md), [using directives](docs/DOCUMENTATION.md#types-and-functions).
@@ -418,9 +515,9 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.1.3`
+Current version: `v2.1.4`
 
-* Everything major has some tests, but code coverage is not 100%.
+* Everything major has some tests (except for the recent view structs), but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
 * [Change Log](docs/CHANGELOG.md)
 
@@ -447,7 +544,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.10.3**
+* **MSVC 2022 - v17.11.2**
 
 ```
 [doctest] doctest version is "2.4.11"

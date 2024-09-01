@@ -40,6 +40,7 @@
 				<Size>$T3</Size>
 				<ValuePointer>store</ValuePointer>
 			</ArrayItems>
+			<Item Name="data_ptr">(const void *)store</Item>
 		</Expand>
 	</Type>
 
@@ -217,6 +218,7 @@
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
+			<Item Name="data_ptr">(void *)base</Item>
 		</Expand>
 	</Type>
 
@@ -260,6 +262,7 @@
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
+			<Item Name="data_ptr">(void *)base</Item>
 		</Expand>
 	</Type>
 
@@ -305,6 +308,7 @@
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
+			<Item Name="data_ptr">(void *)base</Item>
 		</Expand>
 	</Type>
 
@@ -352,6 +356,7 @@
 				</Expand>
 			</Synthetic>
 			<Item Name="writable">Writable</Item>
+			<Item Name="data_ptr">(void *)base</Item>
 		</Expand>
 	</Type>
 
