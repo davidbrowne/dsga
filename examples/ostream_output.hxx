@@ -14,14 +14,15 @@
 template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived>
 inline std::ostream &operator<<(std::ostream &o, const dsga::vector_base<Writable, T, Count, Derived> &v)
 {
+	const Derived &derived = v.as_derived();
 	if constexpr (std::same_as<bool, T>)
 	{
 		o << std::boolalpha;
 	}
 
-	o << "[" << v[0];
-	for (int i = 1; i < v.length(); ++i)
-		o << ", " << v[i];
+	o << "[" << derived[0];
+	for (int i = 1; i < derived.length(); ++i)
+		o << ", " << derived[i];
 	return o << "]";
 }
 
@@ -41,6 +42,20 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::basic_vector<T, Siz
 
 template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 inline std::ostream &operator<<(std::ostream &o, const dsga::indexed_vector<T, Size, Count, Is...> &v)
+{
+	if constexpr (std::same_as<bool, T>)
+	{
+		o << std::boolalpha;
+	}
+
+	o << "[" << v[0];
+	for (int i = 1; i < v.length(); ++i)
+		o << ", " << v[i];
+	return o << "]";
+}
+
+template <dsga::dimensional_scalar T, std::size_t Size>
+inline std::ostream &operator<<(std::ostream &o, const dsga::storage_wrapper<T, Size> &v)
 {
 	if constexpr (std::same_as<bool, T>)
 	{

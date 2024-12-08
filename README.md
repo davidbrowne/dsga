@@ -6,9 +6,11 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.0.5
+v2.2.0
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.0
+    * Reverted major changes between v2.0.5 and v2.1.4, so we no longer have the view structs that wrap a pointer. Wrapping a pointer turned the data structures from owning to non-owning for the view structs, but we want the vector and matrix structs to be owning. The point of the view experiment was built on lack of insight on the nature of owning vs. non-owning and what this library was trying to achieve.
 * v2.0.5
     * Fixed wrong matrix type (reversed dimensions) being returned from ```outerProduct()```.
 * v2.0.4
@@ -22,7 +24,14 @@ v2.0.5
 * v2.0.1
     * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
 
-## Minimum Version of Tested Compilers
+## Tested Compilers
+### Regularly Tested
+* Microsoft Visual Studio 2022 v17.12.3
+* gcc v14.2.0
+* clang v19.1.5
+* icx v2024.1.0
+
+### Minimum Version
 * Microsoft Visual Studio 2022 v17.x
 * gcc v11.4
 * clang v16.0.6
@@ -98,7 +107,7 @@ constexpr auto project_to_line2(const dsga::dvec3 &point,
 #if LINEAR_INTERPOLATE
 
 // cubic bezier linear interpolation, one ordinate at a time, e.g., x, y, z, or w
-// very slow implementation, but illustrates the library
+// very slow implementation (de Casteljau algorithm), but illustrates the library
 constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control_points, float t) noexcept
 {
     auto quadratic_control_points = dsga::mix(cubic_control_points.xyz, cubic_control_points.yzw, t);
@@ -108,7 +117,7 @@ constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control
 
 #else
 
-// ~10-25x faster
+// ~10-25x faster - Bernstein polynomials
 constexpr auto single_ordinate_cubic_bezier_eval(const dsga::vec4 &cubic_control_points, T t) noexcept
 {
     auto t_complement = T(1) - t;
@@ -205,7 +214,7 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 // cross product
 //
 
-// arguments are of the vector base class type, and this function will be used if any passed argument is of type indexed_vector
+// arguments are of the vector_base class type, and this function will be used if any passed argument is of type indexed_vector
 template <bool W1, dsga::floating_point_scalar T1, typename D1, bool W2, dsga::floating_point_scalar T2, typename D2>
 [[nodiscard]] constexpr auto cross(const dsga::vector_base<W1, T1, 3, D1> &a,
                                    const dsga::vector_base<W2, T2, 3, D2> &b) noexcept
@@ -345,7 +354,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.0.5`
+Current version: `v2.2.0`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
@@ -374,7 +383,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.10.0**
+* **MSVC 2022 - v17.12.3**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -385,7 +394,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 13.2.0** on Windows, [MSYS2](https://www.msys2.org/) distribution:
+* **gcc 14.2.0** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -396,7 +405,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 18.1.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.6):
+* **clang 19.1.5** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.6):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -424,7 +433,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 ### Ubuntu 24.04 LTS running in WSL2 for Windows 11
 
-* **gcc 14.0.1**
+* **gcc 14.2.0**
 
 ```
 [doctest] doctest version is "2.4.11"

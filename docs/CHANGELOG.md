@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.2.0
+* Reverted major changes between v2.0.5 and v2.1.4, so we no longer have the view structs that wrap a pointer. Wrapping a pointer turned the data structures from owning to non-owning for the view structs, but we want the vector and matrix structs to be owning. The point of the view experiment was built on lack of insight on the nature of owning vs. non-owning and what this library was trying to achieve.
+
 ###  Ancillary Changes
 * Updated/refacatored some examples.
 * Minor README refactoring.

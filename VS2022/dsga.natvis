@@ -39,6 +39,18 @@
 		</Expand>
 	</Type>
 
+	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
+		<DisplayString Condition="$T2 == 2">[{columns[0]}, {columns[1]}]</DisplayString>
+		<DisplayString Condition="$T2 == 3">[{columns[0]}, {columns[1]}, {columns[2]}]</DisplayString>
+		<DisplayString Condition="$T2 == 4">[{columns[0]}, {columns[1]}, {columns[2]}, {columns[3]}]</DisplayString>
+		<Expand>
+			<Synthetic Name="values">
+				<DisplayString>{{ columns = {$T2}, rows = {$T3} }}</DisplayString>
+			</Synthetic>
+			<ExpandedItem>columns</ExpandedItem>
+		</Expand>
+	</Type>
+
 	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>[{base[$T4],g}]</DisplayString>
 		<Expand HideRawView="true">
@@ -153,7 +165,7 @@
 		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != 1">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
@@ -166,7 +178,7 @@
 		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != 2">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
@@ -180,7 +192,7 @@
 		<DisplayString Condition="mapper_index == 3">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != 3">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>
@@ -195,7 +207,7 @@
 		<DisplayString Condition="mapper_index == 4">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
-			<Item Name="offset" Condition="mapper_index != 4">mapper_index</Item>
+			<Item Name="offset" Condition="mapper_index != $T3">mapper_index</Item>
 			<Item Name="base">*mapper_ptr</Item>
 			<Item Name="[Raw Index]">mapper_index</Item>
 		</Expand>

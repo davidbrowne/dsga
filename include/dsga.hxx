@@ -95,8 +95,8 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 // version info
 
 constexpr inline int DSGA_MAJOR_VERSION = 2;
-constexpr inline int DSGA_MINOR_VERSION = 0;
-constexpr inline int DSGA_PATCH_VERSION = 5;
+constexpr inline int DSGA_MINOR_VERSION = 2;
+constexpr inline int DSGA_PATCH_VERSION = 0;
 
 namespace dsga
 {
@@ -1759,12 +1759,13 @@ namespace dsga
 	// this struct is an aggregate
 	//
 
-	template <dimensional_scalar T, std::size_t Size>
-	requires dimensional_storage<T, Size>
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
 	struct storage_wrapper
 	{
 		// number of indexable elements
-		static constexpr std::size_t Count = Size;
+		static constexpr std::size_t Size = S;
+		static constexpr std::size_t Count = S;
 
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
@@ -1844,21 +1845,21 @@ namespace dsga
 		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
 	};
 
-	template <dimensional_scalar T, std::size_t Size>
-	constexpr void swap(storage_wrapper<T, Size> &lhs, storage_wrapper<T, Size> &rhs) noexcept
+	template <dimensional_scalar T, std::size_t S>
+	constexpr void swap(storage_wrapper<T, S> &lhs, storage_wrapper<T, S> &rhs) noexcept
 	{
 		lhs.swap(rhs);
 	}
 
-	template <dimensional_scalar T1, std::size_t C, dimensional_scalar T2>
+	template <dimensional_scalar T1, std::size_t S, dimensional_scalar T2>
 	requires implicitly_convertible_to<T2, T1>
-	constexpr bool operator ==(const storage_wrapper<T1, C> &first,
-							   const storage_wrapper<T2, C> &second) noexcept
+	constexpr bool operator ==(const storage_wrapper<T1, S> &first,
+							   const storage_wrapper<T2, S> &second) noexcept
 	{
 		return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
 			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
-		}(std::make_index_sequence<C>{});
+		}(std::make_index_sequence<S>{});
 	}
 
 	//
@@ -1868,7 +1869,6 @@ namespace dsga
 	template <dimensional_scalar T, dimensional_scalar ...U>
 	storage_wrapper(T, U...) -> storage_wrapper<T, 1 + sizeof...(U)>;
 
-	// basic_vector will act as the primary vector class in this library.
 	//
 	// T is the type of the elements stored in the vector/storage
 	// Size is number of elements referencable in vector/storage
@@ -1878,10 +1878,10 @@ namespace dsga
 	// template parameters:
 	//
 	//		T - the scalar type stored
-	//		Size - the number of actual elements in storage
+	//		S - the number of actual elements in storage
 	//
-	template <dimensional_scalar T, std::size_t Size>
-	requires dimensional_storage<T, Size>
+	template <dimensional_scalar T, std::size_t S>
+	requires dimensional_storage<T, S>
 	struct basic_vector;
 
 	//
@@ -1913,6 +1913,10 @@ namespace dsga
 		// CRTP access to Derived class
 		[[nodiscard]] constexpr Derived &as_derived() noexcept requires Writable	{ return static_cast<Derived &>(*this); }
 		[[nodiscard]] constexpr const Derived &as_derived() const noexcept			{ return static_cast<const Derived &>(*this); }
+
+		// for debugging and testing
+		[[nodiscard]] constexpr auto &as_base() noexcept requires Writable					{ return *this; }
+		[[nodiscard]] constexpr const auto &as_base() const noexcept						{ return *this; }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
@@ -2068,11 +2072,12 @@ namespace dsga
 	};
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
+	// both indexed_vector and basic_vector have their own storage (linked via anonymous union and common initial sequence).
 	//
 	// T is the type of the elements stored in the underlying storage
 	// Size relates to the number of elements in the underlying storage, which informs the values the Is can hold
 	// Count is the number of elements accessible in swizzle -- often works alongside with basic_vector's Size
-	// Is... are the number of swizzlable values available -- there are Count of them, and their values are in the range:  0 <= Indexes < Size
+	// Is... are the number of swizzlable values available -- there are Count of them, and their values are in the range:  0 <= Is < Size
 
 	// we want indexed_vector (vector swizzles) to have length from 1 to 4 (1 is just a sneaky type of T swizzle) in order
 	// to work with the basic_vector which also has these lengths. The number of indexes is the same as the Count, between 1 and 4.
@@ -2091,9 +2096,8 @@ namespace dsga
 	struct indexed_vector;
 
 	//
-	// random-access iterators for indexed_vector so it can participate in range-for loop amongst other things.
-	// make sure that it doesn't out-live it's indexed_vector or there will be
-	// a dangling pointer.
+	// random-access iterators for indexed_vector so they can participate in range-for loop amongst other things.
+	// make sure that it doesn't out-live it's indexed_vector or there will be a dangling pointer.
 	//
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
@@ -2109,12 +2113,12 @@ namespace dsga
 		using reference = const T &;
 
 		// range of valid values for mapper_index
-		constexpr static int begin_index = 0;
-		constexpr static int end_index = Count;
+		constexpr static std::ptrdiff_t begin_index = 0;
+		constexpr static std::ptrdiff_t end_index = Count;
 
 		// the data
 		const indexed_vector<T, Size, Count, Is ...> *mapper_ptr;
-		int mapper_index;
+		std::ptrdiff_t mapper_index;
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
@@ -2366,6 +2370,8 @@ namespace dsga
 		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
 		static constexpr bool Writable = writable_swizzle<Size, Count, Is...>;
 
+		using Derived = indexed_vector<T, Size, Count, Is...>;
+
 		//
 		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
 		// currently unused because operator[] does this logically for us.
@@ -2614,13 +2620,13 @@ namespace dsga
 
 		// create a tuple from a vector
 
-		template <dimensional_scalar T, std::size_t C>
-		constexpr auto to_tuple(const basic_vector<T, C> &arg) noexcept
+		template <dimensional_scalar T, std::size_t S>
+		constexpr auto to_tuple(const basic_vector<T, S> &arg) noexcept
 		{
 			return [&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return std::tuple(arg[Is]...);
-			}(std::make_index_sequence<C>{});
+			}(std::make_index_sequence<S>{});
 		}
 
 		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
@@ -2669,9 +2675,9 @@ namespace dsga
 		{
 		};
 
-		template <dimensional_scalar U, std::size_t C, floating_point_scalar T>
+		template <dimensional_scalar U, std::size_t S, floating_point_scalar T>
 		requires std::convertible_to<U, T>
-		struct valid_matrix_component<basic_vector<U, C>, T> : std::true_type
+		struct valid_matrix_component<basic_vector<U, S>, T> : std::true_type
 		{
 		};
 
@@ -6276,11 +6282,11 @@ namespace dsga
 		//
 
 		//
-		// runtime swizzle function -- if 1 < number of indexes <= 4, returns a stand-alone basic_vector as opposed to
-		// an indexed_vector union data member. If number of indexes == 1, returns a scalar value for that indexed value.
-		// return value is *not* bound to the lifetime of the input argument, unlike how v.xyz is a member of v.
-		// It will throw if the index arguments are out of bounds (arg must be < C) or if number of index arguments are
-		// not in range 1 <= num args <= 4.
+		// runtime swizzle function -- if 1 < number of indexes <= 4, returns a stand-alone basic_vector
+		// as opposed to an indexed_vector union data member. If number of indexes == 1, returns a scalar
+		// value for that indexed value. return value is *not* bound to the lifetime of the input argument,
+		// unlike how v.xyz is a member of v. It will throw if the index arguments are out of bounds (index
+		// arguments must be < C) or if the number of index arguments are not in range 1 <= num args <= 4.
 		//
 		// Not in GLSL -- inspired by the Odin Programming Language.
 		//

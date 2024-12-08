@@ -61,7 +61,7 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 template <dsga::dimensional_scalar T, std::size_t Size>
 inline std::ostream &operator<<(std::ostream &o, const dsga::basic_vector<T, Size> &v)
 {
-	o << v[0];
+	o << std::scientific << v[0];
 	for (int i = 1; i < v.length(); ++i)
 		o << " " << std::scientific << v[i];
 	return o;

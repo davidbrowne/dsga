@@ -180,7 +180,9 @@
     <ClInclude Include="..\examples\hash.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
+    <ClInclude Include="..\examples\stl.hxx" />
     <ClInclude Include="..\examples\tolerance.hxx" />
+    <ClInclude Include="..\examples\valarray_convert.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />
   </ItemGroup>
   <ItemGroup>
@@ -207,6 +209,7 @@
     <ClCompile Include="..\tests\function_test.cxx" />
     <ClCompile Include="..\tests\operator_test.cxx" />
     <ClCompile Include="..\tests\swizzle_test.cxx" />
+    <ClCompile Include="..\tests\traits_test.cxx" />
     <ClCompile Include="..\tests\utility_test.cxx" />
   </ItemGroup>
   <ItemGroup>

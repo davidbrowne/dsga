@@ -7,7 +7,7 @@
 		+ {abstract} operator[]()
 		+ {abstract} data()
 		+ {abstract} sequence()
-		+ {abstract} iterator functions()
+		+ {abstract} iterator access()
 	}
 	note left of "CRTP duck type"
 		Conceptual interface, not real :
@@ -19,10 +19,11 @@
 		+ CRTP operator[]()
 		+ CRTP data()
 		+ CRTP sequence()
-		+ CRTP iterator functions()
+		+ CRTP iterator access()
 		+ length()
 		+ size()
 		+ as_derived()
+		+ as_base()
 		+ apply()
 		+ query()
 		+ shift()
@@ -31,10 +32,20 @@
 		+ max()
 		+ sum()
 	}
+	struct indexed_vector_const_iterator<T, Size, Count, ...Is>
+	{
+		+ mapper_ptr : const indexed_vector<T, Size, Count, Is ...> *
+		+ mapper_index : std::ptrdiff_t
+		+ iterator functions()
+	}
+	struct indexed_vector_iterator<T, Size, Count, ...Is>
+	{
+		+ iterator functions()
+	}
 	struct basic_vector<T, Size>
 	{
 		+ union
-		+ {static} offsets : std::array<std::size_t, Size>
+		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
 		+ operator=()
@@ -51,13 +62,12 @@
 	struct storage_wrapper<T, Size>
 	{
 		+ store : std::array<T, Size>
-		+ {static} offsets : std::array<std::size_t, Size>
+		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
-		+ operator=()
 		+ data()
 		+ sequence()
-		+ iterator functions()
+		+ iterator access()
 		+ length()
 		+ size()
 		+ swap()
@@ -65,13 +75,13 @@
 	struct indexed_vector<T, Size, Count, ...Is>
 	{
 		+ base : std::array<T, Size>
-		+ {static} offsets : std::array<std::size_t, Count>
+		+ {static} offsets : std::array<T, Count>
 		+ set()
 		+ operator[]()
 		+ operator=()
 		+ data()
 		+ sequence()
-		+ iterator functions()
+		+ iterator access()
 	}
 	struct basic_matrix<T, Cols, Rows>
 	{
@@ -80,7 +90,7 @@
 		+ operator[]()
 		+ operator=()
 		+ data()
-		+ iterator functions()
+		+ iterator access()
 		+ length()
 		+ column_length()
 		+ size()
@@ -89,6 +99,7 @@
 	}
 	vector_base <|-- basic_vector: CRTP inherits
 	vector_base <|-- indexed_vector : CRTP inherits
+	indexed_vector_const_iterator <|-- indexed_vector_iterator : const_cast<>
 	"CRTP duck type" ^.. basic_vector : duck implements
 	"CRTP duck type" ^.. indexed_vector : duck implements
 	basic_vector::anonymous_union::base "1" *-- "1" storage_wrapper : base
@@ -99,6 +110,8 @@
 	  all members have a common initial
 	  sequence with each other
 	end note
+	indexed_vector_const_iterator::mapper_ptr "1" *-- "many" indexed_vector : mapper_ptr
+	indexed_vector_iterator::mapper_ptr "1" *-- "many" indexed_vector : mapper_ptr
 	"CRTP duck type" <. vector_base : Derived CRTP
 	basic_matrix::columns "1" *-- "Cols" basic_vector : columns
 	basic_vector -[hidden]left- indexed_vector
