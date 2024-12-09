@@ -49,7 +49,7 @@ namespace dsga
 
 		constexpr inline int CXCM_MAJOR_VERSION = 1;
 		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 8;
+		constexpr inline int CXCM_PATCH_VERSION = 9;
 
 		namespace dd_real
 		{
