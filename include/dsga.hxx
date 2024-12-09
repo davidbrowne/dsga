@@ -19,7 +19,6 @@
 #include <cmath>					// for cxcm
 #include <numeric>
 #include <bit>						// bit_cast
-#include <cassert>
 #include <stdexcept>
 
 //
@@ -37,7 +36,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 1;
+	constexpr inline int DSGA_PATCH_VERSION = 2;
 
 	namespace cxcm
 	{
@@ -2267,7 +2266,6 @@ namespace dsga
 
 		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
 		{
-			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
 			if (mapper_ptr == nullptr)
 			{
 				throw std::runtime_error("can't deref nullptr");

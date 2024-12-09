@@ -6,7 +6,7 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.1
+v2.2.2
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
 * v2.2.1
@@ -356,7 +356,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.1`
+Current version: `v2.2.2`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
