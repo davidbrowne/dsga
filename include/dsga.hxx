@@ -28,36 +28,7 @@
 
 #if defined(DISABLE_ASSERTS)
 
-#define DSGA_DISABLE_ASSERTS
 #define CXCM_DISABLE_ASSERTS
-
-#endif
-
-
-//
-// dsga_constexpr_assert() derived from https://gist.github.com/oliora/928424f7675d58fadf49c70fdba70d2f
-//
-
-#if defined(DSGA_DISABLE_ASSERTS)
-
-#define dsga_assertm(exp, msg) ((void)0)
-#define dsga_constexpr_assert(cond, msg) ((void)0)
-
-#else
-
-#define dsga_assertm(exp, msg) assert(((void)msg, exp))
-
-// this needs to be NOT constexpr, so attempted use of this function stops constexpr evaluation
-template<class Assert>
-inline void dsga_constexpr_assert_failed(Assert &&a) noexcept
-{
-	std::forward<Assert>(a)();
-}
-
-// When evaluated at compile time emits a compilation error if condition is not true.
-// Invokes the standard assert at run time.
-#define dsga_constexpr_assert(cond, msg) \
-	((void)(!!(cond) ? 0 : (dsga_constexpr_assert_failed([](){ assert(((void)msg, !static_cast<bool>(#cond))); }), 0)))
 
 #endif
 
@@ -92,26 +63,31 @@ inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
 // Data Structures for Geometric Algebra (dsga)
 //
 
-// version info
-
-constexpr inline int DSGA_MAJOR_VERSION = 2;
-constexpr inline int DSGA_MINOR_VERSION = 2;
-constexpr inline int DSGA_PATCH_VERSION = 0;
-
 namespace dsga
 {
+    //          Copyright David Browne 2020-2024.
+    // Distributed under the Boost Software License, Version 1.0.
+    //    (See accompanying file LICENSE_1_0.txt or copy at
+    //          https://www.boost.org/LICENSE_1_0.txt)
+
+	// version info
+
+	constexpr inline int DSGA_MAJOR_VERSION = 2;
+	constexpr inline int DSGA_MINOR_VERSION = 2;
+	constexpr inline int DSGA_PATCH_VERSION = 1;
+
 	namespace cxcm
 	{
-		// copyright for cxcm - https://github.com/davidbrowne/cxcm
-
 		//          Copyright David Browne 2020-2024.
 		// Distributed under the Boost Software License, Version 1.0.
 		//    (See accompanying file LICENSE_1_0.txt or copy at
 		//          https://www.boost.org/LICENSE_1_0.txt)
 
-		constexpr inline int CXCM_MAJOR_VERSION = 1;
-		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 4;
+		// version info
+
+		constexpr int CXCM_MAJOR_VERSION = 1;
+		constexpr int CXCM_MINOR_VERSION = 1;
+		constexpr int CXCM_PATCH_VERSION = 8;
 
 		namespace dd_real
 		{
@@ -123,7 +99,7 @@ namespace dsga
 				This work was supported by the Director, Office of Science, Division
 				of Mathematical, Information, and Computational Sciences of the
 				U.S. Department of Energy under contract number DE-AC03-76SF00098.
- 
+
 				Copyright (c) 2000-2007
 
 				1. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -131,10 +107,10 @@ namespace dsga
 					(1) Redistributions of source code must retain the copyright notice, this list of conditions and the following disclaimer.
 
 					(2) Redistributions in binary form must reproduce the copyright notice, this list of conditions and the following disclaimer in the documentation
-					    and/or other materials provided with the distribution.
+						and/or other materials provided with the distribution.
 
 					(3) Neither the name of the University of California, Lawrence Berkeley National Laboratory, U.S. Dept. of Energy nor the names of its contributors
-					    may be used to endorse or promote products derived from this software without specific prior written permission.
+						may be used to endorse or promote products derived from this software without specific prior written permission.
 
 				2. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 				   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
@@ -176,7 +152,7 @@ namespace dsga
 			// while the low word will contain the lower 26 bits.
 			constexpr void split(double a, double &high, double &low) noexcept
 			{
-				double temp = 134217729.0 * a;			// 134217729.0 = 2^27 + 1
+				double temp = 134217729.0 * a;				// 134217729.0 = 2^27 + 1
 				high = temp - (temp - a);
 				low = a - high;
 			}
@@ -184,7 +160,11 @@ namespace dsga
 			// The following code computes fl(a x b) and error(a x b).
 			constexpr double two_prod(double a, double b, double &error) noexcept
 			{
-				double a_high, a_low, b_high, b_low;
+				double a_high = 0.0;
+				double a_low = 0.0;
+				double b_high = 0.0;
+				double b_low = 0.0;
+
 				double p = a * b;
 				split(a, a_high, a_low);
 				split(b, b_high, b_low);
@@ -201,25 +181,25 @@ namespace dsga
 				{
 				}
 
-				constexpr dd_real(double hi, double lo) noexcept : x{ hi, lo }
+				constexpr dd_real(double hi, double lo) noexcept : x{hi, lo}
 				{
 				}
 
-				explicit constexpr dd_real(double h) noexcept : x{ h, 0. }
+				explicit constexpr dd_real(double h) noexcept : x{h, 0.}
 				{
 				}
 
 				constexpr dd_real(const dd_real &) noexcept = default;
 				constexpr dd_real(dd_real &&) noexcept = default;
-				constexpr dd_real & operator =(const dd_real &) noexcept = default;
-				constexpr dd_real & operator =(dd_real &&) noexcept = default;
+				constexpr dd_real &operator =(const dd_real &) noexcept = default;
+				constexpr dd_real &operator =(dd_real &&) noexcept = default;
 
 				constexpr double operator [](unsigned int index) const noexcept
 				{
 					return x[index];
 				}
 
-				constexpr double & operator [](unsigned int index) noexcept
+				constexpr double &operator [](unsigned int index) noexcept
 				{
 					return x[index];
 				}
@@ -240,7 +220,10 @@ namespace dsga
 			constexpr dd_real ieee_add(const dd_real &a, const dd_real &b) noexcept
 			{
 				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
-				double s1, s2, t1, t2;
+				double s1 = 0.0;
+				double s2 = 0.0;
+				double t1 = 0.0;
+				double t2 = 0.0;
 
 				s1 = two_sum(a.x[0], b.x[0], s2);
 				t1 = two_sum(a.x[1], b.x[1], t2);
@@ -255,7 +238,8 @@ namespace dsga
 			constexpr dd_real ieee_add(const dd_real &a, double b) noexcept
 			{
 				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
-				double s1, s2;
+				double s1 = 0.0;
+				double s2 = 0.0;
 
 				s1 = two_sum(a.x[0], b, s2);
 				s1 = quick_two_sum(s1, s2 + a.x[1], s2);
@@ -266,7 +250,10 @@ namespace dsga
 			constexpr dd_real ieee_subtract(const dd_real &a, const dd_real &b) noexcept
 			{
 				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
-				double s1, s2, t1, t2;
+				double s1 = 0.0;
+				double s2 = 0.0;
+				double t1 = 0.0;
+				double t2 = 0.0;
 
 				s1 = two_sum(a.x[0], -b.x[0], s2);
 				t1 = two_sum(a.x[1], -b.x[1], t2);
@@ -281,7 +268,8 @@ namespace dsga
 			constexpr dd_real ieee_subtract(double a, const dd_real &b) noexcept
 			{
 				// This one satisfies IEEE style error bound, due to K. Briggs and W. Kahan.
-				double s1, s2;
+				double s1 = 0.0;
+				double s2 = 0.0;
 
 				s1 = two_sum(a, -b.x[0], s2);
 				s1 = quick_two_sum(s1, s2 - b.x[1], s2);
@@ -319,7 +307,8 @@ namespace dsga
 			// double-double * double-double
 			constexpr dd_real operator *(const dd_real &a, const dd_real &b) noexcept
 			{
-				double p1, p2;
+				double p1 = 0.0;
+				double p2 = 0.0;
 
 				p1 = two_prod(a.x[0], b.x[0], p2);
 				p2 += (a.x[0] * b.x[1] + a.x[1] * b.x[0]);
@@ -330,7 +319,8 @@ namespace dsga
 			// double-double * double
 			constexpr dd_real operator *(const dd_real &a, double b) noexcept
 			{
-				double p1, p2;
+				double p1 = 0.0;
+				double p2 = 0.0;
 
 				p1 = two_prod(a.x[0], b, p2);
 				p1 = quick_two_sum(p1, p2 + (a.x[1] * b), p2);
@@ -343,9 +333,11 @@ namespace dsga
 				return (b * a);
 			}
 
-			constexpr dd_real & operator *=(dd_real &a, const dd_real &b) noexcept
+			constexpr dd_real &operator *=(dd_real &a, const dd_real &b) noexcept
 			{
-				double p1, p2;
+				double p1 = 0.0;
+				double p2 = 0.0;
+
 				p1 = two_prod(a.x[0], b.x[0], p2);
 				p2 += (a.x[0] * b.x[1] + a.x[1] * b.x[0]);
 				a.x[0] = quick_two_sum(p1, p2, a.x[1]);
@@ -354,7 +346,9 @@ namespace dsga
 
 			constexpr dd_real accurate_div(const dd_real &a, const dd_real &b) noexcept
 			{
-				double q1, q2, q3;
+				double q1 = 0.0;
+				double q2 = 0.0;
+				double q3 = 0.0;
 
 				q1 = a.x[0] / b.x[0];						// approximate quotient
 
@@ -367,7 +361,8 @@ namespace dsga
 
 				q1 = quick_two_sum(q1, q2, q2);
 
-				double s1, s2;
+				double s1 = 0.0;
+				double s2 = 0.0;
 				s1 = two_sum(q1, q3, s2);
 				s1 = quick_two_sum(s1, s2 + q2, s2);
 
@@ -376,7 +371,9 @@ namespace dsga
 
 			constexpr dd_real accurate_div(double a, const dd_real &b) noexcept
 			{
-				double q1, q2, q3;
+				double q1 = 0.0;
+				double q2 = 0.0;
+				double q3 = 0.0;
 
 				q1 = a / b.x[0];							// approximate quotient
 
@@ -389,7 +386,8 @@ namespace dsga
 
 				q1 = quick_two_sum(q1, q2, q2);
 
-				double s1, s2;
+				double s1 = 0.0;
+				double s2 = 0.0;
 				s1 = two_sum(q1, q3, s2);
 				s1 = quick_two_sum(s1, s2 + q2, s2);
 
@@ -444,16 +442,16 @@ namespace dsga
 			// the largest floating point value that has a fractional representation
 
 			template <std::floating_point T>
-			constexpr inline T largest_fractional_value = T();
+			constexpr T largest_fractional_value = T();
 
 			template <>
-			constexpr inline long double largest_fractional_value<long double> = detail::get_largest_fractional_long_double();
+			constexpr long double largest_fractional_value<long double> = detail::get_largest_fractional_long_double();
 
 			template <>
-			constexpr inline double largest_fractional_value<double> = 0x1.fffffffffffffp+51;
+			constexpr double largest_fractional_value<double> = 0x1.fffffffffffffp+51;
 
 			template <>
-			constexpr inline float largest_fractional_value<float> = 0x1.fffffep+22f;
+			constexpr float largest_fractional_value<float> = 0x1.fffffep+22f;
 		}
 
 		//
@@ -461,7 +459,10 @@ namespace dsga
 		//
 
 		template <std::floating_point T>
-		constexpr bool is_negative_zero(T val) noexcept;
+		constexpr bool is_negative_zero(T) noexcept
+		{
+			return false;
+		}
 
 		template<>
 		constexpr bool is_negative_zero(float val) noexcept
@@ -476,13 +477,13 @@ namespace dsga
 		}
 
 		template <std::floating_point T>
-		constexpr inline T negative_zero = T(-0);
+		constexpr T negative_zero = T(-0);
 
 		template <>
-		constexpr inline float negative_zero<float> = std::bit_cast<float>(0x80000000);
+		constexpr float negative_zero<float> = std::bit_cast<float>(0x80000000);
 
 		template <>
-		constexpr inline double negative_zero<double> = std::bit_cast<double>(0x8000000000000000);
+		constexpr double negative_zero<double> = std::bit_cast<double>(0x8000000000000000);
 
 		// don't worry about esoteric input.
 		// much faster than strict or standard when non constant evaluated,
@@ -794,10 +795,10 @@ namespace dsga
 #endif
 
 		template <std::floating_point T>
-		#if defined(__GNUC__) && !defined(__clang__)
-			__attribute__((optimize("-fno-fast-math")))
-		#endif
-		constexpr bool isnan(T value) noexcept
+#if defined(__GNUC__) && !defined(__clang__)
+		__attribute__((optimize("-fno-fast-math")))
+#endif
+			constexpr bool isnan(T value) noexcept
 		{
 			return (value != value);
 		}
@@ -806,21 +807,21 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-		//
-		// isinf()
-		//
+	//
+	// isinf()
+	//
 
-		// make sure this isn't optimized away if used with fast-math
+	// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__)
 #pragma float_control(precise, on, push)
 #endif
 
 		template <std::floating_point T>
-		#if defined(__GNUC__) && !defined(__clang__)
-			__attribute__((optimize("-fno-fast-math")))
-		#endif
-		constexpr bool isinf(T value) noexcept
+#if defined(__GNUC__) && !defined(__clang__)
+		__attribute__((optimize("-fno-fast-math")))
+#endif
+			constexpr bool isinf(T value) noexcept
 		{
 			return (value == -std::numeric_limits<T>::infinity()) || (value == std::numeric_limits<T>::infinity());
 		}
@@ -829,9 +830,9 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-		//
-		// fpclassify()
-		//
+	//
+	// fpclassify()
+	//
 
 		template <std::floating_point T>
 		constexpr int fpclassify(T value) noexcept
@@ -1064,7 +1065,7 @@ namespace dsga
 						return x;
 
 					if (x == T(0) && y != T(0))
-						return 0;
+						return x;
 
 					if (y == 0)
 						return std::numeric_limits<T>::quiet_NaN();
@@ -1107,10 +1108,10 @@ namespace dsga
 #endif
 
 				template <std::floating_point T>
-				#if defined(__GNUC__) && !defined(__clang__)
-					__attribute__((optimize("-fno-fast-math")))
-				#endif
-				constexpr T constexpr_sqrt(T value) noexcept
+#if defined(__GNUC__) && !defined(__clang__)
+				__attribute__((optimize("-fno-fast-math")))
+#endif
+					constexpr T constexpr_sqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1159,21 +1160,21 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-				//
-				// constexpr_inverse_sqrt()
-				//
+			//
+			// constexpr_inverse_sqrt()
+			//
 
-				// make sure this isn't optimized away if used with fast-math
+			// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__)
 #pragma float_control(precise, on, push)
 #endif
 
 				template <std::floating_point T>
-				#if defined(__GNUC__) && !defined(__clang__)
-					__attribute__((optimize("-fno-fast-math")))
-				#endif
-				constexpr T constexpr_rsqrt(T value) noexcept
+#if defined(__GNUC__) && !defined(__clang__)
+				__attribute__((optimize("-fno-fast-math")))
+#endif
+					constexpr T constexpr_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1222,17 +1223,17 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-				// make sure this isn't optimized away if used with fast-math
+			// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__)
 #pragma float_control(precise, on, push)
 #endif
 
 				template <std::floating_point T>
-				#if defined(__GNUC__) && !defined(__clang__)
-					__attribute__((optimize("-fno-fast-math")))
-				#endif
-				constexpr T constexpr_fast_rsqrt(T value) noexcept
+#if defined(__GNUC__) && !defined(__clang__)
+				__attribute__((optimize("-fno-fast-math")))
+#endif
+					constexpr T constexpr_fast_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1293,18 +1294,48 @@ namespace dsga
 			template <std::floating_point T>
 			constexpr T abs(T value) noexcept
 			{
-				if (!detail::isnormal_or_subnormal(value))
-					return value;
+				auto new_value = cxcm::copysign(value, T(+1));
 
-				return relaxed::abs(value);
+#if NDEBUG
+				return new_value;
+#else
+				if (isnan(new_value))
+				{
+					if constexpr (sizeof(T) == 4)
+					{
+						unsigned int bits = std::bit_cast<unsigned int>(new_value);
+
+						// set the is_quiet bit
+						bits |= 0x00400000;
+
+						return std::bit_cast<T>(bits);
+					}
+					else if constexpr (sizeof(T) == 8)
+					{
+						unsigned long long bits = std::bit_cast<unsigned long long>(new_value);
+
+						// set the is_quiet bit
+						bits |= 0x0008000000000000;
+
+						return std::bit_cast<T>(bits);
+					}
+				}
+				else
+				{
+					return new_value;
+				}
+#endif
 			}
 
 			// don't know what to do if someone tries to negate the most negative number.
 			// standard says behavior is undefined if you can't represent the result by return type.
 			template <std::integral T>
-			constexpr T abs(T value) noexcept
+			constexpr T abs(T value)
 			{
-				cxcm_constexpr_assert(value != std::numeric_limits<T>::min(), "undefined behavior in abs()");
+				if (value == std::numeric_limits<T>::min())
+				{
+					throw std::domain_error("negation of min value is not a valid integral value");
+				}
 
 				return relaxed::abs(value);
 			}
@@ -1312,16 +1343,16 @@ namespace dsga
 			template <std::floating_point T>
 			constexpr T fabs(T value) noexcept
 			{
-				if (!detail::isnormal_or_subnormal(value))
-					return value;
-
-				return relaxed::fabs(value);
+				return cxcm::abs(value);
 			}
 
 			template <std::integral T>
-			constexpr double fabs(T value) noexcept
+			constexpr double fabs(T value)
 			{
-				cxcm_constexpr_assert(value != std::numeric_limits<T>::min(), "undefined behavior in fabs()");
+				if (value == std::numeric_limits<T>::min())
+				{
+					throw std::domain_error("negation of min value is not a valid integral value");
+				}
 
 				return relaxed::fabs(value);
 			}
@@ -1511,7 +1542,7 @@ namespace dsga
 			template <std::floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
-					return detail::constexpr_rsqrt(value);
+				return detail::constexpr_rsqrt(value);
 			}
 
 			//
@@ -1796,17 +1827,23 @@ namespace dsga
 		// logical and physically contiguous access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable
+		[[nodiscard]] constexpr T &operator [](const U &index) requires Writable
 		{
-			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
+			{
+				throw std::out_of_range("index not in range");
+			}
 			return store[static_cast<std::size_t>(index)];
 		}
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
+		[[nodiscard]] constexpr const T &operator [](const U &index) const
 		{
-			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
+			{
+				throw std::out_of_range("index not in range");
+			}
 			return store[static_cast<std::size_t>(index)];
 		}
 
@@ -2122,10 +2159,14 @@ namespace dsga
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
-		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, int index) noexcept
+		constexpr indexed_vector_const_iterator(const indexed_vector<T, Size, Count, Is ...> &mapper, int index)
 			: mapper_ptr(std::addressof(mapper)), mapper_index(index)
 		{
-			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index <= end_index), "index not in range");
+			// I don't want to throw from a constructor, but my hand is forced
+			if ((mapper_index < begin_index) || (mapper_index > end_index))
+			{
+				throw std::out_of_range("index not in range");
+			}
 		}
 
 		constexpr indexed_vector_const_iterator() noexcept = default;
@@ -2135,97 +2176,143 @@ namespace dsga
 		constexpr indexed_vector_const_iterator &operator =(indexed_vector_const_iterator &&) & noexcept = default;
 		constexpr ~indexed_vector_const_iterator() = default;
 
-		[[nodiscard]] constexpr reference operator *() const noexcept
+		[[nodiscard]] constexpr reference operator *() const
 		{
-			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
-			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+			if (mapper_ptr == nullptr)
+			{
+				throw std::runtime_error("can't deref nullptr");
+			}
+			else if ((mapper_index < begin_index) || (mapper_index >= end_index))
+			{
+				throw std::out_of_range("index not in range");
+			}
 
 			return (*mapper_ptr)[mapper_index];
 		}
 
-		[[nodiscard]] constexpr pointer operator ->() const noexcept
+		[[nodiscard]] constexpr pointer operator ->() const
 		{
-			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
-			dsga_constexpr_assert((mapper_index >= begin_index) && (mapper_index < end_index), "index not in range");
+			if (mapper_ptr == nullptr)
+			{
+				throw std::runtime_error("can't deref nullptr");
+			}
+			else if ((mapper_index < begin_index) || (mapper_index >= end_index))
+			{
+				throw std::out_of_range("index not in range");
+			}
 
 			return std::addressof((*mapper_ptr)[mapper_index]);
 		}
 
-		constexpr indexed_vector_const_iterator &operator ++() noexcept
+		constexpr indexed_vector_const_iterator &operator ++()
 		{
-			dsga_constexpr_assert(mapper_index < end_index, "don't increment past end_index");
+			if (mapper_index >= end_index)
+			{
+				throw std::runtime_error("don't increment past end_index");
+			}
 
 			++mapper_index;
 			return *this;
 		}
 
-		constexpr indexed_vector_const_iterator operator ++(int) noexcept
+		constexpr indexed_vector_const_iterator operator ++(int)
 		{
-			dsga_constexpr_assert(mapper_index < end_index, "don't increment past end_index");
+			if (mapper_index >= end_index)
+			{
+				throw std::runtime_error("don't increment past end_index");
+			}
 
 			indexed_vector_const_iterator temp = *this;
 			++mapper_index;
 			return temp;
 		}
 
-		constexpr indexed_vector_const_iterator &operator --() noexcept
+		constexpr indexed_vector_const_iterator &operator --()
 		{
-			dsga_constexpr_assert(mapper_index > begin_index, "don't decrement past begin_index");
+			if (mapper_index <= begin_index)
+			{
+				throw std::runtime_error("don't decrement past begin_index");
+			}
 
 			--mapper_index;
 			return *this;
 		}
 
-		constexpr indexed_vector_const_iterator operator --(int) noexcept
+		constexpr indexed_vector_const_iterator operator --(int)
 		{
-			dsga_constexpr_assert(mapper_index > begin_index, "don't decrement past begin_index");
+			if (mapper_index <= begin_index)
+			{
+				throw std::runtime_error("don't decrement past begin_index");
+			}
 
 			indexed_vector_const_iterator temp = *this;
 			--mapper_index;
 			return temp;
 		}
 
-		constexpr indexed_vector_const_iterator &operator +=(const int offset) noexcept
+		constexpr indexed_vector_const_iterator &operator +=(const int offset)
 		{
-			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+			if (((mapper_index + offset) < begin_index) || ((mapper_index + offset) >= end_index))
+			{
+				throw std::out_of_range("offset not in range");
+			}
 
 			mapper_index += offset;
 			return *this;
 		}
 
-		constexpr indexed_vector_const_iterator &operator -=(const int offset) noexcept
+		constexpr indexed_vector_const_iterator &operator -=(const int offset)
 		{
-			dsga_constexpr_assert(((mapper_index - offset) >= begin_index) && ((mapper_index - offset) < end_index), "offset not in range");
+			if (((mapper_index - offset) < begin_index) || ((mapper_index - offset) >= end_index))
+			{
+				throw std::out_of_range("offset not in range");
+			}
 
 			mapper_index -= offset;
 			return *this;
 		}
 
-		[[nodiscard]] constexpr int operator -(const indexed_vector_const_iterator &iter) const noexcept
+		[[nodiscard]] constexpr int operator -(const indexed_vector_const_iterator &iter) const
 		{
-			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+			if (mapper_ptr != iter.mapper_ptr)
+			{
+				throw std::invalid_argument("different indexed_vector source");
+			}
 
 			return static_cast<int>(mapper_index) - static_cast<int>(iter.mapper_index);
 		}
 
-		[[nodiscard]] constexpr bool operator ==(const indexed_vector_const_iterator &iter) const noexcept
+		[[nodiscard]] constexpr bool operator ==(const indexed_vector_const_iterator &iter) const
 		{
-			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+			if (mapper_ptr != iter.mapper_ptr)
+			{
+				throw std::invalid_argument("different indexed_vector source");
+			}
 
 			return ((mapper_ptr == iter.mapper_ptr) && (mapper_index == iter.mapper_index));
 		}
 
-		[[nodiscard]] constexpr std::strong_ordering operator <=>(const indexed_vector_const_iterator &iter) const noexcept
+		[[nodiscard]] constexpr std::strong_ordering operator <=>(const indexed_vector_const_iterator &iter) const
 		{
-			dsga_constexpr_assert(mapper_ptr == iter.mapper_ptr, "different indexed_vector source");
+			if (mapper_ptr != iter.mapper_ptr)
+			{
+				throw std::invalid_argument("different indexed_vector source");
+			}
 
 			return mapper_index <=> iter.mapper_index;
 		}
 
 		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
 		{
-			dsga_constexpr_assert(nullptr != mapper_ptr, "can't deref nullptr");
 			dsga_constexpr_assert(((mapper_index + offset) >= begin_index) && ((mapper_index + offset) < end_index), "offset not in range");
+			if (mapper_ptr == nullptr)
+			{
+				throw std::runtime_error("can't deref nullptr");
+			}
+			else if (((mapper_index + offset) < begin_index) || ((mapper_index + offset) >= end_index))
+			{
+				throw std::out_of_range("index not in range");
+			}
 
 			return (*mapper_ptr)[mapper_index + offset];
 		}
@@ -2437,18 +2524,24 @@ namespace dsga
 		// logically contiguous - used by operator [] for read/write access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable
+		[[nodiscard]] constexpr T &operator [](const U &index) requires Writable
 		{
-			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
+			{
+				throw std::out_of_range("index not in range");
+			}
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
 		// logically contiguous - used by operator [] for read access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept
+		[[nodiscard]] constexpr const T &operator [](const U &index) const
 		{
-			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < Count, "index out of bounds");
+			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
+			{
+				throw std::out_of_range("index not in range");
+			}
 			return base[offsets[static_cast<std::size_t>(index)]];
 		}
 
@@ -4450,13 +4543,20 @@ namespace dsga
 
 	// binary operators %=, % -- uses c++ modulus operator rules
 
-	constexpr inline auto modulus_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept
-	{ dsga_constexpr_assert(rhs != 0, "(lhs % 0) is undefined"); return lhs % rhs; };
+	constexpr inline auto modulus_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs)
+	{
+		if (rhs == 0)
+		{
+			throw std::domain_error("(lhs % 0) is undefined");
+		}
+
+		return lhs % rhs;
+	};
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, C, D2> &rhs) noexcept
+								const vector_base<W2, T2, C, D2> &rhs)
 	{
 		machinery::apply_unitype_modify(lhs, rhs, modulus_op);
 		return lhs.as_derived();
@@ -4465,7 +4565,7 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
 	constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
-								const vector_base<W2, T2, 1, D2> &rhs) noexcept
+								const vector_base<W2, T2, 1, D2> &rhs)
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], modulus_op);
 		return lhs.as_derived();
@@ -4474,7 +4574,7 @@ namespace dsga
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires W && implicitly_convertible_to<U, T>
 	constexpr auto &operator %=(vector_base<W, T, C, D> &lhs,
-								U rhs) noexcept
+								U rhs)
 	{
 		machinery::apply_unitype_modify(lhs, rhs, modulus_op);
 		return lhs.as_derived();
@@ -4483,7 +4583,7 @@ namespace dsga
 	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
 	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
 	[[nodiscard]] constexpr auto operator %(const vector_base<W1, T1, C1, D1> &lhs,
-											const vector_base<W2, T2, C2, D2> &rhs) noexcept
+											const vector_base<W2, T2, C2, D2> &rhs)
 	{
 		if constexpr (C1 == C2)
 			return machinery::apply_unitype_make(lhs, rhs, modulus_op);
@@ -4496,7 +4596,7 @@ namespace dsga
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator %(const vector_base<W, T, C, D> &lhs,
-											U rhs) noexcept
+											U rhs)
 	{
 		return machinery::apply_unitype_make(lhs, rhs, modulus_op);
 	}
@@ -4504,7 +4604,7 @@ namespace dsga
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr auto operator %(U lhs,
-											const vector_base<W, T, C, D> &rhs) noexcept
+											const vector_base<W, T, C, D> &rhs)
 	{
 		return machinery::apply_unitype_make(lhs, rhs, modulus_op);
 	}
@@ -5433,22 +5533,33 @@ namespace dsga
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] inline auto pow(const vector_base<W1, T, C, D1> &base,
-									  const vector_base<W2, T, C, D2> &exp) noexcept
+									  const vector_base<W2, T, C, D2> &exp)
 		{
-			dsga_constexpr_assert(all(greaterThanEqual(base, basic_vector<T, C>(0))), "(base < 0) is UB");
-			dsga_constexpr_assert(
-				all(compNot(compAnd(equal(base, basic_vector<T, C>(0)), lessThanEqual(exp, basic_vector<T, C>(0))))),
-				"(base == 0 && exp <= 0) is UB"
-			);
+			if (any(lessThan(base, basic_vector<T, C>(0))))
+			{
+				throw std::invalid_argument("(base < 0) is UB");
+			}
+			else if (!all(compNot(compAnd(equal(base, basic_vector<T, C>(0)), lessThanEqual(exp, basic_vector<T, C>(0))))))
+			{
+				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
+			}
+
 			return machinery::apply_unitype_make(base, exp, pow_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline auto pow(T base,
-									  T exp) noexcept
+									  T exp)
 		{
-			dsga_constexpr_assert(base >= T(0), "(base < 0) is UB");
-			dsga_constexpr_assert(!(base == T(0) && exp <= T(0)), "(base == 0 && exp <= 0) is UB");
+			if (base < T(0))
+			{
+				throw std::invalid_argument("(base < 0) is UB");
+			}
+			else if ((base == T(0) && exp <= T(0)))
+			{
+				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
+			}
+
 			return pow_op(base, exp);
 		}
 
@@ -5781,27 +5892,36 @@ namespace dsga
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr auto clamp(const vector_base<W1, T, C, D1> &x,
 										   const vector_base<W2, T, C, D2> &min_val,
-										   const vector_base<W3, T, C, D3> &max_val) noexcept
+										   const vector_base<W3, T, C, D3> &max_val)
 		{
-			dsga_constexpr_assert(all(lessThanEqual(min_val, max_val)), "(max_val < min_val) is UB");
+			if (any(greaterThan(min_val, max_val)))
+			{
+				throw std::invalid_argument("(max_val < min_val) is UB");
+			}
 			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto clamp(const vector_base<W, T, C, D> &x,
 										   T min_val,
-										   T max_val) noexcept
+										   T max_val)
 		{
-			dsga_constexpr_assert(min_val <= max_val, "(max_val < min_val) is UB");
+			if (min_val > max_val)
+			{
+				throw std::invalid_argument("(max_val < min_val) is UB");
+			}
 			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr auto clamp(T x,
 										   T min_val,
-										   T max_val) noexcept
+										   T max_val)
 		{
-			dsga_constexpr_assert(min_val <= max_val, "(max_val < min_val) is UB");
+			if (min_val > max_val)
+			{
+				throw std::invalid_argument("(max_val < min_val) is UB");
+			}
 			return clamp_op(x, min_val, max_val);
 		}
 
@@ -5881,27 +6001,36 @@ namespace dsga
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr auto smoothstep(const vector_base<W1, T, C, D1> &edge0,
 												const vector_base<W2, T, C, D2> &edge1,
-												const vector_base<W3, T, C, D3> &x) noexcept
+												const vector_base<W3, T, C, D3> &x)
 		{
-			dsga_constexpr_assert(all(lessThan(edge0, edge1)), "(edge0 >= edge1) is UB");
+			if (any(greaterThanEqual(edge0, edge1)))
+			{
+				throw std::invalid_argument("(edge0 >= edge1) is UB");
+			}
 			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto smoothstep(T edge0,
 												T edge1,
-												const vector_base<W, T, C, D> &x) noexcept
+												const vector_base<W, T, C, D> &x)
 		{
-			dsga_constexpr_assert(edge0 < edge1, "(edge0 >= edge1) is UB");
+			if (edge0 >= edge1)
+			{
+				throw std::invalid_argument("(edge0 >= edge1) is UB");
+			}
 			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr auto smoothstep(T edge0,
 												T edge1,
-												T x) noexcept
+												T x)
 		{
-			dsga_constexpr_assert(edge0 < edge1, "(edge0 >= edge1) is UB");
+			if (edge0 >= edge1)
+			{
+				throw std::invalid_argument("(edge0 >= edge1) is UB");
+			}
 			return smoothstep_op(edge0, edge1, x);
 		}
 
@@ -6296,10 +6425,11 @@ namespace dsga
 		inline auto swizzle(const vector_base<W, T, C, D> &v, const Arg &index)
 		{
 			bool index_valid = (static_cast<std::size_t>(index) < C);
-			dsga_constexpr_assert(index_valid, "index out of range");
 
 			if (!index_valid)
+			{
 				throw std::out_of_range("swizzle() index out of range");
+			}
 
 			return v[static_cast<std::size_t>(index)];
 		}
@@ -6309,10 +6439,11 @@ namespace dsga
 		inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is)
 		{
 			bool indexes_valid = ((static_cast<std::size_t>(Is) < C) && ...);
-			dsga_constexpr_assert(indexes_valid, "indexes out of range");
 
 			if (!indexes_valid)
+			{
 				throw std::out_of_range("swizzle() indexes out of range");
+			}
 
 			return basic_vector<T, sizeof...(Args)>{ v[static_cast<std::size_t>(Is)]... };
 		}
@@ -6389,26 +6520,37 @@ namespace dsga
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr basic_vector<T, R> &operator [](const U &index) noexcept
+		[[nodiscard]] constexpr basic_vector<T, R> &operator [](const U &index)
 		{
-			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < C, "index out of bounds");
+			if ((index < 0) || (static_cast<std::size_t>(index) >= C))
+			{
+				throw std::out_of_range("index not in range");
+			}
+
 			return columns[static_cast<std::size_t>(index)];
 		}
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const basic_vector<T, R> &operator [](const U &index) const noexcept
+		[[nodiscard]] constexpr const basic_vector<T, R> &operator [](const U &index) const
 		{
-			dsga_constexpr_assert(index >= 0 && static_cast<std::size_t>(index) < C, "index out of bounds");
+			if ((index < 0) || (static_cast<std::size_t>(index) >= C))
+			{
+				throw std::out_of_range("index not in range");
+			}
+
 			return columns[static_cast<std::size_t>(index)];
 		}
 
 		// get a row of the matrix as a vector
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr basic_vector<T, C> row(const U &row_index) const noexcept
+		[[nodiscard]] constexpr basic_vector<T, C> row(const U &row_index) const
 		{
-			dsga_constexpr_assert(row_index >= 0 && static_cast<std::size_t>(row_index) < R, "row_index out of bounds");
+			if ((row_index < 0) || (static_cast<std::size_t>(row_index) >= R))
+			{
+				throw std::out_of_range("index not in range");
+			}
 
 			// for each column of the matrix, get a row component, and bundle
 			// these components up into a vector that represents the row

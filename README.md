@@ -6,9 +6,11 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.0
+v2.2.1
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.1
+    * Replaced home-brew asserts with exceptions. Attempting to make safer through bounds checking and other input checking, enforced by throwing exceptions.
 * v2.2.0
     * Reverted major changes between v2.0.5 and v2.1.4, so we no longer have the view structs that wrap a pointer. Wrapping a pointer turned the data structures from owning to non-owning for the view structs, but we want the vector and matrix structs to be owning. The point of the view experiment was built on lack of insight on the nature of owning vs. non-owning and what this library was trying to achieve.
 * v2.0.5
@@ -354,7 +356,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.0`
+Current version: `v2.2.1`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)

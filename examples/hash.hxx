@@ -41,7 +41,7 @@ struct std::hash<dsga::basic_vector<T, S>>
 	}
 };
 
-template <bool M, dsga::dimensional_scalar T, std::size_t S>
+template <dsga::dimensional_scalar T, std::size_t S>
 struct std::hash<dsga::storage_wrapper<T, S>>
 {
 	std::size_t operator()(const dsga::storage_wrapper<T, S> &v) const noexcept
