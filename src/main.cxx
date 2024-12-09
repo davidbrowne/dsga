@@ -23,7 +23,7 @@
 // print current version number
 void print_dsga_version()
 {
-	std::cout << "\ndsga version: v" << DSGA_MAJOR_VERSION << "." << DSGA_MINOR_VERSION << "." << DSGA_PATCH_VERSION << "\n\n";
+	std::cout << "\ndsga version: v" << dsga::DSGA_MAJOR_VERSION << "." << dsga::DSGA_MINOR_VERSION << "." << dsga::DSGA_PATCH_VERSION << "\n\n";
 }
 
 // this function is a place to just test out whatever
