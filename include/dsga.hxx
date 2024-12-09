@@ -23,43 +23,6 @@
 #include <stdexcept>
 
 //
-// disable all asserts
-//
-
-#if defined(DISABLE_ASSERTS)
-
-#define CXCM_DISABLE_ASSERTS
-
-#endif
-
-//
-// for cxcm nested namespace
-//
-
-#if defined(CXCM_DISABLE_ASSERTS)
-
-#define cxcm_assertm(exp, msg) ((void)0)
-#define cxcm_constexpr_assert(cond, msg) ((void)0)
-
-#else
-
-#define cxcm_assertm(exp, msg) assert(((void)msg, exp))
-
-// this needs to be NOT constexpr, so attempted use of this function stops constexpr evaluation
-template<class Assert>
-inline void cxcm_constexpr_assert_failed(Assert &&a) noexcept
-{
-	std::forward<Assert>(a)();
-}
-
-// When evaluated at compile time emits a compilation error if condition is not true.
-// Invokes the standard assert at run time.
-#define cxcm_constexpr_assert(cond, msg) \
-	((void)(!!(cond) ? 0 : (cxcm_constexpr_assert_failed([](){ assert(((void)msg, !static_cast<bool>(#cond))); }), 0)))
-
-#endif
-
-//
 // Data Structures for Geometric Algebra (dsga)
 //
 
