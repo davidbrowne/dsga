@@ -6,9 +6,11 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.2
+v2.2.3
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.3
+    * Upgraded to cxcm v1.1.10
 * v2.2.1
     * Replaced home-brew asserts with exceptions. Attempting to make safer through bounds checking and other input checking, enforced by throwing exceptions.
 * v2.2.0
@@ -356,7 +358,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.2`
+Current version: `v2.2.3`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)

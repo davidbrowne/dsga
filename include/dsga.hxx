@@ -36,7 +36,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 2;
+	constexpr inline int DSGA_PATCH_VERSION = 3;
 
 	namespace cxcm
 	{
@@ -47,9 +47,9 @@ namespace dsga
 
 		// version info
 
-		constexpr inline int CXCM_MAJOR_VERSION = 1;
-		constexpr inline int CXCM_MINOR_VERSION = 1;
-		constexpr inline int CXCM_PATCH_VERSION = 9;
+		constexpr int CXCM_MAJOR_VERSION = 1;
+		constexpr int CXCM_MINOR_VERSION = 1;
+		constexpr int CXCM_PATCH_VERSION = 10;
 
 		namespace dd_real
 		{
@@ -370,6 +370,12 @@ namespace dsga
 
 		} // namespace dd_real
 
+		namespace concepts
+		{
+			template <typename T>
+			concept basic_floating_point = (std::is_same_v<float, T> || std::is_same_v<double, T>);
+		}
+
 		namespace limits
 		{
 			namespace detail
@@ -403,11 +409,8 @@ namespace dsga
 
 			// the largest floating point value that has a fractional representation
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr inline T largest_fractional_value = T();
-
-			template <>
-			constexpr inline long double largest_fractional_value<long double> = detail::get_largest_fractional_long_double();
 
 			template <>
 			constexpr inline double largest_fractional_value<double> = 0x1.fffffffffffffp+51;
@@ -420,7 +423,7 @@ namespace dsga
 		// floating-point negative zero support
 		//
 
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 		constexpr bool is_negative_zero(T) noexcept
 		{
 			return false;
@@ -438,7 +441,7 @@ namespace dsga
 			return (0x8000000000000000 == std::bit_cast<unsigned long long>(val));
 		}
 
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 		constexpr inline T negative_zero = T(-0);
 
 		template <>
@@ -459,7 +462,7 @@ namespace dsga
 
 			// absolute value
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T abs(T value) noexcept
 			{
 				return (value < T(0)) ? -value : value;
@@ -478,7 +481,7 @@ namespace dsga
 				return value;
 			}
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fabs(T value) noexcept
 			{
 				return abs(value);
@@ -498,7 +501,7 @@ namespace dsga
 
 			// rounds towards zero
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T trunc(T value) noexcept
 			{
 				return static_cast<T>(static_cast<long long>(value));
@@ -517,7 +520,7 @@ namespace dsga
 
 			// rounds towards negative infinity
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T floor(T value) noexcept
 			{
 				const T truncated_value = trunc(value);
@@ -539,7 +542,7 @@ namespace dsga
 
 			// rounds towards positive infinity
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T ceil(T value) noexcept
 			{
 				const T truncated_value = trunc(value);
@@ -561,7 +564,7 @@ namespace dsga
 
 			// rounds to nearest integral position, halfway cases away from zero
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T round(T value) noexcept
 			{
 				// zero could be handled either place, but here it is with the negative values.
@@ -580,7 +583,7 @@ namespace dsga
 
 			// the fractional part of a floating point number - always non-negative.
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fract(T value) noexcept
 			{
 				return value - floor(value);
@@ -592,7 +595,7 @@ namespace dsga
 
 			// the floating point remainder of division
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fmod(T x, T y) noexcept
 			{
 				return x - trunc(x / y) * y;
@@ -604,7 +607,7 @@ namespace dsga
 
 			// rounds to nearest integral position, halfway cases towards even
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T round_even(T value) noexcept
 			{
 				T trunc_value = trunc(value);
@@ -655,7 +658,7 @@ namespace dsga
 				}
 
 				// float uses double internally, double uses dd_real internally
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T converging_sqrt(T arg) noexcept
 				{
 					const double boosted_arg = arg;
@@ -692,7 +695,7 @@ namespace dsga
 				}
 
 				// float uses double internally, double uses dd_real internally
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T inverse_sqrt(T arg) noexcept
 				{
 					// don't need this to be a dd_real
@@ -724,21 +727,21 @@ namespace dsga
 			}
 
 			// constexpr square root, uses higher precision behind the scenes
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T sqrt(T value) noexcept
 			{
 				return detail::converging_sqrt(value);
 			}
 
 			// reciprocal of square root, uses higher precision behind the scenes
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
 				return detail::inverse_sqrt(value);
 			}
 
 			// fast reciprocal of square root
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fast_rsqrt(T value) noexcept
 			{
 				return static_cast<T>(detail::fast_rsqrt(static_cast<double>(value)));
@@ -752,20 +755,20 @@ namespace dsga
 
 		// make sure this isn't optimized away if used with fast-math
 
-#if defined(_MSC_VER) || defined(__clang__)
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
 #pragma float_control(precise, on, push)
 #endif
 
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 #if defined(__GNUC__) && !defined(__clang__)
 		__attribute__((optimize("-fno-fast-math")))
 #endif
-			constexpr bool isnan(T value) noexcept
+		constexpr bool isnan(T value) noexcept
 		{
 			return (value != value);
 		}
 
-#if defined(_MSC_VER) || defined(__clang__)
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
 #pragma float_control(pop)
 #endif
 
@@ -775,20 +778,20 @@ namespace dsga
 
 	// make sure this isn't optimized away if used with fast-math
 
-#if defined(_MSC_VER) || defined(__clang__)
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
 #pragma float_control(precise, on, push)
 #endif
 
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 #if defined(__GNUC__) && !defined(__clang__)
 		__attribute__((optimize("-fno-fast-math")))
 #endif
-			constexpr bool isinf(T value) noexcept
+		constexpr bool isinf(T value) noexcept
 		{
 			return (value == -std::numeric_limits<T>::infinity()) || (value == std::numeric_limits<T>::infinity());
 		}
 
-#if defined(_MSC_VER) || defined(__clang__)
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
 #pragma float_control(pop)
 #endif
 
@@ -796,7 +799,7 @@ namespace dsga
 	// fpclassify()
 	//
 
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 		constexpr int fpclassify(T value) noexcept
 		{
 			if (isnan(value))
@@ -815,7 +818,7 @@ namespace dsga
 		// isnormal()
 		//
 
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 		constexpr bool isnormal(T value) noexcept
 		{
 			return (fpclassify(value) == FP_NORMAL);
@@ -825,7 +828,7 @@ namespace dsga
 		// isfinite()
 		//
 
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 		constexpr bool isfinite(T value) noexcept
 		{
 			return !isnan(value) && !isinf(value);
@@ -836,7 +839,7 @@ namespace dsga
 		//
 
 		// +0 returns false and -0 returns true
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 		constexpr bool signbit(T value) noexcept
 		{
 			if constexpr (sizeof(T) == 4)
@@ -856,7 +859,7 @@ namespace dsga
 		//
 
 		// +0 or -0 for sign is considered as *not* negative
-		template <std::floating_point T>
+		template <cxcm::concepts::basic_floating_point T>
 		constexpr T copysign(T value, T sgn) noexcept
 		{
 			// +0 or -0 for sign is considered as *not* negative
@@ -891,6 +894,38 @@ namespace dsga
 
 			namespace detail
 			{
+				//
+				// make_nan_quiet()
+				//
+
+				// make a NaN into a quiet NaN - if input is not a NaN, it is returned unchanged
+				template <cxcm::concepts::basic_floating_point T>
+				constexpr T convert_to_quiet_nan(T value) noexcept
+				{
+					if (cxcm::isnan(value))
+					{
+						if constexpr (sizeof(T) == 4)
+						{
+							unsigned int bits = std::bit_cast<unsigned int>(value);
+
+							// set the is_quiet bit
+							bits |= 0x00400000;
+
+							return std::bit_cast<T>(bits);
+						}
+						else if constexpr (sizeof(T) == 8)
+						{
+							unsigned long long bits = std::bit_cast<unsigned long long>(value);
+
+							// set the is_quiet bit
+							bits |= 0x0008000000000000;
+
+							return std::bit_cast<T>(bits);
+						}
+					}
+
+					return value;
+				}
 
 				//
 				// isnormal_or_subnormal()
@@ -898,7 +933,7 @@ namespace dsga
 
 				// standard library screening requirement for these functions
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr bool isnormal_or_subnormal(T value) noexcept
 				{
 					// intentional use of the implicit cast of 0 to T.
@@ -914,7 +949,7 @@ namespace dsga
 				// the constraints weren't met, and the fractional functions will do no further work and return
 				// the value as is.
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr bool fails_fractional_input_constraints(T value) noexcept
 				{
 					// if any of the following constraints are not met, return true:
@@ -931,10 +966,15 @@ namespace dsga
 
 				// rounds towards zero
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T constexpr_trunc(T value) noexcept
 				{
-					// screen out unnecessary input
+#if !defined(__GNUC__) || defined(__clang__)
+					if (isnan(value))
+						return convert_to_quiet_nan(value);
+#endif
+
+				// screen out unnecessary input
 					if (fails_fractional_input_constraints(value))
 						return value;
 
@@ -947,10 +987,15 @@ namespace dsga
 
 				// rounds towards negative infinity
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T constexpr_floor(T value) noexcept
 				{
-					// screen out unnecessary input
+#if !defined(__GNUC__) || defined(__clang__)
+					if (isnan(value))
+						return convert_to_quiet_nan(value);
+#endif
+
+				// screen out unnecessary input
 					if (fails_fractional_input_constraints(value))
 						return value;
 
@@ -963,10 +1008,15 @@ namespace dsga
 
 				// rounds towards positive infinity
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T constexpr_ceil(T value) noexcept
 				{
-					// screen out unnecessary input
+#if !defined(__GNUC__) || defined(__clang__)
+					if (isnan(value))
+						return convert_to_quiet_nan(value);
+#endif
+
+				// screen out unnecessary input
 					if (fails_fractional_input_constraints(value))
 						return value;
 
@@ -979,10 +1029,15 @@ namespace dsga
 
 				// rounds to nearest integral position, halfway cases away from zero
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T constexpr_round(T value) noexcept
 				{
-					// screen out unnecessary input
+#if !defined(__GNUC__) || defined(__clang__)
+					if (isnan(value))
+						return convert_to_quiet_nan(value);
+#endif
+
+				// screen out unnecessary input
 					if (fails_fractional_input_constraints(value))
 						return value;
 
@@ -1001,10 +1056,15 @@ namespace dsga
 				// constexpr_fract()
 				//
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T constexpr_fract(T value) noexcept
 				{
-					// screen out unnecessary input
+#if !defined(__GNUC__) || defined(__clang__)
+					if (isnan(value))
+						return convert_to_quiet_nan(value);
+#endif
+
+				// screen out unnecessary input
 					if (fails_fractional_input_constraints(value))
 						return value;
 
@@ -1015,7 +1075,7 @@ namespace dsga
 				// constexpr_fmod()
 				//
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T constexpr_fmod(T x, T y) noexcept
 				{
 					// screen out unnecessary input
@@ -1041,10 +1101,15 @@ namespace dsga
 
 				// rounds to nearest integral position, halfway cases away from zero
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 				constexpr T constexpr_round_even(T value) noexcept
 				{
-					// screen out unnecessary input
+#if !defined(__GNUC__) || defined(__clang__)
+					if (isnan(value))
+						return convert_to_quiet_nan(value);
+#endif
+
+				// screen out unnecessary input
 					if (fails_fractional_input_constraints(value))
 						return value;
 
@@ -1069,34 +1134,17 @@ namespace dsga
 #pragma float_control(precise, on, push)
 #endif
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-					constexpr T constexpr_sqrt(T value) noexcept
+				constexpr T constexpr_sqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
 					if (isnan(value))
 					{
-						if constexpr (sizeof(T) == 4)
-						{
-							unsigned int bits = std::bit_cast<unsigned int>(value);
-
-							// set the is_quiet bit
-							bits |= 0x00400000;
-
-							return std::bit_cast<T>(bits);
-						}
-						else if constexpr (sizeof(T) == 8)
-						{
-							unsigned long long bits = std::bit_cast<unsigned long long>(value);
-
-							// set the is_quiet bit
-							bits |= 0x0008000000000000;
-
-							return std::bit_cast<T>(bits);
-						}
+						return detail::convert_to_quiet_nan(value);
 					}
 					else if (value == std::numeric_limits<T>::infinity())
 					{
@@ -1132,34 +1180,17 @@ namespace dsga
 #pragma float_control(precise, on, push)
 #endif
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-					constexpr T constexpr_rsqrt(T value) noexcept
+				constexpr T constexpr_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
 					if (isnan(value))
 					{
-						if constexpr (sizeof(T) == 4)
-						{
-							unsigned int bits = std::bit_cast<unsigned int>(value);
-
-							// set the is_quiet bit
-							bits |= 0x00400000;
-
-							return std::bit_cast<T>(bits);
-						}
-						else if constexpr (sizeof(T) == 8)
-						{
-							unsigned long long bits = std::bit_cast<unsigned long long>(value);
-
-							// set the is_quiet bit
-							bits |= 0x0008000000000000;
-
-							return std::bit_cast<T>(bits);
-						}
+						return detail::convert_to_quiet_nan(value);
 					}
 					else if (value == std::numeric_limits<T>::infinity())
 					{
@@ -1191,34 +1222,17 @@ namespace dsga
 #pragma float_control(precise, on, push)
 #endif
 
-				template <std::floating_point T>
+				template <cxcm::concepts::basic_floating_point T>
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-					constexpr T constexpr_fast_rsqrt(T value) noexcept
+				constexpr T constexpr_fast_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
 					if (isnan(value))
 					{
-						if constexpr (sizeof(T) == 4)
-						{
-							unsigned int bits = std::bit_cast<unsigned int>(value);
-
-							// set the is_quiet bit
-							bits |= 0x00400000;
-
-							return std::bit_cast<T>(bits);
-						}
-						else if constexpr (sizeof(T) == 8)
-						{
-							unsigned long long bits = std::bit_cast<unsigned long long>(value);
-
-							// set the is_quiet bit
-							bits |= 0x0008000000000000;
-
-							return std::bit_cast<T>(bits);
-						}
+						return detail::convert_to_quiet_nan(value);
 					}
 					else if (value == std::numeric_limits<T>::infinity())
 					{
@@ -1253,39 +1267,22 @@ namespace dsga
 
 			// absolute value
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T abs(T value) noexcept
 			{
 				auto new_value = cxcm::copysign(value, T(+1));
 
-#if NDEBUG
-				return new_value;
-#else
+#if !defined(NDEBUG) && defined(_MSC_VER)
 				if (isnan(new_value))
 				{
-					if constexpr (sizeof(T) == 4)
-					{
-						unsigned int bits = std::bit_cast<unsigned int>(new_value);
-
-						// set the is_quiet bit
-						bits |= 0x00400000;
-
-						return std::bit_cast<T>(bits);
-					}
-					else if constexpr (sizeof(T) == 8)
-					{
-						unsigned long long bits = std::bit_cast<unsigned long long>(new_value);
-
-						// set the is_quiet bit
-						bits |= 0x0008000000000000;
-
-						return std::bit_cast<T>(bits);
-					}
+					return detail::convert_to_quiet_nan(new_value);
 				}
 				else
 				{
 					return new_value;
 				}
+#else
+				return new_value;
 #endif
 			}
 
@@ -1302,7 +1299,7 @@ namespace dsga
 				return relaxed::abs(value);
 			}
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fabs(T value) noexcept
 			{
 				return cxcm::abs(value);
@@ -1325,7 +1322,7 @@ namespace dsga
 
 			// rounds towards zero
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T trunc(T value) noexcept
 			{
 				if (std::is_constant_evaluated())
@@ -1350,7 +1347,7 @@ namespace dsga
 
 			// rounds towards negative infinity
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T floor(T value) noexcept
 			{
 				if (std::is_constant_evaluated())
@@ -1375,7 +1372,7 @@ namespace dsga
 
 			// rounds towards positive infinity
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T ceil(T value) noexcept
 			{
 				if (std::is_constant_evaluated())
@@ -1400,7 +1397,7 @@ namespace dsga
 
 			// rounds to nearest integral position, halfway cases away from zero
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T round(T value) noexcept
 			{
 				if (std::is_constant_evaluated())
@@ -1427,7 +1424,7 @@ namespace dsga
 
 			// the fractional part of a floating point number - always non-negative.
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fract(T value) noexcept
 			{
 				return detail::constexpr_fract(value);
@@ -1445,7 +1442,7 @@ namespace dsga
 
 			// the floating point remainder of division
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fmod(T x, T y) noexcept
 			{
 				if (std::is_constant_evaluated())
@@ -1466,7 +1463,7 @@ namespace dsga
 
 			// rounds to nearest integral position, halfway cases towards even
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T round_even(T value) noexcept
 			{
 				return detail::constexpr_round_even(value);
@@ -1482,7 +1479,7 @@ namespace dsga
 			// sqrt()
 			//
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T sqrt(T value) noexcept
 			{
 				if (std::is_constant_evaluated())
@@ -1501,7 +1498,7 @@ namespace dsga
 
 			// there is no standard c++ version of this, so always call constexpr version
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
 				return detail::constexpr_rsqrt(value);
@@ -1513,7 +1510,7 @@ namespace dsga
 
 			// there is no standard c++ version of this, so always call constexpr version
 
-			template <std::floating_point T>
+			template <cxcm::concepts::basic_floating_point T>
 			constexpr T fast_rsqrt(T value) noexcept
 			{
 				return detail::constexpr_fast_rsqrt(value);

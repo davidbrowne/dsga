@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.2.3
+* Upgraded to cxcm v1.1.10
+
 ### v2.2.1
 * Replaced home-brew asserts with exceptions. Attempting to make safer through bounds checking and other input checking, enforced by throwing exceptions.
 * Upgraded to cxcm v1.1.8
