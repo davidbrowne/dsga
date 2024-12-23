@@ -1,4 +1,4 @@
-//          Copyright David Browne 2020-2024.
+//          Copyright David Browne 2020-2025.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -27,7 +27,7 @@
 
 namespace dsga
 {
-    //          Copyright David Browne 2020-2024.
+    //          Copyright David Browne 2020-2025.
     // Distributed under the Boost Software License, Version 1.0.
     //    (See accompanying file LICENSE_1_0.txt or copy at
     //          https://www.boost.org/LICENSE_1_0.txt)
@@ -36,11 +36,11 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 3;
+	constexpr inline int DSGA_PATCH_VERSION = 4;
 
 	namespace cxcm
 	{
-		//          Copyright David Browne 2020-2024.
+		//          Copyright David Browne 2020-2025.
 		// Distributed under the Boost Software License, Version 1.0.
 		//    (See accompanying file LICENSE_1_0.txt or copy at
 		//          https://www.boost.org/LICENSE_1_0.txt)
@@ -48,8 +48,8 @@ namespace dsga
 		// version info
 
 		constexpr int CXCM_MAJOR_VERSION = 1;
-		constexpr int CXCM_MINOR_VERSION = 1;
-		constexpr int CXCM_PATCH_VERSION = 10;
+		constexpr int CXCM_MINOR_VERSION = 2;
+		constexpr int CXCM_PATCH_VERSION = 0;
 
 		namespace dd_real
 		{
@@ -373,7 +373,7 @@ namespace dsga
 		namespace concepts
 		{
 			template <typename T>
-			concept basic_floating_point = (std::is_same_v<float, T> || std::is_same_v<double, T>);
+			concept basic_floating_point = (std::is_same_v<float, std::remove_cvref_t<T>> || std::is_same_v<double, std::remove_cvref_t<T>>);
 		}
 
 		namespace limits
@@ -763,7 +763,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 		__attribute__((optimize("-fno-fast-math")))
 #endif
-		constexpr bool isnan(T value) noexcept
+			constexpr bool isnan(T value) noexcept
 		{
 			return (value != value);
 		}
@@ -772,11 +772,17 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-	//
-	// isinf()
-	//
+		template <std::integral T>
+		constexpr bool isnan(T value) noexcept
+		{
+			return isnan(static_cast<double>(value));
+		}
 
-	// make sure this isn't optimized away if used with fast-math
+		//
+		// isinf()
+		//
+
+		// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
 #pragma float_control(precise, on, push)
@@ -786,7 +792,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 		__attribute__((optimize("-fno-fast-math")))
 #endif
-		constexpr bool isinf(T value) noexcept
+			constexpr bool isinf(T value) noexcept
 		{
 			return (value == -std::numeric_limits<T>::infinity()) || (value == std::numeric_limits<T>::infinity());
 		}
@@ -795,9 +801,15 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-	//
-	// fpclassify()
-	//
+		template <std::integral T>
+		constexpr bool isinf(T value) noexcept
+		{
+			return isinf(static_cast<double>(value));
+		}
+
+		//
+		// fpclassify()
+		//
 
 		template <cxcm::concepts::basic_floating_point T>
 		constexpr int fpclassify(T value) noexcept
@@ -814,6 +826,12 @@ namespace dsga
 			return FP_NORMAL;
 		}
 
+		template <std::integral T>
+		constexpr int fpclassify(T value) noexcept
+		{
+			return fpclassify(static_cast<double>(value));
+		}
+
 		//
 		// isnormal()
 		//
@@ -824,6 +842,12 @@ namespace dsga
 			return (fpclassify(value) == FP_NORMAL);
 		}
 
+		template <std::integral T>
+		constexpr bool isnormal(T value) noexcept
+		{
+			return isnormal(static_cast<double>(value));
+		}
+
 		//
 		// isfinite()
 		//
@@ -832,6 +856,12 @@ namespace dsga
 		constexpr bool isfinite(T value) noexcept
 		{
 			return !isnan(value) && !isinf(value);
+		}
+
+		template <std::integral T>
+		constexpr bool isfinite(T value) noexcept
+		{
+			return isfinite(static_cast<double>(value));
 		}
 
 		//
@@ -852,6 +882,12 @@ namespace dsga
 				unsigned long long bits = std::bit_cast<unsigned long long>(value);
 				return (bits & 0x8000000000000000) != 0;
 			}
+		}
+
+		template <std::integral T>
+		constexpr bool signbit(T value) noexcept
+		{
+			return signbit(static_cast<double>(value));
 		}
 
 		//
@@ -885,6 +921,12 @@ namespace dsga
 
 				return std::bit_cast<T>(bits);
 			}
+		}
+
+		template <std::integral T>
+		constexpr double copysign(T value, T sgn) noexcept
+		{
+			return copysign(static_cast<double>(value), static_cast<double>(sgn));
 		}
 
 		// try and match standard library requirements.
@@ -1138,7 +1180,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-				constexpr T constexpr_sqrt(T value) noexcept
+					constexpr T constexpr_sqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1184,7 +1226,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-				constexpr T constexpr_rsqrt(T value) noexcept
+					constexpr T constexpr_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1226,7 +1268,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-				constexpr T constexpr_fast_rsqrt(T value) noexcept
+					constexpr T constexpr_fast_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1338,7 +1380,7 @@ namespace dsga
 			template <std::integral T>
 			constexpr double trunc(T value) noexcept
 			{
-				return value;
+				return trunc(static_cast<double>(value));
 			}
 
 			//
@@ -1363,7 +1405,7 @@ namespace dsga
 			template <std::integral T>
 			constexpr double floor(T value) noexcept
 			{
-				return value;
+				return floor(static_cast<double>(value));
 			}
 
 			//
@@ -1388,7 +1430,7 @@ namespace dsga
 			template <std::integral T>
 			constexpr double ceil(T value) noexcept
 			{
-				return value;
+				return ceil(static_cast<double>(value));
 			}
 
 			//
@@ -1413,7 +1455,7 @@ namespace dsga
 			template <std::integral T>
 			constexpr double round(T value) noexcept
 			{
-				return value;
+				return round(static_cast<double>(value));
 			}
 
 			//
@@ -1431,9 +1473,9 @@ namespace dsga
 			}
 
 			template <std::integral T>
-			constexpr double fract(T /* value */) noexcept
+			constexpr double fract(T value) noexcept
 			{
-				return 0.0;
+				return fract(static_cast<double>(value));
 			}
 
 			//
@@ -1455,6 +1497,12 @@ namespace dsga
 				}
 			}
 
+			template <std::integral T>
+			constexpr double fmod(T x, T y) noexcept
+			{
+				return fmod(static_cast<double>(x), static_cast<double>(y));
+			}
+
 			//
 			// round_even()
 			//
@@ -1472,7 +1520,7 @@ namespace dsga
 			template <std::integral T>
 			constexpr double round_even(T value) noexcept
 			{
-				return value;
+				return round_even(static_cast<double>(value));
 			}
 
 			//
@@ -1492,6 +1540,12 @@ namespace dsga
 				}
 			}
 
+			template <std::integral T>
+			constexpr double sqrt(T value) noexcept
+			{
+				return sqrt(static_cast<double>(value));
+			}
+
 			//
 			// rsqrt() - inverse square root
 			//
@@ -1504,6 +1558,12 @@ namespace dsga
 				return detail::constexpr_rsqrt(value);
 			}
 
+			template <std::integral T>
+			constexpr double rsqrt(T value) noexcept
+			{
+				return rsqrt(static_cast<double>(value));
+			}
+
 			//
 			// fast_rsqrt() - fast good approximation to inverse square root
 			//
@@ -1514,6 +1574,12 @@ namespace dsga
 			constexpr T fast_rsqrt(T value) noexcept
 			{
 				return detail::constexpr_fast_rsqrt(value);
+			}
+
+			template <std::integral T>
+			constexpr double fast_rsqrt(T value) noexcept
+			{
+				return fast_rsqrt(static_cast<double>(value));
 			}
 
 		} // namespace strict
@@ -5252,6 +5318,22 @@ namespace dsga
 			return comp_or_op(x, y);
 		}
 
+		constexpr inline auto comp_xor_op = [](bool x, bool y) noexcept -> bool { return x != y; };
+
+		// not in GLSL
+		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr auto compXor(const vector_base<W1, bool, C, D1> &x,
+											 const vector_base<W2, bool, C, D2> &y) noexcept
+		{
+			return machinery::apply_unitype_make(x, y, comp_xor_op);
+		}
+
+		[[nodiscard]] constexpr auto compXor(bool x,
+												 bool y) noexcept
+		{
+			return comp_xor_op(x, y);
+		}
+
 		// not in GLSL
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
@@ -5590,6 +5672,8 @@ namespace dsga
 		{
 			return sqrt_op(arg);
 		}
+
+		// not in GLSL
 
 		constexpr inline auto fast_rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fast_rsqrt(arg); };
 
@@ -6237,6 +6321,21 @@ namespace dsga
 		[[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E e) noexcept
 		{
 			return static_cast<std::underlying_type_t<E>>(e);
+		}
+
+		// not in GLSL
+		// return a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1)
+		// that are all the same size, but might be of different types
+		template <typename Op, std::size_t C, bool ... Ws, dimensional_scalar ...Ts, typename ...Ds>
+		requires ((sizeof ...(Ts)) > 0)
+		[[nodiscard]] constexpr basic_vector<std::invoke_result_t<Op, Ts...>, C> invoke(Op op, const vector_base<Ws, Ts, C, Ds> & ...vectors) noexcept
+		{
+			auto op_invoke = [&](std::size_t index) { return op(vectors[index] ...); };
+
+			return [&]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return basic_vector<std::invoke_result_t<Op, Ts...>, C>{op_invoke(Is) ...};
+			}(std::make_index_sequence<C>{});
 		}
 
 		//
