@@ -6,12 +6,15 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.4
+v2.2.5
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.5
+    * Extracted ```dsga::invoke()``` to its own example header, and modified it to work on a wide range of inputs.
+    * Made all lambda captures specific.
 * v2.2.4
-    * Added dsga::compXor() to perform xor operations on boolean values (as opposed to bitwise xor ^)
-    * Added dsga::invoke() which returns a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1) that are all the same size, but might be of different types
+    * Added ```dsga::compXor()``` to perform xor operations on boolean values (as opposed to bitwise xor ^)
+    * Added ```dsga::invoke()``` which returns a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1) that are all the same size, but might be of different types
 * v2.2.3
     * Upgraded to cxcm v1.1.10
 * v2.2.1
@@ -33,9 +36,9 @@ v2.2.4
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2022 v17.12.3
+* Microsoft Visual Studio 2022 v17.12.4
 * gcc v14.2.0
-* clang v19.1.6
+* clang v19.1.7
 * icx v2024.1.0 - Must set "precise" floating-point model since default is "fast" and the "float_control" #pragma doesn't seem to work.
 
 ### Minimum Version
@@ -361,10 +364,10 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.4`
+Current version: `v2.2.5`
 
 * Everything major has some tests, but code coverage is not 100%.
-* [Last Released: v2.0.0](https://github.com/davidbrowne/dsga/releases/tag/v2.0.0)
+* [Last Released: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
 * [Change Log](docs/CHANGELOG.md)
 
 ### The next steps
@@ -390,7 +393,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.12.3**
+* **MSVC 2022 - v17.12.4**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -412,7 +415,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 19.1.6** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-19.1.6):
+* **clang 19.1.7** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-19.1.7):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

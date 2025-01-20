@@ -142,6 +142,10 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <ControlFlowGuard>Guard</ControlFlowGuard>
+      <AdditionalOptions>/Ob3 %(AdditionalOptions)</AdditionalOptions>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -161,6 +165,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Ob3 %(AdditionalOptions)</AdditionalOptions>
       <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -180,6 +185,7 @@
     <ClInclude Include="..\examples\compare.hxx" />
     <ClInclude Include="..\examples\format_output.hxx" />
     <ClInclude Include="..\examples\hash.hxx" />
+    <ClInclude Include="..\examples\invoke.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
     <ClInclude Include="..\examples\stl.hxx" />

@@ -1,8 +1,12 @@
 # Change Log
 
+### v2.2.5
+* Extracted ```dsga::invoke()``` to its own example header, and modified it to work on a wide range of inputs.
+* Made all lambda captures specific.
+
 ### v2.2.4
-* Added dsga::compXor() to perform xor operations on boolean values (as opposed to bitwise xor ^)
-* Added dsga::invoke() which returns a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1) that are all the same size, but might be of different types
+* Added ```dsga::compXor()``` to perform xor operations on boolean values (as opposed to bitwise xor ^)
+* Added ```dsga::invoke()``` which returns a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1) that are all the same size, but might be of different types
 * Upgraded to cxcm v1.2.0
 
 ### v2.2.3

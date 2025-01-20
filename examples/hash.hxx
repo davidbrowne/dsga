@@ -1,5 +1,5 @@
 
-//          Copyright David Browne 2020-2024.
+//          Copyright David Browne 2020-2025.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -14,7 +14,7 @@
 template <typename T>
 constexpr std::size_t hash_combine(std::size_t seed, const T &t) noexcept
 {
-	std::size_t x = seed + 0x9e3779b9 + std::hash<T>{}(t);
+	std::size_t x = seed + 0x9e3779b97f4a7c15 + std::hash<T>{}(t);
 
 	x ^= x >> 30;
 	x *= 0xbf58476d1ce4e5b9;
