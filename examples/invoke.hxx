@@ -42,14 +42,14 @@ namespace dsga
 		template <typename T>
 		struct indexer
 		{
-			indexer(const T &val, std::size_t c) noexcept : t(val), C(c)
+			indexer(const T &value, std::size_t size) noexcept : arg(value), count(size)
 			{
 			}
 
-			auto &operator []([[ maybe_unused ]] std::size_t index)
+			const auto &operator [](std::size_t index)
 			{
 				// check for valid index based on return vector size
-				if (index >= C)
+				if (index >= count)
 				{
 					throw std::out_of_range("index out of range");
 				}
@@ -59,66 +59,54 @@ namespace dsga
 				if constexpr (can_index<T> && !is_dsga_matrix_v<T>)
 				{
 					// check for valid index based on indexable size
-					if (index >= t.size())
+					if (index >= arg.size())
 					{
 						throw std::out_of_range("index out of range");
 					}
 
 					if constexpr (has_at<T>)
 					{
-						return t.at(index);
+						return arg.at(index);
 					}
 					else
 					{
-						return t[index];
+						return arg[index];
 					}
 				}
 				else
 				{
-					return t;
+					return arg;
 				}
 			}
 
 			private:
-			const T &t;
-			std::size_t C;
+				const T &arg;
+				std::size_t count;
 		};
 	}
 
 	// not in GLSL
-	// return a vector created by invoking an operation element-wise to a variable number of arguments (there must be at least 1)
-	// that are either dimensional_scalar or basic_matrix --  if an argument isn't a vector of dimensional_scalars of length C,
-	// it can be a single scalar that will be used C times (the length of the return vector) -- similarly, if an argument is a
-	// matrix, it will be used C times (the length of the return vector) -- usually the arguments will be vectors of the same
-	// length C or a std::array or std::span of matrices of the same length C.
+	// return a vector created by invoking an operation element-wise to a variable number of arguments that are either
+	// dimensional_scalar or basic_matrix --  if an argument isn't a vector of dimensional_scalars of length C, it can
+	// be a single scalar that will be used C times (the length of the return vector) -- similarly, if an argument is
+	// a matrix, it will be used C times (the length of the return vector) -- usually the arguments will be vectors of
+	// the same length C or a std::array or std::span of matrices of the same length C.
 	//
 	// the Op must return a dsga::dimensional_scalar type, since invoke() returns a dsga::basic_vector of the results.
+	// this also means that C must be greater than 1 for vectors (no longer supporting length 1 vectors)
 	template <std::size_t C, typename Op, typename ...Ts>
-	requires ((sizeof ...(Ts)) > 0) && (C > 1)
-	[[nodiscard]] constexpr auto invoke(Op op, const Ts & ...args) noexcept
+	requires (C > 1)
+	[[nodiscard]] constexpr auto invoke(Op &&op, Ts && ...args) noexcept(std::is_nothrow_invocable_v<Op, Ts...>)
 	{
-		auto op_invoke = [&op, &args...](std::size_t index) { return op(invoke_detail::indexer(args, C)[index] ...); };
+		auto op_invoke = [&op, &args...]([[ maybe_unused ]] std::size_t index)
+		{
+			return std::forward<Op>(op)(invoke_detail::indexer(std::forward<Ts>(args), C)[index] ...);
+		};
 
 		return [&op_invoke]<std::size_t ...Is>(std::index_sequence<Is...>)
 		{
-			return basic_vector(op_invoke(Is) ...);
+			// using "{" and "}" for the constructor evaluates arguments left-to-right
+			return basic_vector{op_invoke(Is) ...};
 		}(std::make_index_sequence<C>{});
-	}
-
-	// not in GLSL
-	// return a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1)
-	// that are all the same size, but might be of different types
-	template <typename Op, std::size_t C, bool ...Ws, dimensional_scalar ...Ts, typename ...Ds>
-	requires ((sizeof ...(Ts)) > 0) && (C > 1)
-	[[nodiscard]] constexpr basic_vector<std::invoke_result_t<Op, Ts...>, C> invoke_on_vectors(Op op, const vector_base<Ws, Ts, C, Ds> & ...vectors) noexcept
-	{
-		return dsga::invoke<C>(op, vectors...);
-
-//		auto op_invoke = [&op, &vectors ...](std::size_t index) { return op(vectors[index] ...); };
-//
-//		return [&op_invoke]<std::size_t ...Is>(std::index_sequence<Is...>)
-//		{
-//			return basic_vector<std::invoke_result_t<Op, Ts...>, C>{op_invoke(Is) ...};
-//		}(std::make_index_sequence<C>{});
 	}
 }

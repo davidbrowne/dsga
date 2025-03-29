@@ -6,39 +6,26 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.5
+v2.2.6
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.6
+    * Minor refactoring.
+    * Tweaked ```dsga.natvis``` for better debugging experience.
+    * Changed usage of ```std::array::operator []``` to ```std::array::at()``` for bounds checking.
+    * Overhauled ```dsga::mix()``` to use a faster algorithm than ```std::lerp()```.
 * v2.2.5
     * Extracted ```dsga::invoke()``` to its own example header, and modified it to work on a wide range of inputs.
     * Made all lambda captures specific.
 * v2.2.4
     * Added ```dsga::compXor()``` to perform xor operations on boolean values (as opposed to bitwise xor ^)
     * Added ```dsga::invoke()``` which returns a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1) that are all the same size, but might be of different types
-* v2.2.3
-    * Upgraded to cxcm v1.1.10
-* v2.2.1
-    * Replaced home-brew asserts with exceptions. Attempting to make safer through bounds checking and other input checking, enforced by throwing exceptions.
-* v2.2.0
-    * Reverted major changes between v2.0.5 and v2.1.4, so we no longer have the view structs that wrap a pointer. Wrapping a pointer turned the data structures from owning to non-owning for the view structs, but we want the vector and matrix structs to be owning. The point of the view experiment was built on lack of insight on the nature of owning vs. non-owning and what this library was trying to achieve.
-* v2.0.5
-    * Fixed wrong matrix type (reversed dimensions) being returned from ```outerProduct()```.
-* v2.0.4
-    * Renamed ```logicalNot()``` to ```compNot()```. Deprecated ```logicalNot()```.
-    * Added ```compAnd()``` and ```compOr()``` functions to complement ```compNot()```.
-    * Added missing scalar versions of non-geometric vector functions.
-* v2.0.3
-    * Tolerance checking functions moved to ```examples/tolerance.hxx```.
-* v2.0.2
-    * Potentially breaking change: removed an implicit ```dsga::basic_matrix``` constructor, now requiring the use of a constructor that is explicit.
-* v2.0.1
-    * Added ```query()``` function (not in GLSL nor ```std::valarray```) to vector_base. It works like ```apply()```, but expects a boolean predicate, and returns a vector of boolean values instead of element type T.
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2022 v17.12.4
+* Microsoft Visual Studio 2022 v17.13.5
 * gcc v14.2.0
-* clang v19.1.7
+* clang v20.1.1
 * icx v2024.1.0 - Must set "precise" floating-point model since default is "fast" and the "float_control" #pragma doesn't seem to work.
 
 ### Minimum Version
@@ -364,7 +351,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.5`
+Current version: `v2.2.6`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Released: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
@@ -393,7 +380,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.12.4**
+* **MSVC 2022 - v17.13.5**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -415,7 +402,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 19.1.7** on Windows, [official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-19.1.7):
+* **clang 20.1.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-20.1.1):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -454,7 +441,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 18.1.3**
+* **clang 19.1.1**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -506,14 +493,6 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-## Similar Projects
-
-It is a common pastime for people to write these kind of vector libraries. The three we wanted to mention here are:
-
-* [glm](https://github.com/g-truc/glm) - popular long lived project that is similar in goals with respect to being based on OpenGL Shading Language specification, but is much more mature. It will work with c\+\+98, while dsga is for c\+\+20.
-* [DirectXMath](https://github.com/microsoft/DirectXMath) - this is from Microsoft and basically performs the same role as glm, but with DirectX instead of OpenGL. It is also long lived and much more mature than dsga.
-* mango (repo has been removed by owner) - this is the project that I read the blog about for vector component access and swizzling, so it is nice to have as another example. Again, more mature than dsga.
-
 ## License
 [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
 
@@ -534,7 +513,7 @@ The libraries we use (some just occasionally):
 // cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
 // https://github.com/davidbrowne/cxcm
 //
-//          Copyright David Browne 2020-2024.
+//          Copyright David Browne 2020-2025.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)

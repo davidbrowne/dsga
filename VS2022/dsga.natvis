@@ -161,7 +161,7 @@
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
@@ -173,8 +173,8 @@
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
@@ -186,9 +186,9 @@
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5],g} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 3">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
@@ -200,10 +200,10 @@
 
 	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt;">
 		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt;" />
-		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="mapper_index == 3">{{ value = {(*mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5],g} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6],g} }}</DisplayString>
+		<DisplayString Condition="mapper_index == 3">{{ value = {(*mapper_ptr).base[$T7],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 4">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
@@ -216,7 +216,7 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -228,8 +228,8 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5],g} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -241,9 +241,9 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5],g} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6],g} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
@@ -255,10 +255,10 @@
 	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt; &gt;">
 		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6]} }}</DisplayString>
-		<DisplayString Condition="current.mapper_index == 4">{{ value = {(*current.mapper_ptr).base[$T7]} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5],g} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 3">{{ value = {(*current.mapper_ptr).base[$T6],g} }}</DisplayString>
+		<DisplayString Condition="current.mapper_index == 4">{{ value = {(*current.mapper_ptr).base[$T7],g} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>

@@ -9,6 +9,7 @@
 #if !defined(DSGA_DSGA_HXX)
 #define DSGA_DSGA_HXX
 
+#include <utility>
 #include <limits>
 #include <type_traits>				// requirements
 #include <concepts>					// requirements
@@ -37,7 +38,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 5;
+	constexpr inline int DSGA_PATCH_VERSION = 6;
 
 	namespace cxcm
 	{
@@ -1183,7 +1184,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-					constexpr T constexpr_sqrt(T value) noexcept
+				constexpr T constexpr_sqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1215,11 +1216,11 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-			//
-			// constexpr_inverse_sqrt()
-			//
+				//
+				// constexpr_inverse_sqrt()
+				//
 
-			// make sure this isn't optimized away if used with fast-math
+				// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__)
 #pragma float_control(precise, on, push)
@@ -1229,7 +1230,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-					constexpr T constexpr_rsqrt(T value) noexcept
+				constexpr T constexpr_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1261,7 +1262,7 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-			// make sure this isn't optimized away if used with fast-math
+				// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__)
 #pragma float_control(precise, on, push)
@@ -1271,7 +1272,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 				__attribute__((optimize("-fno-fast-math")))
 #endif
-					constexpr T constexpr_fast_rsqrt(T value) noexcept
+				constexpr T constexpr_fast_rsqrt(T value) noexcept
 				{
 					// screen out unnecessary input
 
@@ -1743,7 +1744,7 @@ namespace dsga
 		template <sequence_indexable auto vals, std::size_t ...Is>
 		requires ((vals[Is] >= 0) && ...)
 		constexpr std::index_sequence<vals[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
-	}
+	}	// namespace detail
 
 	// do the argument indexes and count/size make for valid indirect indexing
 	template <std::size_t Size, std::size_t Count, std::size_t ...Is>
@@ -1857,22 +1858,14 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr T &operator [](const U &index) requires Writable
 		{
-			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
-			{
-				throw std::out_of_range("index not in range");
-			}
-			return store[static_cast<std::size_t>(index)];
+			return store.at(static_cast<std::size_t>(index));
 		}
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const
 		{
-			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
-			{
-				throw std::out_of_range("index not in range");
-			}
-			return store[static_cast<std::size_t>(index)];
+			return store.at(static_cast<std::size_t>(index));
 		}
 
 		// in general, data() should be used with sequence() as the "logically contiguous" offsets
@@ -1886,10 +1879,10 @@ namespace dsga
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[this]<std::size_t ...Js, typename ...As>(std::index_sequence<Js ...>, As ...same_args) noexcept
+			[this, &args...]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
-				((store[Js] = static_cast<T>(same_args)),...);
-			}(std::make_index_sequence<Count>{}, args...);
+				((store.at(Js) = static_cast<T>(args)),...);
+			}(std::make_index_sequence<Count>{});
 		}
 
 		constexpr void swap(storage_wrapper &sw) noexcept requires Writable	{ store.swap(sw.store); 	}
@@ -2052,7 +2045,7 @@ namespace dsga
 		requires (std::same_as<bool, std::invoke_result_t<UnOp, T>> || std::same_as<bool, std::invoke_result_t<UnOp, const T &>>)
 		[[nodiscard]] constexpr basic_vector<bool, Count> query(UnOp op) const noexcept
 		{
-			return[this, &op]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			return [this, &op]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return basic_vector<bool, Count>{ op((*this)[Is])... };		// braced init list is evaluated in element order
 			}(std::make_index_sequence<Count>{});
@@ -2533,14 +2526,14 @@ namespace dsga
 		// this is extremely important and is only for indexed_vector of [Count == 1]
 		explicit(false) constexpr operator T() const noexcept requires (Count == 1)
 		{
-			return base[offsets[0]];
+			return base.at(offsets.at(0));
 		}
 
 		template <typename U>
 		requires std::convertible_to<T, U> && (Count == 1)
 		explicit constexpr operator U() const noexcept
 		{
-			return static_cast<U>(base[offsets[0]]);
+			return static_cast<U>(base.at(offsets.at(0)));
 		}
 
 		// logically contiguous - used by operator [] for read/write access to data
@@ -2548,11 +2541,7 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr T &operator [](const U &index) requires Writable
 		{
-			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
-			{
-				throw std::out_of_range("index not in range");
-			}
-			return base[offsets[static_cast<std::size_t>(index)]];
+			return base.at(offsets.at(static_cast<std::size_t>(index)));
 		}
 
 		// logically contiguous - used by operator [] for read access to data
@@ -2560,11 +2549,7 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const
 		{
-			if ((index < 0) || (static_cast<std::size_t>(index) >= Count))
-			{
-				throw std::out_of_range("index not in range");
-			}
-			return base[offsets[static_cast<std::size_t>(index)]];
+			return base.at(offsets.at(static_cast<std::size_t>(index)));
 		}
 
 		// physically contiguous
@@ -2600,7 +2585,7 @@ namespace dsga
 			// these Is are likely not sequential as they are in indexable order,
 			// and we are accessing the internal storage directly. we are not using
 			// the indirection built into indexed_vector::operator []() for this function.
-			((base[Is] = static_cast<T>(args)), ...);
+			((base.at(Is) = static_cast<T>(args)), ...);
 		}
 
 		template <bool W, dimensional_scalar U, typename D>
@@ -2852,7 +2837,7 @@ namespace dsga
 		struct valid_vector_component<basic_matrix<U, C, R>, T> : std::true_type
 		{
 		};
-	}
+	}	// namespace detail
 
 	//
 	// basic_vector - the fundamental vector class
@@ -3027,7 +3012,7 @@ namespace dsga
 		requires Writable && std::convertible_to<U, T>
 		constexpr void set(U value) noexcept
 		{
-			base[0] = static_cast<T>(value);
+			base.set(value);
 		}
 	};
 
@@ -3208,10 +3193,7 @@ namespace dsga
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[this, &args...]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
-			{
-				((base[Js] = static_cast<T>(args)), ...);
-			}(std::make_index_sequence<Count>{});
+			base.set(args...);
 		}
 	};
 
@@ -3484,10 +3466,7 @@ namespace dsga
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[this, &args...]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
-			{
-				((base[Js] = static_cast<T>(args)), ...);
-			}(std::make_index_sequence<Count>{});
+			base.set(args...);
 		}
 	};
 
@@ -3983,10 +3962,7 @@ namespace dsga
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
-			[this, &args...]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
-			{
-				((base[Js] = static_cast<T>(args)), ...);
-			}(std::make_index_sequence<Count>{});
+			base.set(args...);
 		}
 	};
 
@@ -4257,7 +4233,7 @@ namespace dsga
 			}
 			else
 			{
-				return[&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
 					return basic_vector<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))... };
 				}(std::make_index_sequence<C>{});
@@ -4327,7 +4303,7 @@ namespace dsga
 				}(std::make_index_sequence<C>{});
 			}
 		}
-	}
+	}	// namespace machinery
 
 	//
 	// operators
@@ -4964,7 +4940,7 @@ namespace dsga
 		}
 		else
 		{
-			return basic_vector<T, C>(arg);					// no-op copy
+			return basic_vector<T, C>{arg};					// no-op copy
 		}
 	}
 
@@ -5975,7 +5951,41 @@ namespace dsga
 			return clamp_op(x, min_val, max_val);
 		}
 
-		constexpr inline auto mix1_op = []<floating_point_scalar T>(T x, T y, T a) noexcept { return std::lerp(x, y, a); };
+		// https://stackoverflow.com/a/58648036
+		constexpr inline auto mix1_op = []<floating_point_scalar T>(T x, T y, T a) noexcept -> T
+		{
+//			auto formula = [x, y, a]() noexcept
+//			{
+//				T w0 = T(1.0) - a;
+//				T w1 = T(1.0) - w0;
+//				T t0 = w0 * x;
+//				T t1 = w1 * y;
+//				return t0 + t1;
+//			};
+
+			if (x == y)
+			{
+				return x;
+			}
+
+			auto val = T(0.0);
+			if (a <= T(0.5))
+			{
+				val = x + (y - x) * a;
+			}
+			else
+			{
+//				val = formula();
+				val = ((T(1.0) - a) * x) + (a * y);
+			}
+
+			if (cxcm::isnan(val) && !cxcm::isnan(a + x + y))
+			{
+				val = cxcm::copysign(std::numeric_limits<T>::infinity(), y - x);
+			}
+
+			return val;
+		};
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr auto mix(const vector_base<W1, T, C, D1> &x,
@@ -6268,7 +6278,7 @@ namespace dsga
 		{
 			return [&x, &exp]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, C>(frexp_op(x[Is], exp[Is])...);
+				return basic_vector<T, C>{frexp_op(x[Is], exp[Is])...};
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6364,9 +6374,9 @@ namespace dsga
 		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &a,
 										   const vector_base<W2, T2, 3, D2> &b) noexcept
 		{
-			return basic_vector((a[1] * b[2]) - (b[1] * a[2]),
+			return basic_vector{(a[1] * b[2]) - (b[1] * a[2]),
 								(a[2] * b[0]) - (b[2] * a[0]),
-								(a[0] * b[1]) - (b[0] * a[1]));
+								(a[0] * b[1]) - (b[0] * a[1])};
 		}
 
 		template <floating_point_scalar T1, floating_point_scalar T2>
@@ -6451,7 +6461,7 @@ namespace dsga
 			T k = T(1) - eta * eta * (T(1) - dot(n, i) * dot(n, i));
 
 			if (k < T(0))
-				return basic_vector<T, C>(T(0));
+				return basic_vector<T, C>{T(0)};
 
 			return eta * i - (eta * dot(n, i) + cxcm::sqrt(k)) * n;
 		}
@@ -6485,7 +6495,7 @@ namespace dsga
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
-		requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
+		requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 1) && (sizeof...(Args) <= 4)
 		inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is)
 		{
 			bool indexes_valid = ((static_cast<std::size_t>(Is) < C) && ...);
@@ -6497,7 +6507,7 @@ namespace dsga
 
 			return basic_vector<T, sizeof...(Args)>{ v[static_cast<std::size_t>(Is)]... };
 		}
-	}
+	}	// namespace functions
 
 	//
 	// component-wise equality operator for vectors, scalar boolean result: ==, != (thanks to c++20).
@@ -6572,24 +6582,14 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr basic_vector<T, R> &operator [](const U &index)
 		{
-			if ((index < 0) || (static_cast<std::size_t>(index) >= C))
-			{
-				throw std::out_of_range("index not in range");
-			}
-
-			return columns[static_cast<std::size_t>(index)];
+			return columns.at(static_cast<std::size_t>(index));
 		}
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const basic_vector<T, R> &operator [](const U &index) const
 		{
-			if ((index < 0) || (static_cast<std::size_t>(index) >= C))
-			{
-				throw std::out_of_range("index not in range");
-			}
-
-			return columns[static_cast<std::size_t>(index)];
+			return columns.at(static_cast<std::size_t>(index));
 		}
 
 		// get a row of the matrix as a vector
@@ -6597,16 +6597,11 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr basic_vector<T, C> row(const U &row_index) const
 		{
-			if ((row_index < 0) || (static_cast<std::size_t>(row_index) >= R))
-			{
-				throw std::out_of_range("index not in range");
-			}
-
 			// for each column of the matrix, get a row component, and bundle
 			// these components up into a vector that represents the row
 			return [this, &row_index]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, C>{ columns[Is][row_index]... };
+				return basic_vector<T, C>{ columns.at(Is)[row_index]... };
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6638,7 +6633,7 @@ namespace dsga
 				(([this, &arg_tuple]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					columns[Col].set( std::get<Col * R + Js>(arg_tuple)... );
+					columns.at(Col).set( std::get<Col * R + Js>(arg_tuple)... );
 				}(std::make_index_sequence<R>{})), ...);
 			}(std::make_index_sequence<C>{});
 		}
@@ -6651,7 +6646,7 @@ namespace dsga
 		{
 			[this, &arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((columns[Is][Is] = static_cast<T>(arg)), ...);
+				((columns.at(Is)[Is] = static_cast<T>(arg)), ...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6663,7 +6658,7 @@ namespace dsga
 		{
 			[this, &arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((columns[Is] = arg[Is]), ...);
+				((columns.at(Is) = arg[Is]), ...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6677,7 +6672,7 @@ namespace dsga
 				(([this, &arg]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					((columns[Col][Js] = static_cast<T>(arg[Col][Js])), ...);
+					((columns.at(Col)[Js] = static_cast<T>(arg[Col][Js])), ...);
 				}(std::make_index_sequence<std::min(R, Rows)>{})), ...);
 			}(std::make_index_sequence<std::min(C, Cols)>{});
 
@@ -6686,7 +6681,7 @@ namespace dsga
 			{
 				[this]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					((columns[Is][Is] = T(1.0)), ...);
+					((columns.at(Is)[Is] = T(1.0)), ...);
 				}(make_index_range<std::min(std::min(Cols, C), std::min(Rows, R)), C>{});
 			}
 		}
@@ -6701,7 +6696,7 @@ namespace dsga
 		{
 			[this, &other]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((columns[Is] = other[Is]), ...);			// let basic_vector do any type conversion if needed
+				((columns.at(Is) = other[Is]), ...);			// let basic_vector do any type conversion if needed
 			}(std::make_index_sequence<C>{});
 
 			return *this;
@@ -6980,7 +6975,7 @@ namespace dsga
 
 			return square_mat;
 		}
-	}
+	}	// namespace functions
 
 	//
 	// matrix operators

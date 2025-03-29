@@ -1,5 +1,5 @@
 
-//          Copyright David Browne 2020-2024.
+//          Copyright David Browne 2020-2025.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -69,7 +69,7 @@ constexpr auto quadratic_bezier_ordinate_eval2(const dsga::vector_base<W, T, 3, 
 // given 3 control points and a t value (hopefully in the [0, 1] interval), evaluate the quadratic bezier function
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3>
-	requires (C > 1)
+requires (C > 1)
 constexpr auto quadratic_bezier_eval2(const dsga::vector_base<W1, T, C, D1> &p0,
 									  const dsga::vector_base<W2, T, C, D2> &p1,
 									  const dsga::vector_base<W3, T, C, D3> &p2,
@@ -165,7 +165,7 @@ constexpr auto cubic_bezier_ordinate_eval2(const dsga::vector_base<W, T, 4, D> &
 // given 4 control points and a t value (hopefully in the [0, 1] interval), evaluate the cubic bezier function
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1,
 	bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-	requires (C > 1)
+requires (C > 1)
 constexpr auto cubic_bezier_eval2(const dsga::vector_base<W1, T, C, D1> &p0,
 								  const dsga::vector_base<W2, T, C, D2> &p1,
 								  const dsga::vector_base<W3, T, C, D3> &p2,

@@ -12,24 +12,24 @@ using namespace dsga;
 #include "doctest.h"
 
 // structs for demonstrating common initial sequence
-struct array_storage_a
+struct mock_storage
 {
-	std::array<double, 4> i;
+	std::array<double, 4> store;
 };
 
-struct array_storage_b
+struct mock_indexed
 {
-	std::array<double, 4> j;
+	std::array<double, 4> base;
 };
 
-struct faux_vector
+struct mock_vector
 {
-	array_storage_b k;
+	mock_indexed base;
 };
 
-struct faux_wrapper
+struct mock_wrapper
 {
-	array_storage_a l;
+	mock_storage base;
 };
 
 TEST_SUITE("type traits tests")
@@ -300,11 +300,11 @@ TEST_SUITE("type traits tests")
 #if defined(__cpp_lib_is_layout_compatible)
 
 		// proof that we are using the common initial sequence ***properly*** by introducing
-		// dsga::base_wrapper<> for the anonymous union instead of just adding a std::array<>:
+		// dsga::storage_wrapper<> for the anonymous union instead of just adding a std::array<>:
 
-		CHECK_UNARY(std::is_corresponding_member(&array_storage_a::i, &array_storage_b::j));		// using two structs of the same type form
-		CHECK_UNARY_FALSE(std::is_corresponding_member(&array_storage_a::i, &faux_vector::k));		// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
-		CHECK_UNARY(std::is_corresponding_member(&faux_wrapper::l, &faux_vector::k));	// analogous to using dsga::base_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
+		CHECK_UNARY(std::is_corresponding_member(&mock_storage::store, &mock_indexed::base));		// using two structs of the same type form
+		CHECK_UNARY_FALSE(std::is_corresponding_member(&mock_storage::store, &mock_vector::base));	// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
+		CHECK_UNARY(std::is_corresponding_member(&mock_wrapper::base, &mock_vector::base));			// analogous to using dsga::storage_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
 
 		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::store, &dsga::indexed_vector<int, 1, 1, 0>::base));
 		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::store, &dsga::indexed_vector<int, 2, 2, 1, 0>::base));

@@ -1,5 +1,11 @@
 # Change Log
 
+### v2.2.6
+* Minor refactoring.
+* Tweaked ```dsga.natvis``` for better debugging experience.
+* Changed usage of ```std::array::operator []``` to ```std::array::at()``` for bounds checking.
+* Overhauled ```dsga::mix()``` to use a faster algorithm than ```std::lerp()```.
+
 ### v2.2.5
 * Extracted ```dsga::invoke()``` to its own example header, and modified it to work on a wide range of inputs.
 * Made all lambda captures specific.
