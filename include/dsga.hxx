@@ -38,7 +38,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 6;
+	constexpr inline int DSGA_PATCH_VERSION = 7;
 
 	namespace cxcm
 	{
@@ -1901,7 +1901,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() noexcept requires Writable		{ return store.rend(); }
 		[[nodiscard]] constexpr auto rend() const noexcept					{ return store.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept					{ return rend(); }
-	};
+	};	// struct storage_wrapper
 
 	template <dimensional_scalar T, std::size_t S>
 	constexpr void swap(storage_wrapper<T, S> &lhs, storage_wrapper<T, S> &rhs) noexcept
@@ -1973,13 +1973,13 @@ namespace dsga
 		[[nodiscard]] constexpr const Derived &as_derived() const noexcept			{ return static_cast<const Derived &>(*this); }
 
 		// for debugging and testing
-		[[nodiscard]] constexpr auto &as_base() noexcept requires Writable					{ return *this; }
-		[[nodiscard]] constexpr const auto &as_base() const noexcept						{ return *this; }
+		[[nodiscard]] constexpr auto &as_base() noexcept requires Writable			{ return *this; }
+		[[nodiscard]] constexpr const auto &as_base() const noexcept				{ return *this; }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
-		constexpr void set(Args ...args) noexcept									{ this->as_derived().set(args...); }
+		constexpr void set(Args ...args) noexcept											{ this->as_derived().set(args...); }
 
 		// logically contiguous access to piecewise data as index goes from 0 to (Count - 1)
 		template <typename U>
@@ -2127,7 +2127,7 @@ namespace dsga
 				return ((*this)[Is] + ...);
 			}(std::make_index_sequence<Count>{});
 		}
-	};
+	};	// struct vector_base
 
 	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
 	// both indexed_vector and basic_vector have their own storage (linked via anonymous union and common initial sequence).
@@ -2356,7 +2356,7 @@ namespace dsga
 			iter += offset;
 			return iter;
 		}
-	};
+	};	// struct indexed_vector_const_iterator
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
 	requires indexable<Size, Count, Is...>
@@ -2462,7 +2462,7 @@ namespace dsga
 		{
 			return const_cast<reference>(base_iter::operator[](offset));
 		}
-	};
+	};	// struct indexed_vector_iterator
 
 	//
 	// indexed_vector - swizzle classes that are types of union members in basic_vector
@@ -2597,7 +2597,7 @@ namespace dsga
 				this->set(other[Js]...);
 			}(std::make_index_sequence<Count>{});
 		}
-	};
+	};	// struct indexed_vector
 
 	//
 	// convenience using types for indexed_vector as members of basic_vector
@@ -3014,7 +3014,7 @@ namespace dsga
 		{
 			base.set(value);
 		}
-	};
+	};	// struct basic_vector<T, 1>
 
 	template <dimensional_scalar T>
 	struct basic_vector<T, 2> : vector_base<true, T, 2, basic_vector<T, 2>>
@@ -3195,7 +3195,7 @@ namespace dsga
 		{
 			base.set(args...);
 		}
-	};
+	};	// struct basic_vector<T, 2>
 
 	template <dimensional_scalar T>
 	struct basic_vector<T, 3> : vector_base<true, T, 3, basic_vector<T, 3>>
@@ -3468,7 +3468,7 @@ namespace dsga
 		{
 			base.set(args...);
 		}
-	};
+	};	// struct basic_vector<T, 3>
 
 	template <dimensional_scalar T>
 	struct basic_vector<T, 4> : vector_base<true, T, 4, basic_vector<T, 4>>
@@ -3964,7 +3964,7 @@ namespace dsga
 		{
 			base.set(args...);
 		}
-	};
+	};	// struct basic_vector<T, 4>
 
 	template <dimensional_scalar T, std::size_t Size>
 	constexpr void swap(basic_vector<T, Size> &lhs, basic_vector<T, Size> &rhs) noexcept
@@ -5177,7 +5177,7 @@ namespace dsga
 		}
 
 		[[nodiscard]] constexpr auto equal(bool x,
-											   bool y) noexcept
+										   bool y) noexcept
 		{
 			return bool_equal_op(x, y);
 		}
@@ -5211,7 +5211,7 @@ namespace dsga
 		}
 
 		[[nodiscard]] constexpr auto notEqual(bool x,
-												  bool y) noexcept
+											  bool y) noexcept
 		{
 			return bool_not_equal_op(x, y);
 		}
@@ -5281,7 +5281,7 @@ namespace dsga
 		}
 
 		[[nodiscard]] constexpr auto compAnd(bool x,
-												 bool y) noexcept
+											 bool y) noexcept
 		{
 			return comp_and_op(x, y);
 		}
@@ -5297,7 +5297,7 @@ namespace dsga
 		}
 
 		[[nodiscard]] constexpr auto compOr(bool x,
-												bool y) noexcept
+											bool y) noexcept
 		{
 			return comp_or_op(x, y);
 		}
@@ -5313,7 +5313,7 @@ namespace dsga
 		}
 
 		[[nodiscard]] constexpr auto compXor(bool x,
-												 bool y) noexcept
+											 bool y) noexcept
 		{
 			return comp_xor_op(x, y);
 		}
@@ -5705,7 +5705,7 @@ namespace dsga
 		// 8.3 - common
 		//
 
-		constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept { return cxcm::abs(arg); };
+		constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept -> T { return cxcm::abs(arg); };
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		requires (!unsigned_scalar<T>)
@@ -5721,7 +5721,7 @@ namespace dsga
 			return abs_op(arg);
 		}
 
-		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(T(0) < arg) - T(arg < T(0))); };
+		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(0) < arg) - T(arg < T(0)); };
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		requires (!unsigned_scalar<T>)
@@ -6722,7 +6722,7 @@ namespace dsga
 		[[nodiscard]] constexpr auto rend() noexcept			{ return columns.rend(); }
 		[[nodiscard]] constexpr auto rend() const noexcept		{ return columns.crend(); }
 		[[nodiscard]] constexpr auto crend() const noexcept		{ return rend(); }
-	};
+	};	// struct basic_matrix
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
 	constexpr void swap(basic_matrix<T, C, R> &lhs, basic_matrix<T, C, R> &rhs) noexcept

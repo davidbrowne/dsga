@@ -6,9 +6,13 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.6
+v2.2.7
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.7
+    * Reworked example tolerance-checking functions.
+    * Minor formatting and commenting changes.
+    * Upgraded to doctest v2.4.12.
 * v2.2.6
     * Minor refactoring.
     * Tweaked ```dsga.natvis``` for better debugging experience.
@@ -23,16 +27,14 @@ v2.2.6
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2022 v17.13.5
-* gcc v14.2.0
-* clang v20.1.1
-* icx v2024.1.0 - Must set "precise" floating-point model since default is "fast" and the "float_control" #pragma doesn't seem to work.
+* Microsoft Visual Studio 2022 v17.14
+* gcc v14.2
+* clang v20.1
 
 ### Minimum Version
 * Microsoft Visual Studio 2022 v17.x
 * gcc v11.4
-* clang v16.0.6
-* icx v2023.1.0 - using [Compiler Explorer](https://compiler-explorer.com/) for basic compilation test, but test suite not run
+* clang v16.0
 
 ## Contents
 * [Some Quick Examples](#some-quick-examples)
@@ -351,10 +353,10 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.6`
+Current version: `v2.2.7`
 
 * Everything major has some tests, but code coverage is not 100%.
-* [Last Released: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
+* [Last Release: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
 * [Change Log](docs/CHANGELOG.md)
 
 ### The next steps
@@ -380,10 +382,10 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.13.5**
+* **MSVC 2022 - v17.14**
 
 ```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -391,10 +393,10 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 14.2.0** on Windows, [MSYS2](https://www.msys2.org/) distribution:
+* **gcc 14.2** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -402,25 +404,12 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 20.1.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases/tag/llvmorg-20.1.1):
+* **clang 20.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.11"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-* **icpx 2024.1.0** on Windows, [official binaries](https://www.intel.com/content/www/us/en/developer/articles/tool/oneapi-standalone-components.html#dpcpp-cpp):
-
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
-
-```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -430,7 +419,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 ### Ubuntu 24.04 LTS running in WSL2 for Windows 11
 
-* **gcc 14.2.0**
+* **gcc 14.2**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -441,7 +430,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 19.1.1**
+* **clang 19.1**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -456,7 +445,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 
 ### Ubuntu 22.04.3 LTS running in WSL2 for Windows 11
 
-* **gcc 12.3.0**
+* **gcc 12.3**
 
 ```
 [doctest] doctest version is "2.4.11"
@@ -467,7 +456,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 11.4.0**
+* **gcc 11.4**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -480,7 +469,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 16.0.6**
+* **clang 16.0**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

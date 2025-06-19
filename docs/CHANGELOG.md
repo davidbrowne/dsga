@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.2.7
+* Reworked example tolerance-checking functions.
+* Minor formatting and commenting changes.
+* Upgraded to doctest v2.4.12.
+
 ### v2.2.6
 * Minor refactoring.
 * Tweaked ```dsga.natvis``` for better debugging experience.
