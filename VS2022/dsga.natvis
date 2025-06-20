@@ -16,6 +16,19 @@
 		</Expand>
 	</Type>
 
+	<Type Name="std::array&lt;*,*&gt;" IncludeView="columns">
+		<DisplayString Condition="$T2 == 2">[{_Elems[0]}, {_Elems[1]}]</DisplayString>
+		<DisplayString Condition="$T2 == 3">[{_Elems[0]}, {_Elems[1]}, {_Elems[2]}]</DisplayString>
+		<DisplayString Condition="$T2 == 4">[{_Elems[0]}, {_Elems[1]}, {_Elems[2]}, {_Elems[3]}]</DisplayString>
+		<DisplayString>{{ ??? }}</DisplayString>
+		<Expand HideRawView="true">
+			<Item Name ="col [0]" Condition="$T2 >= 2">_Elems[0]</Item>
+			<Item Name ="col [1]" Condition="$T2 >= 2">_Elems[1]</Item>
+			<Item Name ="col [2]" Condition="$T2 >= 3">_Elems[2]</Item>
+			<Item Name ="col [3]" Condition="$T2 >= 4">_Elems[3]</Item>
+		</Expand>
+	</Type>
+
 	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
 		<DisplayString>{store,view(dsga)}</DisplayString>
 		<Expand>
@@ -47,7 +60,7 @@
 			<Synthetic Name="values">
 				<DisplayString>{{ columns = {$T2}, rows = {$T3} }}</DisplayString>
 			</Synthetic>
-			<ExpandedItem>columns</ExpandedItem>
+			<ExpandedItem>columns,view(columns)</ExpandedItem>
 		</Expand>
 	</Type>
 
@@ -264,16 +277,6 @@
 			<Item Name="offset" Condition="current.mapper_index != 0">current.mapper_index - 1</Item>
 			<Item Name="base">*current.mapper_ptr</Item>
 			<Item Name="[Raw Index]">current.mapper_index</Item>
-		</Expand>
-	</Type>
-
-	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
-		<DisplayString Condition="$T2 == 2">[{columns[0]}, {columns[1]}]</DisplayString>
-		<DisplayString Condition="$T2 == 3">[{columns[0]}, {columns[1]}, {columns[2]}]</DisplayString>
-		<DisplayString Condition="$T2 == 4">[{columns[0]}, {columns[1]}, {columns[2]}, {columns[3]}]</DisplayString>
-		<Expand>
-			<Synthetic Name="values"><DisplayString>{{ columns = {$T2}, rows = {$T3} }}</DisplayString></Synthetic>
-			<ExpandedItem>columns</ExpandedItem>
 		</Expand>
 	</Type>
 

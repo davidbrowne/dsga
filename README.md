@@ -9,6 +9,9 @@
 v2.2.7
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* Current Commit
+    * Tweaks to the MSVC debugger visualizer (dsga.natvis).
+
 * v2.2.7
     * Reworked example tolerance-checking functions.
     * Minor formatting and commenting changes.
