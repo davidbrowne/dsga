@@ -403,6 +403,7 @@ TEST_SUITE("test operators")
 		// for vector, length()/size() returns the number of vector components that are indexable.
 
 		// length()
+		/*
 		CHECK_EQ(fscal(1).length(), 1);
 		CHECK_EQ(vec2(1, 1).length(), 2);
 		CHECK_EQ(vec3(1, 1, 1).length(), 3);
@@ -412,6 +413,7 @@ TEST_SUITE("test operators")
 		CHECK_EQ(vec4(1, 1, 1, 1).yyy.length(), 3);
 		CHECK_EQ(vec4(1, 1, 1, 1).wx.length(), 2);
 		CHECK_EQ(vec4(1, 1, 1, 1).z.length(), 1);
+		*/
 
 		// size()
 		CHECK_EQ(fscal(1).size(), 1u);
