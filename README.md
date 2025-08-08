@@ -6,12 +6,16 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.7
+v2.2.8
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
-* Current Commit
-    * Tweaks to the MSVC debugger visualizer (dsga.natvis).
-
+* v2.2.8
+    * Added transformation matrix functions example.
+    * Refactored ```operator ==()``` for the vector classes.
+    * Added support for matrices for the tolerance example functions.
+    * Creaded example view transform functions.
+* Non-Versioned Commit
+    * Tweaks to the MSVC debugger visualizer (```dsga.natvis```).
 * v2.2.7
     * Reworked example tolerance-checking functions.
     * Minor formatting and commenting changes.
@@ -31,7 +35,7 @@ v2.2.7
 ## Tested Compilers
 ### Regularly Tested
 * Microsoft Visual Studio 2022 v17.14
-* gcc v14.2
+* gcc v15.1
 * clang v20.1
 
 ### Minimum Version
@@ -396,7 +400,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 14.2** on Windows, [MSYS2](https://www.msys2.org/) distribution:
+* **gcc 15.1** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
 [doctest] doctest version is "2.4.12"

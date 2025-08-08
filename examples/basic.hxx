@@ -1,10 +1,16 @@
+#pragma once
 
-//          Copyright David Browne 2020-2024.
+//          Copyright David Browne 2020-2025.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 
 #include "dsga.hxx"
+
+//
+// some of these functions come from Section 12 and 17 in the paper:
+// https://people.eecs.berkeley.edu/~wkahan/MathH110/Cross.pdf
+//
 
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
@@ -28,10 +34,11 @@ constexpr auto get_perpendicular2(const dsga::basic_vector<T, 2> &some_vec) noex
 // if p1 == p2 == p3, then there is a singularity -- we will have 0/0 problem, when real answer should be p1 or p2 or p3.
 // the return value c is the center point of a circle inscribed in a triangle represented by the vertices p1, p2, and p3.
 // a line segment from c to any of the vertices bisects the angles at the vertices.
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::basic_vector<T, 3u> triangle_incenter(const dsga::vector_base<W1, T, 3u, D1> &p1,
-													  const dsga::vector_base<W2, T, 3u, D2> &p2,
-													  const dsga::vector_base<W3, T, 3u, D3> &p3)
+// From Section 17, #9 in the paper
+template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
+constexpr auto triangle_incenter(const dsga::vector_base<W1, T, C, D1> &p1,
+								 const dsga::vector_base<W2, T, C, D2> &p2,
+								 const dsga::vector_base<W3, T, C, D3> &p3) noexcept
 {
 	auto mag1 = dsga::distance(p2, p3);
 	auto mag2 = dsga::distance(p3, p1);
@@ -42,6 +49,7 @@ constexpr dsga::basic_vector<T, 3u> triangle_incenter(const dsga::vector_base<W1
 
 // the return value c is the center point of the biggest sphere inscribed in a tetrahedron represented by the vertices p1,
 // p2, p3, and the implicit origin. c is equidistant from the four planes of the triangle faces of the tetrahedron.
+// From Section 17, #10 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr dsga::basic_vector<T, 3u> tetrahedron_incenter(const dsga::vector_base<W1, T, 3u, D1> &p1,
 														 const dsga::vector_base<W2, T, 3u, D2> &p2,
@@ -56,6 +64,7 @@ constexpr dsga::basic_vector<T, 3u> tetrahedron_incenter(const dsga::vector_base
 }
 
 // find center of circle that goes through the three points
+// From #8 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr auto three_point_circle_center(const dsga::vector_base<W1, T, 3u, D1> &p1,
 										 const dsga::vector_base<W2, T, 3u, D2> &p2,
@@ -75,6 +84,7 @@ constexpr auto three_point_circle_center(const dsga::vector_base<W1, T, 3u, D1> 
 }
 
 // find radius of circle that goes through the three points
+// From #8 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr auto three_point_circle_radius(const dsga::vector_base<W1, T, 3u, D1> &p1,
 										 const dsga::vector_base<W2, T, 3u, D2> &p2,
@@ -107,6 +117,7 @@ constexpr auto project_to_line1(const dsga::vector_base<W1, T, 3u, D1> &point,
 }
 
 // same as above, different implementation
+// From #4 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr auto project_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
 								const dsga::vector_base<W2, T, 3u, D2> &p1,
@@ -118,6 +129,7 @@ constexpr auto project_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
 }
 
 // same as above, different implementation, paying more attention to attenuating roundoff
+// From #6 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr auto project_to_line3(const dsga::vector_base<W1, T, 3u, D1> &point,
 								const dsga::vector_base<W2, T, 3u, D2> &p1,
@@ -143,6 +155,7 @@ constexpr auto project_to_line3(const dsga::vector_base<W1, T, 3u, D1> &point,
 }
 
 // gives minimum distance from point to a line made from line segment p1 <=> p2
+// From simple vector addition/subtraction (see project_to_line1())
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr T distance_to_line(const dsga::vector_base<W1, T, 3u, D1> &point,
 							 const dsga::vector_base<W2, T, 3u, D2> &p1,
@@ -156,6 +169,7 @@ constexpr T distance_to_line(const dsga::vector_base<W1, T, 3u, D1> &point,
 }
 
 // project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points
+// From #3 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
 constexpr auto project_to_plane1(const dsga::vector_base<W1, T, 3u, D1> &point,
 								 const dsga::vector_base<W2, T, 3u, D2> &p1,

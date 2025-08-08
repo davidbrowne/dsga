@@ -1,6 +1,13 @@
 # Change Log
 
-### Current Commit
+### v2.2.8
+* Added transformation matrix functions example.
+* Refactored ```operator ==()``` for the vector classes.
+* Added support for matrices for the tolerance example functions.
+* Creaded example view transform functions.
+* Updated some copyright dates.
+
+### No Version Commit
 * Tweaks to the MSVC debugger visualizer (dsga.natvis).
 
 ### v2.2.7

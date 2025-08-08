@@ -21,7 +21,6 @@
 #include <tuple>					// tuple interface for structured bindings, variadic constructors
 #include <algorithm>				// min()
 #include <numbers>					// pi_v<>, inv_pi_v<>
-#include <numeric>
 
 //
 // Data Structures for Geometric Algebra (dsga)
@@ -38,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 7;
+	constexpr inline int DSGA_PATCH_VERSION = 8;
 
 	namespace cxcm
 	{
@@ -1850,7 +1849,7 @@ namespace dsga
 		using reverse_iterator = dimensional_storage_t<T, Size>::reverse_iterator;
 		using const_reverse_iterator = dimensional_storage_t<T, Size>::const_reverse_iterator;
 
-		[[nodiscard]] constexpr int length() const noexcept					{ return Count; }
+		[[nodiscard]] consteval int length() noexcept						{ return Count; }
 		static constexpr std::integral_constant<std::size_t, Count> size =	{};
 
 		// logical and physically contiguous access to data
@@ -2001,7 +2000,7 @@ namespace dsga
 		[[nodiscard]] static constexpr auto sequence() noexcept						{ return Derived::sequence(); }
 
 		// number of accessible T elements - required by spec
-		[[nodiscard]] constexpr int length() const noexcept							{ return Count; }
+		[[nodiscard]] consteval int length() noexcept								{ return Count; }
 
 		// not required by spec, but more c++ container-like
 		static constexpr std::integral_constant<std::size_t, Count> size =			{};
@@ -2443,7 +2442,7 @@ namespace dsga
 			return temp;
 		}
 
-		[[nodiscard]] friend constexpr indexed_vector_iterator operator +(const int offset, indexed_vector_iterator iter) noexcept
+		[[nodiscard]] friend constexpr indexed_vector_iterator operator +(const int offset, indexed_vector_iterator iter)
 		{
 			iter += offset;
 			return iter;
@@ -2904,7 +2903,7 @@ namespace dsga
 
 		template <bool W, dimensional_scalar U, std::size_t C, typename D>
 		requires implicitly_convertible_to<U, T>
-		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other) noexcept
+		explicit(false) constexpr basic_vector(const vector_base<W, U, C, D> &other)
 			: base{ static_cast<T>(other[0]) }
 		{
 		}
@@ -6345,7 +6344,7 @@ namespace dsga
 		// 8.4 is omitted
 		//
 
-		// not in GLSL -- dot() is just for floating point, innerProduct() will work with everything but bool
+		// not in GLSL -- dot() is just for floating point, innerProduct() does what dot() does, but it works on all non_bool_scalar types
 		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 		[[nodiscard]] constexpr auto innerProduct(const vector_base<W1, T1, C, D1> &x,
 												  const vector_base<W2, T2, C, D2> &y) noexcept
@@ -6517,33 +6516,25 @@ namespace dsga
 
 	// implicitly_convertible_to does not work with bool, so need another function for that case if we want to support that (which we don't)
 	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
-	requires implicitly_convertible_to<T2, T1>
+	requires std::convertible_to<T1, T2> || std::convertible_to<T2, T1>
 	constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
 							   const vector_base<W2, T2, C, D2> &second) noexcept
 	{
+		using commontype = std::common_type_t<T1, T2>;
 		return [&first, &second]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
-		}(std::make_index_sequence<C>{});
-	}
-
-	template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-	constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
-							   const vector_base<W2, T, C, D2> &second) noexcept
-	{
-		return [&first, &second]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-		{
-			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == second[Is])) && ...);
+			return ((!std::isunordered(first[Is], second[Is]) &&
+					(static_cast<commontype>(first[Is]) == static_cast<commontype>(second[Is]))) && ...);
 		}(std::make_index_sequence<C>{});
 	}
 
 	// when Count == 1, treat it like a scalar value for equality comparison
-	template <bool W, dimensional_scalar T, typename D, dimensional_scalar U>
-	requires std::convertible_to<U, T> || std::convertible_to<T, U>
-	constexpr bool operator ==(const vector_base<W, T, 1, D> &first,
-							   U second) noexcept
+	template <bool W, dimensional_scalar T1, typename D, dimensional_scalar T2>
+	requires std::convertible_to<T2, T1> || std::convertible_to<T1, T2>
+	constexpr bool operator ==(const vector_base<W, T1, 1, D> &first,
+							   T2 second) noexcept
 	{
-		using commontype = std::common_type_t<T, U>;
+		using commontype = std::common_type_t<T1, T2>;
 		return (static_cast<commontype>(first[0]) == static_cast<commontype>(second));
 	}
 
@@ -6558,10 +6549,10 @@ namespace dsga
 		static constexpr std::size_t ComponentCount = C * R;
 
 		// number of columns
-		[[nodiscard]] constexpr int length() const noexcept						{ return C; }
+		[[nodiscard]] consteval int length() noexcept						{ return C; }
 
 		// number of rows
-		[[nodiscard]] constexpr int column_length() const noexcept				{ return R; }
+		[[nodiscard]] consteval int column_length() noexcept				{ return R; }
 
 		// returns number of columns (row size), not number of elements
 		// not required by spec, but more c++ container-like
@@ -6975,6 +6966,17 @@ namespace dsga
 
 			return square_mat;
 		}
+
+		// not in glsl
+		//
+		// make an identity matrix
+		template <floating_point_scalar T, std::size_t C>
+		requires (C > 1)
+		[[nodiscard]] constexpr basic_matrix<T, C, C> identity_matrix() noexcept
+		{
+			return basic_matrix<T, C, C>(1);
+		}
+
 	}	// namespace functions
 
 	//
