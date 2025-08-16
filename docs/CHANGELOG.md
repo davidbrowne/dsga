@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.2.9
+* Reverted changes to the ```length()``` method and associated tests.
+
 ### v2.2.8
 * Added transformation matrix functions example.
 * Refactored ```operator ==()``` for the vector classes.

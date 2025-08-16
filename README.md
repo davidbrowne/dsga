@@ -6,9 +6,12 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.8
+v2.2.9
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.9
+    * Reverted changes to the ```length()``` method and associated tests.
+
 * v2.2.8
     * Added transformation matrix functions example.
     * Refactored ```operator ==()``` for the vector classes.
@@ -360,7 +363,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.7`
+Current version: `v2.2.9`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)

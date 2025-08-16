@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 8;
+	constexpr inline int DSGA_PATCH_VERSION = 9;
 
 	namespace cxcm
 	{
@@ -1849,7 +1849,7 @@ namespace dsga
 		using reverse_iterator = dimensional_storage_t<T, Size>::reverse_iterator;
 		using const_reverse_iterator = dimensional_storage_t<T, Size>::const_reverse_iterator;
 
-		[[nodiscard]] consteval int length() noexcept						{ return Count; }
+		[[nodiscard]] static constexpr int length() noexcept				{ return Count; }
 		static constexpr std::integral_constant<std::size_t, Count> size =	{};
 
 		// logical and physically contiguous access to data
@@ -2000,7 +2000,7 @@ namespace dsga
 		[[nodiscard]] static constexpr auto sequence() noexcept						{ return Derived::sequence(); }
 
 		// number of accessible T elements - required by spec
-		[[nodiscard]] consteval int length() noexcept								{ return Count; }
+		[[nodiscard]] static constexpr int length() noexcept						{ return Count; }
 
 		// not required by spec, but more c++ container-like
 		static constexpr std::integral_constant<std::size_t, Count> size =			{};
@@ -2128,8 +2128,9 @@ namespace dsga
 		}
 	};	// struct vector_base
 
-	// indexed_vector will act as a swizzle of a basic_vector. basic_vector relies on the anonymous union of indexed_vector data members.
-	// both indexed_vector and basic_vector have their own storage (linked via anonymous union and common initial sequence).
+	// indexed_vector will act as a swizzle of a basic_vector, the result of "component group notation". basic_vector relies
+	// on the anonymous union of indexed_vector data members. both indexed_vector and basic_vector have their own storage
+	// (linked via anonymous union and common initial sequence).
 	//
 	// T is the type of the elements stored in the underlying storage
 	// Size relates to the number of elements in the underlying storage, which informs the values the Is can hold
@@ -6549,18 +6550,18 @@ namespace dsga
 		static constexpr std::size_t ComponentCount = C * R;
 
 		// number of columns
-		[[nodiscard]] consteval int length() noexcept						{ return C; }
+		[[nodiscard]] static constexpr int length() noexcept					{ return C; }
 
 		// number of rows
-		[[nodiscard]] consteval int column_length() noexcept				{ return R; }
+		[[nodiscard]] static constexpr int column_length() noexcept				{ return R; }
 
 		// returns number of columns (row size), not number of elements
 		// not required by spec, but more c++ container-like
-		static constexpr std::integral_constant<std::size_t, C> size = {};
+		static constexpr std::integral_constant<std::size_t, C> size =			{};
 
 		// returns number of rows
 		// not required by spec, but more c++ container-like
-		static constexpr std::integral_constant<std::size_t, R> column_size = {};
+		static constexpr std::integral_constant<std::size_t, R> column_size =	{};
 
 		// data storage for matrix
 		std::array<basic_vector<T, R>, C> columns;
