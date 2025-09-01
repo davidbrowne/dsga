@@ -6,9 +6,14 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.9
+v2.2.10
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.10
+    * ```normalize()``` now returns a vector of zeroes if the length is zero (instead of the old way where it returned a vector of NaNs).
+    * Modified angle example by adding an alternate (supposedly lesser) function for determining the angle between 2 vectors.
+    * For many functions where ```auto``` was the return type, changed them so the return type is now explicitly specified, where possible.
+
 * v2.2.9
     * Reverted changes to the ```length()``` method and associated tests.
 
@@ -39,7 +44,7 @@ v2.2.9
 ### Regularly Tested
 * Microsoft Visual Studio 2022 v17.14
 * gcc v15.1
-* clang v20.1
+* clang v21.1
 
 ### Minimum Version
 * Microsoft Visual Studio 2022 v17.x
@@ -363,7 +368,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.9`
+Current version: `v2.2.10`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
@@ -414,7 +419,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 20.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases):
+* **clang 21.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

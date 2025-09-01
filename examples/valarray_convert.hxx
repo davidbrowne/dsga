@@ -32,7 +32,7 @@ void copy_from_vector(std::valarray<U> &lhs, const dsga::basic_vector<T, S> &rhs
 // create a valarray from a vector
 
 template <dsga::dimensional_scalar T, std::size_t S>
-auto to_valarray(const dsga::basic_vector<T, S> &v)
+std::valarray<T> to_valarray(const dsga::basic_vector<T, S> &v)
 {
 	return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 	{

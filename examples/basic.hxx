@@ -15,7 +15,7 @@
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
 template <dsga::floating_point_scalar T>
-constexpr auto get_perpendicular1(const dsga::basic_vector<T, 2> &some_vec) noexcept
+constexpr dsga::basic_vector<T, 2> get_perpendicular1(const dsga::basic_vector<T, 2> &some_vec) noexcept
 {
 	auto cos90 = 0.0f;
 	auto sin90 = 1.0f;
@@ -26,7 +26,7 @@ constexpr auto get_perpendicular1(const dsga::basic_vector<T, 2> &some_vec) noex
 
 // same as above, different implementation
 template <dsga::floating_point_scalar T>
-constexpr auto get_perpendicular2(const dsga::basic_vector<T, 2> &some_vec) noexcept
+constexpr dsga::basic_vector<T, 2> get_perpendicular2(const dsga::basic_vector<T, 2> &some_vec) noexcept
 {
 	return dsga::basic_vector<T, 2>(-1, 1) * some_vec.yx;
 }
@@ -36,9 +36,9 @@ constexpr auto get_perpendicular2(const dsga::basic_vector<T, 2> &some_vec) noex
 // a line segment from c to any of the vertices bisects the angles at the vertices.
 // From Section 17, #9 in the paper
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr auto triangle_incenter(const dsga::vector_base<W1, T, C, D1> &p1,
-								 const dsga::vector_base<W2, T, C, D2> &p2,
-								 const dsga::vector_base<W3, T, C, D3> &p3) noexcept
+constexpr dsga::basic_vector<T, C> triangle_incenter(const dsga::vector_base<W1, T, C, D1> &p1,
+													 const dsga::vector_base<W2, T, C, D2> &p2,
+													 const dsga::vector_base<W3, T, C, D3> &p3) noexcept
 {
 	auto mag1 = dsga::distance(p2, p3);
 	auto mag2 = dsga::distance(p3, p1);
@@ -66,9 +66,9 @@ constexpr dsga::basic_vector<T, 3u> tetrahedron_incenter(const dsga::vector_base
 // find center of circle that goes through the three points
 // From #8 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr auto three_point_circle_center(const dsga::vector_base<W1, T, 3u, D1> &p1,
-										 const dsga::vector_base<W2, T, 3u, D2> &p2,
-										 const dsga::vector_base<W3, T, 3u, D3> &p3) noexcept
+constexpr dsga::basic_vector<T, 3> three_point_circle_center(const dsga::vector_base<W1, T, 3u, D1> &p1,
+															 const dsga::vector_base<W2, T, 3u, D2> &p2,
+															 const dsga::vector_base<W3, T, 3u, D3> &p3) noexcept
 {
 	auto v = p2 - p1;
 	auto u = dsga::basic_vector<T, 3u>(p2);
@@ -86,9 +86,9 @@ constexpr auto three_point_circle_center(const dsga::vector_base<W1, T, 3u, D1> 
 // find radius of circle that goes through the three points
 // From #8 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr auto three_point_circle_radius(const dsga::vector_base<W1, T, 3u, D1> &p1,
-										 const dsga::vector_base<W2, T, 3u, D2> &p2,
-										 const dsga::vector_base<W3, T, 3u, D3> &p3) noexcept
+constexpr T three_point_circle_radius(const dsga::vector_base<W1, T, 3u, D1> &p1,
+									  const dsga::vector_base<W2, T, 3u, D2> &p2,
+									  const dsga::vector_base<W3, T, 3u, D3> &p3) noexcept
 {
 	auto v = p2 - p1;
 	[[maybe_unused]] auto u = dsga::basic_vector<T, 3u>(p2);
@@ -105,9 +105,9 @@ constexpr auto three_point_circle_radius(const dsga::vector_base<W1, T, 3u, D1> 
 
 // gives closest projection point from point to a line made from line segment p1 <=> p2
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr auto project_to_line1(const dsga::vector_base<W1, T, 3u, D1> &point,
-								const dsga::vector_base<W2, T, 3u, D2> &p1,
-								const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
+constexpr dsga::basic_vector<T, 3> project_to_line1(const dsga::vector_base<W1, T, 3u, D1> &point,
+													const dsga::vector_base<W2, T, 3u, D2> &p1,
+													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
 	auto hyp = point - p1;
 	auto v1 = p2 - p1;
@@ -119,9 +119,9 @@ constexpr auto project_to_line1(const dsga::vector_base<W1, T, 3u, D1> &point,
 // same as above, different implementation
 // From #4 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr auto project_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
-								const dsga::vector_base<W2, T, 3u, D2> &p1,
-								const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
+constexpr dsga::basic_vector<T, 3> project_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
+													const dsga::vector_base<W2, T, 3u, D2> &p1,
+													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
 	auto hyp = point - p1;
 	auto v1 = p2 - p1;
@@ -131,9 +131,9 @@ constexpr auto project_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
 // same as above, different implementation, paying more attention to attenuating roundoff
 // From #6 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr auto project_to_line3(const dsga::vector_base<W1, T, 3u, D1> &point,
-								const dsga::vector_base<W2, T, 3u, D2> &p1,
-								const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
+constexpr dsga::basic_vector<T, 3> project_to_line3(const dsga::vector_base<W1, T, 3u, D1> &point,
+													const dsga::vector_base<W2, T, 3u, D2> &p1,
+													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
 	auto hyp1 = point - p1;
 	auto v1 = p2 - p1;
@@ -171,10 +171,10 @@ constexpr T distance_to_line(const dsga::vector_base<W1, T, 3u, D1> &point,
 // project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points
 // From #3 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-constexpr auto project_to_plane1(const dsga::vector_base<W1, T, 3u, D1> &point,
-								 const dsga::vector_base<W2, T, 3u, D2> &p1,
-								 const dsga::vector_base<W3, T, 3u, D3> &p2,
-								 const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
+constexpr dsga::basic_vector<T, 3> project_to_plane1(const dsga::vector_base<W1, T, 3u, D1> &point,
+													 const dsga::vector_base<W2, T, 3u, D2> &p1,
+													 const dsga::vector_base<W3, T, 3u, D3> &p2,
+													 const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
 {
 	auto p = [](const auto &u, auto &v, const auto &w) { return dsga::cross_matrix(v - u) * (w - u); };
 	auto p_val = p(p1, p2, p3);
@@ -185,10 +185,10 @@ constexpr auto project_to_plane1(const dsga::vector_base<W1, T, 3u, D1> &point,
 
 // same as above, different implementation
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-constexpr auto project_to_plane2(const dsga::vector_base<W1, T, 3u, D1> &point,
-								 const dsga::vector_base<W2, T, 3u, D2> &p1,
-								 const dsga::vector_base<W3, T, 3u, D3> &p2,
-								 const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
+constexpr dsga::basic_vector<T, 3> project_to_plane2(const dsga::vector_base<W1, T, 3u, D1> &point,
+													 const dsga::vector_base<W2, T, 3u, D2> &p1,
+													 const dsga::vector_base<W3, T, 3u, D3> &p2,
+													 const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
 {
 	auto triangle_norm = [](const auto &u, auto &v, const auto &w) { return dsga::cross_matrix(v - u) * (w - u); };
 	auto N = triangle_norm(p1, p2, p3);
@@ -199,10 +199,10 @@ constexpr auto project_to_plane2(const dsga::vector_base<W1, T, 3u, D1> &point,
 
 #if ATTENUATE_ROUNDOFF
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-constexpr auto project_to_plane(const dsga::vector_base<W1, T, 3u, D1> &point,
-								const dsga::vector_base<W2, T, 3u, D2> &p1,
-								const dsga::vector_base<W3, T, 3u, D3> &p2,
-								const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
+constexpr dsga::basic_vector<T, 3> project_to_plane(const dsga::vector_base<W1, T, 3u, D1> &point,
+													const dsga::vector_base<W2, T, 3u, D2> &p1,
+													const dsga::vector_base<W3, T, 3u, D3> &p2,
+													const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
 {
 	auto p = [](const auto &u, auto &v, const auto &w) { return dsga::cross_matrix(v - u) * (w - u); };
 	auto delta_u = p3 - p2;

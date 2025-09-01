@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.2.10
+* ```normalize()``` now returns a vector of zeroes if the length is zero (instead of the old way where it returned a vector of NaNs).
+* Modified angle example by adding an alternate (supposedly less accurate) function for determining the angle between 2 vectors.
+* For many functions where ```auto``` was the return type, changed them so the return type is now explicitly specified, where possible. This is an effort to reduce compile times.
+
 ### v2.2.9
 * Reverted changes to the ```length()``` method and associated tests.
 

@@ -33,7 +33,7 @@ namespace dsga
 
 	template <floating_point_scalar T, floating_point_scalar U>
 	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr auto within_tolerance(T x,
+	[[nodiscard]] constexpr bool within_tolerance(T x,
 												  U tolerance) noexcept
 	{
 		return abs(x) <= static_cast<T>(abs(tolerance));
@@ -89,8 +89,8 @@ namespace dsga
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
 	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr auto within_tolerance(const basic_matrix<T, C, R> &arg,
-												  U tolerance) noexcept
+	[[nodiscard]] constexpr basic_vector<bool, C> within_tolerance(const basic_matrix<T, C, R> &arg,
+																   U tolerance) noexcept
 	{
 		return [&arg, &tolerance] <std::size_t ...Is>(std::index_sequence<Is ...>) noexcept
 		{
@@ -100,8 +100,8 @@ namespace dsga
 
 	template <bool W, floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U, typename D>
 	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr auto within_tolerance(const basic_matrix<T, C, R> &arg,
-												  const vector_base<W, U, C, D> &tolerance) noexcept
+	[[nodiscard]] constexpr basic_vector<bool, C> within_tolerance(const basic_matrix<T, C, R> &arg,
+																   const vector_base<W, U, C, D> &tolerance) noexcept
 	{
 		return [&arg, &tolerance] <std::size_t ...Is>(std::index_sequence<Is ...>) noexcept
 		{

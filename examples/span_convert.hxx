@@ -81,7 +81,7 @@ template <dsga::dimensional_scalar T, std::size_t S>
 
 // const T span from const vector
 template <dsga::dimensional_scalar T, std::size_t S>
-[[nodiscard]] constexpr auto make_span(const dsga::basic_vector<T, S> &v) noexcept
+[[nodiscard]] constexpr std::span<const T, S> make_span(const dsga::basic_vector<T, S> &v) noexcept
 {
 //	return std::span<const T, S>(v.begin(), v.end());
 //	return std::span<const T, S>(v.data(), v.size());
@@ -98,7 +98,7 @@ auto make_span(const dsga::basic_vector<T, S> &&v) noexcept = delete;
 
 // const T span from either const or non-const vector
 template <dsga::dimensional_scalar T, std::size_t S>
-[[nodiscard]] constexpr auto make_const_span(const dsga::basic_vector<T, S> &v) noexcept
+[[nodiscard]] constexpr std::span<const T, S> make_const_span(const dsga::basic_vector<T, S> &v) noexcept
 {
 //	return std::span<const T, S>(v.begin(), v.end());
 //	return std::span<const T, S>(v.data(), v.size());
@@ -119,7 +119,7 @@ auto make_const_span(const dsga::basic_vector<T, S> &&v) noexcept = delete;
 
 // non-const dsga::basic_vector<T, C> span from non-const matrix
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-[[nodiscard]] constexpr auto make_span(dsga::basic_matrix<T, C, R> &m) noexcept
+[[nodiscard]] constexpr std::span<dsga::basic_vector<T, R>, C> make_span(dsga::basic_matrix<T, C, R> &m) noexcept
 {
 //	return std::span<dsga::basic_vector<T, R>, C>(m.begin(), m.end());
 //	return std::span<dsga::basic_vector<T, R>, C>(m.data(), m.size());
@@ -128,7 +128,7 @@ template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
 
 // const dsga::basic_vector<T, C> span from const matrix
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-[[nodiscard]] constexpr auto make_span(const dsga::basic_matrix<T, C, R> &m) noexcept
+[[nodiscard]] constexpr std::span<const dsga::basic_vector<T, R>, C> make_span(const dsga::basic_matrix<T, C, R> &m) noexcept
 {
 //	return std::span<const dsga::basic_vector<T, R>, C>(m.begin(), m.end());
 //	return std::span<const dsga::basic_vector<T, R>, C>(m.data(), m.size());
@@ -145,7 +145,7 @@ auto make_span(const dsga::basic_matrix<T, C, R> &&m) noexcept = delete;
 
 // const dsga::basic_vector<T, C> span from either const or non-const matrix
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-[[nodiscard]] constexpr auto make_const_span(const dsga::basic_matrix<T, C, R> &m) noexcept
+[[nodiscard]] constexpr std::span<const dsga::basic_vector<T, R>, C> make_const_span(const dsga::basic_matrix<T, C, R> &m) noexcept
 {
 //	return std::span<const dsga::basic_vector<T, R>, C>(m.begin(), m.end());
 //	return std::span<const dsga::basic_vector<T, R>, C>(m.data(), m.size());

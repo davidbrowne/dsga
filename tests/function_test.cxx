@@ -494,8 +494,8 @@ TEST_SUITE("test functions")
 			CHECK_EQ(normed, vec4(0.5, -0.5, 0.5, -0.5));
 
 			auto zeros = dvec4(0.0);
-			auto nan_normed = normalize(zeros);
-			CHECK_UNARY(all(isnan(nan_normed)));
+			auto bad_norm = normalize(zeros);
+			CHECK_EQ(zeros, bad_norm);
 		}
 
 		SUBCASE("'normal' vector functions")

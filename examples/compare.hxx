@@ -15,7 +15,7 @@ namespace dsga
 	// default weights for comparison - x has priority over y, which is over z, which is over w
 	template <std::size_t C>
 	requires (C >= 1 && C <= 4)
-	[[nodiscard]] constexpr auto default_comparison_weights() noexcept
+	[[nodiscard]] constexpr basic_vector<int, C> default_comparison_weights() noexcept
 	{
 		constexpr auto weights = basic_vector<int, 4>(1, 3, 9, 27);				// reverse order
 		return[&]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -37,17 +37,17 @@ namespace dsga
 
 		// comparison lambdas that return -1 for less than, 0 for equal, and 1 for greater than.
 		// these are for the types that don't work with the sign() function
-		constexpr inline auto unsigned_compare_op = [](unsigned_scalar auto lhs, unsigned_scalar auto rhs) noexcept -> int
+		constexpr inline auto unsigned_compare_op = [](unsigned_scalar auto lhs, unsigned_scalar auto rhs) noexcept
 		{
 			return (lhs < rhs) ? -1 : ((lhs > rhs) ? 1 : 0);
 		};
 
-		constexpr inline auto signed_unsigned_compare_op = []<signed_scalar T1, unsigned_scalar T2>(T1 lhs, T2 rhs) noexcept -> int
+		constexpr inline auto signed_unsigned_compare_op = []<signed_scalar T1, unsigned_scalar T2>(T1 lhs, T2 rhs) noexcept
 		{
 			return (lhs < 0) ? -1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
 		};
 
-		constexpr inline auto unsigned_signed_compare_op = []<unsigned_scalar T1, signed_scalar T2>(T1 lhs, T2 rhs) noexcept -> int
+		constexpr inline auto unsigned_signed_compare_op = []<unsigned_scalar T1, signed_scalar T2>(T1 lhs, T2 rhs) noexcept
 		{
 			return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
 		};
@@ -179,7 +179,7 @@ namespace dsga
 	//
 
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	constexpr auto operator <=>(const vector_base<W1, T1, C, D1> &first,
+	constexpr bool operator <=>(const vector_base<W1, T1, C, D1> &first,
 								const vector_base<W2, T2, C, D2> &second) noexcept
 	{
 		constexpr auto weights = default_comparison_weights<C>();
@@ -198,7 +198,7 @@ namespace dsga
 	};
 
 	template <floating_point_scalar T1, std::size_t C, std::size_t R, floating_point_scalar T2>
-	constexpr auto operator <=>(const basic_matrix<T1, C, R> &lhs,
+	constexpr bool operator <=>(const basic_matrix<T1, C, R> &lhs,
 								const basic_matrix<T2, C, R> &rhs) noexcept
 	{
 		return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), mat_vec_comp_op);
