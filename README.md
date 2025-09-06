@@ -43,7 +43,7 @@ v2.2.10
 ## Tested Compilers
 ### Regularly Tested
 * Microsoft Visual Studio 2022 v17.14
-* gcc v15.1
+* gcc v15.2
 * clang v21.1
 
 ### Minimum Version
@@ -408,7 +408,7 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **gcc 15.1** on Windows, [MSYS2](https://www.msys2.org/) distribution:
+* **gcc 15.2** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
 [doctest] doctest version is "2.4.12"

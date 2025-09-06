@@ -28,10 +28,10 @@
 
 namespace dsga
 {
-    //          Copyright David Browne 2020-2025.
-    // Distributed under the Boost Software License, Version 1.0.
-    //    (See accompanying file LICENSE_1_0.txt or copy at
-    //          https://www.boost.org/LICENSE_1_0.txt)
+	//          Copyright David Browne 2020-2025.
+	// Distributed under the Boost Software License, Version 1.0.
+	//    (See accompanying file LICENSE_1_0.txt or copy at
+	//          https://www.boost.org/LICENSE_1_0.txt)
 
 	// version info
 
@@ -371,13 +371,14 @@ namespace dsga
 				return accurate_div(a, b);
 			}
 
-		} // namespace dd_real
+		}	// namespace dd_real
 
 		namespace concepts
 		{
 			template <typename T>
 			concept basic_floating_point = (std::is_same_v<float, std::remove_cvref_t<T>> || std::is_same_v<double, std::remove_cvref_t<T>>);
-		}
+
+		}	// namespace concepts
 
 		namespace limits
 		{
@@ -404,7 +405,8 @@ namespace dsga
 						return 0x1.fffffffffffffp+51L;
 					}
 				}
-			}
+
+			}	// namespace detail
 
 			//
 			// largest_fractional_value
@@ -420,7 +422,8 @@ namespace dsga
 
 			template <>
 			constexpr inline float largest_fractional_value<float> = 0x1.fffffep+22f;
-		}
+
+		}	// namespace limits
 
 		//
 		// floating-point negative zero support
@@ -458,7 +461,6 @@ namespace dsga
 		// though standard library is a little better in debugger.
 		namespace relaxed
 		{
-
 			//
 			// abs(), fabs()
 			//
@@ -637,7 +639,6 @@ namespace dsga
 
 			namespace detail
 			{
-
 				// "Improving the Accuracy of the Fast Inverse Square Root by Modifying Newton-Raphson Corrections" 2021
 				// https://www.mdpi.com/1099-4300/23/1/86
 				//
@@ -727,7 +728,7 @@ namespace dsga
 					}
 				}
 
-			}
+			}	// namespace detail
 
 			// constexpr square root, uses higher precision behind the scenes
 			template <cxcm::concepts::basic_floating_point T>
@@ -750,7 +751,7 @@ namespace dsga
 				return static_cast<T>(detail::fast_rsqrt(static_cast<double>(value)));
 			}
 
-		} // namespace relaxed
+		}	// namespace relaxed
 
 		//
 		// isnan()
@@ -936,7 +937,6 @@ namespace dsga
 		// this namespace is pulled into parent namespace via inline.
 		inline namespace strict
 		{
-
 			namespace detail
 			{
 				//
@@ -1303,7 +1303,7 @@ namespace dsga
 #pragma float_control(pop)
 #endif
 
-			} // namespace detail
+			}	// namespace detail
 
 			//
 			// abs(), fabs()
@@ -1585,9 +1585,9 @@ namespace dsga
 				return fast_rsqrt(static_cast<double>(value));
 			}
 
-		} // namespace strict
+		}	// namespace strict
 
-	} // namespace cxcm
+	}	// namespace cxcm
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1743,6 +1743,7 @@ namespace dsga
 		template <sequence_indexable auto vals, std::size_t ...Is>
 		requires ((vals[Is] >= 0) && ...)
 		constexpr std::index_sequence<vals[Is]...> indexable_to_sequence(std::index_sequence<Is...>) noexcept { return {}; }
+
 	}	// namespace detail
 
 	// do the argument indexes and count/size make for valid indirect indexing
@@ -1794,7 +1795,6 @@ namespace dsga
 	concept promotes_to =
 	requires
 	{
-		typename std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 		requires std::same_as<std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>, std::remove_cvref_t<U>>;
 	};
 
@@ -1815,7 +1815,7 @@ namespace dsga
 
 	//
 	// common initial sequence wrapper with basic storage access -- forwards function calls to wrapped storage.
-	// this struct is an aggregate
+	// this struct is an aggregate type
 	//
 
 	template <dimensional_scalar T, std::size_t S>
@@ -1872,7 +1872,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr sequence_pack sequence() noexcept	{ return sequence_pack{}; }
 
 		template <typename ...Args>
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -1887,12 +1887,12 @@ namespace dsga
 		constexpr void swap(storage_wrapper &sw) noexcept requires Writable	{ store.swap(sw.store); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator		begin() noexcept requires Writable				{ return store.begin(); }
-		[[nodiscard]] constexpr const_iterator	begin() const noexcept							{ return store.cbegin(); }
-		[[nodiscard]] constexpr const_iterator	cbegin() const noexcept							{ return begin(); }
-		[[nodiscard]] constexpr iterator		end() noexcept requires Writable				{ return store.end(); }
-		[[nodiscard]] constexpr const_iterator	end() const noexcept							{ return store.cend(); }
-		[[nodiscard]] constexpr const_iterator	cend() const noexcept							{ return end(); }
+		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return store.begin(); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return store.cbegin(); }
+		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return store.end(); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return store.cend(); }
+		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return store.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return store.crbegin(); }
@@ -1900,6 +1900,7 @@ namespace dsga
 		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return store.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return store.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
+
 	};	// struct storage_wrapper
 
 	template <dimensional_scalar T, std::size_t S>
@@ -2126,6 +2127,7 @@ namespace dsga
 				return ((*this)[Is] + ...);
 			}(std::make_index_sequence<Count>{});
 		}
+
 	};	// struct vector_base
 
 	// indexed_vector will act as a swizzle of a basic_vector, the result of "component group notation". basic_vector relies
@@ -2356,6 +2358,7 @@ namespace dsga
 			iter += offset;
 			return iter;
 		}
+
 	};	// struct indexed_vector_const_iterator
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
@@ -2462,6 +2465,7 @@ namespace dsga
 		{
 			return const_cast<reference>(base_iter::operator[](offset));
 		}
+
 	};	// struct indexed_vector_iterator
 
 	//
@@ -2562,18 +2566,18 @@ namespace dsga
 		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator		begin() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, 0); }
-		[[nodiscard]] constexpr const_iterator	begin() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, 0); }
-		[[nodiscard]] constexpr const_iterator	cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator		end() noexcept requires Writable		{ return indexed_vector_iterator<T, Size, Count, Is...>(*this, Count); }
-		[[nodiscard]] constexpr const_iterator	end() const noexcept					{ return indexed_vector_const_iterator<T, Size, Count, Is...>(*this, Count); }
-		[[nodiscard]] constexpr const_iterator	cend() const noexcept					{ return end(); }
+		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return iterator(*this, 0); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return const_iterator(*this, 0); }
+		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return iterator(*this, Count); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return const_iterator(*this, Count); }
+		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(end()); }
-		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(end()); }
+		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return reverse_iterator(end()); }
+		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return const_reverse_iterator(end()); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>(begin()); }
-		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return std::reverse_iterator<indexed_vector_const_iterator<T, Size, Count, Is...>>(begin()); }
+		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return reverse_iterator(begin()); }
+		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return const_reverse_iterator(begin()); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
 		// logically contiguous - used by set() for write access to data
@@ -2597,6 +2601,7 @@ namespace dsga
 				this->set(other[Js]...);
 			}(std::make_index_sequence<Count>{});
 		}
+
 	};	// struct indexed_vector
 
 	//
@@ -2637,7 +2642,6 @@ namespace dsga
 
 	namespace detail
 	{
-
 		// how many components can the item supply
 
 		template <typename T>
@@ -2757,6 +2761,8 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
+		// create a tuple from a matrix
+
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
 		constexpr auto to_tuple(const basic_matrix<T, C, R> &arg) noexcept
 		{
@@ -2837,6 +2843,7 @@ namespace dsga
 		struct valid_vector_component<basic_matrix<U, C, R>, T> : std::true_type
 		{
 		};
+
 	}	// namespace detail
 
 	//
@@ -2988,12 +2995,12 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator		begin() noexcept requires Writable		{ return base.begin(); }
-		[[nodiscard]] constexpr const_iterator	begin() const noexcept					{ return base.cbegin(); }
-		[[nodiscard]] constexpr const_iterator	cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator		end() noexcept requires Writable		{ return base.end(); }
-		[[nodiscard]] constexpr const_iterator	end() const noexcept					{ return base.cend(); }
-		[[nodiscard]] constexpr const_iterator	cend() const noexcept					{ return end(); }
+		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
@@ -3014,6 +3021,7 @@ namespace dsga
 		{
 			base.set(value);
 		}
+
 	};	// struct basic_vector<T, 1>
 
 	template <dimensional_scalar T>
@@ -3169,12 +3177,12 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator		begin() noexcept requires Writable		{ return base.begin(); }
-		[[nodiscard]] constexpr const_iterator	begin() const noexcept					{ return base.cbegin(); }
-		[[nodiscard]] constexpr const_iterator	cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator		end() noexcept requires Writable		{ return base.end(); }
-		[[nodiscard]] constexpr const_iterator	end() const noexcept					{ return base.cend(); }
-		[[nodiscard]] constexpr const_iterator	cend() const noexcept					{ return end(); }
+		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
@@ -3195,6 +3203,7 @@ namespace dsga
 		{
 			base.set(args...);
 		}
+
 	};	// struct basic_vector<T, 2>
 
 	template <dimensional_scalar T>
@@ -3442,12 +3451,12 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator		begin() noexcept requires Writable		{ return base.begin(); }
-		[[nodiscard]] constexpr const_iterator	begin() const noexcept					{ return base.cbegin(); }
-		[[nodiscard]] constexpr const_iterator	cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator		end() noexcept requires Writable		{ return base.end(); }
-		[[nodiscard]] constexpr const_iterator	end() const noexcept					{ return base.cend(); }
-		[[nodiscard]] constexpr const_iterator	cend() const noexcept					{ return end(); }
+		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
@@ -3468,6 +3477,7 @@ namespace dsga
 		{
 			base.set(args...);
 		}
+
 	};	// struct basic_vector<T, 3>
 
 	template <dimensional_scalar T>
@@ -3938,12 +3948,12 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator		begin() noexcept requires Writable		{ return base.begin(); }
-		[[nodiscard]] constexpr const_iterator	begin() const noexcept					{ return base.cbegin(); }
-		[[nodiscard]] constexpr const_iterator	cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator		end() noexcept requires Writable		{ return base.end(); }
-		[[nodiscard]] constexpr const_iterator	end() const noexcept					{ return base.cend(); }
-		[[nodiscard]] constexpr const_iterator	cend() const noexcept					{ return end(); }
+		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
+		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
+		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
+		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
@@ -3964,6 +3974,7 @@ namespace dsga
 		{
 			base.set(args...);
 		}
+
 	};	// struct basic_vector<T, 4>
 
 	template <dimensional_scalar T, std::size_t Size>
@@ -4303,6 +4314,7 @@ namespace dsga
 				}(std::make_index_sequence<C>{});
 			}
 		}
+
 	}	// namespace machinery
 
 	//
@@ -4968,7 +4980,7 @@ namespace dsga
 	// post-increment
 	template <bool W, non_bool_scalar T, std::size_t C, typename D>
 	requires W
-	constexpr auto operator ++(vector_base<W, T, C, D> &arg, int) noexcept
+	constexpr basic_vector<T, C> operator ++(vector_base<W, T, C, D> &arg, int) noexcept
 	{
 		basic_vector<T, C> value(arg);
 		arg += T(1);
@@ -4989,7 +5001,7 @@ namespace dsga
 	// post-decrement
 	template <bool W, non_bool_scalar T, std::size_t C, typename D>
 	requires W
-	constexpr auto operator --(vector_base<W, T, C, D> &arg, int) noexcept
+	constexpr basic_vector<T, C> operator --(vector_base<W, T, C, D> &arg, int) noexcept
 	{
 		basic_vector<T, C> value(arg);
 		arg -= T(1);
@@ -5016,14 +5028,7 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t S>
 	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr T && get(storage_wrapper<T, S> && arg) noexcept
-	{
-		return std::move(arg[N]);
-	}
-
-	template <int N, dimensional_scalar T, std::size_t S>
-	requires (N >= 0) && (N < S)
-	[[nodiscard]] constexpr const T && get(const storage_wrapper<T, S> && arg) noexcept
+	[[nodiscard]] constexpr auto && get(storage_wrapper<T, S> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -5047,13 +5052,6 @@ namespace dsga
 	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 	requires (N >= 0) && (N < C)
 	[[nodiscard]] constexpr auto && get(vector_base<W, T, C, D> && arg) noexcept
-	{
-		return std::move(arg[N]);
-	}
-
-	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr const T && get(const vector_base<W, T, C, D> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -6507,6 +6505,7 @@ namespace dsga
 
 			return basic_vector<T, sizeof...(Args)>{ v[static_cast<std::size_t>(Is)]... };
 		}
+
 	}	// namespace functions
 
 	//
@@ -6705,15 +6704,15 @@ namespace dsga
 		[[nodiscard]] constexpr basic_vector<T, R> * data() noexcept				{ return columns.data(); }
 		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return columns.data(); }
 
-		constexpr void swap(basic_matrix &bm) noexcept			{ columns.swap(bm.columns); }
+		constexpr void swap(basic_matrix &bm) noexcept								{ columns.swap(bm.columns); }
 
 		// support for range-based for loop -- gives column vectors
-		[[nodiscard]] constexpr iterator		begin() noexcept			{ return columns.begin(); }
-		[[nodiscard]] constexpr const_iterator	begin() const noexcept		{ return columns.cbegin(); }
-		[[nodiscard]] constexpr const_iterator	cbegin() const noexcept		{ return begin(); }
-		[[nodiscard]] constexpr iterator		end() noexcept				{ return columns.end(); }
-		[[nodiscard]] constexpr const_iterator	end() const noexcept		{ return columns.cend(); }
-		[[nodiscard]] constexpr const_iterator	cend() const noexcept		{ return end(); }
+		[[nodiscard]] constexpr iterator				begin() noexcept			{ return columns.begin(); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept		{ return columns.cbegin(); }
+		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept		{ return begin(); }
+		[[nodiscard]] constexpr iterator				end() noexcept				{ return columns.end(); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept		{ return columns.cend(); }
+		[[nodiscard]] constexpr const_iterator			cend() const noexcept		{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept			{ return columns.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept		{ return columns.crbegin(); }
@@ -6721,6 +6720,7 @@ namespace dsga
 		[[nodiscard]] constexpr reverse_iterator		rend() noexcept				{ return columns.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept		{ return columns.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept		{ return rend(); }
+
 	};	// struct basic_matrix
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
@@ -6749,14 +6749,7 @@ namespace dsga
 
 	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr basic_vector<T, R> && get(basic_matrix<T, C, R> && arg) noexcept
-	{
-		return std::move(arg[N]);
-	}
-
-	template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
-	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr const basic_vector<T, R> && get(const basic_matrix<T, C, R> && arg) noexcept
+	[[nodiscard]] constexpr auto && get(basic_matrix<T, C, R> && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
