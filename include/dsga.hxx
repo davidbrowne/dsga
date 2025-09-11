@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 10;
+	constexpr inline int DSGA_PATCH_VERSION = 11;
 
 	namespace cxcm
 	{
@@ -1961,8 +1961,17 @@ namespace dsga
 	//		length() - relies on Count template parameter
 	//		data() - relies on data() in Derived - access in physical order
 	//		sequence() - relies on sequence() in Derived - the physical order to logical order mapping
+	//		as_base() - a reference to the Derived base class vector_base
 	//		as_derived() - relies on Derived template parameter - useful for returning references to Derived when you just have a vector_base
+	//		begin(), end(), cbegin(), cend(), rbegin(), rend(), crbegin(), crend() - iterator functions that rely on Derived
 	//
+	//		apply() - similar to std::valarray apply() which returns Ts - relies on operator[] in Derived
+	//		query() - similar to apply() except it returns bools - relies on operator[] in Derived
+	//		shift() - shifts elements left or right, filling with zero
+	//		cshift() - circular shift of elements left or right
+	//		min() - minimum element value - relies on operator[] in Derived
+	//		max() - maximum element value - relies on operator[] in Derived
+	//		sum() - sum of all element values - relies on operator[] in Derived
 
 	template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 	requires dimensional_storage<T, Count>
@@ -6344,9 +6353,9 @@ namespace dsga
 		//
 
 		// not in GLSL -- dot() is just for floating point, innerProduct() does what dot() does, but it works on all non_bool_scalar types
-		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-		[[nodiscard]] constexpr auto innerProduct(const vector_base<W1, T1, C, D1> &x,
-												  const vector_base<W2, T2, C, D2> &y) noexcept
+		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr T innerProduct(const vector_base<W1, T, C, D1> &x,
+											   const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return [&x, &y]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -6358,9 +6367,9 @@ namespace dsga
 		// 8.5 - geometric
 		//
 
-		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
-		[[nodiscard]] constexpr auto dot(const vector_base<W1, T1, C, D1> &x,
-										 const vector_base<W2, T2, C, D2> &y) noexcept
+		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr T dot(const vector_base<W1, T, C, D1> &x,
+									  const vector_base<W2, T, C, D2> &y) noexcept
 		{
 			return [&x, &y]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -6368,24 +6377,24 @@ namespace dsga
 			}(std::make_index_sequence<C>{});
 		}
 
-		template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
-		[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &a,
-										   const vector_base<W2, T2, 3, D2> &b) noexcept
+		template <bool W1, floating_point_scalar T, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr basic_vector<T, 3> cross(const vector_base<W1, T, 3, D1> &a,
+														 const vector_base<W2, T, 3, D2> &b) noexcept
 		{
 			return basic_vector{(a[1] * b[2]) - (b[1] * a[2]),
 								(a[2] * b[0]) - (b[2] * a[0]),
 								(a[0] * b[1]) - (b[0] * a[1])};
 		}
 
-		template <floating_point_scalar T1, floating_point_scalar T2>
-		[[nodiscard]] constexpr auto cross(const basic_vector<T1, 3> &a,
-										   const basic_vector<T2, 3> &b) noexcept
+		template <floating_point_scalar T>
+		[[nodiscard]] constexpr basic_vector<T, 3> cross(const basic_vector<T, 3> &a,
+														 const basic_vector<T, 3> &b) noexcept
 		{
 			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto length(const vector_base<W, T, C, D> &x) noexcept
+		[[nodiscard]] constexpr T length(const vector_base<W, T, C, D> &x) noexcept
 		{
 			return cxcm::sqrt(dot(x, x));
 		}
@@ -6402,16 +6411,16 @@ namespace dsga
 			return cxcm::abs(x);
 		}
 
-		template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
-		[[nodiscard]] constexpr auto distance(const vector_base<W1, T1, C, D1> &p0,
-											  const vector_base<W2, T2, C, D2> &p1) noexcept
+		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
+		[[nodiscard]] constexpr T distance(const vector_base<W1, T, C, D1> &p0,
+										   const vector_base<W2, T, C, D2> &p1) noexcept
 		{
 			return length(p0 - p1);
 		}
 
-		template <floating_point_scalar T1, floating_point_scalar T2>
-		[[nodiscard]] constexpr auto distance(T1 p0,
-											  T2 p1) noexcept
+		template <floating_point_scalar T>
+		[[nodiscard]] constexpr T distance(T p0,
+										   T p1) noexcept
 		{
 			return length(p0 - p1);
 		}
@@ -6433,9 +6442,9 @@ namespace dsga
 		
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		requires (C > 1)
-		[[nodiscard]] constexpr auto faceforward(const vector_base<W1, T, C, D1> &n,
-												 const vector_base<W2, T, C, D2> &i,
-												 const vector_base<W3, T, C, D3> &nref) noexcept
+		[[nodiscard]] constexpr basic_vector<T, C> faceforward(const vector_base<W1, T, C, D1> &n,
+															   const vector_base<W2, T, C, D2> &i,
+															   const vector_base<W3, T, C, D3> &nref) noexcept
 		{
 			return (dot(nref, i) < T(0)) ? +n : -n;
 		}
@@ -6443,8 +6452,8 @@ namespace dsga
 		// n must be normalized in order to achieve desired results
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires (C > 1)
-		[[nodiscard]] constexpr auto reflect(const vector_base<W1, T, C, D1> &i,
-											 const vector_base<W2, T, C, D2> &n) noexcept
+		[[nodiscard]] constexpr basic_vector<T, C> reflect(const vector_base<W1, T, C, D1> &i,
+														   const vector_base<W2, T, C, D2> &n) noexcept
 		{
 			return i - T(2) * dot(n, i) * n;
 		}
@@ -6765,23 +6774,23 @@ namespace dsga
 		//
 
 		// component-wise matrix multiplication, since operator * is linear-algebraic for a matrix with a vector or other matrix
-		template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-		[[nodiscard]] constexpr auto matrixCompMult(const basic_matrix<T, C, R> &lhs,
-													const basic_matrix<U, C, R> &rhs) noexcept
+		template <floating_point_scalar T, std::size_t C, std::size_t R>
+		[[nodiscard]] constexpr basic_matrix<T, C, R> matrixCompMult(const basic_matrix<T, C, R> &lhs,
+																	 const basic_matrix<T, C, R> &rhs) noexcept
 		{
 			return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] * rhs[Is])... };
+				return basic_matrix<T, C, R>{ (lhs[Is] * rhs[Is])... };
 			}(std::make_index_sequence<C>{});
 		}
 
 		// outerProduct() - matrix from a column vector times a row vector
-		template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-		requires (floating_point_scalar<T1> || floating_point_scalar<T2>) && ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
-		[[nodiscard]] constexpr auto outerProduct(const vector_base<W1, T1, C1, D1> &lhs,
-												  const vector_base<W2, T2, C2, D2> &rhs) noexcept
+		template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, std::size_t C2, typename D2>
+		requires ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
+		[[nodiscard]] constexpr basic_matrix<T, C2, C1> outerProduct(const vector_base<W1, T, C1, D1> &lhs,
+																	 const vector_base<W2, T, C2, D2> &rhs) noexcept
 		{
-			auto val = basic_matrix<std::common_type_t<T1, T2>, C2, C1>{};
+			auto val = basic_matrix<T, C2, C1>{};
 
 			[&val, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
@@ -6985,10 +6994,9 @@ namespace dsga
 	//
 
 	// component-wise equality operator for matrices, scalar boolean result: ==, != (thanks to c++20)
-	template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-	requires implicitly_convertible_to<U, T>
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
 	constexpr bool operator ==(const basic_matrix<T, C, R> &lhs,
-							   const basic_matrix<U, C, R> &rhs) noexcept
+							   const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
@@ -7063,125 +7071,125 @@ namespace dsga
 
 	// operator + with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
-											U rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator +(const basic_matrix<T, C, R> &lhs,
+															 T rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] + rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] + rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator +(U lhs,
-											const basic_matrix<T, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator +(T lhs,
+															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs + rhs[Is])...};
+			return basic_matrix<T, C, R>{ (lhs + rhs[Is])...};
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator - with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator -(const basic_matrix<T, C, R> &lhs,
-											U rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator -(const basic_matrix<T, C, R> &lhs,
+															 T rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] - rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] - rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator -(U lhs,
-											const basic_matrix<T, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator -(T lhs,
+															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs - rhs[Is])... };
+			return basic_matrix<T, C, R>{ (lhs - rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator * with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
-											U rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator *(const basic_matrix<T, C, R> &lhs,
+															 T rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] * rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] * rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator *(U lhs,
-											const basic_matrix<T, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator *(T lhs,
+															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs * rhs[Is])... };
+			return basic_matrix<T, C, R>{ (lhs * rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator / with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator /(const basic_matrix<T, C, R> &lhs,
-											U rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator /(const basic_matrix<T, C, R> &lhs,
+															 T rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] / rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] / rhs)... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-	[[nodiscard]] constexpr auto operator /(U lhs,
-											const basic_matrix<T, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator /(T lhs,
+															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs / rhs[Is])... };
+			return basic_matrix<T, C, R>{ (lhs / rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator + with same size matrices
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-	[[nodiscard]] constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
-											const basic_matrix<U, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator +(const basic_matrix<T, C, R> &lhs,
+															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] + rhs[Is])... };
+			return basic_matrix<T, C, R>{ (lhs[Is] + rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator - with same size matrices
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-	[[nodiscard]] constexpr auto operator -(const basic_matrix<T, C, R> &lhs,
-											const basic_matrix<U, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator -(const basic_matrix<T, C, R> &lhs,
+															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] - rhs[Is])... };
+			return basic_matrix<T, C, R>{ (lhs[Is] - rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator / with same size matrices
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-	[[nodiscard]] constexpr auto operator /(const basic_matrix<T, C, R> &lhs,
-											const basic_matrix<U, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator /(const basic_matrix<T, C, R> &lhs,
+															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<std::common_type_t<T, U>, C, R>{ (lhs[Is] / rhs[Is])... };
+			return basic_matrix<T, C, R>{ (lhs[Is] / rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -7191,9 +7199,9 @@ namespace dsga
 
 	// matrix * (column) vector => (column) vector
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
-	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
-											const vector_base<W, U, C, D> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, typename D>
+	[[nodiscard]] constexpr basic_vector<T, R> operator *(const basic_matrix<T, C, R> &lhs,
+														  const vector_base<W, T, C, D> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
@@ -7203,9 +7211,9 @@ namespace dsga
 
 	// (row) vector * matrix => (row) vector
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
-	[[nodiscard]] constexpr auto operator *(const vector_base<W, U, R, D> &lhs,
-											const basic_matrix<T, C, R> &rhs) noexcept
+	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, typename D>
+	[[nodiscard]] constexpr basic_vector<T, R> operator *(const vector_base<W, T, R, D> &lhs,
+														  const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
@@ -7215,15 +7223,12 @@ namespace dsga
 
 	// matrix * matrix => matrix
 
-	template <floating_point_scalar T, std::size_t C1, std::size_t R1, floating_point_scalar U, std::size_t C2, std::size_t R2>
+	template <floating_point_scalar T, std::size_t C1, std::size_t R1, std::size_t C2, std::size_t R2>
 	requires (C1 == R2)
-	[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C1, R1> &lhs,
-											const basic_matrix<U, C2, R2> &rhs) noexcept
+	[[nodiscard]] constexpr basic_matrix<T, C2, R1> operator *(const basic_matrix<T, C1, R1> &lhs,
+															   const basic_matrix<T, C2, R2> &rhs) noexcept
 	{
-		// functions::dot() is the core of a different implementation of this function,
-		// and is representative of the underlying multiplication and addition that occurs.
-		using element_type_t = decltype(functions::dot(std::declval<basic_vector<T, C1>>(), std::declval<basic_vector<U, R2>>()));
-		auto val = basic_matrix<element_type_t, C2, R1>{};
+		auto val = basic_matrix<T, C2, R1>{};
 
 		[&val, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{

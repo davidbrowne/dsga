@@ -1,5 +1,9 @@
 # Change Log
 
+### v2.2.11
+* Matrix functions that used to be able to mix ```float``` and ```double``` based arguments will now only work with arguments based off the same floating-point type.
+* Changed more functions where ```auto``` was the return type to where the return type is now explicitly specified.
+
 ### v2.2.10
 * ```normalize()``` now returns a vector of zeroes if the length is zero (instead of the old way where it returned a vector of NaNs).
 * Modified angle example by adding an alternate (supposedly less accurate) function for determining the angle between 2 vectors.

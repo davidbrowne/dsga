@@ -6,17 +6,19 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.10
+v2.2.11
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.11
+    * Matrix functions that used to be able to mix ```float``` and ```double``` based arguments will now only work with arguments based off the same floating-point type.
+    * Changed more functions where ```auto``` was the return type to where the return type is now explicitly specified.
+
 * v2.2.10
     * ```normalize()``` now returns a vector of zeroes if the length is zero (instead of the old way where it returned a vector of NaNs).
     * Modified angle example by adding an alternate (supposedly lesser) function for determining the angle between 2 vectors.
     * For many functions where ```auto``` was the return type, changed them so the return type is now explicitly specified, where possible.
-
 * v2.2.9
     * Reverted changes to the ```length()``` method and associated tests.
-
 * v2.2.8
     * Added transformation matrix functions example.
     * Refactored ```operator ==()``` for the vector classes.
@@ -28,21 +30,10 @@ v2.2.10
     * Reworked example tolerance-checking functions.
     * Minor formatting and commenting changes.
     * Upgraded to doctest v2.4.12.
-* v2.2.6
-    * Minor refactoring.
-    * Tweaked ```dsga.natvis``` for better debugging experience.
-    * Changed usage of ```std::array::operator []``` to ```std::array::at()``` for bounds checking.
-    * Overhauled ```dsga::mix()``` to use a faster algorithm than ```std::lerp()```.
-* v2.2.5
-    * Extracted ```dsga::invoke()``` to its own example header, and modified it to work on a wide range of inputs.
-    * Made all lambda captures specific.
-* v2.2.4
-    * Added ```dsga::compXor()``` to perform xor operations on boolean values (as opposed to bitwise xor ^)
-    * Added ```dsga::invoke()``` which returns a vector created by invoking an operation element-wise to a variable number of vectors (there must be at least 1) that are all the same size, but might be of different types
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2022 v17.14
+* Microsoft Visual Studio 2026 Insider (v18) (9/2025)
 * gcc v15.2
 * clang v21.1
 
@@ -368,7 +359,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.10`
+Current version: `v2.2.11`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
@@ -397,7 +388,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2022 - v17.14**
+* **MSVC 2026 Insider (9/2025) - v18**
 
 ```
 [doctest] doctest version is "2.4.12"
@@ -437,7 +428,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 14.2**
 
 ```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -450,7 +441,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -463,7 +454,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 12.3**
 
 ```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -476,7 +467,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -489,7 +480,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.11"
+[doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -501,7 +492,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
 
 ```
-//          Copyright David Browne 2020-2024.
+//          Copyright David Browne 2020-2025.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
