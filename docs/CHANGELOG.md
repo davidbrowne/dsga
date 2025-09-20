@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.2.12
+* Moved detail lambdas out of ```dsga``` namespace.
+
 ### v2.2.11
 * Matrix functions that used to be able to mix ```float``` and ```double``` based arguments will now only work with arguments based off the same floating-point type.
 * Changed more functions where ```auto``` was the return type to where the return type is now explicitly specified.

@@ -6,9 +6,11 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.11
+v2.2.12
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.12
+    * Moved detail lambdas out of ```dsga``` namespace.
 * v2.2.11
     * Matrix functions that used to be able to mix ```float``` and ```double``` based arguments will now only work with arguments based off the same floating-point type.
     * Changed more functions where ```auto``` was the return type to where the return type is now explicitly specified.
@@ -33,7 +35,8 @@ v2.2.11
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2026 Insider (v18) (9/2025)
+* Microsoft Visual Studio 2026 v18.0 Insiders
+* Microsoft Visual Studio 2022 v17.14
 * gcc v15.2
 * clang v21.1
 
@@ -359,7 +362,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.11`
+Current version: `v2.2.12`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
@@ -388,7 +391,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2026 Insider (9/2025) - v18**
+* **MSVC 2026 v18.0 Insiders
 
 ```
 [doctest] doctest version is "2.4.12"

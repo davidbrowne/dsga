@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 11;
+	constexpr inline int DSGA_PATCH_VERSION = 12;
 
 	namespace cxcm
 	{
@@ -4330,16 +4330,41 @@ namespace dsga
 	// operators
 	//
 
-	// binary operators +=, +
+	// lambdas for operators
+	namespace lambda_ops
+	{
+		constexpr inline auto plus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs + rhs; };
+		constexpr inline auto minus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs - rhs; };
+		constexpr inline auto times_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs * rhs; };
+		constexpr inline auto div_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs / rhs; };
+		constexpr inline auto modulus_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs)
+		{
+			if (rhs == 0)
+			{
+				throw std::domain_error("(lhs % 0) is undefined");
+			}
 
-	constexpr inline auto plus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs + rhs; };
+			return lhs % rhs;
+		};
+		constexpr inline auto bit_not_op = [](numeric_integral_scalar auto arg) noexcept { return ~arg; };
+		constexpr inline auto lshift_op =
+			[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs << rhs); };
+		constexpr inline auto rshift_op =
+			[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs >> rhs); };
+		constexpr inline auto and_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs & rhs; };
+		constexpr inline auto or_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs | rhs; };
+		constexpr inline auto xor_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs ^ rhs; };
+		constexpr inline auto neg_op = [](non_bool_scalar auto arg) noexcept { return -arg; };
+	}	// namespace lambda_ops
+
+	// binary operators +=, +
 
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr D1 &operator +=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, plus_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::plus_op);
 		return lhs.as_derived();
 	}
 
@@ -4348,7 +4373,7 @@ namespace dsga
 	constexpr D1 &operator +=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], plus_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::plus_op);
 		return lhs.as_derived();
 	}
 
@@ -4357,7 +4382,7 @@ namespace dsga
 	constexpr D &operator +=(vector_base<W, T, C, D> &lhs,
 							 U rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, plus_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::plus_op);
 		return lhs.as_derived();
 	}
 
@@ -4367,11 +4392,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, plus_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::plus_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, plus_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::plus_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], plus_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::plus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4379,7 +4404,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator +(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, plus_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::plus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4387,19 +4412,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator +(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, plus_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::plus_op);
 	}
 
 	// binary operators -=, -
-
-	constexpr inline auto minus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs - rhs; };
 
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr D1 &operator -=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, minus_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::minus_op);
 		return lhs.as_derived();
 	}
 
@@ -4408,7 +4431,7 @@ namespace dsga
 	constexpr D1 &operator -=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], minus_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::minus_op);
 		return lhs.as_derived();
 	}
 
@@ -4417,7 +4440,7 @@ namespace dsga
 	constexpr D &operator -=(vector_base<W, T, C, D> &lhs,
 							 U rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, minus_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::minus_op);
 		return lhs.as_derived();
 	}
 
@@ -4427,11 +4450,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, minus_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::minus_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, minus_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::minus_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], minus_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::minus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4439,7 +4462,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, minus_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::minus_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4447,19 +4470,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator -(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, minus_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::minus_op);
 	}
 
 	// binary operators *=, *
-
-	constexpr inline auto times_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs * rhs; };
 
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr D1 &operator *=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, times_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::times_op);
 		return lhs.as_derived();
 	}
 
@@ -4468,7 +4489,7 @@ namespace dsga
 	constexpr D1 &operator *=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], times_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::times_op);
 		return lhs.as_derived();
 	}
 
@@ -4477,7 +4498,7 @@ namespace dsga
 	constexpr D &operator *=(vector_base<W, T, C, D> &lhs,
 							 U rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, times_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::times_op);
 		return lhs.as_derived();
 	}
 
@@ -4487,11 +4508,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, times_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::times_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, times_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::times_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], times_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::times_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4499,7 +4520,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator *(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, times_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::times_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4507,19 +4528,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator *(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, times_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::times_op);
 	}
 
 	// binary operators /=, /
-
-	constexpr inline auto div_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs / rhs; };
 
 	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr D1 &operator /=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, div_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::div_op);
 		return lhs.as_derived();
 	}
 
@@ -4528,7 +4547,7 @@ namespace dsga
 	constexpr D1 &operator /=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], div_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::div_op);
 		return lhs.as_derived();
 	}
 
@@ -4537,7 +4556,7 @@ namespace dsga
 	constexpr D &operator /=(vector_base<W, T, C, D> &lhs,
 							 U rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, div_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::div_op);
 		return lhs.as_derived();
 	}
 
@@ -4547,11 +4566,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, div_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::div_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, div_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::div_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], div_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::div_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4559,7 +4578,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator /(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, div_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::div_op);
 	}
 
 	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
@@ -4567,27 +4586,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator /(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, div_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::div_op);
 	}
 
 	// binary operators %=, % -- uses c++ modulus operator rules
-
-	constexpr inline auto modulus_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs)
-	{
-		if (rhs == 0)
-		{
-			throw std::domain_error("(lhs % 0) is undefined");
-		}
-
-		return lhs % rhs;
-	};
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr D1 &operator %=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs)
 	{
-		machinery::apply_unitype_modify(lhs, rhs, modulus_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -4596,7 +4605,7 @@ namespace dsga
 	constexpr D1 &operator %=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs)
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], modulus_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -4605,7 +4614,7 @@ namespace dsga
 	constexpr D &operator %=(vector_base<W, T, C, D> &lhs,
 							 U rhs)
 	{
-		machinery::apply_unitype_modify(lhs, rhs, modulus_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::modulus_op);
 		return lhs.as_derived();
 	}
 
@@ -4615,11 +4624,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs)
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, modulus_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::modulus_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, modulus_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::modulus_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], modulus_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::modulus_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4627,7 +4636,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator %(const vector_base<W, T, C, D> &lhs,
 											U rhs)
 	{
-		return machinery::apply_unitype_make(lhs, rhs, modulus_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::modulus_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4635,30 +4644,25 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator %(U lhs,
 											const vector_base<W, T, C, D> &rhs)
 	{
-		return machinery::apply_unitype_make(lhs, rhs, modulus_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::modulus_op);
 	}
 
 	// unary operator ~
 
-	constexpr inline auto bit_not_op = [](numeric_integral_scalar auto arg) noexcept { return ~arg; };
-
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator ~(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return machinery::apply_make(arg, bit_not_op);
+		return machinery::apply_make(arg, lambda_ops::bit_not_op);
 	}
 
 	// binary operators <<=, <<
-
-	constexpr inline auto lshift_op =
-		[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs << rhs); };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr D1 &operator <<=(vector_base<W1, T1, C, D1> &lhs,
 							   const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_multitype_modify(lhs, rhs, lshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4667,7 +4671,7 @@ namespace dsga
 	constexpr D1 &operator <<=(vector_base<W1, T1, C, D1> &lhs,
 							   const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_multitype_modify(lhs, rhs[0], lshift_op);
+		machinery::apply_multitype_modify(lhs, rhs[0], lambda_ops::lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4676,7 +4680,7 @@ namespace dsga
 	constexpr D &operator <<=(vector_base<W, T, C, D> &lhs,
 							  U rhs) noexcept
 	{
-		machinery::apply_multitype_modify(lhs, rhs, lshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::lshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4686,11 +4690,11 @@ namespace dsga
 											 const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_multitype_make(lhs, rhs, lshift_op);
+			return machinery::apply_multitype_make(lhs, rhs, lambda_ops::lshift_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_multitype_make(lhs[0], rhs, lshift_op);
+			return machinery::apply_multitype_make(lhs[0], rhs, lambda_ops::lshift_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_multitype_make(lhs, rhs[0], lshift_op);
+			return machinery::apply_multitype_make(lhs, rhs[0], lambda_ops::lshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4698,7 +4702,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator <<(const vector_base<W, T, C, D> &lhs,
 											 U rhs) noexcept
 	{
-		return machinery::apply_multitype_make(lhs, rhs, lshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::lshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4706,20 +4710,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator <<(U lhs,
 											 const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_multitype_make(lhs, rhs, lshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::lshift_op);
 	}
 
 	// binary operators >>=, >>
-
-	constexpr inline auto rshift_op =
-		[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs >> rhs); };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1>
 	constexpr D1 &operator >>=(vector_base<W1, T1, C, D1> &lhs,
 							   const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_multitype_modify(lhs, rhs, rshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4728,7 +4729,7 @@ namespace dsga
 	constexpr D1 &operator >>=(vector_base<W1, T1, C, D1> &lhs,
 							   const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_multitype_modify(lhs, rhs[0], rshift_op);
+		machinery::apply_multitype_modify(lhs, rhs[0], lambda_ops::rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4737,7 +4738,7 @@ namespace dsga
 	constexpr D &operator >>=(vector_base<W, T, C, D> &lhs,
 							  U rhs) noexcept
 	{
-		machinery::apply_multitype_modify(lhs, rhs, rshift_op);
+		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::rshift_op);
 		return lhs.as_derived();
 	}
 
@@ -4747,11 +4748,11 @@ namespace dsga
 											 const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_multitype_make(lhs, rhs, rshift_op);
+			return machinery::apply_multitype_make(lhs, rhs, lambda_ops::rshift_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_multitype_make(lhs[0], rhs, rshift_op);
+			return machinery::apply_multitype_make(lhs[0], rhs, lambda_ops::rshift_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_multitype_make(lhs, rhs[0], rshift_op);
+			return machinery::apply_multitype_make(lhs, rhs[0], lambda_ops::rshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4759,7 +4760,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator >>(const vector_base<W, T, C, D> &lhs,
 											 U rhs) noexcept
 	{
-		return machinery::apply_multitype_make(lhs, rhs, rshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::rshift_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4767,19 +4768,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator >>(U lhs,
 											 const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_multitype_make(lhs, rhs, rshift_op);
+		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::rshift_op);
 	}
 
 	// binary operators &=, &
-
-	constexpr inline auto and_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs & rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
 	constexpr D1 &operator &=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, and_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::and_op);
 		return lhs.as_derived();
 	}
 
@@ -4788,7 +4787,7 @@ namespace dsga
 	constexpr D1 &operator &=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], and_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::and_op);
 		return lhs.as_derived();
 	}
 
@@ -4797,7 +4796,7 @@ namespace dsga
 	constexpr D &operator &=(vector_base<W, T, C, D> &lhs,
 							 U rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, and_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::and_op);
 		return lhs.as_derived();
 	}
 
@@ -4807,11 +4806,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, and_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::and_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, and_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::and_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], and_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::and_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4819,7 +4818,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator &(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, and_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::and_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4827,19 +4826,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator &(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, and_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::and_op);
 	}
 
 	// binary operators |=, |
-
-	constexpr inline auto or_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs | rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
 	constexpr D1 &operator |=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, or_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::or_op);
 		return lhs.as_derived();
 	}
 
@@ -4848,7 +4845,7 @@ namespace dsga
 	constexpr D1 &operator |=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], or_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::or_op);
 		return lhs.as_derived();
 	}
 
@@ -4857,7 +4854,7 @@ namespace dsga
 	constexpr D &operator |=(vector_base<W, T, C, D> &lhs,
 							 U rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, or_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::or_op);
 		return lhs.as_derived();
 	}
 
@@ -4867,11 +4864,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, or_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::or_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, or_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::or_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], or_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::or_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4879,7 +4876,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator |(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, or_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::or_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4887,19 +4884,17 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator |(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, or_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::or_op);
 	}
 
 	// binary operators ^=, ^
-
-	constexpr inline auto xor_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs ^ rhs; };
 
 	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
 	constexpr D1 &operator ^=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, C, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, xor_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::xor_op);
 		return lhs.as_derived();
 	}
 
@@ -4908,7 +4903,7 @@ namespace dsga
 	constexpr D1 &operator ^=(vector_base<W1, T1, C, D1> &lhs,
 							  const vector_base<W2, T2, 1, D2> &rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs[0], xor_op);
+		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::xor_op);
 		return lhs.as_derived();
 	}
 
@@ -4917,7 +4912,7 @@ namespace dsga
 	constexpr D &operator ^=(vector_base<W, T, C, D> &lhs,
 							 U rhs) noexcept
 	{
-		machinery::apply_unitype_modify(lhs, rhs, xor_op);
+		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::xor_op);
 		return lhs.as_derived();
 	}
 
@@ -4927,11 +4922,11 @@ namespace dsga
 											const vector_base<W2, T2, C2, D2> &rhs) noexcept
 	{
 		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, xor_op);
+			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::xor_op);
 		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, xor_op);
+			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::xor_op);
 		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], xor_op);
+			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::xor_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4939,7 +4934,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator ^(const vector_base<W, T, C, D> &lhs,
 											U rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, xor_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::xor_op);
 	}
 
 	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
@@ -4947,7 +4942,7 @@ namespace dsga
 	[[nodiscard]] constexpr auto operator ^(U lhs,
 											const vector_base<W, T, C, D> &rhs) noexcept
 	{
-		return machinery::apply_unitype_make(lhs, rhs, xor_op);
+		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::xor_op);
 	}
 
 	// unary operator +
@@ -4967,12 +4962,10 @@ namespace dsga
 
 	// unary operator -
 
-	constexpr inline auto neg_op = [](non_bool_scalar auto arg) noexcept { return -arg; };
-
 	template <bool W, non_bool_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return machinery::apply_make(arg, neg_op);
+		return machinery::apply_make(arg, lambda_ops::neg_op);
 	}
 
 	// unary operators ++
@@ -5079,148 +5072,150 @@ namespace dsga
 		// these are defined first as they don't depend on the other functions, and the other functions can depend on them.
 		//
 
-		constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+		// lambdas for functions
+		namespace lambda_ops
 		{
-			return std::isless(x, y);
-		};
+			constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			{
+				return std::isless(x, y);
+			};
+			constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			{
+				return std::islessequal(x, y);
+			};
+			constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			{
+				return std::isgreater(x, y);
+			};
+			constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			{
+				return std::isgreaterequal(x, y);
+			};
+			constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			{
+				return std::isunordered(x, y) ? false : x == y;
+			};
+			constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept -> bool { return x == y; };
+			constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			{
+				return std::isunordered(x, y) ? true : x != y;
+			};
+			constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept -> bool { return x != y; };
+			constexpr inline auto comp_not_op = [](bool x) noexcept -> bool { return !x; };
+			constexpr inline auto comp_and_op = [](bool x, bool y) noexcept -> bool { return x && y; };
+			constexpr inline auto comp_or_op = [](bool x, bool y) noexcept -> bool { return x || y; };
+			constexpr inline auto comp_xor_op = [](bool x, bool y) noexcept -> bool { return x != y; };
+
+		}	// namespace lambda_ops
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
 											  const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, less_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::less_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr bool lessThan(T x,
 											  T y) noexcept
 		{
-			return less_op(x, y);
+			return lambda_ops::less_op(x, y);
 		}
-
-		constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
-		{
-			return std::islessequal(x, y);
-		};
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
 												   const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, less_equal_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::less_equal_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr bool lessThanEqual(T x,
 												   T y) noexcept
 		{
-			return less_equal_op(x, y);
+			return lambda_ops::less_equal_op(x, y);
 		}
-
-		constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
-		{
-			return std::isgreater(x, y);
-		};
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
 												 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, greater_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::greater_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr bool greaterThan(T x,
 												 T y) noexcept
 		{
-			return greater_op(x, y);
+			return lambda_ops::greater_op(x, y);
 		}
-
-		constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
-		{
-			return std::isgreaterequal(x, y);
-		};
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
 													  const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, greater_equal_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::greater_equal_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr bool greaterThanEqual(T x,
 													  T y) noexcept
 		{
-			return greater_equal_op(x, y);
+			return lambda_ops::greater_equal_op(x, y);
 		}
-
-		constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
-		{
-			return std::isunordered(x, y) ? false : x == y;
-		};
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto equal(const vector_base<W1, T, C, D1> &x,
 										   const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, equal_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::equal_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr bool equal(T x,
 										   T y) noexcept
 		{
-			return equal_op(x, y);
+			return lambda_ops::equal_op(x, y);
 		}
-
-		constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept -> bool { return x == y; };
 
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
 										   const vector_base<W2, bool, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, bool_equal_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::bool_equal_op);
 		}
 
 		[[nodiscard]] constexpr bool equal(bool x,
 										   bool y) noexcept
 		{
-			return bool_equal_op(x, y);
+			return lambda_ops::bool_equal_op(x, y);
 		}
-
-		constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
-		{
-			return std::isunordered(x, y) ? true : x != y;
-		};
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
 											  const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, not_equal_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::not_equal_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr bool notEqual(T x,
 											  T y) noexcept
 		{
-			return not_equal_op(x, y);
+			return lambda_ops::not_equal_op(x, y);
 		}
-
-		constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept -> bool { return x != y; };
 
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
 											  const vector_base<W2, bool, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, bool_not_equal_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::bool_not_equal_op);
 		}
 
 		[[nodiscard]] constexpr bool notEqual(bool x,
 											  bool y) noexcept
 		{
-			return bool_not_equal_op(x, y);
+			return lambda_ops::bool_not_equal_op(x, y);
 		}
 
 		template <bool W, std::size_t C, typename D>
@@ -5251,19 +5246,17 @@ namespace dsga
 			return x;
 		}
 
-		constexpr inline auto comp_not_op = [](bool x) noexcept -> bool { return !x; };
-
 		// c++ does not allow a function named not() as in GLSL, so this is our alternate name
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto compNot(const vector_base<W, bool, C, D> &x) noexcept
 		{
-			return machinery::apply_make(x, comp_not_op);
+			return machinery::apply_make(x, lambda_ops::comp_not_op);
 		}
 
 		// c++ does not allow a function named not() as in GLSL, so this is our alternate name
 		[[nodiscard]] constexpr bool compNot(bool x) noexcept
 		{
-			return comp_not_op(x);
+			return lambda_ops::comp_not_op(x);
 		}
 
 		template <bool W, std::size_t C, typename D>
@@ -5277,52 +5270,46 @@ namespace dsga
 			return compNot(x);
 		}
 
-		constexpr inline auto comp_and_op = [](bool x, bool y) noexcept -> bool { return x && y; };
-
 		// not in GLSL
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto compAnd(const vector_base<W1, bool, C, D1> &x,
 											 const vector_base<W2, bool, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, comp_and_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::comp_and_op);
 		}
 
 		[[nodiscard]] constexpr bool compAnd(bool x,
 											 bool y) noexcept
 		{
-			return comp_and_op(x, y);
+			return lambda_ops::comp_and_op(x, y);
 		}
-
-		constexpr inline auto comp_or_op = [](bool x, bool y) noexcept -> bool { return x || y; };
 
 		// not in GLSL
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto compOr(const vector_base<W1, bool, C, D1> &x,
 											const vector_base<W2, bool, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, comp_or_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::comp_or_op);
 		}
 
 		[[nodiscard]] constexpr bool compOr(bool x,
 											bool y) noexcept
 		{
-			return comp_or_op(x, y);
+			return lambda_ops::comp_or_op(x, y);
 		}
-
-		constexpr inline auto comp_xor_op = [](bool x, bool y) noexcept -> bool { return x != y; };
 
 		// not in GLSL
 		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto compXor(const vector_base<W1, bool, C, D1> &x,
 											 const vector_base<W2, bool, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, comp_xor_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::comp_xor_op);
 		}
 
 		[[nodiscard]] constexpr bool compXor(bool x,
 											 bool y) noexcept
 		{
-			return comp_xor_op(x, y);
+			return lambda_ops::comp_xor_op(x, y);
 		}
 
 		// not in GLSL
@@ -5340,6 +5327,24 @@ namespace dsga
 		//
 		// 8.1 - angle and trigonometry
 		//
+
+		// lambdas for functions
+		namespace lambda_ops
+		{
+			constexpr inline auto sin_op = [](floating_point_scalar auto arg) noexcept { return std::sin(arg); };
+			constexpr inline auto cos_op = [](floating_point_scalar auto arg) noexcept { return std::cos(arg); };
+			constexpr inline auto tan_op = [](floating_point_scalar auto arg) noexcept { return std::tan(arg); };
+			constexpr inline auto asin_op = [](floating_point_scalar auto arg) noexcept { return std::asin(arg); };
+			constexpr inline auto acos_op = [](floating_point_scalar auto arg) noexcept { return std::acos(arg); };
+			constexpr inline auto atan_op = [](floating_point_scalar auto arg) noexcept { return std::atan(arg); };
+			constexpr inline auto atan2_op = []<floating_point_scalar U>(U arg_y, U arg_x) noexcept { return std::atan2(arg_y, arg_x); };
+			constexpr inline auto sinh_op = [](floating_point_scalar auto arg) noexcept { return std::sinh(arg); };
+			constexpr inline auto cosh_op = [](floating_point_scalar auto arg) noexcept { return std::cosh(arg); };
+			constexpr inline auto tanh_op = [](floating_point_scalar auto arg) noexcept { return std::tanh(arg); };
+			constexpr inline auto asinh_op = [](floating_point_scalar auto arg) noexcept { return std::asinh(arg); };
+			constexpr inline auto acosh_op = [](floating_point_scalar auto arg) noexcept { return std::acosh(arg); };
+			constexpr inline auto atanh_op = [](floating_point_scalar auto arg) noexcept { return std::atanh(arg); };
+		}	// namespace lambda_ops
 
 		template <floating_point_scalar T>
 		inline constexpr T degrees_per_radian_v = std::numbers::inv_pi_v<T> * T(180);
@@ -5371,196 +5376,181 @@ namespace dsga
 			return rad * degrees_per_radian_v<T>;
 		}
 
-		constexpr inline auto sin_op = [](floating_point_scalar auto arg) noexcept { return std::sin(arg); };
-
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto sin(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, sin_op);
+			return machinery::apply_make(arg, lambda_ops::sin_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T sin(T arg) noexcept
 		{
-			return sin_op(arg);
+			return lambda_ops::sin_op(arg);
 		}
-
-		constexpr inline auto cos_op = [](floating_point_scalar auto arg) noexcept { return std::cos(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto cos(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, cos_op);
+			return machinery::apply_make(arg, lambda_ops::cos_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T cos(T arg) noexcept
 		{
-			return cos_op(arg);
+			return lambda_ops::cos_op(arg);
 		}
-
-		constexpr inline auto tan_op = [](floating_point_scalar auto arg) noexcept { return std::tan(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto tan(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, tan_op);
+			return machinery::apply_make(arg, lambda_ops::tan_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T tan(T arg) noexcept
 		{
-			return tan_op(arg);
+			return lambda_ops::tan_op(arg);
 		}
-
-		constexpr inline auto asin_op = [](floating_point_scalar auto arg) noexcept { return std::asin(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto asin(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, asin_op);
+			return machinery::apply_make(arg, lambda_ops::asin_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T asin(T arg) noexcept
 		{
-			return asin_op(arg);
+			return lambda_ops::asin_op(arg);
 		}
-
-		constexpr inline auto acos_op = [](floating_point_scalar auto arg) noexcept { return std::acos(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto acos(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, acos_op);
+			return machinery::apply_make(arg, lambda_ops::acos_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T acos(T arg) noexcept
 		{
-			return acos_op(arg);
+			return lambda_ops::acos_op(arg);
 		}
-
-		constexpr inline auto atan_op = [](floating_point_scalar auto arg) noexcept { return std::atan(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto atan(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, atan_op);
+			return machinery::apply_make(arg, lambda_ops::atan_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T atan(T arg) noexcept
 		{
-			return atan_op(arg);
+			return lambda_ops::atan_op(arg);
 		}
-
-		constexpr inline auto atan2_op = []<floating_point_scalar U>(U arg_y, U arg_x) noexcept { return std::atan2(arg_y, arg_x); };
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1,
 		bool W2, typename D2>
 		[[nodiscard]] inline auto atan(const vector_base<W1, T, C, D1> &y,
 									   const vector_base<W2, T, C, D2> &x) noexcept
 		{
-			return machinery::apply_unitype_make(y, x, atan2_op);
+			return machinery::apply_unitype_make(y, x, lambda_ops::atan2_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T atan(T y,
 									T x) noexcept
 		{
-			return atan2_op(y, x);
+			return lambda_ops::atan2_op(y, x);
 		}
-
-		constexpr inline auto sinh_op = [](floating_point_scalar auto arg) noexcept { return std::sinh(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto sinh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, sinh_op);
+			return machinery::apply_make(arg, lambda_ops::sinh_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T sinh(T arg) noexcept
 		{
-			return sinh_op(arg);
+			return lambda_ops::sinh_op(arg);
 		}
-
-		constexpr inline auto cosh_op = [](floating_point_scalar auto arg) noexcept { return std::cosh(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto cosh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, cosh_op);
+			return machinery::apply_make(arg, lambda_ops::cosh_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T cosh(T arg) noexcept
 		{
-			return cosh_op(arg);
+			return lambda_ops::cosh_op(arg);
 		}
-
-		constexpr inline auto tanh_op = [](floating_point_scalar auto arg) noexcept { return std::tanh(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto tanh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, tanh_op);
+			return machinery::apply_make(arg, lambda_ops::tanh_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T tanh(T arg) noexcept
 		{
-			return tanh_op(arg);
+			return lambda_ops::tanh_op(arg);
 		}
-
-		constexpr inline auto asinh_op = [](floating_point_scalar auto arg) noexcept { return std::asinh(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto asinh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, asinh_op);
+			return machinery::apply_make(arg, lambda_ops::asinh_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T asinh(T arg) noexcept
 		{
-			return asinh_op(arg);
+			return lambda_ops::asinh_op(arg);
 		}
-
-		constexpr inline auto acosh_op = [](floating_point_scalar auto arg) noexcept { return std::acosh(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto acosh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, acosh_op);
+			return machinery::apply_make(arg, lambda_ops::acosh_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T acosh(T arg) noexcept
 		{
-			return acosh_op(arg);
+			return lambda_ops::acosh_op(arg);
 		}
-
-		constexpr inline auto atanh_op = [](floating_point_scalar auto arg) noexcept { return std::atanh(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto atanh(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, atanh_op);
+			return machinery::apply_make(arg, lambda_ops::atanh_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T atanh(T arg) noexcept
 		{
-			return atanh_op(arg);
+			return lambda_ops::atanh_op(arg);
 		}
 
 		//
 		// 8.2 - exponential
 		//
 
-		constexpr inline auto pow_op = []<floating_point_scalar U>(U base, U exp) noexcept { return std::pow(base, exp); };
+		// lambdas for functions
+		namespace lambda_ops
+		{
+			constexpr inline auto pow_op = []<floating_point_scalar U>(U base, U exp) noexcept { return std::pow(base, exp); };
+			constexpr inline auto exp_op = [](floating_point_scalar auto arg) noexcept { return std::exp(arg); };
+			constexpr inline auto log_op = [](floating_point_scalar auto arg) noexcept { return std::log(arg); };
+			constexpr inline auto exp2_op = [](floating_point_scalar auto arg) noexcept { return std::exp2(arg); };
+			constexpr inline auto log2_op = [](floating_point_scalar auto arg) noexcept { return std::log2(arg); };
+			constexpr inline auto sqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::sqrt(arg); };
+			constexpr inline auto fast_rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fast_rsqrt(arg); };
+			constexpr inline auto rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::rsqrt(arg); };
+		}	// namespace lambda_ops
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] inline auto pow(const vector_base<W1, T, C, D1> &base,
@@ -5575,7 +5565,7 @@ namespace dsga
 				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
 			}
 
-			return machinery::apply_unitype_make(base, exp, pow_op);
+			return machinery::apply_unitype_make(base, exp, lambda_ops::pow_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5591,108 +5581,94 @@ namespace dsga
 				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
 			}
 
-			return pow_op(base, exp);
+			return lambda_ops::pow_op(base, exp);
 		}
-
-		constexpr inline auto exp_op = [](floating_point_scalar auto arg) noexcept { return std::exp(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto exp(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, exp_op);
+			return machinery::apply_make(arg, lambda_ops::exp_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T exp(T arg) noexcept
 		{
-			return exp_op(arg);
+			return lambda_ops::exp_op(arg);
 		}
-
-		constexpr inline auto log_op = [](floating_point_scalar auto arg) noexcept { return std::log(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto log(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, log_op);
+			return machinery::apply_make(arg, lambda_ops::log_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T log(T arg) noexcept
 		{
-			return log_op(arg);
+			return lambda_ops::log_op(arg);
 		}
-
-		constexpr inline auto exp2_op = [](floating_point_scalar auto arg) noexcept { return std::exp2(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto exp2(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, exp2_op);
+			return machinery::apply_make(arg, lambda_ops::exp2_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T exp2(T arg) noexcept
 		{
-			return exp2_op(arg);
+			return lambda_ops::exp2_op(arg);
 		}
-
-		constexpr inline auto log2_op = [](floating_point_scalar auto arg) noexcept { return std::log2(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] inline auto log2(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, log2_op);
+			return machinery::apply_make(arg, lambda_ops::log2_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T log2(T arg) noexcept
 		{
-			return log2_op(arg);
+			return lambda_ops::log2_op(arg);
 		}
-
-		constexpr inline auto sqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::sqrt(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto sqrt(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, sqrt_op);
+			return machinery::apply_make(arg, lambda_ops::sqrt_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T sqrt(T arg) noexcept
 		{
-			return sqrt_op(arg);
+			return lambda_ops::sqrt_op(arg);
 		}
 
 		// not in GLSL
 
-		constexpr inline auto fast_rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fast_rsqrt(arg); };
-
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto fast_inversesqrt(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, fast_rsqrt_op);
+			return machinery::apply_make(arg, lambda_ops::fast_rsqrt_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T fast_inversesqrt(T arg) noexcept
 		{
-			return fast_rsqrt_op(arg);
+			return lambda_ops::fast_rsqrt_op(arg);
 		}
-
-		constexpr inline auto rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::rsqrt(arg); };
 
 		// double specializations
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto inversesqrt(const vector_base<W, double, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, rsqrt_op);
+			return machinery::apply_make(arg, lambda_ops::rsqrt_op);
 		}
 
 		[[nodiscard]] constexpr double inversesqrt(double arg) noexcept
 		{
-			return rsqrt_op(arg);
+			return lambda_ops::rsqrt_op(arg);
 		}
 
 		// float specializations - cxcm::rsqrt(float) is 100% match with cxcm::fast_rsqrt(float)
@@ -5712,146 +5688,206 @@ namespace dsga
 		// 8.3 - common
 		//
 
-		constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept -> T { return cxcm::abs(arg); };
+		// lambdas for functions
+		namespace lambda_ops
+		{
+			constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept -> T { return cxcm::abs(arg); };
+			constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(0) < arg) - T(arg < T(0)); };
+			constexpr inline auto floor_op = [](floating_point_scalar auto arg) noexcept { return cxcm::floor(arg); };
+			constexpr inline auto trunc_op = [](floating_point_scalar auto arg) noexcept { return cxcm::trunc(arg); };
+			constexpr inline auto round_op = [](floating_point_scalar auto arg) noexcept { return cxcm::round(arg); };
+			constexpr inline auto round_even_op = [](floating_point_scalar auto arg) noexcept { return cxcm::round_even(arg); };
+			constexpr inline auto ceil_op = [](floating_point_scalar auto arg) noexcept { return cxcm::ceil(arg); };
+			constexpr inline auto fract_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fract(arg); };
+			constexpr inline auto mod_op = []<floating_point_scalar T>(T x, T y) noexcept { return x - y * cxcm::floor(x / y); };
+			constexpr inline auto modf_op = []<floating_point_scalar T>(T x, T y) noexcept { return x - y; };
+			constexpr inline auto min_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? y : x; };
+			constexpr inline auto max_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? x : y; };
+			constexpr inline auto clamp_op = []<non_bool_scalar T>(T x, T min_val, T max_val) noexcept -> T { return std::clamp(x, min_val, max_val); };
+
+			// https://stackoverflow.com/a/58648036
+			constexpr inline auto mix1_op = []<floating_point_scalar T>(T x, T y, T a) noexcept -> T
+			{
+//				auto formula = [x, y, a]() noexcept
+//				{
+//					T w0 = T(1.0) - a;
+//					T w1 = T(1.0) - w0;
+//					T t0 = w0 * x;
+//					T t1 = w1 * y;
+//					return t0 + t1;
+//				};
+
+				if (x == y)
+				{
+					return x;
+				}
+
+				auto val = T(0.0);
+				if (a <= T(0.5))
+				{
+					val = x + (y - x) * a;
+				}
+				else
+				{
+	//				val = formula();
+					val = ((T(1.0) - a) * x) + (a * y);
+				}
+
+				if (cxcm::isnan(val) && !cxcm::isnan(a + x + y))
+				{
+					val = cxcm::copysign(std::numeric_limits<T>::infinity(), y - x);
+				}
+
+				return val;
+			};
+			constexpr inline auto mix2_op = []<dimensional_scalar T, bool_scalar B>(T x, T y, B a) noexcept -> T { return a ? y : x; };
+			constexpr inline auto step_op = []<floating_point_scalar T>(T edge, T x) noexcept { return ((x < edge) ? T(0) : T(1)); };
+			constexpr inline auto smoothstep_op = []<floating_point_scalar T>(T edge0, T edge1, T x) noexcept
+			{
+				T t = clamp_op((x - edge0) / (edge1 - edge0), T(0), T(1));
+				return t * t * (T(3) - T(2) * t);
+			};
+			constexpr inline auto isnan_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isnan(arg); };
+			constexpr inline auto isinf_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isinf(arg); };
+			constexpr inline auto float_bits_to_int_op = [](float arg) noexcept { return std::bit_cast<int>(arg); };
+			constexpr inline auto float_bits_to_uint_op = [](float arg) noexcept { return std::bit_cast<unsigned int>(arg); };
+			constexpr inline auto double_bits_to_long_long_op = [](double arg) noexcept { return std::bit_cast<long long>(arg); };
+			constexpr inline auto double_bits_to_ulong_long_op = [](double arg) noexcept { return std::bit_cast<unsigned long long>(arg); };
+			constexpr inline auto int_bits_to_float_op = [](int arg) noexcept { return std::bit_cast<float>(arg); };
+			constexpr inline auto uint_bits_to_float_op = [](unsigned int arg) noexcept { return std::bit_cast<float>(arg); };
+			constexpr inline auto long_long_bits_to_double_op = [](long long arg) noexcept { return std::bit_cast<double>(arg); };
+			constexpr inline auto ulong_long_bits_to_double_op = [](unsigned long long arg) noexcept { return std::bit_cast<double>(arg); };
+			inline auto fma_op = []<floating_point_scalar T>(T a, T b, T c) noexcept { return std::fma(a, b, c); };
+			inline auto frexp_op = []<floating_point_scalar T>(T x, int &exp) noexcept { return std::frexp(x, &exp); };
+			inline auto ldexp_op = []<floating_point_scalar T>(T x, int exp) noexcept { return std::ldexp(x, exp); };
+			constexpr auto byteswap_op = []<numeric_integral_scalar T>(T x) noexcept -> T
+			{
+				auto value_representation = std::bit_cast<std::array<std::byte, sizeof(T)>>(x);
+				std::ranges::reverse(value_representation);
+				return std::bit_cast<T>(value_representation);
+			};
+		}	// namespace lambda_ops
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, abs_op);
+			return machinery::apply_make(arg, lambda_ops::abs_op);
 		}
 
 		template <non_bool_scalar T>
 		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr T abs(T arg) noexcept
 		{
-			return abs_op(arg);
+			return lambda_ops::abs_op(arg);
 		}
-
-		constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(0) < arg) - T(arg < T(0)); };
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, sign_op);
+			return machinery::apply_make(arg, lambda_ops::sign_op);
 		}
 
 		template <non_bool_scalar T>
 		requires (!unsigned_scalar<T>)
 		[[nodiscard]] constexpr T sign(T arg) noexcept
 		{
-			return sign_op(arg);
+			return lambda_ops::sign_op(arg);
 		}
-
-		constexpr inline auto floor_op = [](floating_point_scalar auto arg) noexcept { return cxcm::floor(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto floor(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, floor_op);
+			return machinery::apply_make(arg, lambda_ops::floor_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T floor(T arg) noexcept
 		{
-			return floor_op(arg);
+			return lambda_ops::floor_op(arg);
 		}
-
-		constexpr inline auto trunc_op = [](floating_point_scalar auto arg) noexcept { return cxcm::trunc(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto trunc(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, trunc_op);
+			return machinery::apply_make(arg, lambda_ops::trunc_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T trunc(T arg) noexcept
 		{
-			return trunc_op(arg);
+			return lambda_ops::trunc_op(arg);
 		}
-
-		constexpr inline auto round_op = [](floating_point_scalar auto arg) noexcept { return cxcm::round(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto round(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, round_op);
+			return machinery::apply_make(arg, lambda_ops::round_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T round(T arg) noexcept
 		{
-			return round_op(arg);
+			return lambda_ops::round_op(arg);
 		}
-
-		constexpr inline auto round_even_op = [](floating_point_scalar auto arg) noexcept { return cxcm::round_even(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto roundEven(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, round_even_op);
+			return machinery::apply_make(arg, lambda_ops::round_even_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T roundEven(T arg) noexcept
 		{
-			return round_even_op(arg);
+			return lambda_ops::round_even_op(arg);
 		}
-
-		constexpr inline auto ceil_op = [](floating_point_scalar auto arg) noexcept { return cxcm::ceil(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto ceil(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, ceil_op);
+			return machinery::apply_make(arg, lambda_ops::ceil_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T ceil(T arg) noexcept
 		{
-			return ceil_op(arg);
+			return lambda_ops::ceil_op(arg);
 		}
-
-		constexpr inline auto fract_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fract(arg); };
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto fract(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, fract_op);
+			return machinery::apply_make(arg, lambda_ops::fract_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T fract(T arg) noexcept
 		{
-			return fract_op(arg);
+			return lambda_ops::fract_op(arg);
 		}
-
-		constexpr inline auto mod_op = []<floating_point_scalar T>(T x, T y) noexcept { return x - y * cxcm::floor(x / y); };
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto mod(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, mod_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::mod_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto mod(const vector_base<W, T, C, D> &x,
 										 T y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, mod_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::mod_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T mod(T x,
 									  T y) noexcept
 		{
-			return mod_op(x, y);
+			return lambda_ops::mod_op(x, y);
 		}
-
-		constexpr inline auto modf_op = []<floating_point_scalar T>(T x, T y) noexcept { return x - y; };
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires W2
@@ -5863,7 +5899,7 @@ namespace dsga
 			else
 				i.as_derived() = trunc(arg);
 
-			return machinery::apply_unitype_make(arg, i, modf_op);
+			return machinery::apply_unitype_make(arg, i, lambda_ops::modf_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5871,56 +5907,50 @@ namespace dsga
 									   T &i) noexcept
 		{
 			i = trunc(arg);
-			return modf_op(arg, i);
+			return lambda_ops::modf_op(arg, i);
 		}
-
-		constexpr inline auto min_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? y : x; };
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto min(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, min_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::min_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto min(const vector_base<W, T, C, D> &x,
 										 T y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, min_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::min_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr T min(T x,
 									  T y) noexcept
 		{
-			return min_op(x, y);
+			return lambda_ops::min_op(x, y);
 		}
-
-		constexpr inline auto max_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? x : y; };
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto max(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, max_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::max_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto max(const vector_base<W, T, C, D> &x,
 										 T y) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, max_op);
+			return machinery::apply_unitype_make(x, y, lambda_ops::max_op);
 		}
 
 		template <non_bool_scalar T>
 		[[nodiscard]] constexpr T max(T x,
 									  T y) noexcept
 		{
-			return max_op(x, y);
+			return lambda_ops::max_op(x, y);
 		}
-
-		constexpr inline auto clamp_op = []<non_bool_scalar T>(T x, T min_val, T max_val) noexcept -> T { return std::clamp(x, min_val, max_val); };
 
 		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr auto clamp(const vector_base<W1, T, C, D1> &x,
@@ -5931,7 +5961,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(max_val < min_val) is UB");
 			}
-			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
+			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
@@ -5943,7 +5973,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(max_val < min_val) is UB");
 			}
-			return machinery::apply_unitype_make(x, min_val, max_val, clamp_op);
+			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
 		template <non_bool_scalar T>
@@ -5955,51 +5985,15 @@ namespace dsga
 			{
 				throw std::invalid_argument("(max_val < min_val) is UB");
 			}
-			return clamp_op(x, min_val, max_val);
+			return lambda_ops::clamp_op(x, min_val, max_val);
 		}
-
-		// https://stackoverflow.com/a/58648036
-		constexpr inline auto mix1_op = []<floating_point_scalar T>(T x, T y, T a) noexcept -> T
-		{
-//			auto formula = [x, y, a]() noexcept
-//			{
-//				T w0 = T(1.0) - a;
-//				T w1 = T(1.0) - w0;
-//				T t0 = w0 * x;
-//				T t1 = w1 * y;
-//				return t0 + t1;
-//			};
-
-			if (x == y)
-			{
-				return x;
-			}
-
-			auto val = T(0.0);
-			if (a <= T(0.5))
-			{
-				val = x + (y - x) * a;
-			}
-			else
-			{
-//				val = formula();
-				val = ((T(1.0) - a) * x) + (a * y);
-			}
-
-			if (cxcm::isnan(val) && !cxcm::isnan(a + x + y))
-			{
-				val = cxcm::copysign(std::numeric_limits<T>::infinity(), y - x);
-			}
-
-			return val;
-		};
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr auto mix(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y,
 										 const vector_base<W3, T, C, D3> &a) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, a, mix1_op);
+			return machinery::apply_unitype_make(x, y, a, lambda_ops::mix1_op);
 		}
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
@@ -6007,7 +6001,7 @@ namespace dsga
 										 const vector_base<W2, T, C, D2> &y,
 										 T a) noexcept
 		{
-			return machinery::apply_unitype_make(x, y, a, mix1_op);
+			return machinery::apply_unitype_make(x, y, a, lambda_ops::mix1_op);
 		}
 
 		template <floating_point_scalar T>
@@ -6015,17 +6009,15 @@ namespace dsga
 									  T y,
 									  T a) noexcept
 		{
-			return mix1_op(x, y, a);
+			return lambda_ops::mix1_op(x, y, a);
 		}
-
-		constexpr inline auto mix2_op = []<dimensional_scalar T, bool_scalar B>(T x, T y, B a) noexcept -> T { return a ? y : x; };
 
 		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, bool_scalar B, typename D3>
 		[[nodiscard]] constexpr auto mix(const vector_base<W1, T, C, D1> &x,
 										 const vector_base<W2, T, C, D2> &y,
 										 const vector_base<W3, B, C, D3> &a) noexcept
 		{
-			return machinery::apply_multitype_make(x, y, a, mix2_op);
+			return machinery::apply_multitype_make(x, y, a, lambda_ops::mix2_op);
 		}
 
 		template <dimensional_scalar T, bool_scalar B>
@@ -6033,37 +6025,29 @@ namespace dsga
 									  T y,
 									  B a) noexcept
 		{
-			return mix2_op(x, y, a);
+			return lambda_ops::mix2_op(x, y, a);
 		}
-
-		constexpr inline auto step_op = []<floating_point_scalar T>(T edge, T x) noexcept { return ((x < edge) ? T(0) : T(1)); };
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] constexpr auto step(const vector_base<W1, T, C, D1> &edge,
 										  const vector_base<W2, T, C, D2> &x) noexcept
 		{
-			return machinery::apply_unitype_make(edge, x, step_op);
+			return machinery::apply_unitype_make(edge, x, lambda_ops::step_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto step(T edge,
 										  const vector_base<W, T, C, D> &x) noexcept
 		{
-			return machinery::apply_unitype_make(edge, x, step_op);
+			return machinery::apply_unitype_make(edge, x, lambda_ops::step_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T step(T edge,
 									   T x) noexcept
 		{
-			return step_op(edge, x);
+			return lambda_ops::step_op(edge, x);
 		}
-
-		constexpr inline auto smoothstep_op = []<floating_point_scalar T>(T edge0, T edge1, T x) noexcept
-		{
-			T t = clamp_op((x - edge0) / (edge1 - edge0), T(0), T(1));
-			return t * t * (T(3) - T(2) * t);
-		};
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] constexpr auto smoothstep(const vector_base<W1, T, C, D1> &edge0,
@@ -6074,7 +6058,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
-			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
+			return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -6086,7 +6070,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
-			return machinery::apply_unitype_make(edge0, edge1, x, smoothstep_op);
+			return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
 		}
 
 		template <floating_point_scalar T>
@@ -6098,51 +6082,47 @@ namespace dsga
 			{
 				throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
-			return smoothstep_op(edge0, edge1, x);
+			return lambda_ops::smoothstep_op(edge0, edge1, x);
 		}
-
-		constexpr inline auto isnan_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isnan(arg); };
 
 		// MSVC has a problem when I try to implement this with vector_base -- don't know about gcc or clang
 
 		template <floating_point_scalar T, std::size_t C>
 		[[nodiscard]] constexpr auto isnan(const basic_vector<T, C> &arg) noexcept
 		{
-			return machinery::apply_make(arg, isnan_op);
+			return machinery::apply_make(arg, lambda_ops::isnan_op);
 		}
 
 		template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 		[[nodiscard]] constexpr auto isnan(const indexed_vector<T, S, C, Is...> &arg) noexcept
 		{
-			return machinery::apply_make(arg, isnan_op);
+			return machinery::apply_make(arg, lambda_ops::isnan_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr bool isnan(T arg) noexcept
 		{
-			return isnan_op(arg);
+			return lambda_ops::isnan_op(arg);
 		}
-
-		constexpr inline auto isinf_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isinf(arg); };
 
 		// MSVC has a problem when I try to implement this with vector_base -- don't know about gcc or clang
 
 		template <floating_point_scalar T, std::size_t C>
 		[[nodiscard]] constexpr auto isinf(const basic_vector<T, C> &arg) noexcept
 		{
-			return machinery::apply_make(arg, isinf_op);
+			return machinery::apply_make(arg, lambda_ops::isinf_op);
 		}
 
 		template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
 		[[nodiscard]] constexpr auto isinf(const indexed_vector<T, S, C, Is...> &arg) noexcept
 		{
-			return machinery::apply_make(arg, isinf_op);
+			return machinery::apply_make(arg, lambda_ops::isinf_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr bool isinf(T arg) noexcept
 		{
-			return isinf_op(arg);
+			return lambda_ops::isinf_op(arg);
 		}
 
 		//
@@ -6154,118 +6134,100 @@ namespace dsga
 		static_assert(sizeof(double) == sizeof(long long), "double and long long must be same byte size");
 		static_assert(sizeof(double) == sizeof(unsigned long long), "double and unsigned long long must be same byte size");
 
-		constexpr inline auto float_bits_to_int_op = [](float arg) noexcept { return std::bit_cast<int>(arg); };
-
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto floatBitsToInt(const vector_base<W, float, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, float_bits_to_int_op);
+			return machinery::apply_make(arg, lambda_ops::float_bits_to_int_op);
 		}
 
 		[[nodiscard]] constexpr int floatBitsToInt(float arg) noexcept
 		{
-			return float_bits_to_int_op(arg);
+			return lambda_ops::float_bits_to_int_op(arg);
 		}
-
-		constexpr inline auto float_bits_to_uint_op = [](float arg) noexcept { return std::bit_cast<unsigned int>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto floatBitsToUint(const vector_base<W, float, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, float_bits_to_uint_op);
+			return machinery::apply_make(arg, lambda_ops::float_bits_to_uint_op);
 		}
 
 		[[nodiscard]] constexpr unsigned int floatBitsToUint(float arg) noexcept
 		{
-			return float_bits_to_uint_op(arg);
+			return lambda_ops::float_bits_to_uint_op(arg);
 		}
-
-		constexpr inline auto double_bits_to_long_long_op = [](double arg) noexcept { return std::bit_cast<long long>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto doubleBitsToLongLong(const vector_base<W, double, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, double_bits_to_long_long_op);
+			return machinery::apply_make(arg, lambda_ops::double_bits_to_long_long_op);
 		}
 
 		[[nodiscard]] constexpr long long doubleBitsToLongLong(double arg) noexcept
 		{
-			return double_bits_to_long_long_op(arg);
+			return lambda_ops::double_bits_to_long_long_op(arg);
 		}
-
-		constexpr inline auto double_bits_to_ulong_long_op = [](double arg) noexcept { return std::bit_cast<unsigned long long>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto doubleBitsToUlongLong(const vector_base<W, double, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, double_bits_to_ulong_long_op);
+			return machinery::apply_make(arg, lambda_ops::double_bits_to_ulong_long_op);
 		}
 
 		[[nodiscard]] constexpr unsigned long long doubleBitsToUlongLong(double arg) noexcept
 		{
-			return double_bits_to_ulong_long_op(arg);
+			return lambda_ops::double_bits_to_ulong_long_op(arg);
 		}
-
-		constexpr inline auto int_bits_to_float_op = [](int arg) noexcept { return std::bit_cast<float>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto intBitsToFloat(const vector_base<W, int, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, int_bits_to_float_op);
+			return machinery::apply_make(arg, lambda_ops::int_bits_to_float_op);
 		}
 
 		[[nodiscard]] constexpr float intBitsToFloat(int arg) noexcept
 		{
-			return int_bits_to_float_op(arg);
+			return lambda_ops::int_bits_to_float_op(arg);
 		}
-
-		constexpr inline auto uint_bits_to_float_op = [](unsigned int arg) noexcept { return std::bit_cast<float>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto uintBitsToFloat(const vector_base<W, unsigned int, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, uint_bits_to_float_op);
+			return machinery::apply_make(arg, lambda_ops::uint_bits_to_float_op);
 		}
 
 		[[nodiscard]] constexpr float uintBitsToFloat(unsigned int arg) noexcept
 		{
-			return uint_bits_to_float_op(arg);
+			return lambda_ops::uint_bits_to_float_op(arg);
 		}
-
-		constexpr inline auto long_long_bits_to_double_op = [](long long arg) noexcept { return std::bit_cast<double>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto longLongBitsToDouble(const vector_base<W, long long, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, long_long_bits_to_double_op);
+			return machinery::apply_make(arg, lambda_ops::long_long_bits_to_double_op);
 		}
 
 		[[nodiscard]] constexpr double longLongBitsToDouble(long long arg) noexcept
 		{
-			return long_long_bits_to_double_op(arg);
+			return lambda_ops::long_long_bits_to_double_op(arg);
 		}
-
-		constexpr inline auto ulong_long_bits_to_double_op = [](unsigned long long arg) noexcept { return std::bit_cast<double>(arg); };
 
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto ulongLongBitsToDouble(const vector_base<W, unsigned long long, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, ulong_long_bits_to_double_op);
+			return machinery::apply_make(arg, lambda_ops::ulong_long_bits_to_double_op);
 		}
 
 		[[nodiscard]] constexpr double ulongLongBitsToDouble(unsigned long long arg) noexcept
 		{
-			return ulong_long_bits_to_double_op(arg);
+			return lambda_ops::ulong_long_bits_to_double_op(arg);
 		}
-
-		inline auto fma_op = []<floating_point_scalar T>(T a, T b, T c) noexcept { return std::fma(a, b, c); };
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 		[[nodiscard]] inline auto fma(const vector_base<W1, T, C, D1> &a,
 									  const vector_base<W2, T, C, D2> &b,
 									  const vector_base<W3, T, C, D3> &c) noexcept
 		{
-			return machinery::apply_unitype_make(a, b, c, fma_op);
+			return machinery::apply_unitype_make(a, b, c, lambda_ops::fma_op);
 		}
 
 		template <floating_point_scalar T>
@@ -6273,10 +6235,8 @@ namespace dsga
 								   T b,
 								   T c) noexcept
 		{
-			return fma_op(a, b, c);
+			return lambda_ops::fma_op(a, b, c);
 		}
-
-		inline auto frexp_op = []<floating_point_scalar T>(T x, int &exp) noexcept { return std::frexp(x, &exp); };
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		requires W2
@@ -6285,7 +6245,7 @@ namespace dsga
 		{
 			return [&x, &exp]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_vector<T, C>{frexp_op(x[Is], exp[Is])...};
+				return basic_vector<T, C>{lambda_ops::frexp_op(x[Is], exp[Is])...};
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6293,23 +6253,21 @@ namespace dsga
 		[[nodiscard]] inline T frexp(T x,
 									 int &exp) noexcept
 		{
-			return frexp_op(x, exp);
+			return lambda_ops::frexp_op(x, exp);
 		}
-
-		inline auto ldexp_op = []<floating_point_scalar T>(T x, int exp) noexcept { return std::ldexp(x, exp); };
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 		[[nodiscard]] inline auto ldexp(const vector_base<W1, T, C, D1> &x,
 										const vector_base<W2, int, C, D2> &exp) noexcept
 		{
-			return machinery::apply_multitype_make(x, exp, ldexp_op);
+			return machinery::apply_multitype_make(x, exp, lambda_ops::ldexp_op);
 		}
 
 		template <floating_point_scalar T>
 		[[nodiscard]] inline T ldexp(T x,
 									 int exp) noexcept
 		{
-			return ldexp_op(x, exp);
+			return lambda_ops::ldexp_op(x, exp);
 		}
 
 		//
@@ -6317,23 +6275,16 @@ namespace dsga
 		//
 
 		// since dsga is designed for c++20, we can't use std::byteswap() from c++23
-		constexpr auto byteswap_op = []<numeric_integral_scalar T>(T x) noexcept -> T
-		{
-			auto value_representation = std::bit_cast<std::array<std::byte, sizeof(T)>>(x);
-			std::ranges::reverse(value_representation);
-			return std::bit_cast<T>(value_representation);
-		};
-
 		template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto byteswap(const vector_base<W, T, C, D> &arg) noexcept
 		{
-			return machinery::apply_make(arg, byteswap_op);
+			return machinery::apply_make(arg, lambda_ops::byteswap_op);
 		}
 
 		template <numeric_integral_scalar T>
 		[[nodiscard]] constexpr T byteswap(T arg) noexcept
 		{
-			return byteswap_op(arg);
+			return lambda_ops::byteswap_op(arg);
 		}
 
 		//
