@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 12;
+	constexpr inline int DSGA_PATCH_VERSION = 13;
 
 	namespace cxcm
 	{
@@ -1341,7 +1341,7 @@ namespace dsga
 					throw std::domain_error("negation of min value is not a valid integral value");
 				}
 
-				return relaxed::abs(value);
+				[[ likely ]] return relaxed::abs(value);
 			}
 
 			template <cxcm::concepts::basic_floating_point T>
@@ -1358,7 +1358,7 @@ namespace dsga
 					throw std::domain_error("negation of min value is not a valid integral value");
 				}
 
-				return relaxed::fabs(value);
+				[[ likely ]] return relaxed::fabs(value);
 			}
 
 			//
@@ -1903,6 +1903,7 @@ namespace dsga
 
 	};	// struct storage_wrapper
 
+	// swap specialization
 	template <dimensional_scalar T, std::size_t S>
 	constexpr void swap(storage_wrapper<T, S> &lhs, storage_wrapper<T, S> &rhs) noexcept
 	{
@@ -2197,7 +2198,7 @@ namespace dsga
 			// I don't want to throw from a constructor, but my hand is forced
 			if ((mapper_index < begin_index) || (mapper_index > end_index))
 			{
-				throw std::out_of_range("index not in range");
+				[[ unlikely ]] throw std::out_of_range("index not in range");
 			}
 		}
 
@@ -2219,7 +2220,7 @@ namespace dsga
 				throw std::out_of_range("index not in range");
 			}
 
-			return (*mapper_ptr)[mapper_index];
+			[[ likely ]] return (*mapper_ptr)[mapper_index];
 		}
 
 		[[nodiscard]] constexpr pointer operator ->() const
@@ -2233,7 +2234,7 @@ namespace dsga
 				throw std::out_of_range("index not in range");
 			}
 
-			return std::addressof((*mapper_ptr)[mapper_index]);
+			[[ likely ]] return std::addressof((*mapper_ptr)[mapper_index]);
 		}
 
 		constexpr indexed_vector_const_iterator &operator ++()
@@ -2243,7 +2244,7 @@ namespace dsga
 				throw std::runtime_error("don't increment past end_index");
 			}
 
-			++mapper_index;
+			[[ likely ]] ++mapper_index;
 			return *this;
 		}
 
@@ -2255,7 +2256,7 @@ namespace dsga
 			}
 
 			indexed_vector_const_iterator temp = *this;
-			++mapper_index;
+			[[ likely ]] ++mapper_index;
 			return temp;
 		}
 
@@ -2266,7 +2267,7 @@ namespace dsga
 				throw std::runtime_error("don't decrement past begin_index");
 			}
 
-			--mapper_index;
+			[[ likely ]] --mapper_index;
 			return *this;
 		}
 
@@ -2277,7 +2278,7 @@ namespace dsga
 				throw std::runtime_error("don't decrement past begin_index");
 			}
 
-			indexed_vector_const_iterator temp = *this;
+			[[ likely ]] indexed_vector_const_iterator temp = *this;
 			--mapper_index;
 			return temp;
 		}
@@ -2289,7 +2290,7 @@ namespace dsga
 				throw std::out_of_range("offset not in range");
 			}
 
-			mapper_index += offset;
+			[[ likely ]] mapper_index += offset;
 			return *this;
 		}
 
@@ -2300,7 +2301,7 @@ namespace dsga
 				throw std::out_of_range("offset not in range");
 			}
 
-			mapper_index -= offset;
+			[[ likely ]] mapper_index -= offset;
 			return *this;
 		}
 
@@ -2311,7 +2312,7 @@ namespace dsga
 				throw std::invalid_argument("different indexed_vector source");
 			}
 
-			return static_cast<int>(mapper_index) - static_cast<int>(iter.mapper_index);
+			[[ likely ]] return static_cast<int>(mapper_index) - static_cast<int>(iter.mapper_index);
 		}
 
 		[[nodiscard]] constexpr bool operator ==(const indexed_vector_const_iterator &iter) const
@@ -2321,7 +2322,7 @@ namespace dsga
 				throw std::invalid_argument("different indexed_vector source");
 			}
 
-			return ((mapper_ptr == iter.mapper_ptr) && (mapper_index == iter.mapper_index));
+			[[ likely ]] return ((mapper_ptr == iter.mapper_ptr) && (mapper_index == iter.mapper_index));
 		}
 
 		[[nodiscard]] constexpr std::strong_ordering operator <=>(const indexed_vector_const_iterator &iter) const
@@ -2331,7 +2332,7 @@ namespace dsga
 				throw std::invalid_argument("different indexed_vector source");
 			}
 
-			return mapper_index <=> iter.mapper_index;
+			[[ likely ]] return mapper_index <=> iter.mapper_index;
 		}
 
 		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
@@ -2345,7 +2346,7 @@ namespace dsga
 				throw std::out_of_range("index not in range");
 			}
 
-			return (*mapper_ptr)[mapper_index + offset];
+			[[ likely ]] return (*mapper_ptr)[mapper_index + offset];
 		}
 
 		[[nodiscard]] constexpr indexed_vector_const_iterator operator +(const int offset) const noexcept
@@ -3986,6 +3987,7 @@ namespace dsga
 
 	};	// struct basic_vector<T, 4>
 
+	// swap specialization
 	template <dimensional_scalar T, std::size_t Size>
 	constexpr void swap(basic_vector<T, Size> &lhs, basic_vector<T, Size> &rhs) noexcept
 	{
@@ -4344,7 +4346,7 @@ namespace dsga
 				throw std::domain_error("(lhs % 0) is undefined");
 			}
 
-			return lhs % rhs;
+			[[ likely ]] return lhs % rhs;
 		};
 		constexpr inline auto bit_not_op = [](numeric_integral_scalar auto arg) noexcept { return ~arg; };
 		constexpr inline auto lshift_op =
@@ -5565,7 +5567,7 @@ namespace dsga
 				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
 			}
 
-			return machinery::apply_unitype_make(base, exp, lambda_ops::pow_op);
+			[[ likely ]] return machinery::apply_unitype_make(base, exp, lambda_ops::pow_op);
 		}
 
 		template <floating_point_scalar T>
@@ -5581,7 +5583,7 @@ namespace dsga
 				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
 			}
 
-			return lambda_ops::pow_op(base, exp);
+			[[ likely ]] return lambda_ops::pow_op(base, exp);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -5961,7 +5963,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(max_val < min_val) is UB");
 			}
-			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
+			[[ likely ]] return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
@@ -5973,7 +5975,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(max_val < min_val) is UB");
 			}
-			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
+			[[ likely ]] return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
 		template <non_bool_scalar T>
@@ -5985,7 +5987,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(max_val < min_val) is UB");
 			}
-			return lambda_ops::clamp_op(x, min_val, max_val);
+			[[ likely ]] return lambda_ops::clamp_op(x, min_val, max_val);
 		}
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
@@ -6058,7 +6060,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
-			return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
+			[[ likely ]] return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -6070,7 +6072,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
-			return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
+			[[ likely ]] return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
 		}
 
 		template <floating_point_scalar T>
@@ -6082,7 +6084,7 @@ namespace dsga
 			{
 				throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
-			return lambda_ops::smoothstep_op(edge0, edge1, x);
+			[[ likely ]] return lambda_ops::smoothstep_op(edge0, edge1, x);
 		}
 
 		// MSVC has a problem when I try to implement this with vector_base -- don't know about gcc or clang
@@ -6449,7 +6451,7 @@ namespace dsga
 				throw std::out_of_range("swizzle() index out of range");
 			}
 
-			return v[static_cast<std::size_t>(index)];
+			[[ likely ]] return v[static_cast<std::size_t>(index)];
 		}
 
 		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
@@ -6463,7 +6465,7 @@ namespace dsga
 				throw std::out_of_range("swizzle() indexes out of range");
 			}
 
-			return basic_vector<T, sizeof...(Args)>{ v[static_cast<std::size_t>(Is)]... };
+			[[ likely ]] return basic_vector<T, sizeof...(Args)>{ v[static_cast<std::size_t>(Is)]... };
 		}
 
 	}	// namespace functions
@@ -6591,7 +6593,7 @@ namespace dsga
 				(([this, &arg_tuple]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
 				{
 					constexpr std::size_t Col = Is;
-					columns.at(Col).set( std::get<Col * R + Js>(arg_tuple)... );
+					columns.at(Col).set(std::get<Col * R + Js>(arg_tuple)...);
 				}(std::make_index_sequence<R>{})), ...);
 			}(std::make_index_sequence<C>{});
 		}
@@ -6683,6 +6685,7 @@ namespace dsga
 
 	};	// struct basic_matrix
 
+	// swap specialization
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
 	constexpr void swap(basic_matrix<T, C, R> &lhs, basic_matrix<T, C, R> &rhs) noexcept
 	{

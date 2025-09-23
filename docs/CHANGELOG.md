@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.2.13
+* Added ```likely``` and ```unlikely``` attributes for branch prediction when we are explicitly doing a ```throw```.
+
 ### v2.2.12
 * Moved detail lambdas out of ```dsga``` namespace.
 

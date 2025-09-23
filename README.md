@@ -6,15 +6,16 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.12
+v2.2.13
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.13
+    * Added ```likely``` and ```unlikely``` attributes for branch prediction when we are explicitly doing a ```throw```.
 * v2.2.12
     * Moved detail lambdas out of ```dsga``` namespace.
 * v2.2.11
     * Matrix functions that used to be able to mix ```float``` and ```double``` based arguments will now only work with arguments based off the same floating-point type.
     * Changed more functions where ```auto``` was the return type to where the return type is now explicitly specified.
-
 * v2.2.10
     * ```normalize()``` now returns a vector of zeroes if the length is zero (instead of the old way where it returned a vector of NaNs).
     * Modified angle example by adding an alternate (supposedly lesser) function for determining the angle between 2 vectors.
@@ -362,7 +363,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.12`
+Current version: `v2.2.13`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
