@@ -2278,8 +2278,8 @@ namespace dsga
 				throw std::runtime_error("don't decrement past begin_index");
 			}
 
-			[[ likely ]] indexed_vector_const_iterator temp = *this;
-			--mapper_index;
+			indexed_vector_const_iterator temp = *this;
+			[[ likely ]] --mapper_index;
 			return temp;
 		}
 
