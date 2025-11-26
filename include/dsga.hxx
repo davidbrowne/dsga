@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 13;
+	constexpr inline int DSGA_PATCH_VERSION = 14;
 
 	namespace cxcm
 	{
@@ -1843,7 +1843,7 @@ namespace dsga
 		dimensional_storage_t<T, Size> store;
 
 		// using directives related to storage
-		using value_type = dimensional_storage_t<T, Size>::value_type;
+		using value_type = T;
 		using iterator = dimensional_storage_t<T, Size>::iterator;
 		using const_iterator = dimensional_storage_t<T, Size>::const_iterator;
 		using reverse_iterator = dimensional_storage_t<T, Size>::reverse_iterator;
@@ -2039,8 +2039,8 @@ namespace dsga
 		//
 		// Every initializer clause is sequenced before any initializer clause that follows it in the braced-init-list (i.e.,
 		// left-to-right). This is in contrast with the arguments of a function call expression, which are indeterminately
-		// sequenced (since C++17), e.g., MSVC and gcc appear to sequence function call arguments right-to-left, while clang
-		// appears to sequence function call arguments left-to-right.
+		// sequenced (since C++17), e.g., MSVC and gcc appear to sequence the evaluation of expression arguments going from
+		// right-to-left, while clang appears to go from left-to-right. https://godbolt.org/z/G6sbYd5rs
 		template <typename UnOp>
 		requires (std::same_as<T, std::invoke_result_t<UnOp, T>> || std::same_as<T, std::invoke_result_t<UnOp, const T &>>)
 		[[nodiscard]] constexpr basic_vector<T, Count> apply(UnOp op) const noexcept
@@ -2491,8 +2491,6 @@ namespace dsga
 		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
 		static constexpr bool Writable = writable_swizzle<Size, Count, Is...>;
 
-		using Derived = indexed_vector<T, Size, Count, Is...>;
-
 		//
 		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
 		// currently unused because operator[] does this logically for us.
@@ -2508,7 +2506,7 @@ namespace dsga
 		dimensional_storage_t<T, Size> base;
 
 		// using directives related to storage
-		using value_type = dimensional_storage_t<T, Size>::value_type;
+		using value_type = T;
 		using iterator = indexed_vector_iterator<T, Size, Count, Is...>;
 		using const_iterator = indexed_vector_const_iterator<T, Size, Count, Is...>;
 		using reverse_iterator = std::reverse_iterator<indexed_vector_iterator<T, Size, Count, Is...>>;
@@ -2576,11 +2574,11 @@ namespace dsga
 		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return iterator(*this, 0); }
-		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return const_iterator(*this, 0); }
+		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return iterator(*this, iterator::begin_index); }
+		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return const_iterator(*this, const_iterator::begin_index); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return iterator(*this, Count); }
-		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return const_iterator(*this, Count); }
+		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return iterator(*this, iterator::end_index); }
+		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return const_iterator(*this, const_iterator::end_index); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
 		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return reverse_iterator(end()); }
@@ -2614,25 +2612,29 @@ namespace dsga
 
 	};	// struct indexed_vector
 
-	//
-	// convenience using types for indexed_vector as members of basic_vector
-	//
+	namespace dex
+	{
+		//
+		// convenience using types for indexed_vector as members of basic_vector
+		//
 
-	template <dimensional_scalar T, std::size_t Size, std::size_t I>
-	requires indexable<Size, 1, I>
-	using dexvec1 = indexed_vector<T, Size, 1, I>;
+		template <dimensional_scalar T, std::size_t Size, std::size_t I>
+		requires indexable<Size, 1, I>
+		using dexvec1 = indexed_vector<T, Size, 1, I>;
 
-	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
-	requires indexable<Size, 2, Is...>
-	using dexvec2 = indexed_vector<T, Size, 2, Is...>;
+		template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+		requires indexable<Size, 2, Is...>
+		using dexvec2 = indexed_vector<T, Size, 2, Is...>;
 
-	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
-	requires indexable<Size, 3, Is...>
-	using dexvec3 = indexed_vector<T, Size, 3, Is...>;
+		template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+		requires indexable<Size, 3, Is...>
+		using dexvec3 = indexed_vector<T, Size, 3, Is...>;
 
-	template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
-	requires indexable<Size, 4, Is...>
-	using dexvec4 = indexed_vector<T, Size, 4, Is...>;
+		template <dimensional_scalar T, std::size_t Size, std::size_t ...Is>
+		requires indexable<Size, 4, Is...>
+		using dexvec4 = indexed_vector<T, Size, 4, Is...>;
+
+	}	// namespace dex
 
 	//
 	// basic_matrix will act as the primary matrix class in this library.
@@ -2885,19 +2887,19 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
-			dexvec1<T, Size, 0>					x;				// Writable
+			dex::dexvec1<T, Size, 0>				x;				// Writable
 
-			dexvec2<T, Size, 0, 0>				xx;
+			dex::dexvec2<T, Size, 0, 0>				xx;
 
-			dexvec3<T, Size, 0, 0, 0>			xxx;
+			dex::dexvec3<T, Size, 0, 0, 0>			xxx;
 
-			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
+			dex::dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
 		};
 
 		// using directives related to storage
-		using value_type = storage_wrapper<T, Size>::value_type;
+		using value_type = T;
 		using iterator = storage_wrapper<T, Size>::iterator;
 		using const_iterator = storage_wrapper<T, Size>::const_iterator;
 		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
@@ -2994,15 +2996,15 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
 
 		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
@@ -3059,45 +3061,45 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
-			dexvec1<T, Size, 0>					x;				// Writable
-			dexvec1<T, Size, 1>					y;				// Writable
+			dex::dexvec1<T, Size, 0>				x;				// Writable
+			dex::dexvec1<T, Size, 1>				y;				// Writable
 
-			dexvec2<T, Size, 0, 0>				xx;
-			dexvec2<T, Size, 0, 1>				xy;				// Writable
-			dexvec2<T, Size, 1, 0>				yx;				// Writable
-			dexvec2<T, Size, 1, 1>				yy;
+			dex::dexvec2<T, Size, 0, 0>				xx;
+			dex::dexvec2<T, Size, 0, 1>				xy;				// Writable
+			dex::dexvec2<T, Size, 1, 0>				yx;				// Writable
+			dex::dexvec2<T, Size, 1, 1>				yy;
 
-			dexvec3<T, Size, 0, 0, 0>			xxx;
-			dexvec3<T, Size, 0, 0, 1>			xxy;
-			dexvec3<T, Size, 0, 1, 0>			xyx;
-			dexvec3<T, Size, 0, 1, 1>			xyy;
-			dexvec3<T, Size, 1, 0, 0>			yxx;
-			dexvec3<T, Size, 1, 0, 1>			yxy;
-			dexvec3<T, Size, 1, 1, 0>			yyx;
-			dexvec3<T, Size, 1, 1, 1>			yyy;
+			dex::dexvec3<T, Size, 0, 0, 0>			xxx;
+			dex::dexvec3<T, Size, 0, 0, 1>			xxy;
+			dex::dexvec3<T, Size, 0, 1, 0>			xyx;
+			dex::dexvec3<T, Size, 0, 1, 1>			xyy;
+			dex::dexvec3<T, Size, 1, 0, 0>			yxx;
+			dex::dexvec3<T, Size, 1, 0, 1>			yxy;
+			dex::dexvec3<T, Size, 1, 1, 0>			yyx;
+			dex::dexvec3<T, Size, 1, 1, 1>			yyy;
 
-			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
-			dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
-			dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
-			dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
-			dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
-			dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
-			dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
-			dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
-			dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
-			dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
-			dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
-			dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
-			dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
-			dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
-			dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
-			dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
+			dex::dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
+			dex::dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
+			dex::dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
+			dex::dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
+			dex::dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
+			dex::dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
+			dex::dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
+			dex::dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
+			dex::dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
+			dex::dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
+			dex::dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
+			dex::dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
+			dex::dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
+			dex::dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
+			dex::dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
+			dex::dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
 		};
 
 		// using directives related to storage
-		using value_type = storage_wrapper<T, Size>::value_type;
+		using value_type = T;
 		using iterator = storage_wrapper<T, Size>::iterator;
 		using const_iterator = storage_wrapper<T, Size>::const_iterator;
 		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
@@ -3176,15 +3178,15 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
 
 		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
@@ -3241,135 +3243,135 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
-			dexvec1<T, Size, 0>					x;				// Writable
-			dexvec1<T, Size, 1>					y;				// Writable
-			dexvec1<T, Size, 2>					z;				// Writable
+			dex::dexvec1<T, Size, 0>				x;				// Writable
+			dex::dexvec1<T, Size, 1>				y;				// Writable
+			dex::dexvec1<T, Size, 2>				z;				// Writable
 
-			dexvec2<T, Size, 0, 0>				xx;
-			dexvec2<T, Size, 0, 1>				xy;				// Writable
-			dexvec2<T, Size, 0, 2>				xz;				// Writable
-			dexvec2<T, Size, 1, 0>				yx;				// Writable
-			dexvec2<T, Size, 1, 1>				yy;
-			dexvec2<T, Size, 1, 2>				yz;				// Writable
-			dexvec2<T, Size, 2, 0>				zx;				// Writable
-			dexvec2<T, Size, 2, 1>				zy;				// Writable
-			dexvec2<T, Size, 2, 2>				zz;
+			dex::dexvec2<T, Size, 0, 0>				xx;
+			dex::dexvec2<T, Size, 0, 1>				xy;				// Writable
+			dex::dexvec2<T, Size, 0, 2>				xz;				// Writable
+			dex::dexvec2<T, Size, 1, 0>				yx;				// Writable
+			dex::dexvec2<T, Size, 1, 1>				yy;
+			dex::dexvec2<T, Size, 1, 2>				yz;				// Writable
+			dex::dexvec2<T, Size, 2, 0>				zx;				// Writable
+			dex::dexvec2<T, Size, 2, 1>				zy;				// Writable
+			dex::dexvec2<T, Size, 2, 2>				zz;
 
-			dexvec3<T, Size, 0, 0, 0>			xxx;
-			dexvec3<T, Size, 0, 0, 1>			xxy;
-			dexvec3<T, Size, 0, 0, 2>			xxz;
-			dexvec3<T, Size, 0, 1, 0>			xyx;
-			dexvec3<T, Size, 0, 1, 1>			xyy;
-			dexvec3<T, Size, 0, 1, 2>			xyz;			// Writable
-			dexvec3<T, Size, 0, 2, 0>			xzx;
-			dexvec3<T, Size, 0, 2, 1>			xzy;			// Writable
-			dexvec3<T, Size, 0, 2, 2>			xzz;
-			dexvec3<T, Size, 1, 0, 0>			yxx;
-			dexvec3<T, Size, 1, 0, 1>			yxy;
-			dexvec3<T, Size, 1, 0, 2>			yxz;			// Writable
-			dexvec3<T, Size, 1, 1, 0>			yyx;
-			dexvec3<T, Size, 1, 1, 1>			yyy;
-			dexvec3<T, Size, 1, 1, 2>			yyz;
-			dexvec3<T, Size, 1, 2, 0>			yzx;			// Writable
-			dexvec3<T, Size, 1, 2, 1>			yzy;
-			dexvec3<T, Size, 1, 2, 2>			yzz;
-			dexvec3<T, Size, 2, 0, 0>			zxx;
-			dexvec3<T, Size, 2, 0, 1>			zxy;			// Writable
-			dexvec3<T, Size, 2, 0, 2>			zxz;
-			dexvec3<T, Size, 2, 1, 0>			zyx;			// Writable
-			dexvec3<T, Size, 2, 1, 1>			zyy;
-			dexvec3<T, Size, 2, 1, 2>			zyz;
-			dexvec3<T, Size, 2, 2, 0>			zzx;
-			dexvec3<T, Size, 2, 2, 1>			zzy;
-			dexvec3<T, Size, 2, 2, 2>			zzz;
+			dex::dexvec3<T, Size, 0, 0, 0>			xxx;
+			dex::dexvec3<T, Size, 0, 0, 1>			xxy;
+			dex::dexvec3<T, Size, 0, 0, 2>			xxz;
+			dex::dexvec3<T, Size, 0, 1, 0>			xyx;
+			dex::dexvec3<T, Size, 0, 1, 1>			xyy;
+			dex::dexvec3<T, Size, 0, 1, 2>			xyz;			// Writable
+			dex::dexvec3<T, Size, 0, 2, 0>			xzx;
+			dex::dexvec3<T, Size, 0, 2, 1>			xzy;			// Writable
+			dex::dexvec3<T, Size, 0, 2, 2>			xzz;
+			dex::dexvec3<T, Size, 1, 0, 0>			yxx;
+			dex::dexvec3<T, Size, 1, 0, 1>			yxy;
+			dex::dexvec3<T, Size, 1, 0, 2>			yxz;			// Writable
+			dex::dexvec3<T, Size, 1, 1, 0>			yyx;
+			dex::dexvec3<T, Size, 1, 1, 1>			yyy;
+			dex::dexvec3<T, Size, 1, 1, 2>			yyz;
+			dex::dexvec3<T, Size, 1, 2, 0>			yzx;			// Writable
+			dex::dexvec3<T, Size, 1, 2, 1>			yzy;
+			dex::dexvec3<T, Size, 1, 2, 2>			yzz;
+			dex::dexvec3<T, Size, 2, 0, 0>			zxx;
+			dex::dexvec3<T, Size, 2, 0, 1>			zxy;			// Writable
+			dex::dexvec3<T, Size, 2, 0, 2>			zxz;
+			dex::dexvec3<T, Size, 2, 1, 0>			zyx;			// Writable
+			dex::dexvec3<T, Size, 2, 1, 1>			zyy;
+			dex::dexvec3<T, Size, 2, 1, 2>			zyz;
+			dex::dexvec3<T, Size, 2, 2, 0>			zzx;
+			dex::dexvec3<T, Size, 2, 2, 1>			zzy;
+			dex::dexvec3<T, Size, 2, 2, 2>			zzz;
 
-			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
-			dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
-			dexvec4<T, Size, 0, 0, 0, 2>		xxxz;
-			dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
-			dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
-			dexvec4<T, Size, 0, 0, 1, 2>		xxyz;
-			dexvec4<T, Size, 0, 0, 2, 0>		xxzx;
-			dexvec4<T, Size, 0, 0, 2, 1>		xxzy;
-			dexvec4<T, Size, 0, 0, 2, 2>		xxzz;
-			dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
-			dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
-			dexvec4<T, Size, 0, 1, 0, 2>		xyxz;
-			dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
-			dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
-			dexvec4<T, Size, 0, 1, 1, 2>		xyyz;
-			dexvec4<T, Size, 0, 1, 2, 0>		xyzx;
-			dexvec4<T, Size, 0, 1, 2, 1>		xyzy;
-			dexvec4<T, Size, 0, 1, 2, 2>		xyzz;
-			dexvec4<T, Size, 0, 2, 0, 0>		xzxx;
-			dexvec4<T, Size, 0, 2, 0, 1>		xzxy;
-			dexvec4<T, Size, 0, 2, 0, 2>		xzxz;
-			dexvec4<T, Size, 0, 2, 1, 0>		xzyx;
-			dexvec4<T, Size, 0, 2, 1, 1>		xzyy;
-			dexvec4<T, Size, 0, 2, 1, 2>		xzyz;
-			dexvec4<T, Size, 0, 2, 2, 0>		xzzx;
-			dexvec4<T, Size, 0, 2, 2, 1>		xzzy;
-			dexvec4<T, Size, 0, 2, 2, 2>		xzzz;
-			dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
-			dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
-			dexvec4<T, Size, 1, 0, 0, 2>		yxxz;
-			dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
-			dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
-			dexvec4<T, Size, 1, 0, 1, 2>		yxyz;
-			dexvec4<T, Size, 1, 0, 2, 0>		yxzx;
-			dexvec4<T, Size, 1, 0, 2, 1>		yxzy;
-			dexvec4<T, Size, 1, 0, 2, 2>		yxzz;
-			dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
-			dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
-			dexvec4<T, Size, 1, 1, 0, 2>		yyxz;
-			dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
-			dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
-			dexvec4<T, Size, 1, 1, 1, 2>		yyyz;
-			dexvec4<T, Size, 1, 1, 2, 0>		yyzx;
-			dexvec4<T, Size, 1, 1, 2, 1>		yyzy;
-			dexvec4<T, Size, 1, 1, 2, 2>		yyzz;
-			dexvec4<T, Size, 1, 2, 0, 0>		yzxx;
-			dexvec4<T, Size, 1, 2, 0, 1>		yzxy;
-			dexvec4<T, Size, 1, 2, 0, 2>		yzxz;
-			dexvec4<T, Size, 1, 2, 1, 0>		yzyx;
-			dexvec4<T, Size, 1, 2, 1, 1>		yzyy;
-			dexvec4<T, Size, 1, 2, 1, 2>		yzyz;
-			dexvec4<T, Size, 1, 2, 2, 0>		yzzx;
-			dexvec4<T, Size, 1, 2, 2, 1>		yzzy;
-			dexvec4<T, Size, 1, 2, 2, 2>		yzzz;
-			dexvec4<T, Size, 2, 0, 0, 0>		zxxx;
-			dexvec4<T, Size, 2, 0, 0, 1>		zxxy;
-			dexvec4<T, Size, 2, 0, 0, 2>		zxxz;
-			dexvec4<T, Size, 2, 0, 1, 0>		zxyx;
-			dexvec4<T, Size, 2, 0, 1, 1>		zxyy;
-			dexvec4<T, Size, 2, 0, 1, 2>		zxyz;
-			dexvec4<T, Size, 2, 0, 2, 0>		zxzx;
-			dexvec4<T, Size, 2, 0, 2, 1>		zxzy;
-			dexvec4<T, Size, 2, 0, 2, 2>		zxzz;
-			dexvec4<T, Size, 2, 1, 0, 0>		zyxx;
-			dexvec4<T, Size, 2, 1, 0, 1>		zyxy;
-			dexvec4<T, Size, 2, 1, 0, 2>		zyxz;
-			dexvec4<T, Size, 2, 1, 1, 0>		zyyx;
-			dexvec4<T, Size, 2, 1, 1, 1>		zyyy;
-			dexvec4<T, Size, 2, 1, 1, 2>		zyyz;
-			dexvec4<T, Size, 2, 1, 2, 0>		zyzx;
-			dexvec4<T, Size, 2, 1, 2, 1>		zyzy;
-			dexvec4<T, Size, 2, 1, 2, 2>		zyzz;
-			dexvec4<T, Size, 2, 2, 0, 0>		zzxx;
-			dexvec4<T, Size, 2, 2, 0, 1>		zzxy;
-			dexvec4<T, Size, 2, 2, 0, 2>		zzxz;
-			dexvec4<T, Size, 2, 2, 1, 0>		zzyx;
-			dexvec4<T, Size, 2, 2, 1, 1>		zzyy;
-			dexvec4<T, Size, 2, 2, 1, 2>		zzyz;
-			dexvec4<T, Size, 2, 2, 2, 0>		zzzx;
-			dexvec4<T, Size, 2, 2, 2, 1>		zzzy;
-			dexvec4<T, Size, 2, 2, 2, 2>		zzzz;
+			dex::dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
+			dex::dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
+			dex::dexvec4<T, Size, 0, 0, 0, 2>		xxxz;
+			dex::dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
+			dex::dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
+			dex::dexvec4<T, Size, 0, 0, 1, 2>		xxyz;
+			dex::dexvec4<T, Size, 0, 0, 2, 0>		xxzx;
+			dex::dexvec4<T, Size, 0, 0, 2, 1>		xxzy;
+			dex::dexvec4<T, Size, 0, 0, 2, 2>		xxzz;
+			dex::dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
+			dex::dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
+			dex::dexvec4<T, Size, 0, 1, 0, 2>		xyxz;
+			dex::dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
+			dex::dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
+			dex::dexvec4<T, Size, 0, 1, 1, 2>		xyyz;
+			dex::dexvec4<T, Size, 0, 1, 2, 0>		xyzx;
+			dex::dexvec4<T, Size, 0, 1, 2, 1>		xyzy;
+			dex::dexvec4<T, Size, 0, 1, 2, 2>		xyzz;
+			dex::dexvec4<T, Size, 0, 2, 0, 0>		xzxx;
+			dex::dexvec4<T, Size, 0, 2, 0, 1>		xzxy;
+			dex::dexvec4<T, Size, 0, 2, 0, 2>		xzxz;
+			dex::dexvec4<T, Size, 0, 2, 1, 0>		xzyx;
+			dex::dexvec4<T, Size, 0, 2, 1, 1>		xzyy;
+			dex::dexvec4<T, Size, 0, 2, 1, 2>		xzyz;
+			dex::dexvec4<T, Size, 0, 2, 2, 0>		xzzx;
+			dex::dexvec4<T, Size, 0, 2, 2, 1>		xzzy;
+			dex::dexvec4<T, Size, 0, 2, 2, 2>		xzzz;
+			dex::dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
+			dex::dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
+			dex::dexvec4<T, Size, 1, 0, 0, 2>		yxxz;
+			dex::dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
+			dex::dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
+			dex::dexvec4<T, Size, 1, 0, 1, 2>		yxyz;
+			dex::dexvec4<T, Size, 1, 0, 2, 0>		yxzx;
+			dex::dexvec4<T, Size, 1, 0, 2, 1>		yxzy;
+			dex::dexvec4<T, Size, 1, 0, 2, 2>		yxzz;
+			dex::dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
+			dex::dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
+			dex::dexvec4<T, Size, 1, 1, 0, 2>		yyxz;
+			dex::dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
+			dex::dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
+			dex::dexvec4<T, Size, 1, 1, 1, 2>		yyyz;
+			dex::dexvec4<T, Size, 1, 1, 2, 0>		yyzx;
+			dex::dexvec4<T, Size, 1, 1, 2, 1>		yyzy;
+			dex::dexvec4<T, Size, 1, 1, 2, 2>		yyzz;
+			dex::dexvec4<T, Size, 1, 2, 0, 0>		yzxx;
+			dex::dexvec4<T, Size, 1, 2, 0, 1>		yzxy;
+			dex::dexvec4<T, Size, 1, 2, 0, 2>		yzxz;
+			dex::dexvec4<T, Size, 1, 2, 1, 0>		yzyx;
+			dex::dexvec4<T, Size, 1, 2, 1, 1>		yzyy;
+			dex::dexvec4<T, Size, 1, 2, 1, 2>		yzyz;
+			dex::dexvec4<T, Size, 1, 2, 2, 0>		yzzx;
+			dex::dexvec4<T, Size, 1, 2, 2, 1>		yzzy;
+			dex::dexvec4<T, Size, 1, 2, 2, 2>		yzzz;
+			dex::dexvec4<T, Size, 2, 0, 0, 0>		zxxx;
+			dex::dexvec4<T, Size, 2, 0, 0, 1>		zxxy;
+			dex::dexvec4<T, Size, 2, 0, 0, 2>		zxxz;
+			dex::dexvec4<T, Size, 2, 0, 1, 0>		zxyx;
+			dex::dexvec4<T, Size, 2, 0, 1, 1>		zxyy;
+			dex::dexvec4<T, Size, 2, 0, 1, 2>		zxyz;
+			dex::dexvec4<T, Size, 2, 0, 2, 0>		zxzx;
+			dex::dexvec4<T, Size, 2, 0, 2, 1>		zxzy;
+			dex::dexvec4<T, Size, 2, 0, 2, 2>		zxzz;
+			dex::dexvec4<T, Size, 2, 1, 0, 0>		zyxx;
+			dex::dexvec4<T, Size, 2, 1, 0, 1>		zyxy;
+			dex::dexvec4<T, Size, 2, 1, 0, 2>		zyxz;
+			dex::dexvec4<T, Size, 2, 1, 1, 0>		zyyx;
+			dex::dexvec4<T, Size, 2, 1, 1, 1>		zyyy;
+			dex::dexvec4<T, Size, 2, 1, 1, 2>		zyyz;
+			dex::dexvec4<T, Size, 2, 1, 2, 0>		zyzx;
+			dex::dexvec4<T, Size, 2, 1, 2, 1>		zyzy;
+			dex::dexvec4<T, Size, 2, 1, 2, 2>		zyzz;
+			dex::dexvec4<T, Size, 2, 2, 0, 0>		zzxx;
+			dex::dexvec4<T, Size, 2, 2, 0, 1>		zzxy;
+			dex::dexvec4<T, Size, 2, 2, 0, 2>		zzxz;
+			dex::dexvec4<T, Size, 2, 2, 1, 0>		zzyx;
+			dex::dexvec4<T, Size, 2, 2, 1, 1>		zzyy;
+			dex::dexvec4<T, Size, 2, 2, 1, 2>		zzyz;
+			dex::dexvec4<T, Size, 2, 2, 2, 0>		zzzx;
+			dex::dexvec4<T, Size, 2, 2, 2, 1>		zzzy;
+			dex::dexvec4<T, Size, 2, 2, 2, 2>		zzzz;
 		};
 
 		// using directives related to storage
-		using value_type = storage_wrapper<T, Size>::value_type;
+		using value_type = T;
 		using iterator = storage_wrapper<T, Size>::iterator;
 		using const_iterator = storage_wrapper<T, Size>::const_iterator;
 		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
@@ -3450,15 +3452,15 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
 
 		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
@@ -3515,355 +3517,355 @@ namespace dsga
 
 		union
 		{
-			storage_wrapper<T, Size>			base;
+			storage_wrapper<T, Size>				base;
 
-			dexvec1<T, Size, 0>					x;				// Writable
-			dexvec1<T, Size, 1>					y;				// Writable
-			dexvec1<T, Size, 2>					z;				// Writable
-			dexvec1<T, Size, 3>					w;				// Writable
+			dex::dexvec1<T, Size, 0>				x;				// Writable
+			dex::dexvec1<T, Size, 1>				y;				// Writable
+			dex::dexvec1<T, Size, 2>				z;				// Writable
+			dex::dexvec1<T, Size, 3>				w;				// Writable
 
-			dexvec2<T, Size, 0, 0>				xx;
-			dexvec2<T, Size, 0, 1>				xy;				// Writable
-			dexvec2<T, Size, 0, 2>				xz;				// Writable
-			dexvec2<T, Size, 0, 3>				xw;				// Writable
-			dexvec2<T, Size, 1, 0>				yx;				// Writable
-			dexvec2<T, Size, 1, 1>				yy;
-			dexvec2<T, Size, 1, 2>				yz;				// Writable
-			dexvec2<T, Size, 1, 3>				yw;				// Writable
-			dexvec2<T, Size, 2, 0>				zx;				// Writable
-			dexvec2<T, Size, 2, 1>				zy;				// Writable
-			dexvec2<T, Size, 2, 2>				zz;
-			dexvec2<T, Size, 2, 3>				zw;				// Writable
-			dexvec2<T, Size, 3, 0>				wx;				// Writable
-			dexvec2<T, Size, 3, 1>				wy;				// Writable
-			dexvec2<T, Size, 3, 2>				wz;				// Writable
-			dexvec2<T, Size, 3, 3>				ww;
+			dex::dexvec2<T, Size, 0, 0>				xx;
+			dex::dexvec2<T, Size, 0, 1>				xy;				// Writable
+			dex::dexvec2<T, Size, 0, 2>				xz;				// Writable
+			dex::dexvec2<T, Size, 0, 3>				xw;				// Writable
+			dex::dexvec2<T, Size, 1, 0>				yx;				// Writable
+			dex::dexvec2<T, Size, 1, 1>				yy;
+			dex::dexvec2<T, Size, 1, 2>				yz;				// Writable
+			dex::dexvec2<T, Size, 1, 3>				yw;				// Writable
+			dex::dexvec2<T, Size, 2, 0>				zx;				// Writable
+			dex::dexvec2<T, Size, 2, 1>				zy;				// Writable
+			dex::dexvec2<T, Size, 2, 2>				zz;
+			dex::dexvec2<T, Size, 2, 3>				zw;				// Writable
+			dex::dexvec2<T, Size, 3, 0>				wx;				// Writable
+			dex::dexvec2<T, Size, 3, 1>				wy;				// Writable
+			dex::dexvec2<T, Size, 3, 2>				wz;				// Writable
+			dex::dexvec2<T, Size, 3, 3>				ww;
 
-			dexvec3<T, Size, 0, 0, 0>			xxx;
-			dexvec3<T, Size, 0, 0, 1>			xxy;
-			dexvec3<T, Size, 0, 0, 2>			xxz;
-			dexvec3<T, Size, 0, 0, 3>			xxw;
-			dexvec3<T, Size, 0, 1, 0>			xyx;
-			dexvec3<T, Size, 0, 1, 1>			xyy;
-			dexvec3<T, Size, 0, 1, 2>			xyz;			// Writable
-			dexvec3<T, Size, 0, 1, 3>			xyw;			// Writable
-			dexvec3<T, Size, 0, 2, 0>			xzx;
-			dexvec3<T, Size, 0, 2, 1>			xzy;			// Writable
-			dexvec3<T, Size, 0, 2, 2>			xzz;
-			dexvec3<T, Size, 0, 2, 3>			xzw;			// Writable
-			dexvec3<T, Size, 0, 3, 0>			xwx;
-			dexvec3<T, Size, 0, 3, 1>			xwy;			// Writable
-			dexvec3<T, Size, 0, 3, 2>			xwz;			// Writable
-			dexvec3<T, Size, 0, 3, 3>			xww;
-			dexvec3<T, Size, 1, 0, 0>			yxx;
-			dexvec3<T, Size, 1, 0, 1>			yxy;
-			dexvec3<T, Size, 1, 0, 2>			yxz;			// Writable
-			dexvec3<T, Size, 1, 0, 3>			yxw;			// Writable
-			dexvec3<T, Size, 1, 1, 0>			yyx;
-			dexvec3<T, Size, 1, 1, 1>			yyy;
-			dexvec3<T, Size, 1, 1, 2>			yyz;
-			dexvec3<T, Size, 1, 1, 3>			yyw;
-			dexvec3<T, Size, 1, 2, 0>			yzx;			// Writable
-			dexvec3<T, Size, 1, 2, 1>			yzy;
-			dexvec3<T, Size, 1, 2, 2>			yzz;
-			dexvec3<T, Size, 1, 2, 3>			yzw;			// Writable
-			dexvec3<T, Size, 1, 3, 0>			ywx;			// Writable
-			dexvec3<T, Size, 1, 3, 1>			ywy;
-			dexvec3<T, Size, 1, 3, 2>			ywz;			// Writable
-			dexvec3<T, Size, 1, 3, 3>			yww;
-			dexvec3<T, Size, 2, 0, 0>			zxx;
-			dexvec3<T, Size, 2, 0, 1>			zxy;			// Writable
-			dexvec3<T, Size, 2, 0, 2>			zxz;
-			dexvec3<T, Size, 2, 0, 3>			zxw;			// Writable
-			dexvec3<T, Size, 2, 1, 0>			zyx;			// Writable
-			dexvec3<T, Size, 2, 1, 1>			zyy;
-			dexvec3<T, Size, 2, 1, 2>			zyz;
-			dexvec3<T, Size, 2, 1, 3>			zyw;			// Writable
-			dexvec3<T, Size, 2, 2, 0>			zzx;
-			dexvec3<T, Size, 2, 2, 1>			zzy;
-			dexvec3<T, Size, 2, 2, 2>			zzz;
-			dexvec3<T, Size, 2, 2, 3>			zzw;
-			dexvec3<T, Size, 2, 3, 0>			zwx;			// Writable
-			dexvec3<T, Size, 2, 3, 1>			zwy;			// Writable
-			dexvec3<T, Size, 2, 3, 2>			zwz;
-			dexvec3<T, Size, 2, 3, 3>			zww;
-			dexvec3<T, Size, 3, 0, 0>			wxx;
-			dexvec3<T, Size, 3, 0, 1>			wxy;			// Writable
-			dexvec3<T, Size, 3, 0, 2>			wxz;			// Writable
-			dexvec3<T, Size, 3, 0, 3>			wxw;
-			dexvec3<T, Size, 3, 1, 0>			wyx;			// Writable
-			dexvec3<T, Size, 3, 1, 1>			wyy;
-			dexvec3<T, Size, 3, 1, 2>			wyz;			// Writable
-			dexvec3<T, Size, 3, 1, 3>			wyw;
-			dexvec3<T, Size, 3, 2, 0>			wzx;			// Writable
-			dexvec3<T, Size, 3, 2, 1>			wzy;
-			dexvec3<T, Size, 3, 2, 2>			wzz;			// Writable
-			dexvec3<T, Size, 3, 2, 3>			wzw;
-			dexvec3<T, Size, 3, 3, 0>			wwx;
-			dexvec3<T, Size, 3, 3, 1>			wwy;
-			dexvec3<T, Size, 3, 3, 2>			wwz;
-			dexvec3<T, Size, 3, 3, 3>			www;
+			dex::dexvec3<T, Size, 0, 0, 0>			xxx;
+			dex::dexvec3<T, Size, 0, 0, 1>			xxy;
+			dex::dexvec3<T, Size, 0, 0, 2>			xxz;
+			dex::dexvec3<T, Size, 0, 0, 3>			xxw;
+			dex::dexvec3<T, Size, 0, 1, 0>			xyx;
+			dex::dexvec3<T, Size, 0, 1, 1>			xyy;
+			dex::dexvec3<T, Size, 0, 1, 2>			xyz;			// Writable
+			dex::dexvec3<T, Size, 0, 1, 3>			xyw;			// Writable
+			dex::dexvec3<T, Size, 0, 2, 0>			xzx;
+			dex::dexvec3<T, Size, 0, 2, 1>			xzy;			// Writable
+			dex::dexvec3<T, Size, 0, 2, 2>			xzz;
+			dex::dexvec3<T, Size, 0, 2, 3>			xzw;			// Writable
+			dex::dexvec3<T, Size, 0, 3, 0>			xwx;
+			dex::dexvec3<T, Size, 0, 3, 1>			xwy;			// Writable
+			dex::dexvec3<T, Size, 0, 3, 2>			xwz;			// Writable
+			dex::dexvec3<T, Size, 0, 3, 3>			xww;
+			dex::dexvec3<T, Size, 1, 0, 0>			yxx;
+			dex::dexvec3<T, Size, 1, 0, 1>			yxy;
+			dex::dexvec3<T, Size, 1, 0, 2>			yxz;			// Writable
+			dex::dexvec3<T, Size, 1, 0, 3>			yxw;			// Writable
+			dex::dexvec3<T, Size, 1, 1, 0>			yyx;
+			dex::dexvec3<T, Size, 1, 1, 1>			yyy;
+			dex::dexvec3<T, Size, 1, 1, 2>			yyz;
+			dex::dexvec3<T, Size, 1, 1, 3>			yyw;
+			dex::dexvec3<T, Size, 1, 2, 0>			yzx;			// Writable
+			dex::dexvec3<T, Size, 1, 2, 1>			yzy;
+			dex::dexvec3<T, Size, 1, 2, 2>			yzz;
+			dex::dexvec3<T, Size, 1, 2, 3>			yzw;			// Writable
+			dex::dexvec3<T, Size, 1, 3, 0>			ywx;			// Writable
+			dex::dexvec3<T, Size, 1, 3, 1>			ywy;
+			dex::dexvec3<T, Size, 1, 3, 2>			ywz;			// Writable
+			dex::dexvec3<T, Size, 1, 3, 3>			yww;
+			dex::dexvec3<T, Size, 2, 0, 0>			zxx;
+			dex::dexvec3<T, Size, 2, 0, 1>			zxy;			// Writable
+			dex::dexvec3<T, Size, 2, 0, 2>			zxz;
+			dex::dexvec3<T, Size, 2, 0, 3>			zxw;			// Writable
+			dex::dexvec3<T, Size, 2, 1, 0>			zyx;			// Writable
+			dex::dexvec3<T, Size, 2, 1, 1>			zyy;
+			dex::dexvec3<T, Size, 2, 1, 2>			zyz;
+			dex::dexvec3<T, Size, 2, 1, 3>			zyw;			// Writable
+			dex::dexvec3<T, Size, 2, 2, 0>			zzx;
+			dex::dexvec3<T, Size, 2, 2, 1>			zzy;
+			dex::dexvec3<T, Size, 2, 2, 2>			zzz;
+			dex::dexvec3<T, Size, 2, 2, 3>			zzw;
+			dex::dexvec3<T, Size, 2, 3, 0>			zwx;			// Writable
+			dex::dexvec3<T, Size, 2, 3, 1>			zwy;			// Writable
+			dex::dexvec3<T, Size, 2, 3, 2>			zwz;
+			dex::dexvec3<T, Size, 2, 3, 3>			zww;
+			dex::dexvec3<T, Size, 3, 0, 0>			wxx;
+			dex::dexvec3<T, Size, 3, 0, 1>			wxy;			// Writable
+			dex::dexvec3<T, Size, 3, 0, 2>			wxz;			// Writable
+			dex::dexvec3<T, Size, 3, 0, 3>			wxw;
+			dex::dexvec3<T, Size, 3, 1, 0>			wyx;			// Writable
+			dex::dexvec3<T, Size, 3, 1, 1>			wyy;
+			dex::dexvec3<T, Size, 3, 1, 2>			wyz;			// Writable
+			dex::dexvec3<T, Size, 3, 1, 3>			wyw;
+			dex::dexvec3<T, Size, 3, 2, 0>			wzx;			// Writable
+			dex::dexvec3<T, Size, 3, 2, 1>			wzy;
+			dex::dexvec3<T, Size, 3, 2, 2>			wzz;			// Writable
+			dex::dexvec3<T, Size, 3, 2, 3>			wzw;
+			dex::dexvec3<T, Size, 3, 3, 0>			wwx;
+			dex::dexvec3<T, Size, 3, 3, 1>			wwy;
+			dex::dexvec3<T, Size, 3, 3, 2>			wwz;
+			dex::dexvec3<T, Size, 3, 3, 3>			www;
 
-			dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
-			dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
-			dexvec4<T, Size, 0, 0, 0, 2>		xxxz;
-			dexvec4<T, Size, 0, 0, 0, 3>		xxxw;
-			dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
-			dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
-			dexvec4<T, Size, 0, 0, 1, 2>		xxyz;
-			dexvec4<T, Size, 0, 0, 1, 3>		xxyw;
-			dexvec4<T, Size, 0, 0, 2, 0>		xxzx;
-			dexvec4<T, Size, 0, 0, 2, 1>		xxzy;
-			dexvec4<T, Size, 0, 0, 2, 2>		xxzz;
-			dexvec4<T, Size, 0, 0, 2, 3>		xxzw;
-			dexvec4<T, Size, 0, 0, 3, 0>		xxwx;
-			dexvec4<T, Size, 0, 0, 3, 1>		xxwy;
-			dexvec4<T, Size, 0, 0, 3, 2>		xxwz;
-			dexvec4<T, Size, 0, 0, 3, 3>		xxww;
-			dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
-			dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
-			dexvec4<T, Size, 0, 1, 0, 2>		xyxz;
-			dexvec4<T, Size, 0, 1, 0, 3>		xyxw;
-			dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
-			dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
-			dexvec4<T, Size, 0, 1, 1, 2>		xyyz;
-			dexvec4<T, Size, 0, 1, 1, 3>		xyyw;
-			dexvec4<T, Size, 0, 1, 2, 0>		xyzx;
-			dexvec4<T, Size, 0, 1, 2, 1>		xyzy;
-			dexvec4<T, Size, 0, 1, 2, 2>		xyzz;
-			dexvec4<T, Size, 0, 1, 2, 3>		xyzw;			// Writable
-			dexvec4<T, Size, 0, 1, 3, 0>		xywx;
-			dexvec4<T, Size, 0, 1, 3, 1>		xywy;
-			dexvec4<T, Size, 0, 1, 3, 2>		xywz;			// Writable
-			dexvec4<T, Size, 0, 1, 3, 3>		xyww;
-			dexvec4<T, Size, 0, 2, 0, 0>		xzxx;
-			dexvec4<T, Size, 0, 2, 0, 1>		xzxy;
-			dexvec4<T, Size, 0, 2, 0, 2>		xzxz;
-			dexvec4<T, Size, 0, 2, 0, 3>		xzxw;
-			dexvec4<T, Size, 0, 2, 1, 0>		xzyx;
-			dexvec4<T, Size, 0, 2, 1, 1>		xzyy;
-			dexvec4<T, Size, 0, 2, 1, 2>		xzyz;
-			dexvec4<T, Size, 0, 2, 1, 3>		xzyw;			// Writable
-			dexvec4<T, Size, 0, 2, 2, 0>		xzzx;
-			dexvec4<T, Size, 0, 2, 2, 1>		xzzy;
-			dexvec4<T, Size, 0, 2, 2, 2>		xzzz;
-			dexvec4<T, Size, 0, 2, 2, 3>		xzzw;
-			dexvec4<T, Size, 0, 2, 3, 0>		xzwx;
-			dexvec4<T, Size, 0, 2, 3, 1>		xzwy;			// Writable
-			dexvec4<T, Size, 0, 2, 3, 2>		xzwz;
-			dexvec4<T, Size, 0, 2, 3, 3>		xzww;
-			dexvec4<T, Size, 0, 3, 0, 0>		xwxx;
-			dexvec4<T, Size, 0, 3, 0, 1>		xwxy;
-			dexvec4<T, Size, 0, 3, 0, 2>		xwxz;
-			dexvec4<T, Size, 0, 3, 0, 3>		xwxw;
-			dexvec4<T, Size, 0, 3, 1, 0>		xwyx;
-			dexvec4<T, Size, 0, 3, 1, 1>		xwyy;
-			dexvec4<T, Size, 0, 3, 1, 2>		xwyz;			// Writable
-			dexvec4<T, Size, 0, 3, 1, 3>		xwyw;
-			dexvec4<T, Size, 0, 3, 2, 0>		xwzx;
-			dexvec4<T, Size, 0, 3, 2, 1>		xwzy;			// Writable
-			dexvec4<T, Size, 0, 3, 2, 2>		xwzz;
-			dexvec4<T, Size, 0, 3, 2, 3>		xwzw;
-			dexvec4<T, Size, 0, 3, 3, 0>		xwwx;
-			dexvec4<T, Size, 0, 3, 3, 1>		xwwy;
-			dexvec4<T, Size, 0, 3, 3, 2>		xwwz;
-			dexvec4<T, Size, 0, 3, 3, 3>		xwww;
-			dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
-			dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
-			dexvec4<T, Size, 1, 0, 0, 2>		yxxz;
-			dexvec4<T, Size, 1, 0, 0, 3>		yxxw;
-			dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
-			dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
-			dexvec4<T, Size, 1, 0, 1, 2>		yxyz;
-			dexvec4<T, Size, 1, 0, 1, 3>		yxyw;
-			dexvec4<T, Size, 1, 0, 2, 0>		yxzx;
-			dexvec4<T, Size, 1, 0, 2, 1>		yxzy;
-			dexvec4<T, Size, 1, 0, 2, 2>		yxzz;
-			dexvec4<T, Size, 1, 0, 2, 3>		yxzw;			// Writable
-			dexvec4<T, Size, 1, 0, 3, 0>		yxwx;
-			dexvec4<T, Size, 1, 0, 3, 1>		yxwy;
-			dexvec4<T, Size, 1, 0, 3, 2>		yxwz;			// Writable
-			dexvec4<T, Size, 1, 0, 3, 3>		yxww;
-			dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
-			dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
-			dexvec4<T, Size, 1, 1, 0, 2>		yyxz;
-			dexvec4<T, Size, 1, 1, 0, 3>		yyxw;
-			dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
-			dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
-			dexvec4<T, Size, 1, 1, 1, 2>		yyyz;
-			dexvec4<T, Size, 1, 1, 1, 3>		yyyw;
-			dexvec4<T, Size, 1, 1, 2, 0>		yyzx;
-			dexvec4<T, Size, 1, 1, 2, 1>		yyzy;
-			dexvec4<T, Size, 1, 1, 2, 2>		yyzz;
-			dexvec4<T, Size, 1, 1, 2, 3>		yyzw;
-			dexvec4<T, Size, 1, 1, 3, 0>		yywx;
-			dexvec4<T, Size, 1, 1, 3, 1>		yywy;
-			dexvec4<T, Size, 1, 1, 3, 2>		yywz;
-			dexvec4<T, Size, 1, 1, 3, 3>		yyww;
-			dexvec4<T, Size, 1, 2, 0, 0>		yzxx;
-			dexvec4<T, Size, 1, 2, 0, 1>		yzxy;
-			dexvec4<T, Size, 1, 2, 0, 2>		yzxz;
-			dexvec4<T, Size, 1, 2, 0, 3>		yzxw;			// Writable
-			dexvec4<T, Size, 1, 2, 1, 0>		yzyx;
-			dexvec4<T, Size, 1, 2, 1, 1>		yzyy;
-			dexvec4<T, Size, 1, 2, 1, 2>		yzyz;
-			dexvec4<T, Size, 1, 2, 1, 3>		yzyw;
-			dexvec4<T, Size, 1, 2, 2, 0>		yzzx;
-			dexvec4<T, Size, 1, 2, 2, 1>		yzzy;
-			dexvec4<T, Size, 1, 2, 2, 2>		yzzz;
-			dexvec4<T, Size, 1, 2, 2, 3>		yzzw;
-			dexvec4<T, Size, 1, 2, 3, 0>		yzwx;			// Writable
-			dexvec4<T, Size, 1, 2, 3, 1>		yzwy;
-			dexvec4<T, Size, 1, 2, 3, 2>		yzwz;
-			dexvec4<T, Size, 1, 2, 3, 3>		yzww;
-			dexvec4<T, Size, 1, 3, 0, 0>		ywxx;
-			dexvec4<T, Size, 1, 3, 0, 1>		ywxy;
-			dexvec4<T, Size, 1, 3, 0, 2>		ywxz;			// Writable
-			dexvec4<T, Size, 1, 3, 0, 3>		ywxw;
-			dexvec4<T, Size, 1, 3, 1, 0>		ywyx;
-			dexvec4<T, Size, 1, 3, 1, 1>		ywyy;
-			dexvec4<T, Size, 1, 3, 1, 2>		ywyz;
-			dexvec4<T, Size, 1, 3, 1, 3>		ywyw;
-			dexvec4<T, Size, 1, 3, 2, 0>		ywzx;			// Writable
-			dexvec4<T, Size, 1, 3, 2, 1>		ywzy;
-			dexvec4<T, Size, 1, 3, 2, 2>		ywzz;
-			dexvec4<T, Size, 1, 3, 2, 3>		ywzw;
-			dexvec4<T, Size, 1, 3, 3, 0>		ywwx;
-			dexvec4<T, Size, 1, 3, 3, 1>		ywwy;
-			dexvec4<T, Size, 1, 3, 3, 2>		ywwz;
-			dexvec4<T, Size, 1, 3, 3, 3>		ywww;
-			dexvec4<T, Size, 2, 0, 0, 0>		zxxx;
-			dexvec4<T, Size, 2, 0, 0, 1>		zxxy;
-			dexvec4<T, Size, 2, 0, 0, 2>		zxxz;
-			dexvec4<T, Size, 2, 0, 0, 3>		zxxw;
-			dexvec4<T, Size, 2, 0, 1, 0>		zxyx;
-			dexvec4<T, Size, 2, 0, 1, 1>		zxyy;
-			dexvec4<T, Size, 2, 0, 1, 2>		zxyz;
-			dexvec4<T, Size, 2, 0, 1, 3>		zxyw;			// Writable
-			dexvec4<T, Size, 2, 0, 2, 0>		zxzx;
-			dexvec4<T, Size, 2, 0, 2, 1>		zxzy;
-			dexvec4<T, Size, 2, 0, 2, 2>		zxzz;
-			dexvec4<T, Size, 2, 0, 2, 3>		zxzw;
-			dexvec4<T, Size, 2, 0, 3, 0>		zxwx;
-			dexvec4<T, Size, 2, 0, 3, 1>		zxwy;			// Writable
-			dexvec4<T, Size, 2, 0, 3, 2>		zxwz;
-			dexvec4<T, Size, 2, 0, 3, 3>		zxww;
-			dexvec4<T, Size, 2, 1, 0, 0>		zyxx;
-			dexvec4<T, Size, 2, 1, 0, 1>		zyxy;
-			dexvec4<T, Size, 2, 1, 0, 2>		zyxz;
-			dexvec4<T, Size, 2, 1, 0, 3>		zyxw;			// Writable
-			dexvec4<T, Size, 2, 1, 1, 0>		zyyx;
-			dexvec4<T, Size, 2, 1, 1, 1>		zyyy;
-			dexvec4<T, Size, 2, 1, 1, 2>		zyyz;
-			dexvec4<T, Size, 2, 1, 1, 3>		zyyw;
-			dexvec4<T, Size, 2, 1, 2, 0>		zyzx;
-			dexvec4<T, Size, 2, 1, 2, 1>		zyzy;
-			dexvec4<T, Size, 2, 1, 2, 2>		zyzz;
-			dexvec4<T, Size, 2, 1, 2, 3>		zyzw;
-			dexvec4<T, Size, 2, 1, 3, 0>		zywx;			// Writable
-			dexvec4<T, Size, 2, 1, 3, 1>		zywy;
-			dexvec4<T, Size, 2, 1, 3, 2>		zywz;
-			dexvec4<T, Size, 2, 1, 3, 3>		zyww;
-			dexvec4<T, Size, 2, 2, 0, 0>		zzxx;
-			dexvec4<T, Size, 2, 2, 0, 1>		zzxy;
-			dexvec4<T, Size, 2, 2, 0, 2>		zzxz;
-			dexvec4<T, Size, 2, 2, 0, 3>		zzxw;
-			dexvec4<T, Size, 2, 2, 1, 0>		zzyx;
-			dexvec4<T, Size, 2, 2, 1, 1>		zzyy;
-			dexvec4<T, Size, 2, 2, 1, 2>		zzyz;
-			dexvec4<T, Size, 2, 2, 1, 3>		zzyw;
-			dexvec4<T, Size, 2, 2, 2, 0>		zzzx;
-			dexvec4<T, Size, 2, 2, 2, 1>		zzzy;
-			dexvec4<T, Size, 2, 2, 2, 2>		zzzz;
-			dexvec4<T, Size, 2, 2, 2, 3>		zzzw;
-			dexvec4<T, Size, 2, 2, 3, 0>		zzwx;
-			dexvec4<T, Size, 2, 2, 3, 1>		zzwy;
-			dexvec4<T, Size, 2, 2, 3, 2>		zzwz;
-			dexvec4<T, Size, 2, 2, 3, 3>		zzww;
-			dexvec4<T, Size, 2, 3, 0, 0>		zwxx;
-			dexvec4<T, Size, 2, 3, 0, 1>		zwxy;			// Writable
-			dexvec4<T, Size, 2, 3, 0, 2>		zwxz;
-			dexvec4<T, Size, 2, 3, 0, 3>		zwxw;
-			dexvec4<T, Size, 2, 3, 1, 0>		zwyx;			// Writable
-			dexvec4<T, Size, 2, 3, 1, 1>		zwyy;
-			dexvec4<T, Size, 2, 3, 1, 2>		zwyz;
-			dexvec4<T, Size, 2, 3, 1, 3>		zwyw;
-			dexvec4<T, Size, 2, 3, 2, 0>		zwzx;
-			dexvec4<T, Size, 2, 3, 2, 1>		zwzy;
-			dexvec4<T, Size, 2, 3, 2, 2>		zwzz;
-			dexvec4<T, Size, 2, 3, 2, 3>		zwzw;
-			dexvec4<T, Size, 2, 3, 3, 0>		zwwx;
-			dexvec4<T, Size, 2, 3, 3, 1>		zwwy;
-			dexvec4<T, Size, 2, 3, 3, 2>		zwwz;
-			dexvec4<T, Size, 2, 3, 3, 3>		zwww;
-			dexvec4<T, Size, 3, 0, 0, 0>		wxxx;
-			dexvec4<T, Size, 3, 0, 0, 1>		wxxy;
-			dexvec4<T, Size, 3, 0, 0, 2>		wxxz;
-			dexvec4<T, Size, 3, 0, 0, 3>		wxxw;
-			dexvec4<T, Size, 3, 0, 1, 0>		wxyx;
-			dexvec4<T, Size, 3, 0, 1, 1>		wxyy;
-			dexvec4<T, Size, 3, 0, 1, 2>		wxyz;			// Writable
-			dexvec4<T, Size, 3, 0, 1, 3>		wxyw;
-			dexvec4<T, Size, 3, 0, 2, 0>		wxzx;
-			dexvec4<T, Size, 3, 0, 2, 1>		wxzy;			// Writable
-			dexvec4<T, Size, 3, 0, 2, 2>		wxzz;
-			dexvec4<T, Size, 3, 0, 2, 3>		wxzw;
-			dexvec4<T, Size, 3, 0, 3, 0>		wxwx;
-			dexvec4<T, Size, 3, 0, 3, 1>		wxwy;
-			dexvec4<T, Size, 3, 0, 3, 2>		wxwz;
-			dexvec4<T, Size, 3, 0, 3, 3>		wxww;
-			dexvec4<T, Size, 3, 1, 0, 0>		wyxx;
-			dexvec4<T, Size, 3, 1, 0, 1>		wyxy;
-			dexvec4<T, Size, 3, 1, 0, 2>		wyxz;			// Writable
-			dexvec4<T, Size, 3, 1, 0, 3>		wyxw;
-			dexvec4<T, Size, 3, 1, 1, 0>		wyyx;
-			dexvec4<T, Size, 3, 1, 1, 1>		wyyy;
-			dexvec4<T, Size, 3, 1, 1, 2>		wyyz;
-			dexvec4<T, Size, 3, 1, 1, 3>		wyyw;
-			dexvec4<T, Size, 3, 1, 2, 0>		wyzx;			// Writable
-			dexvec4<T, Size, 3, 1, 2, 1>		wyzy;
-			dexvec4<T, Size, 3, 1, 2, 2>		wyzz;
-			dexvec4<T, Size, 3, 1, 2, 3>		wyzw;
-			dexvec4<T, Size, 3, 1, 3, 0>		wywx;
-			dexvec4<T, Size, 3, 1, 3, 1>		wywy;
-			dexvec4<T, Size, 3, 1, 3, 2>		wywz;
-			dexvec4<T, Size, 3, 1, 3, 3>		wyww;
-			dexvec4<T, Size, 3, 2, 0, 0>		wzxx;
-			dexvec4<T, Size, 3, 2, 0, 1>		wzxy;			// Writable
-			dexvec4<T, Size, 3, 2, 0, 2>		wzxz;
-			dexvec4<T, Size, 3, 2, 0, 3>		wzxw;
-			dexvec4<T, Size, 3, 2, 1, 0>		wzyx;			// Writable
-			dexvec4<T, Size, 3, 2, 1, 1>		wzyy;
-			dexvec4<T, Size, 3, 2, 1, 2>		wzyz;
-			dexvec4<T, Size, 3, 2, 1, 3>		wzyw;
-			dexvec4<T, Size, 3, 2, 2, 0>		wzzx;
-			dexvec4<T, Size, 3, 2, 2, 1>		wzzy;
-			dexvec4<T, Size, 3, 2, 2, 2>		wzzz;
-			dexvec4<T, Size, 3, 2, 2, 3>		wzzw;
-			dexvec4<T, Size, 3, 2, 3, 0>		wzwx;
-			dexvec4<T, Size, 3, 2, 3, 1>		wzwy;
-			dexvec4<T, Size, 3, 2, 3, 2>		wzwz;
-			dexvec4<T, Size, 3, 2, 3, 3>		wzww;
-			dexvec4<T, Size, 3, 3, 0, 0>		wwxx;
-			dexvec4<T, Size, 3, 3, 0, 1>		wwxy;
-			dexvec4<T, Size, 3, 3, 0, 2>		wwxz;
-			dexvec4<T, Size, 3, 3, 0, 3>		wwxw;
-			dexvec4<T, Size, 3, 3, 1, 0>		wwyx;
-			dexvec4<T, Size, 3, 3, 1, 1>		wwyy;
-			dexvec4<T, Size, 3, 3, 1, 2>		wwyz;
-			dexvec4<T, Size, 3, 3, 1, 3>		wwyw;
-			dexvec4<T, Size, 3, 3, 2, 0>		wwzx;
-			dexvec4<T, Size, 3, 3, 2, 1>		wwzy;
-			dexvec4<T, Size, 3, 3, 2, 2>		wwzz;
-			dexvec4<T, Size, 3, 3, 2, 3>		wwzw;
-			dexvec4<T, Size, 3, 3, 3, 0>		wwwx;
-			dexvec4<T, Size, 3, 3, 3, 1>		wwwy;
-			dexvec4<T, Size, 3, 3, 3, 2>		wwwz;
-			dexvec4<T, Size, 3, 3, 3, 3>		wwww;
+			dex::dexvec4<T, Size, 0, 0, 0, 0>		xxxx;
+			dex::dexvec4<T, Size, 0, 0, 0, 1>		xxxy;
+			dex::dexvec4<T, Size, 0, 0, 0, 2>		xxxz;
+			dex::dexvec4<T, Size, 0, 0, 0, 3>		xxxw;
+			dex::dexvec4<T, Size, 0, 0, 1, 0>		xxyx;
+			dex::dexvec4<T, Size, 0, 0, 1, 1>		xxyy;
+			dex::dexvec4<T, Size, 0, 0, 1, 2>		xxyz;
+			dex::dexvec4<T, Size, 0, 0, 1, 3>		xxyw;
+			dex::dexvec4<T, Size, 0, 0, 2, 0>		xxzx;
+			dex::dexvec4<T, Size, 0, 0, 2, 1>		xxzy;
+			dex::dexvec4<T, Size, 0, 0, 2, 2>		xxzz;
+			dex::dexvec4<T, Size, 0, 0, 2, 3>		xxzw;
+			dex::dexvec4<T, Size, 0, 0, 3, 0>		xxwx;
+			dex::dexvec4<T, Size, 0, 0, 3, 1>		xxwy;
+			dex::dexvec4<T, Size, 0, 0, 3, 2>		xxwz;
+			dex::dexvec4<T, Size, 0, 0, 3, 3>		xxww;
+			dex::dexvec4<T, Size, 0, 1, 0, 0>		xyxx;
+			dex::dexvec4<T, Size, 0, 1, 0, 1>		xyxy;
+			dex::dexvec4<T, Size, 0, 1, 0, 2>		xyxz;
+			dex::dexvec4<T, Size, 0, 1, 0, 3>		xyxw;
+			dex::dexvec4<T, Size, 0, 1, 1, 0>		xyyx;
+			dex::dexvec4<T, Size, 0, 1, 1, 1>		xyyy;
+			dex::dexvec4<T, Size, 0, 1, 1, 2>		xyyz;
+			dex::dexvec4<T, Size, 0, 1, 1, 3>		xyyw;
+			dex::dexvec4<T, Size, 0, 1, 2, 0>		xyzx;
+			dex::dexvec4<T, Size, 0, 1, 2, 1>		xyzy;
+			dex::dexvec4<T, Size, 0, 1, 2, 2>		xyzz;
+			dex::dexvec4<T, Size, 0, 1, 2, 3>		xyzw;			// Writable
+			dex::dexvec4<T, Size, 0, 1, 3, 0>		xywx;
+			dex::dexvec4<T, Size, 0, 1, 3, 1>		xywy;
+			dex::dexvec4<T, Size, 0, 1, 3, 2>		xywz;			// Writable
+			dex::dexvec4<T, Size, 0, 1, 3, 3>		xyww;
+			dex::dexvec4<T, Size, 0, 2, 0, 0>		xzxx;
+			dex::dexvec4<T, Size, 0, 2, 0, 1>		xzxy;
+			dex::dexvec4<T, Size, 0, 2, 0, 2>		xzxz;
+			dex::dexvec4<T, Size, 0, 2, 0, 3>		xzxw;
+			dex::dexvec4<T, Size, 0, 2, 1, 0>		xzyx;
+			dex::dexvec4<T, Size, 0, 2, 1, 1>		xzyy;
+			dex::dexvec4<T, Size, 0, 2, 1, 2>		xzyz;
+			dex::dexvec4<T, Size, 0, 2, 1, 3>		xzyw;			// Writable
+			dex::dexvec4<T, Size, 0, 2, 2, 0>		xzzx;
+			dex::dexvec4<T, Size, 0, 2, 2, 1>		xzzy;
+			dex::dexvec4<T, Size, 0, 2, 2, 2>		xzzz;
+			dex::dexvec4<T, Size, 0, 2, 2, 3>		xzzw;
+			dex::dexvec4<T, Size, 0, 2, 3, 0>		xzwx;
+			dex::dexvec4<T, Size, 0, 2, 3, 1>		xzwy;			// Writable
+			dex::dexvec4<T, Size, 0, 2, 3, 2>		xzwz;
+			dex::dexvec4<T, Size, 0, 2, 3, 3>		xzww;
+			dex::dexvec4<T, Size, 0, 3, 0, 0>		xwxx;
+			dex::dexvec4<T, Size, 0, 3, 0, 1>		xwxy;
+			dex::dexvec4<T, Size, 0, 3, 0, 2>		xwxz;
+			dex::dexvec4<T, Size, 0, 3, 0, 3>		xwxw;
+			dex::dexvec4<T, Size, 0, 3, 1, 0>		xwyx;
+			dex::dexvec4<T, Size, 0, 3, 1, 1>		xwyy;
+			dex::dexvec4<T, Size, 0, 3, 1, 2>		xwyz;			// Writable
+			dex::dexvec4<T, Size, 0, 3, 1, 3>		xwyw;
+			dex::dexvec4<T, Size, 0, 3, 2, 0>		xwzx;
+			dex::dexvec4<T, Size, 0, 3, 2, 1>		xwzy;			// Writable
+			dex::dexvec4<T, Size, 0, 3, 2, 2>		xwzz;
+			dex::dexvec4<T, Size, 0, 3, 2, 3>		xwzw;
+			dex::dexvec4<T, Size, 0, 3, 3, 0>		xwwx;
+			dex::dexvec4<T, Size, 0, 3, 3, 1>		xwwy;
+			dex::dexvec4<T, Size, 0, 3, 3, 2>		xwwz;
+			dex::dexvec4<T, Size, 0, 3, 3, 3>		xwww;
+			dex::dexvec4<T, Size, 1, 0, 0, 0>		yxxx;
+			dex::dexvec4<T, Size, 1, 0, 0, 1>		yxxy;
+			dex::dexvec4<T, Size, 1, 0, 0, 2>		yxxz;
+			dex::dexvec4<T, Size, 1, 0, 0, 3>		yxxw;
+			dex::dexvec4<T, Size, 1, 0, 1, 0>		yxyx;
+			dex::dexvec4<T, Size, 1, 0, 1, 1>		yxyy;
+			dex::dexvec4<T, Size, 1, 0, 1, 2>		yxyz;
+			dex::dexvec4<T, Size, 1, 0, 1, 3>		yxyw;
+			dex::dexvec4<T, Size, 1, 0, 2, 0>		yxzx;
+			dex::dexvec4<T, Size, 1, 0, 2, 1>		yxzy;
+			dex::dexvec4<T, Size, 1, 0, 2, 2>		yxzz;
+			dex::dexvec4<T, Size, 1, 0, 2, 3>		yxzw;			// Writable
+			dex::dexvec4<T, Size, 1, 0, 3, 0>		yxwx;
+			dex::dexvec4<T, Size, 1, 0, 3, 1>		yxwy;
+			dex::dexvec4<T, Size, 1, 0, 3, 2>		yxwz;			// Writable
+			dex::dexvec4<T, Size, 1, 0, 3, 3>		yxww;
+			dex::dexvec4<T, Size, 1, 1, 0, 0>		yyxx;
+			dex::dexvec4<T, Size, 1, 1, 0, 1>		yyxy;
+			dex::dexvec4<T, Size, 1, 1, 0, 2>		yyxz;
+			dex::dexvec4<T, Size, 1, 1, 0, 3>		yyxw;
+			dex::dexvec4<T, Size, 1, 1, 1, 0>		yyyx;
+			dex::dexvec4<T, Size, 1, 1, 1, 1>		yyyy;
+			dex::dexvec4<T, Size, 1, 1, 1, 2>		yyyz;
+			dex::dexvec4<T, Size, 1, 1, 1, 3>		yyyw;
+			dex::dexvec4<T, Size, 1, 1, 2, 0>		yyzx;
+			dex::dexvec4<T, Size, 1, 1, 2, 1>		yyzy;
+			dex::dexvec4<T, Size, 1, 1, 2, 2>		yyzz;
+			dex::dexvec4<T, Size, 1, 1, 2, 3>		yyzw;
+			dex::dexvec4<T, Size, 1, 1, 3, 0>		yywx;
+			dex::dexvec4<T, Size, 1, 1, 3, 1>		yywy;
+			dex::dexvec4<T, Size, 1, 1, 3, 2>		yywz;
+			dex::dexvec4<T, Size, 1, 1, 3, 3>		yyww;
+			dex::dexvec4<T, Size, 1, 2, 0, 0>		yzxx;
+			dex::dexvec4<T, Size, 1, 2, 0, 1>		yzxy;
+			dex::dexvec4<T, Size, 1, 2, 0, 2>		yzxz;
+			dex::dexvec4<T, Size, 1, 2, 0, 3>		yzxw;			// Writable
+			dex::dexvec4<T, Size, 1, 2, 1, 0>		yzyx;
+			dex::dexvec4<T, Size, 1, 2, 1, 1>		yzyy;
+			dex::dexvec4<T, Size, 1, 2, 1, 2>		yzyz;
+			dex::dexvec4<T, Size, 1, 2, 1, 3>		yzyw;
+			dex::dexvec4<T, Size, 1, 2, 2, 0>		yzzx;
+			dex::dexvec4<T, Size, 1, 2, 2, 1>		yzzy;
+			dex::dexvec4<T, Size, 1, 2, 2, 2>		yzzz;
+			dex::dexvec4<T, Size, 1, 2, 2, 3>		yzzw;
+			dex::dexvec4<T, Size, 1, 2, 3, 0>		yzwx;			// Writable
+			dex::dexvec4<T, Size, 1, 2, 3, 1>		yzwy;
+			dex::dexvec4<T, Size, 1, 2, 3, 2>		yzwz;
+			dex::dexvec4<T, Size, 1, 2, 3, 3>		yzww;
+			dex::dexvec4<T, Size, 1, 3, 0, 0>		ywxx;
+			dex::dexvec4<T, Size, 1, 3, 0, 1>		ywxy;
+			dex::dexvec4<T, Size, 1, 3, 0, 2>		ywxz;			// Writable
+			dex::dexvec4<T, Size, 1, 3, 0, 3>		ywxw;
+			dex::dexvec4<T, Size, 1, 3, 1, 0>		ywyx;
+			dex::dexvec4<T, Size, 1, 3, 1, 1>		ywyy;
+			dex::dexvec4<T, Size, 1, 3, 1, 2>		ywyz;
+			dex::dexvec4<T, Size, 1, 3, 1, 3>		ywyw;
+			dex::dexvec4<T, Size, 1, 3, 2, 0>		ywzx;			// Writable
+			dex::dexvec4<T, Size, 1, 3, 2, 1>		ywzy;
+			dex::dexvec4<T, Size, 1, 3, 2, 2>		ywzz;
+			dex::dexvec4<T, Size, 1, 3, 2, 3>		ywzw;
+			dex::dexvec4<T, Size, 1, 3, 3, 0>		ywwx;
+			dex::dexvec4<T, Size, 1, 3, 3, 1>		ywwy;
+			dex::dexvec4<T, Size, 1, 3, 3, 2>		ywwz;
+			dex::dexvec4<T, Size, 1, 3, 3, 3>		ywww;
+			dex::dexvec4<T, Size, 2, 0, 0, 0>		zxxx;
+			dex::dexvec4<T, Size, 2, 0, 0, 1>		zxxy;
+			dex::dexvec4<T, Size, 2, 0, 0, 2>		zxxz;
+			dex::dexvec4<T, Size, 2, 0, 0, 3>		zxxw;
+			dex::dexvec4<T, Size, 2, 0, 1, 0>		zxyx;
+			dex::dexvec4<T, Size, 2, 0, 1, 1>		zxyy;
+			dex::dexvec4<T, Size, 2, 0, 1, 2>		zxyz;
+			dex::dexvec4<T, Size, 2, 0, 1, 3>		zxyw;			// Writable
+			dex::dexvec4<T, Size, 2, 0, 2, 0>		zxzx;
+			dex::dexvec4<T, Size, 2, 0, 2, 1>		zxzy;
+			dex::dexvec4<T, Size, 2, 0, 2, 2>		zxzz;
+			dex::dexvec4<T, Size, 2, 0, 2, 3>		zxzw;
+			dex::dexvec4<T, Size, 2, 0, 3, 0>		zxwx;
+			dex::dexvec4<T, Size, 2, 0, 3, 1>		zxwy;			// Writable
+			dex::dexvec4<T, Size, 2, 0, 3, 2>		zxwz;
+			dex::dexvec4<T, Size, 2, 0, 3, 3>		zxww;
+			dex::dexvec4<T, Size, 2, 1, 0, 0>		zyxx;
+			dex::dexvec4<T, Size, 2, 1, 0, 1>		zyxy;
+			dex::dexvec4<T, Size, 2, 1, 0, 2>		zyxz;
+			dex::dexvec4<T, Size, 2, 1, 0, 3>		zyxw;			// Writable
+			dex::dexvec4<T, Size, 2, 1, 1, 0>		zyyx;
+			dex::dexvec4<T, Size, 2, 1, 1, 1>		zyyy;
+			dex::dexvec4<T, Size, 2, 1, 1, 2>		zyyz;
+			dex::dexvec4<T, Size, 2, 1, 1, 3>		zyyw;
+			dex::dexvec4<T, Size, 2, 1, 2, 0>		zyzx;
+			dex::dexvec4<T, Size, 2, 1, 2, 1>		zyzy;
+			dex::dexvec4<T, Size, 2, 1, 2, 2>		zyzz;
+			dex::dexvec4<T, Size, 2, 1, 2, 3>		zyzw;
+			dex::dexvec4<T, Size, 2, 1, 3, 0>		zywx;			// Writable
+			dex::dexvec4<T, Size, 2, 1, 3, 1>		zywy;
+			dex::dexvec4<T, Size, 2, 1, 3, 2>		zywz;
+			dex::dexvec4<T, Size, 2, 1, 3, 3>		zyww;
+			dex::dexvec4<T, Size, 2, 2, 0, 0>		zzxx;
+			dex::dexvec4<T, Size, 2, 2, 0, 1>		zzxy;
+			dex::dexvec4<T, Size, 2, 2, 0, 2>		zzxz;
+			dex::dexvec4<T, Size, 2, 2, 0, 3>		zzxw;
+			dex::dexvec4<T, Size, 2, 2, 1, 0>		zzyx;
+			dex::dexvec4<T, Size, 2, 2, 1, 1>		zzyy;
+			dex::dexvec4<T, Size, 2, 2, 1, 2>		zzyz;
+			dex::dexvec4<T, Size, 2, 2, 1, 3>		zzyw;
+			dex::dexvec4<T, Size, 2, 2, 2, 0>		zzzx;
+			dex::dexvec4<T, Size, 2, 2, 2, 1>		zzzy;
+			dex::dexvec4<T, Size, 2, 2, 2, 2>		zzzz;
+			dex::dexvec4<T, Size, 2, 2, 2, 3>		zzzw;
+			dex::dexvec4<T, Size, 2, 2, 3, 0>		zzwx;
+			dex::dexvec4<T, Size, 2, 2, 3, 1>		zzwy;
+			dex::dexvec4<T, Size, 2, 2, 3, 2>		zzwz;
+			dex::dexvec4<T, Size, 2, 2, 3, 3>		zzww;
+			dex::dexvec4<T, Size, 2, 3, 0, 0>		zwxx;
+			dex::dexvec4<T, Size, 2, 3, 0, 1>		zwxy;			// Writable
+			dex::dexvec4<T, Size, 2, 3, 0, 2>		zwxz;
+			dex::dexvec4<T, Size, 2, 3, 0, 3>		zwxw;
+			dex::dexvec4<T, Size, 2, 3, 1, 0>		zwyx;			// Writable
+			dex::dexvec4<T, Size, 2, 3, 1, 1>		zwyy;
+			dex::dexvec4<T, Size, 2, 3, 1, 2>		zwyz;
+			dex::dexvec4<T, Size, 2, 3, 1, 3>		zwyw;
+			dex::dexvec4<T, Size, 2, 3, 2, 0>		zwzx;
+			dex::dexvec4<T, Size, 2, 3, 2, 1>		zwzy;
+			dex::dexvec4<T, Size, 2, 3, 2, 2>		zwzz;
+			dex::dexvec4<T, Size, 2, 3, 2, 3>		zwzw;
+			dex::dexvec4<T, Size, 2, 3, 3, 0>		zwwx;
+			dex::dexvec4<T, Size, 2, 3, 3, 1>		zwwy;
+			dex::dexvec4<T, Size, 2, 3, 3, 2>		zwwz;
+			dex::dexvec4<T, Size, 2, 3, 3, 3>		zwww;
+			dex::dexvec4<T, Size, 3, 0, 0, 0>		wxxx;
+			dex::dexvec4<T, Size, 3, 0, 0, 1>		wxxy;
+			dex::dexvec4<T, Size, 3, 0, 0, 2>		wxxz;
+			dex::dexvec4<T, Size, 3, 0, 0, 3>		wxxw;
+			dex::dexvec4<T, Size, 3, 0, 1, 0>		wxyx;
+			dex::dexvec4<T, Size, 3, 0, 1, 1>		wxyy;
+			dex::dexvec4<T, Size, 3, 0, 1, 2>		wxyz;			// Writable
+			dex::dexvec4<T, Size, 3, 0, 1, 3>		wxyw;
+			dex::dexvec4<T, Size, 3, 0, 2, 0>		wxzx;
+			dex::dexvec4<T, Size, 3, 0, 2, 1>		wxzy;			// Writable
+			dex::dexvec4<T, Size, 3, 0, 2, 2>		wxzz;
+			dex::dexvec4<T, Size, 3, 0, 2, 3>		wxzw;
+			dex::dexvec4<T, Size, 3, 0, 3, 0>		wxwx;
+			dex::dexvec4<T, Size, 3, 0, 3, 1>		wxwy;
+			dex::dexvec4<T, Size, 3, 0, 3, 2>		wxwz;
+			dex::dexvec4<T, Size, 3, 0, 3, 3>		wxww;
+			dex::dexvec4<T, Size, 3, 1, 0, 0>		wyxx;
+			dex::dexvec4<T, Size, 3, 1, 0, 1>		wyxy;
+			dex::dexvec4<T, Size, 3, 1, 0, 2>		wyxz;			// Writable
+			dex::dexvec4<T, Size, 3, 1, 0, 3>		wyxw;
+			dex::dexvec4<T, Size, 3, 1, 1, 0>		wyyx;
+			dex::dexvec4<T, Size, 3, 1, 1, 1>		wyyy;
+			dex::dexvec4<T, Size, 3, 1, 1, 2>		wyyz;
+			dex::dexvec4<T, Size, 3, 1, 1, 3>		wyyw;
+			dex::dexvec4<T, Size, 3, 1, 2, 0>		wyzx;			// Writable
+			dex::dexvec4<T, Size, 3, 1, 2, 1>		wyzy;
+			dex::dexvec4<T, Size, 3, 1, 2, 2>		wyzz;
+			dex::dexvec4<T, Size, 3, 1, 2, 3>		wyzw;
+			dex::dexvec4<T, Size, 3, 1, 3, 0>		wywx;
+			dex::dexvec4<T, Size, 3, 1, 3, 1>		wywy;
+			dex::dexvec4<T, Size, 3, 1, 3, 2>		wywz;
+			dex::dexvec4<T, Size, 3, 1, 3, 3>		wyww;
+			dex::dexvec4<T, Size, 3, 2, 0, 0>		wzxx;
+			dex::dexvec4<T, Size, 3, 2, 0, 1>		wzxy;			// Writable
+			dex::dexvec4<T, Size, 3, 2, 0, 2>		wzxz;
+			dex::dexvec4<T, Size, 3, 2, 0, 3>		wzxw;
+			dex::dexvec4<T, Size, 3, 2, 1, 0>		wzyx;			// Writable
+			dex::dexvec4<T, Size, 3, 2, 1, 1>		wzyy;
+			dex::dexvec4<T, Size, 3, 2, 1, 2>		wzyz;
+			dex::dexvec4<T, Size, 3, 2, 1, 3>		wzyw;
+			dex::dexvec4<T, Size, 3, 2, 2, 0>		wzzx;
+			dex::dexvec4<T, Size, 3, 2, 2, 1>		wzzy;
+			dex::dexvec4<T, Size, 3, 2, 2, 2>		wzzz;
+			dex::dexvec4<T, Size, 3, 2, 2, 3>		wzzw;
+			dex::dexvec4<T, Size, 3, 2, 3, 0>		wzwx;
+			dex::dexvec4<T, Size, 3, 2, 3, 1>		wzwy;
+			dex::dexvec4<T, Size, 3, 2, 3, 2>		wzwz;
+			dex::dexvec4<T, Size, 3, 2, 3, 3>		wzww;
+			dex::dexvec4<T, Size, 3, 3, 0, 0>		wwxx;
+			dex::dexvec4<T, Size, 3, 3, 0, 1>		wwxy;
+			dex::dexvec4<T, Size, 3, 3, 0, 2>		wwxz;
+			dex::dexvec4<T, Size, 3, 3, 0, 3>		wwxw;
+			dex::dexvec4<T, Size, 3, 3, 1, 0>		wwyx;
+			dex::dexvec4<T, Size, 3, 3, 1, 1>		wwyy;
+			dex::dexvec4<T, Size, 3, 3, 1, 2>		wwyz;
+			dex::dexvec4<T, Size, 3, 3, 1, 3>		wwyw;
+			dex::dexvec4<T, Size, 3, 3, 2, 0>		wwzx;
+			dex::dexvec4<T, Size, 3, 3, 2, 1>		wwzy;
+			dex::dexvec4<T, Size, 3, 3, 2, 2>		wwzz;
+			dex::dexvec4<T, Size, 3, 3, 2, 3>		wwzw;
+			dex::dexvec4<T, Size, 3, 3, 3, 0>		wwwx;
+			dex::dexvec4<T, Size, 3, 3, 3, 1>		wwwy;
+			dex::dexvec4<T, Size, 3, 3, 3, 2>		wwwz;
+			dex::dexvec4<T, Size, 3, 3, 3, 3>		wwww;
 		};
 
 		// using directives related to storage
-		using value_type = storage_wrapper<T, Size>::value_type;
+		using value_type = T;
 		using iterator = storage_wrapper<T, Size>::iterator;
 		using const_iterator = storage_wrapper<T, Size>::const_iterator;
 		using reverse_iterator = storage_wrapper<T, Size>::reverse_iterator;
@@ -3947,15 +3949,15 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
 
 		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(basic_vector &bv) noexcept requires Writable	{ base.swap(bv.base); }
+		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
 		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
@@ -4021,7 +4023,6 @@ namespace dsga
 		template <typename TernOp, dimensional_scalar T, dimensional_scalar U, dimensional_scalar V>
 		using ternop_return_t = std::invoke_result_t<TernOp, T, U, V>;
 
-		//
 		// this machinery relies on vector_base::operator[] to be logically contiguous operation on a derived vector type,
 		// regardless of whether it is physically contiguous. apply the operation on components of vector_base arguments,
 		// either returning a new vector (or scalar) or modifying an existing vector.
@@ -4335,11 +4336,11 @@ namespace dsga
 	// lambdas for operators
 	namespace lambda_ops
 	{
-		constexpr inline auto plus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs + rhs; };
-		constexpr inline auto minus_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs - rhs; };
-		constexpr inline auto times_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs * rhs; };
-		constexpr inline auto div_op = [](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept { return lhs / rhs; };
-		constexpr inline auto modulus_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs)
+		constexpr inline auto plus_op =		[](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept					{ return lhs + rhs; };
+		constexpr inline auto minus_op =	[](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept					{ return lhs - rhs; };
+		constexpr inline auto times_op =	[](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept					{ return lhs * rhs; };
+		constexpr inline auto div_op =		[](non_bool_scalar auto lhs, non_bool_scalar auto rhs) noexcept					{ return lhs / rhs; };
+		constexpr inline auto modulus_op =	[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs)
 		{
 			if (rhs == 0)
 			{
@@ -4348,15 +4349,16 @@ namespace dsga
 
 			[[ likely ]] return lhs % rhs;
 		};
-		constexpr inline auto bit_not_op = [](numeric_integral_scalar auto arg) noexcept { return ~arg; };
+		constexpr inline auto bit_not_op =	[](numeric_integral_scalar auto arg) noexcept									{ return ~arg; };
 		constexpr inline auto lshift_op =
-			[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs << rhs); };
+			[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept								{ return static_cast<T1>(lhs << rhs); };
 		constexpr inline auto rshift_op =
-			[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept -> T1 { return static_cast<T1>(lhs >> rhs); };
-		constexpr inline auto and_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs & rhs; };
-		constexpr inline auto or_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs | rhs; };
-		constexpr inline auto xor_op = [](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept { return lhs ^ rhs; };
-		constexpr inline auto neg_op = [](non_bool_scalar auto arg) noexcept { return -arg; };
+			[]<numeric_integral_scalar T1, numeric_integral_scalar T2>(T1 lhs, T2 rhs) noexcept								{ return static_cast<T1>(lhs >> rhs); };
+		constexpr inline auto and_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs & rhs; };
+		constexpr inline auto or_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs | rhs; };
+		constexpr inline auto xor_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs ^ rhs; };
+		constexpr inline auto neg_op =		[](non_bool_scalar auto arg) noexcept { return -arg; };
+
 	}	// namespace lambda_ops
 
 	// binary operators +=, +
@@ -5077,36 +5079,78 @@ namespace dsga
 		// lambdas for functions
 		namespace lambda_ops
 		{
-			constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept
 			{
-				return std::isless(x, y);
+				if (std::is_constant_evaluated())
+				{
+					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x < y);
+				}
+				else
+				{
+					return std::isless(x, y);
+				}
 			};
-			constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept
 			{
-				return std::islessequal(x, y);
+				if (std::is_constant_evaluated())
+				{
+					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x <= y);
+				}
+				else
+				{
+					return std::islessequal(x, y);
+				}
 			};
-			constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept
 			{
-				return std::isgreater(x, y);
+				if (std::is_constant_evaluated())
+				{
+					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x > y);
+				}
+				else
+				{
+					return std::isgreater(x, y);
+				}
 			};
-			constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept
 			{
-				return std::isgreaterequal(x, y);
+				if (std::is_constant_evaluated())
+				{
+					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x >= y);
+				}
+				else
+				{
+					return std::isgreaterequal(x, y);
+				}
 			};
-			constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept
 			{
-				return std::isunordered(x, y) ? false : x == y;
+				if (std::is_constant_evaluated())
+				{
+					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x == y);
+				}
+				else
+				{
+					return std::isunordered(x, y) ? false : x == y;
+				}
 			};
-			constexpr inline auto bool_equal_op = [](bool x, bool y) noexcept -> bool { return x == y; };
-			constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept -> bool
+			constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept
 			{
-				return std::isunordered(x, y) ? true : x != y;
+				if (std::is_constant_evaluated())
+				{
+					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x != y);
+				}
+				else
+				{
+					return std::isunordered(x, y) ? true : x != y;
+				}
 			};
-			constexpr inline auto bool_not_equal_op = [](bool x, bool y) noexcept -> bool { return x != y; };
-			constexpr inline auto comp_not_op = [](bool x) noexcept -> bool { return !x; };
-			constexpr inline auto comp_and_op = [](bool x, bool y) noexcept -> bool { return x && y; };
-			constexpr inline auto comp_or_op = [](bool x, bool y) noexcept -> bool { return x || y; };
-			constexpr inline auto comp_xor_op = [](bool x, bool y) noexcept -> bool { return x != y; };
+			constexpr inline auto bool_equal_op =		[](bool x, bool y) noexcept	{ return x == y; };
+			constexpr inline auto bool_not_equal_op =	[](bool x, bool y) noexcept	{ return x != y; };
+			constexpr inline auto comp_not_op =			[](bool x) noexcept			{ return !x; };
+			constexpr inline auto comp_and_op =			[](bool x, bool y) noexcept	{ return x && y; };
+			constexpr inline auto comp_or_op =			[](bool x, bool y) noexcept	{ return x || y; };
+			constexpr inline auto comp_xor_op =			[](bool x, bool y) noexcept	{ return x != y; };
 
 		}	// namespace lambda_ops
 
@@ -5248,6 +5292,18 @@ namespace dsga
 			return x;
 		}
 
+		// not in GLSL
+		template <bool W, std::size_t C, typename D>
+		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
+		{
+			return !any(x);
+		}
+
+		[[nodiscard]] constexpr bool none(bool x) noexcept
+		{
+			return !x;
+		}
+
 		// c++ does not allow a function named not() as in GLSL, so this is our alternate name
 		template <bool W, std::size_t C, typename D>
 		[[nodiscard]] constexpr auto compNot(const vector_base<W, bool, C, D> &x) noexcept
@@ -5314,18 +5370,6 @@ namespace dsga
 			return lambda_ops::comp_xor_op(x, y);
 		}
 
-		// not in GLSL
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept
-		{
-			return !any(x);
-		}
-
-		[[nodiscard]] constexpr bool none(bool x) noexcept
-		{
-			return !x;
-		}
-
 		//
 		// 8.1 - angle and trigonometry
 		//
@@ -5333,19 +5377,20 @@ namespace dsga
 		// lambdas for functions
 		namespace lambda_ops
 		{
-			constexpr inline auto sin_op = [](floating_point_scalar auto arg) noexcept { return std::sin(arg); };
-			constexpr inline auto cos_op = [](floating_point_scalar auto arg) noexcept { return std::cos(arg); };
-			constexpr inline auto tan_op = [](floating_point_scalar auto arg) noexcept { return std::tan(arg); };
-			constexpr inline auto asin_op = [](floating_point_scalar auto arg) noexcept { return std::asin(arg); };
-			constexpr inline auto acos_op = [](floating_point_scalar auto arg) noexcept { return std::acos(arg); };
-			constexpr inline auto atan_op = [](floating_point_scalar auto arg) noexcept { return std::atan(arg); };
-			constexpr inline auto atan2_op = []<floating_point_scalar U>(U arg_y, U arg_x) noexcept { return std::atan2(arg_y, arg_x); };
-			constexpr inline auto sinh_op = [](floating_point_scalar auto arg) noexcept { return std::sinh(arg); };
-			constexpr inline auto cosh_op = [](floating_point_scalar auto arg) noexcept { return std::cosh(arg); };
-			constexpr inline auto tanh_op = [](floating_point_scalar auto arg) noexcept { return std::tanh(arg); };
-			constexpr inline auto asinh_op = [](floating_point_scalar auto arg) noexcept { return std::asinh(arg); };
-			constexpr inline auto acosh_op = [](floating_point_scalar auto arg) noexcept { return std::acosh(arg); };
-			constexpr inline auto atanh_op = [](floating_point_scalar auto arg) noexcept { return std::atanh(arg); };
+			constexpr inline auto sin_op =		[](floating_point_scalar auto arg) noexcept				{ return std::sin(arg); };
+			constexpr inline auto cos_op =		[](floating_point_scalar auto arg) noexcept				{ return std::cos(arg); };
+			constexpr inline auto tan_op =		[](floating_point_scalar auto arg) noexcept				{ return std::tan(arg); };
+			constexpr inline auto asin_op =		[](floating_point_scalar auto arg) noexcept				{ return std::asin(arg); };
+			constexpr inline auto acos_op =		[](floating_point_scalar auto arg) noexcept				{ return std::acos(arg); };
+			constexpr inline auto atan_op =		[](floating_point_scalar auto arg) noexcept				{ return std::atan(arg); };
+			constexpr inline auto atan2_op =	[]<floating_point_scalar U>(U arg_y, U arg_x) noexcept	{ return std::atan2(arg_y, arg_x); };
+			constexpr inline auto sinh_op =		[](floating_point_scalar auto arg) noexcept				{ return std::sinh(arg); };
+			constexpr inline auto cosh_op =		[](floating_point_scalar auto arg) noexcept				{ return std::cosh(arg); };
+			constexpr inline auto tanh_op =		[](floating_point_scalar auto arg) noexcept				{ return std::tanh(arg); };
+			constexpr inline auto asinh_op =	[](floating_point_scalar auto arg) noexcept				{ return std::asinh(arg); };
+			constexpr inline auto acosh_op =	[](floating_point_scalar auto arg) noexcept				{ return std::acosh(arg); };
+			constexpr inline auto atanh_op =	[](floating_point_scalar auto arg) noexcept				{ return std::atanh(arg); };
+
 		}	// namespace lambda_ops
 
 		template <floating_point_scalar T>
@@ -5544,14 +5589,15 @@ namespace dsga
 		// lambdas for functions
 		namespace lambda_ops
 		{
-			constexpr inline auto pow_op = []<floating_point_scalar U>(U base, U exp) noexcept { return std::pow(base, exp); };
-			constexpr inline auto exp_op = [](floating_point_scalar auto arg) noexcept { return std::exp(arg); };
-			constexpr inline auto log_op = [](floating_point_scalar auto arg) noexcept { return std::log(arg); };
-			constexpr inline auto exp2_op = [](floating_point_scalar auto arg) noexcept { return std::exp2(arg); };
-			constexpr inline auto log2_op = [](floating_point_scalar auto arg) noexcept { return std::log2(arg); };
-			constexpr inline auto sqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::sqrt(arg); };
-			constexpr inline auto fast_rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fast_rsqrt(arg); };
-			constexpr inline auto rsqrt_op = [](floating_point_scalar auto arg) noexcept { return cxcm::rsqrt(arg); };
+			constexpr inline auto pow_op =			[]<floating_point_scalar U>(U base, U exp) noexcept	{ return std::pow(base, exp); };
+			constexpr inline auto exp_op =			[](floating_point_scalar auto arg) noexcept			{ return std::exp(arg); };
+			constexpr inline auto log_op =			[](floating_point_scalar auto arg) noexcept			{ return std::log(arg); };
+			constexpr inline auto exp2_op =			[](floating_point_scalar auto arg) noexcept			{ return std::exp2(arg); };
+			constexpr inline auto log2_op =			[](floating_point_scalar auto arg) noexcept			{ return std::log2(arg); };
+			constexpr inline auto sqrt_op =			[](floating_point_scalar auto arg) noexcept			{ return cxcm::sqrt(arg); };
+			constexpr inline auto fast_rsqrt_op =	[](floating_point_scalar auto arg) noexcept			{ return cxcm::fast_rsqrt(arg); };
+			constexpr inline auto rsqrt_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::rsqrt(arg); };
+
 		}	// namespace lambda_ops
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
@@ -5693,22 +5739,43 @@ namespace dsga
 		// lambdas for functions
 		namespace lambda_ops
 		{
-			constexpr inline auto abs_op = []<dimensional_scalar T>(T arg) noexcept -> T { return cxcm::abs(arg); };
-			constexpr inline auto sign_op = []<dimensional_scalar T>(T arg) noexcept -> T { return T(T(0) < arg) - T(arg < T(0)); };
-			constexpr inline auto floor_op = [](floating_point_scalar auto arg) noexcept { return cxcm::floor(arg); };
-			constexpr inline auto trunc_op = [](floating_point_scalar auto arg) noexcept { return cxcm::trunc(arg); };
-			constexpr inline auto round_op = [](floating_point_scalar auto arg) noexcept { return cxcm::round(arg); };
-			constexpr inline auto round_even_op = [](floating_point_scalar auto arg) noexcept { return cxcm::round_even(arg); };
-			constexpr inline auto ceil_op = [](floating_point_scalar auto arg) noexcept { return cxcm::ceil(arg); };
-			constexpr inline auto fract_op = [](floating_point_scalar auto arg) noexcept { return cxcm::fract(arg); };
-			constexpr inline auto mod_op = []<floating_point_scalar T>(T x, T y) noexcept { return x - y * cxcm::floor(x / y); };
-			constexpr inline auto modf_op = []<floating_point_scalar T>(T x, T y) noexcept { return x - y; };
-			constexpr inline auto min_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? y : x; };
-			constexpr inline auto max_op = []<non_bool_scalar T>(T x, T y) noexcept { return y < x ? x : y; };
-			constexpr inline auto clamp_op = []<non_bool_scalar T>(T x, T min_val, T max_val) noexcept -> T { return std::clamp(x, min_val, max_val); };
+			constexpr inline auto abs_op =			[]<dimensional_scalar T>(T arg) noexcept		{ return cxcm::abs(arg); };
+			constexpr inline auto sign_op =			[]<dimensional_scalar T>(T arg) noexcept		{ return T(T(0) < arg) - T(arg < T(0)); };
+			constexpr inline auto floor_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::floor(arg); };
+			constexpr inline auto trunc_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::trunc(arg); };
+			constexpr inline auto round_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::round(arg); };
+			constexpr inline auto round_even_op =	[](floating_point_scalar auto arg) noexcept		{ return cxcm::round_even(arg); };
+			constexpr inline auto ceil_op =			[](floating_point_scalar auto arg) noexcept		{ return cxcm::ceil(arg); };
+			constexpr inline auto fract_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::fract(arg); };
+			constexpr inline auto mod_op =			[]<floating_point_scalar T>(T x, T y) noexcept	{ return x - y * cxcm::floor(x / y); };
+			constexpr inline auto modf_op =			[]<floating_point_scalar T>(T x, T y) noexcept	{ return cxcm::isinf(x) ? T(0) : (x - y); };
+			constexpr inline auto min_op =			[]<non_bool_scalar T>(T x, T y) noexcept		{ return std::min(x ,y); };
+			constexpr inline auto max_op =			[]<non_bool_scalar T>(T x, T y) noexcept		{ return std::max(x ,y); };
+			constexpr inline auto clamp_op =		[]<non_bool_scalar T>(T x, T min_val, T max_val) noexcept
+			{
+				if (std::is_constant_evaluated())
+				{
+					if ((x > max_val) && !cxcm::isnan(x) && !cxcm::isnan(max_val))
+					{
+						return max_val;
+					}
+					else if ((x < min_val) && !cxcm::isnan(x) && !cxcm::isnan(min_val))
+					{
+						return min_val;
+					}
+					else
+					{
+						return x;
+					}
+				}
+				else
+				{
+					return std::clamp(x, min_val, max_val);
+				}
+			};
 
 			// https://stackoverflow.com/a/58648036
-			constexpr inline auto mix1_op = []<floating_point_scalar T>(T x, T y, T a) noexcept -> T
+			constexpr inline auto mix1_op = []<floating_point_scalar T>(T x, T y, T a) noexcept
 			{
 //				auto formula = [x, y, a]() noexcept
 //				{
@@ -5742,32 +5809,33 @@ namespace dsga
 
 				return val;
 			};
-			constexpr inline auto mix2_op = []<dimensional_scalar T, bool_scalar B>(T x, T y, B a) noexcept -> T { return a ? y : x; };
-			constexpr inline auto step_op = []<floating_point_scalar T>(T edge, T x) noexcept { return ((x < edge) ? T(0) : T(1)); };
-			constexpr inline auto smoothstep_op = []<floating_point_scalar T>(T edge0, T edge1, T x) noexcept
+			constexpr inline auto mix2_op =							[]<dimensional_scalar T, bool_scalar B>(T x, T y, B a) noexcept		{ return a ? y : x; };
+			constexpr inline auto step_op =							[]<floating_point_scalar T>(T edge, T x) noexcept					{ return ((x < edge) ? T(0) : T(1)); };
+			constexpr inline auto smoothstep_op =					[]<floating_point_scalar T>(T edge0, T edge1, T x) noexcept
 			{
 				T t = clamp_op((x - edge0) / (edge1 - edge0), T(0), T(1));
 				return t * t * (T(3) - T(2) * t);
 			};
-			constexpr inline auto isnan_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isnan(arg); };
-			constexpr inline auto isinf_op = [](floating_point_scalar auto arg) noexcept -> bool { return cxcm::isinf(arg); };
-			constexpr inline auto float_bits_to_int_op = [](float arg) noexcept { return std::bit_cast<int>(arg); };
-			constexpr inline auto float_bits_to_uint_op = [](float arg) noexcept { return std::bit_cast<unsigned int>(arg); };
-			constexpr inline auto double_bits_to_long_long_op = [](double arg) noexcept { return std::bit_cast<long long>(arg); };
-			constexpr inline auto double_bits_to_ulong_long_op = [](double arg) noexcept { return std::bit_cast<unsigned long long>(arg); };
-			constexpr inline auto int_bits_to_float_op = [](int arg) noexcept { return std::bit_cast<float>(arg); };
-			constexpr inline auto uint_bits_to_float_op = [](unsigned int arg) noexcept { return std::bit_cast<float>(arg); };
-			constexpr inline auto long_long_bits_to_double_op = [](long long arg) noexcept { return std::bit_cast<double>(arg); };
-			constexpr inline auto ulong_long_bits_to_double_op = [](unsigned long long arg) noexcept { return std::bit_cast<double>(arg); };
-			inline auto fma_op = []<floating_point_scalar T>(T a, T b, T c) noexcept { return std::fma(a, b, c); };
-			inline auto frexp_op = []<floating_point_scalar T>(T x, int &exp) noexcept { return std::frexp(x, &exp); };
-			inline auto ldexp_op = []<floating_point_scalar T>(T x, int exp) noexcept { return std::ldexp(x, exp); };
-			constexpr auto byteswap_op = []<numeric_integral_scalar T>(T x) noexcept -> T
+			constexpr inline auto isnan_op =						[](floating_point_scalar auto arg) noexcept			{ return cxcm::isnan(arg); };
+			constexpr inline auto isinf_op =						[](floating_point_scalar auto arg) noexcept			{ return cxcm::isinf(arg); };
+			constexpr inline auto float_bits_to_int_op =			[](float arg) noexcept								{ return std::bit_cast<int>(arg); };
+			constexpr inline auto float_bits_to_uint_op =			[](float arg) noexcept								{ return std::bit_cast<unsigned int>(arg); };
+			constexpr inline auto double_bits_to_long_long_op =		[](double arg) noexcept								{ return std::bit_cast<long long>(arg); };
+			constexpr inline auto double_bits_to_ulong_long_op =	[](double arg) noexcept								{ return std::bit_cast<unsigned long long>(arg); };
+			constexpr inline auto int_bits_to_float_op =			[](int arg) noexcept								{ return std::bit_cast<float>(arg); };
+			constexpr inline auto uint_bits_to_float_op =			[](unsigned int arg) noexcept						{ return std::bit_cast<float>(arg); };
+			constexpr inline auto long_long_bits_to_double_op =		[](long long arg) noexcept							{ return std::bit_cast<double>(arg); };
+			constexpr inline auto ulong_long_bits_to_double_op =	[](unsigned long long arg) noexcept					{ return std::bit_cast<double>(arg); };
+			constexpr inline auto fma_op =							[]<floating_point_scalar T>(T a, T b, T c) noexcept	{ return std::fma(a, b, c); };
+			constexpr inline auto frexp_op =						[]<floating_point_scalar T>(T x, int &exp) noexcept	{ return std::frexp(x, &exp); };
+			constexpr inline auto ldexp_op =						[]<floating_point_scalar T>(T x, int exp) noexcept	{ return std::ldexp(x, exp); };
+			constexpr inline auto byteswap_op =						[]<numeric_integral_scalar T>(T x) noexcept
 			{
 				auto value_representation = std::bit_cast<std::array<std::byte, sizeof(T)>>(x);
 				std::ranges::reverse(value_representation);
 				return std::bit_cast<T>(value_representation);
 			};
+
 		}	// namespace lambda_ops
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
@@ -5959,10 +6027,6 @@ namespace dsga
 										   const vector_base<W2, T, C, D2> &min_val,
 										   const vector_base<W3, T, C, D3> &max_val)
 		{
-			if (any(greaterThan(min_val, max_val)))
-			{
-				throw std::invalid_argument("(max_val < min_val) is UB");
-			}
 			[[ likely ]] return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
@@ -5971,10 +6035,6 @@ namespace dsga
 										   T min_val,
 										   T max_val)
 		{
-			if (min_val > max_val)
-			{
-				throw std::invalid_argument("(max_val < min_val) is UB");
-			}
 			[[ likely ]] return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
@@ -5983,10 +6043,6 @@ namespace dsga
 										T min_val,
 										T max_val)
 		{
-			if (min_val > max_val)
-			{
-				throw std::invalid_argument("(max_val < min_val) is UB");
-			}
 			[[ likely ]] return lambda_ops::clamp_op(x, min_val, max_val);
 		}
 
@@ -6528,7 +6584,7 @@ namespace dsga
 		std::array<basic_vector<T, R>, C> columns;
 
 		// using directives related to storage
-		using value_type = std::array<basic_vector<T, R>, C>::value_type;
+		using value_type = basic_vector<T, R>;
 		using iterator = std::array<basic_vector<T, R>, C>::iterator;
 		using const_iterator = std::array<basic_vector<T, R>, C>::const_iterator;
 		using reverse_iterator = std::array<basic_vector<T, R>, C>::reverse_iterator;
@@ -7308,9 +7364,9 @@ namespace dsga
 	template <bool W, dimensional_scalar T, std::size_t C, typename D>
 	[[nodiscard]] constexpr std::array<T, C> to_array(const vector_base<W, T, C, D> &arg) noexcept
 	{
-		return [&arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept -> std::array<T, C>
+		return [&arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return { arg[Is]... };
+			return std::array<T, C>{ arg[Is]... };
 		}(std::make_index_sequence<C>{});
 	}
 

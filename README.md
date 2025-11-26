@@ -6,13 +6,15 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.13
+v2.2.14
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v2.2.14
+    * Lots of formatting and many minor improvements.
 * v2.2.13
     * Added ```likely``` and ```unlikely``` attributes for branch prediction when we are explicitly doing a ```throw```.
 * v2.2.12
-    * Moved detail lambdas out of ```dsga``` namespace.
+    * Moved detail lambdas out of ```dsga``` namespace to a sub-namespace.
 * v2.2.11
     * Matrix functions that used to be able to mix ```float``` and ```double``` based arguments will now only work with arguments based off the same floating-point type.
     * Changed more functions where ```auto``` was the return type to where the return type is now explicitly specified.
@@ -26,17 +28,11 @@ v2.2.13
     * Added transformation matrix functions example.
     * Refactored ```operator ==()``` for the vector classes.
     * Added support for matrices for the tolerance example functions.
-    * Creaded example view transform functions.
-* Non-Versioned Commit
-    * Tweaks to the MSVC debugger visualizer (```dsga.natvis```).
-* v2.2.7
-    * Reworked example tolerance-checking functions.
-    * Minor formatting and commenting changes.
-    * Upgraded to doctest v2.4.12.
+    * Created example view transform functions.
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2026 v18.0 Insiders
+* Microsoft Visual Studio 2026 v18.0
 * Microsoft Visual Studio 2022 v17.14
 * gcc v15.2
 * clang v21.1
@@ -363,7 +359,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.13`
+Current version: `v2.2.14`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v2.2.5](https://github.com/davidbrowne/dsga/releases/tag/v2.2.5)
@@ -392,14 +388,14 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2026 v18.0 Insiders
+* **MSVC 2026 v18.0
 
 ```
 [doctest] doctest version is "2.4.12"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -410,7 +406,7 @@ The tests have been most recently run on:
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -423,7 +419,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] assertions: 2173 | 2173 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -436,11 +432,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 19.1**
+* **clang 20.1**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
@@ -449,7 +445,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] assertions: 2173 | 2173 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -462,7 +458,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2165 | 2165 passed | 0 failed |
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -475,7 +471,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] assertions: 2173 | 2173 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -488,7 +484,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2149 | 2149 passed | 0 failed |
+[doctest] assertions: 2173 | 2173 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -571,5 +567,5 @@ The libraries we use (some just occasionally):
 //
 // Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2019-2020 Martin Ankerl <martin.ankerl@gmail.com>
+// Copyright (c) 2019-2023 Martin Leitner-Ankerl <martin.ankerl@gmail.com>
 ```

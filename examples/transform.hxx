@@ -98,8 +98,8 @@ namespace dsga
 	}
 
 	// check if a matrix is a transformation matrix
-	template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-	[[nodiscard]] constexpr bool is_transformation_matrix(const dsga::basic_matrix<T, C, R> &arg,
+	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	[[nodiscard]] constexpr bool is_transformation_matrix(const basic_matrix<T, C, R> &arg,
 														  T tolerance) noexcept
 	{
 		if constexpr (C != R)				// not a square matrix, so cannot be a transformation matrix
@@ -264,7 +264,7 @@ namespace dsga
 	}
 
 	// prettify a transformation matrix to take care of the rotation part to recover from any drift away from an orthonormal matrix
-	template <dsga::floating_point_scalar T>
+	template <floating_point_scalar T>
 	[[nodiscard]] constexpr basic_matrix<T, 4, 4> renormalize_transformation_matrix(const basic_matrix<T, 4, 4> &mat, T tol) noexcept
 	{
 		auto snap_to_zero = [tol](T x) noexcept { return abs(x) <= tol ? T(0) : x; };
@@ -302,7 +302,7 @@ inline bool transform_inverse_example()
 	auto d4 = dsga::dvec4(3, 5, 7, 1);
 
 	auto m1 = dsga::dmat4(d1, d2, d3, d4);
-	[[ maybe_unused ]] auto m1_is_xform_mat = is_transformation_matrix(m1, 1e-10);
+	[[ maybe_unused ]] auto m1_is_xform_mat = dsga::is_transformation_matrix(m1, 1e-10);
 	auto m1inv1 = dsga::inverse(m1);
 	auto m1inv2 = dsga::transform_inverse(m1);
 
