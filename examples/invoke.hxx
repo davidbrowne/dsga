@@ -1,5 +1,5 @@
 
-//          Copyright David Browne 2024-2025.
+//          Copyright David Browne 2024-2026.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -20,7 +20,7 @@ namespace dsga
 		template <typename T>
 		struct is_dsga_matrix : std::false_type	{};
 
-		template <typename T, std::size_t C, std::size_t R>
+		template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
 		struct is_dsga_matrix<dsga::basic_matrix<T, C, R>> : std::true_type	{};
 
 		template <typename T>
@@ -95,7 +95,7 @@ namespace dsga
 	// the Op must return a dsga::dimensional_scalar type, since invoke() returns a dsga::basic_vector of the results.
 	// this also means that C must be greater than 1 for vectors (no longer supporting length 1 vectors)
 	template <std::size_t C, typename Op, typename ...Ts>
-	requires (C > 1)
+	requires (C >= 1) && (C <= 4)
 	[[nodiscard]] constexpr auto invoke(Op &&op, Ts && ...args) noexcept(std::is_nothrow_invocable_v<Op, Ts...>)
 	{
 		auto op_invoke = [&op, &args...]([[ maybe_unused ]] std::size_t index)

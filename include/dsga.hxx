@@ -1,4 +1,4 @@
-//          Copyright David Browne 2020-2025.
+//          Copyright David Browne 2020-2026.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
@@ -28,7 +28,7 @@
 
 namespace dsga
 {
-	//          Copyright David Browne 2020-2025.
+	//          Copyright David Browne 2020-2026.
 	// Distributed under the Boost Software License, Version 1.0.
 	//    (See accompanying file LICENSE_1_0.txt or copy at
 	//          https://www.boost.org/LICENSE_1_0.txt)
@@ -41,7 +41,7 @@ namespace dsga
 
 	namespace cxcm
 	{
-		//          Copyright David Browne 2020-2025.
+		//          Copyright David Browne 2020-2026.
 		// Distributed under the Boost Software License, Version 1.0.
 		//    (See accompanying file LICENSE_1_0.txt or copy at
 		//          https://www.boost.org/LICENSE_1_0.txt)
@@ -2051,6 +2051,8 @@ namespace dsga
 			}(std::make_index_sequence<Count>{});
 		}
 
+		// not in std::valarray, but potentially useful
+		// apply a predicate function to each element, and return a basic_vector<bool, Count>
 		template <typename UnOp>
 		requires (std::same_as<bool, std::invoke_result_t<UnOp, T>> || std::same_as<bool, std::invoke_result_t<UnOp, const T &>>)
 		[[nodiscard]] constexpr basic_vector<bool, Count> query(UnOp op) const noexcept
@@ -6479,7 +6481,7 @@ namespace dsga
 			if (k < T(0))
 				return basic_vector<T, C>{T(0)};
 
-			return eta * i - (eta * dot(n, i) + cxcm::sqrt(k)) * n;
+			[[likely]] return eta * i - (eta * dot(n, i) + cxcm::sqrt(k)) * n;
 		}
 
 		//
@@ -6963,9 +6965,9 @@ namespace dsga
 		template <bool W, floating_point_scalar T, typename D>
 		[[nodiscard]] constexpr basic_matrix<T, 3, 3> cross_matrix(const vector_base<W, T, 3, D> &vec) noexcept
 		{
-			return basic_matrix<T, 3, 3>{   T(0),  vec[2], -vec[1],
-										 -vec[2],    T(0),  vec[0],
-										  vec[1], -vec[0],    T(0) };
+			return basic_matrix<T, 3, 3>{	 T(0),  vec[2], -vec[1],
+										  -vec[2],	  T(0),  vec[0],
+										   vec[1], -vec[0],	   T(0) };
 		}
 
 		// not in glsl
