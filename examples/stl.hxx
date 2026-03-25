@@ -18,7 +18,7 @@
 // - Don't rely on numeric data being written with full precision. It depends on the format
 //   specifiers that were used to write out the floating-point data.
 // - Don't rely on the space character as the only whitespace separator.
-// - Don't rely on the normal vector. Compute it yourself from the vertex data
+// - Don't rely on the normal vector. Compute it yourself from the vertex data.
 // - Don't rely on only one solid in an ASCII STL file.
 // - Don't rely on the data being in the all-positive octant (definite numbers that are
 //   non-negative and nonzero).

@@ -32,7 +32,7 @@ v2.2.14
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2026 v18.0
+* Microsoft Visual Studio 2026 v18.4
 * Microsoft Visual Studio 2022 v17.14
 * gcc v15.2
 * clang v21.1

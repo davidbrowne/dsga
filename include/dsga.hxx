@@ -4041,7 +4041,7 @@ namespace dsga
 		constexpr auto apply_make(const vector_base<W, T, C, D> &arg,
 								  UnOp &op) noexcept
 		{
-			if  constexpr (C == 1)
+			if constexpr (C == 1)
 			{
 				return op(arg[0]);
 			}
@@ -4359,7 +4359,7 @@ namespace dsga
 		constexpr inline auto and_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs & rhs; };
 		constexpr inline auto or_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs | rhs; };
 		constexpr inline auto xor_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs ^ rhs; };
-		constexpr inline auto neg_op =		[](non_bool_scalar auto arg) noexcept { return -arg; };
+		constexpr inline auto neg_op =		[](non_bool_scalar auto arg) noexcept											{ return -arg; };
 
 	}	// namespace lambda_ops
 
