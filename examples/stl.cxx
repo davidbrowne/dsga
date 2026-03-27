@@ -188,14 +188,14 @@ bool maybe_binary_stl(std::ifstream &some_file, uintmax_t file_size, unsigned in
 	constexpr uintmax_t facet_size = 50u;
 	constexpr uintmax_t header_size = 80u;
 	constexpr uintmax_t num_facets_size = 4u;
-	bool maybe_val = false;
-	num_facets = 0;
 
 	// file too small to have bytes for number of facets
 	if (file_size < (header_size + num_facets_size))
 		return false;
 
 	// skip possible header and read possible number of facets
+	bool maybe_val = false;
+	num_facets = 0;
 	some_file.seekg(header_size);
 	if (read_binary(some_file, num_facets))
 	{
@@ -208,6 +208,8 @@ bool maybe_binary_stl(std::ifstream &some_file, uintmax_t file_size, unsigned in
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// strings for ASCII STL output
+
 constexpr auto solid_open  = "solid dsga_example\n";
 constexpr auto facet_open  = "  facet normal ";					// the normal vector will be appended after this string
 constexpr auto loop_open   = "    outer loop\n";
@@ -217,7 +219,7 @@ constexpr auto loop_close  = "    endloop\n";
 constexpr auto facet_close = "  endfacet\n";
 constexpr auto solid_close = "endsolid dsga_example\n";
 
-//
+// write facet data to ASCII STL file
 bool write_ascii_facet(std::ofstream &out_file, const dsga::vec3 &normal,
 					   const dsga::vec3 &vertex1, const dsga::vec3 &vertex2, const dsga::vec3 &vertex3)
 {
@@ -232,7 +234,7 @@ bool write_ascii_facet(std::ofstream &out_file, const dsga::vec3 &normal,
 	return out_file.good();
 }
 
-//
+// read a vertex or normal vector from binary file, converting from little-endian to native endianness if needed
 bool read_coordinate(std::ifstream &some_file, dsga::vec3 &triple)
 {
 	return
@@ -241,7 +243,7 @@ bool read_coordinate(std::ifstream &some_file, dsga::vec3 &triple)
 		read_binary(some_file, triple[2]);
 }
 
-//
+// read three vertices of a facet from binary file, converting from little-endian to native endianness if needed
 bool read_binary_facet(std::ifstream &some_file, dsga::vec3 &vertex1, dsga::vec3 &vertex2, dsga::vec3 &vertex3)
 {
 	return
@@ -250,7 +252,7 @@ bool read_binary_facet(std::ifstream &some_file, dsga::vec3 &vertex1, dsga::vec3
 		read_coordinate(some_file, vertex3);
 }
 
-//
+// read in a facet from binary file and write facet to ASCII STL file if valid
 bool read_binary_facet_write_ascii(std::ifstream &some_file, std::ofstream &out_file)
 {
 	const std::streampos binary_facet_size = 50u;
@@ -361,13 +363,29 @@ bool binary_stl_to_ascii(std::ifstream &some_file, std::ofstream &out_file, unsi
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //
+bool validate_input_and_output_files()
+{
+	bool is_valid = false;
+
+	// TODO
+
+	return is_valid;
+}
+
+// report usage information including name of excectuable
+void usage(std::string_view exe_name)
+{
+	std::cerr << "Convert binary STL file to ASCII STL file.\n";
+	std::cerr << "Usage: " << exe_name << " binary_src.stl ascii_dest.stl\n";
+}
+
+// program entry point for binary STL to ASCII STL conversion
 int stl_main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 {
 	// check input arguments -- we want exactly two arguments, the source binary STL file and the destination ASCII STL file
 	if (argc != 3)
 	{
-		std::cerr << "Convert binary STL file to ASCII STL file.\n";
-		std::cerr << "Usage: " << argv[0] << " binary_src.stl ascii_dest.stl\n";
+		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
 

@@ -6,6 +6,7 @@ project(dsga VERSION 2.0.5)
 
 # file(GLOB SRC_FILES  CONFIGURE_DEPENDS src/*.cxx)
 # file(GLOB TEST_FILES CONFIGURE_DEPENDS tests/*.cxx)
+# file(GLOB EXAMPLE_FILES CONFIGURE_DEPENDS examples/*.cxx)
 
 set(SRC_FILES
 	src/main.cxx
@@ -24,6 +25,10 @@ set(TEST_FILES
 	tests/utility_test.cxx
 )
 
-add_executable(${PROJECT_NAME} ${SRC_FILES} ${TEST_FILES})
+set(EXAMPLE_FILES
+	examples/stl.cxx
+)
+
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${TEST_FILES} ${EXAMPLE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/dev_3rd)
 
