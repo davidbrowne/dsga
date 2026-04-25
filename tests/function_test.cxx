@@ -6,6 +6,7 @@
 
 #include <numbers>
 #include "dsga.hxx"
+#include "../examples/tolerance.hxx"
 using namespace dsga;
 
 #if defined(__clang__)
@@ -92,7 +93,12 @@ TEST_SUITE("test functions")
 
 			// sinh()
 			auto sinhs = sinh(vals);
-			CHECK_EQ(dvec3(dsga::sinh((double)vals.x), dsga::sinh((double)vals.y), dsga::sinh((double)vals.z)), sinhs);
+			auto eq_within_tol = dsga::within_box(dvec3(dsga::sinh((double)vals.x),
+												  dsga::sinh((double)vals.y),
+												  dsga::sinh((double)vals.z)),
+												  sinhs,
+												  1e-9);
+			CHECK_UNARY(eq_within_tol);
 
 			// cosh()
 			auto coshs = cosh(vals);

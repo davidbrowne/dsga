@@ -428,7 +428,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 14.2**
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -441,7 +441,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -454,7 +454,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 12.3**
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -467,7 +467,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -480,7 +480,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
