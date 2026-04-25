@@ -252,8 +252,8 @@ TEST_SUITE("test operators")
 
 	TEST_CASE("vector unary operator ~")
 	{
-		const iscal i1(0x00ff00cc);
-		const ivec2 i2(0xab00ff00, 0x00de0048);
+		const uscal i1(0x00ff00cc);
+		const uvec2 i2(0xab00ff00, 0x00de0048);
 
 		CHECK_EQ(~i1, 0xff00ff33);
 		CHECK_EQ(~i2, ivec2(0x54ff00ff, 0xff21ffb7));

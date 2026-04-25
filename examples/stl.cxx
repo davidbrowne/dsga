@@ -58,7 +58,7 @@ constexpr bool valid_vertex_strict(const dsga::vec3 &vertex) noexcept
 // binary STL is little-endian, so if native is big-endian, convert float from native to little-endian and vice versa.
 // the same operation will toggle the endianness in either direction, so make proper use of the semantic functions below.
 // if native is little-endian, then this is a no-op.
-constexpr float toggle_endianness(float f) noexcept
+constexpr float toggle_big_endianness(float f) noexcept
 {
 	if constexpr (std::endian::native == std::endian::big)
 	{
@@ -75,7 +75,7 @@ constexpr float toggle_endianness(float f) noexcept
 // binary STL is little-endian, so if native is big-endian, convert unsigned int from native to little-endian and vice versa.
 // the same operation will toggle the endianness in either direction, so make proper use of the semantic functions below.
 // if native is little-endian, then this is a no-op.
-constexpr unsigned int toggle_endianness(unsigned int u) noexcept
+constexpr unsigned int toggle_big_endianness(unsigned int u) noexcept
 {
 	if constexpr (std::endian::native == std::endian::big)
 	{
@@ -90,25 +90,25 @@ constexpr unsigned int toggle_endianness(unsigned int u) noexcept
 // semantically, if used properly, one could consider this to be a one-way conversion
 constexpr float le_to_native(float f) noexcept
 {
-	return toggle_endianness(f);
+	return toggle_big_endianness(f);
 };
 
 // semantically, if used properly, one could consider this to be a one-way conversion
 constexpr float native_to_le(float f) noexcept
 {
-	return toggle_endianness(f);
+	return toggle_big_endianness(f);
 };
 
 // semantically, if used properly, one could consider this to be a one-way conversion
 constexpr unsigned int le_to_native(unsigned int u) noexcept
 {
-	return toggle_endianness(u);
+	return toggle_big_endianness(u);
 };
 
 // semantically, if used properly, one could consider this to be a one-way conversion
 constexpr unsigned int native_to_le(unsigned int u) noexcept
 {
-	return toggle_endianness(u);
+	return toggle_big_endianness(u);
 };
 
 // semantically, this is a one-way endian conversion for a 3D vertex or normal vector.
@@ -379,6 +379,95 @@ void usage(std::string_view exe_name)
 	std::cerr << "Usage: " << exe_name << " binary_src.stl ascii_dest.stl\n";
 }
 
+// Function to check if a buffer of data appears to be text
+//bool is_text_buffer(const char* data, size_t len)
+bool is_text_buffer(std::string_view data)
+{
+	if (data.size() == 0) return true; // Empty files can be considered text
+
+	// Count the number of non-printable or null characters
+	int non_text_count = 0;
+//	for (size_t i = 0; i < len; ++i)
+	for (char c : data)
+	{
+//		char c = data[i];
+		// Allow common text control characters: tab, newline, carriage return
+		if (c == '\t' || c == '\n' || c == '\r')
+		{
+			continue;
+		}
+
+		// Check for null byte or other non-printable characters (ASCII range 0-31 and 127)
+		// isprint() checks for printable characters (0x20 to 0x7E)
+		if (!std::isprint(static_cast<unsigned char>(c)))
+		{
+			++non_text_count;
+			break;
+		}
+	}
+
+	return (non_text_count == 0);
+}
+
+// check to see if a file is an ASCII text file, using the first 1K characters of the file
+// in a buffer as a surrogate for the entire file. this could lead to false positives, but
+// it is a useful heuristic to avoid checking the entire file's contents, which could be large.
+bool is_text_file_heuristic(const std::filesystem::path &stl_path)
+{
+	std::ifstream file(stl_path, std::ios::binary);
+
+	if (!file)
+	{
+		std::cerr << "Error opening file: " << stl_path.string() << "\n";
+		return false;
+	}
+
+	// read up to the first 1K characters of the file into a buffer
+	constexpr size_t buffer_size = 1024; 
+	char buffer[buffer_size];
+	file.read(buffer, buffer_size);
+	auto bytes_read = file.gcount();
+	file.close();
+
+	// check the buffer to see if it has any non-printable characters or not,
+	// results that would indicate whether or not it is a text file (only by
+	// this heuristic, and not a guarantee)
+	return is_text_buffer(std::string_view(buffer, static_cast<std::size_t>(bytes_read)));
+}
+
+// 
+bool is_text_file(const std::filesystem::path &stl_path)
+{
+	std::ifstream file(stl_path, std::ios::binary);
+
+	if (!file)
+	{
+		std::cerr << "Error opening file: " << stl_path.string() << "\n";
+		return false;
+	}
+
+	constexpr std::size_t buffer_size = 4096; 
+	char buffer[buffer_size];
+
+	while (file.read(buffer, buffer_size))
+	{
+		if (!is_text_buffer(std::string_view(buffer, buffer_size)))
+		{
+			file.close();
+			return false;
+		}
+	}
+
+	auto bytes_read = file.gcount();
+	if (!is_text_buffer(std::string_view(buffer, static_cast<std::size_t>(bytes_read))))
+	{
+		file.close();
+		return false;
+	}
+
+	return true;
+}
+
 // program entry point for binary STL to ASCII STL conversion
 int stl_main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 {
@@ -390,7 +479,7 @@ int stl_main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 	}
 
 	// check if input file appears to be a binary STL file
-	auto binary_stl_path = std::filesystem::path(argv[1]);
+	auto binary_stl_path = std::filesystem::canonical(std::filesystem::path(argv[1]));
 
 	auto binary_exists = std::filesystem::exists(binary_stl_path);
 	auto binary_regular = binary_exists ? std::filesystem::is_regular_file(binary_stl_path) : false;
@@ -412,15 +501,15 @@ int stl_main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 	// early exit if bad input file
 	if (!appears_to_be_binary_stl)
 	{
-		std::cerr << std::filesystem::absolute(binary_stl_path) << " is not a valid binary STL file.\n";
+		std::cerr << binary_stl_path.string() << " is not a valid binary STL file.\n";
 		return EXIT_FAILURE;
 	}
 
 	// check if output file can be written as an ASCII STL file
-	auto ascii_stl_path = std::filesystem::path(argv[2]);
+	auto ascii_stl_path = std::filesystem::canonical(std::filesystem::path(argv[2]));
 
 	// can't have same source and destination
-	if (std::filesystem::absolute(binary_stl_path) == std::filesystem::absolute(ascii_stl_path))
+	if (std::filesystem::equivalent(binary_stl_path, ascii_stl_path))
 	{
 		std::cerr << "Input file must be different from output file.\n";
 		return EXIT_FAILURE;
@@ -436,7 +525,7 @@ int stl_main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 		if (ascii_regular)
 		{
 			std::string user_input{};
-			std::cout << "Overwrite " << std::filesystem::absolute(ascii_stl_path) << "? [Y/n] ";
+			std::cout << "Overwrite " << ascii_stl_path.string() << "? [Y/n] ";
 			std::getline(std::cin, user_input);
 			if (user_input.empty() || user_input[0] == 'y' || user_input[0] == 'Y')
 			{
@@ -449,12 +538,14 @@ int stl_main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 			}
 			else
 			{
-				std::cerr << std::filesystem::absolute(ascii_stl_path) << " will not be overwritten.\n";
+				std::cerr << ascii_stl_path.string() << " will not be overwritten.\n";
+				return EXIT_FAILURE;
 			}
 		}
 		else
 		{
-			std::cerr << std::filesystem::absolute(ascii_stl_path) << " is a bad path for destination.\n";
+			std::cerr << ascii_stl_path.string() << " is a bad path for destination.\n";
+			return EXIT_FAILURE;
 		}
 	}
 	else
@@ -464,12 +555,16 @@ int stl_main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 		{
 			new_destination = true;
 			ascii_file.close();
+			std::filesystem::remove(ascii_stl_path);
 		}
 	}
 
+	[[ maybe_unused ]] auto input_status = is_text_file(binary_stl_path.string());
+
+
 	if (!overwrite_destination && !new_destination)
 	{
-		std::cerr << "Can't open destination file " << std::filesystem::absolute(ascii_stl_path) << "\n";
+		std::cerr << "Can't open destination file " << ascii_stl_path.string() << "\n";
 		return EXIT_FAILURE;
 	}
 

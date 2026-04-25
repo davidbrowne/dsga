@@ -32,10 +32,10 @@ v2.2.14
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2026 v18.4
+* Microsoft Visual Studio 2026 v18.5
 * Microsoft Visual Studio 2022 v17.14
 * gcc v15.2
-* clang v21.1
+* clang v22.1
 
 ### Minimum Version
 * Microsoft Visual Studio 2022 v17.x
@@ -388,10 +388,10 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2026 v18.0
+* **MSVC 2026 v18.5
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -402,7 +402,7 @@ The tests have been most recently run on:
 * **gcc 15.2** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -410,12 +410,12 @@ The tests have been most recently run on:
 [doctest] Status: SUCCESS!
 ```
 
-* **clang 21.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases):
+* **clang 22.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases):
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.4.12"
+[doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
 [doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
@@ -508,7 +508,7 @@ The libraries we use (some just occasionally):
 // cxcm - a c++20 library that provides constexpr versions of some <cmath> and related functions.
 // https://github.com/davidbrowne/cxcm
 //
-//          Copyright David Browne 2020-2025.
+//          Copyright David Browne 2020-2026.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)

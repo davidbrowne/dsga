@@ -767,7 +767,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 		__attribute__((optimize("-fno-fast-math")))
 #endif
-			constexpr bool isnan(T value) noexcept
+		constexpr bool isnan(T value) noexcept
 		{
 			return (value != value);
 		}
@@ -796,7 +796,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 		__attribute__((optimize("-fno-fast-math")))
 #endif
-			constexpr bool isinf(T value) noexcept
+		constexpr bool isinf(T value) noexcept
 		{
 			return (value == -std::numeric_limits<T>::infinity()) || (value == std::numeric_limits<T>::infinity());
 		}
@@ -2141,6 +2141,16 @@ namespace dsga
 		}
 
 	};	// struct vector_base
+
+	// swap generalization for vector_base types that don't have their own swap function
+	template <dimensional_scalar T, std::size_t S, typename D1, typename D2>
+	constexpr void swap(vector_base<true, T, S, D1> &lhs, vector_base<true, T, S, D2> &rhs) noexcept
+	{
+		[&lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			((std::swap(lhs[Is], rhs[Is])), ...);
+		}(std::make_index_sequence<S>{});
+	}
 
 	// indexed_vector will act as a swizzle of a basic_vector, the result of "component group notation". basic_vector relies
 	// on the anonymous union of indexed_vector data members. both indexed_vector and basic_vector have their own storage
@@ -5757,11 +5767,11 @@ namespace dsga
 			{
 				if (std::is_constant_evaluated())
 				{
-					if ((x > max_val) && !cxcm::isnan(x) && !cxcm::isnan(max_val))
+					if (!cxcm::isnan(x) && !cxcm::isnan(max_val) && (x > max_val))
 					{
 						return max_val;
 					}
-					else if ((x < min_val) && !cxcm::isnan(x) && !cxcm::isnan(min_val))
+					else if (!cxcm::isnan(x) && !cxcm::isnan(min_val) && (x < min_val))
 					{
 						return min_val;
 					}
@@ -5833,9 +5843,13 @@ namespace dsga
 			constexpr inline auto ldexp_op =						[]<floating_point_scalar T>(T x, int exp) noexcept	{ return std::ldexp(x, exp); };
 			constexpr inline auto byteswap_op =						[]<numeric_integral_scalar T>(T x) noexcept
 			{
+#if defined(__cpp_lib_byteswap)
+				return std::byteswap(x);
+#else
 				auto value_representation = std::bit_cast<std::array<std::byte, sizeof(T)>>(x);
 				std::ranges::reverse(value_representation);
 				return std::bit_cast<T>(value_representation);
+#endif
 			};
 
 		}	// namespace lambda_ops
@@ -6356,7 +6370,11 @@ namespace dsga
 		requires std::is_enum_v<E>
 		[[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E e) noexcept
 		{
+#if defined(__cpp_lib_to_underlying)
+			return std::to_underlying(e);
+#else
 			return static_cast<std::underlying_type_t<E>>(e);
+#endif
 		}
 
 		//

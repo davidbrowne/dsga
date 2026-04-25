@@ -8,7 +8,7 @@
 #include "dsga.hxx"
 
 //
-// find the minimum positive angle (in radians) between 2 vectors and/or indexed vectors (swizzles).
+// find the minimum positive angle (in radians, from 0 to PI) between 2 vector types.
 // 2D or 3D only.
 // 
 // see https://people.eecs.berkeley.edu/~wkahan/Mindless.pdf , section 12:Mangled Angles
@@ -31,15 +31,10 @@ T angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
 	auto numerator = dsga::length(a - b);			// difference: length of line perpendicular to denominator, connecting the scaled endpoints
 	auto denominator = dsga::length(a + b);			// sum: length of line that is sum of scaled vectors
 
-	if (numerator == T(0))							// no angle between vectors
-		return T(0);
-	else if (denominator == T(0))					// no length of sum of scaled vectors
-		return std::numbers::pi_v<T>;
-
 	// numerator / denominator == tan(angle/2)
-	// atan(numerator / denominator) == angle/2
-	// angle == 2 * atan(numerator / denominator)
-	return T(2) * std::atan(numerator / denominator);
+	// atan(numerator / denominator) == atan2(numerator, denominator) == angle/2
+	// angle == 2 * atan2(numerator, denominator)
+	return T(2) * std::atan2(numerator, denominator);
 }
 
 // using acos() for angle (in radians) is reportedly not as good as using atan() above in angle_between().
@@ -56,7 +51,9 @@ T vect_angle(const dsga::vector_base<W1, T, C, D1> &v1,
 	if (length_prod <= tolerance)
 		return 0.0;
 
-	// from dot_product = length(a) * length(b) * cos(angle)
-	auto cos_value = dsga::dot(v1, v2) / length_prod;
-	return dsga::acos(cos_value);
+	// from dot_product == length(v1) * length(v2) * cos(angle)
+	// cos(angle) == dot_product / (length(v1) * length(v2))
+	// angle == acos(cos(angle)) == acos(dot_product / (length(v1) * length(v2)))
+	auto cos_value = dsga::clamp((dsga::dot(v1, v2) / length_prod), -1., 1.);
+	return std::acos(cos_value);
 }

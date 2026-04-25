@@ -109,29 +109,60 @@ constexpr dsga::basic_vector<T, 3> project_to_line1(const dsga::vector_base<W1, 
 													const dsga::vector_base<W2, T, 3u, D2> &p1,
 													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
-	auto hyp = point - p1;
-	auto v1 = p2 - p1;
-	auto t = dsga::dot(hyp, v1) / dsga::dot(v1, v1);
+	auto u = dsga::basic_vector(p1);
+	auto hyp = point - u;
+	auto v = p2 - p1;
+	auto t = dsga::dot(hyp, v) / dsga::dot(v, v);
 
-	return p1 + (t * v1);
+	return u + (t * v);
 }
 
-// same as above, different implementation
-// From #4 in the paper
+// gives closest projection point from point to a line made from line segment p1 <=> p2
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr dsga::basic_vector<T, 3> project_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
 													const dsga::vector_base<W2, T, 3u, D2> &p1,
 													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
-	auto hyp = point - p1;
+	auto hyp1 = point - p1;
+	auto hyp2 = point - p2;
 	auto v1 = p2 - p1;
-	return p1 + dsga::outerProduct(v1, v1) * hyp / dsga::dot(v1, v1);
+	auto v2 = p1 - p2;
+
+	// start values for p1-based approached
+	auto hyp = hyp1;
+	auto v = v1;
+	auto u = dsga::basic_vector(p1);
+
+	// if length of hyp2 is less than length of hyp1, do a p2-based approach
+	if (dsga::dot(hyp1, hyp1) > dsga::dot(hyp2, hyp2))
+	{
+		hyp = hyp2;
+		v = v2;
+		u = dsga::basic_vector(p2);
+	}
+	auto t = dsga::dot(hyp, v) / dsga::dot(v, v);
+
+	return u + (t * v);
+}
+
+// same as above, different implementation
+// From Section 9, #4 in the paper
+template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
+constexpr dsga::basic_vector<T, 3> project_to_line3(const dsga::vector_base<W1, T, 3u, D1> &point,
+													const dsga::vector_base<W2, T, 3u, D2> &p1,
+													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
+{
+	auto u = dsga::basic_vector(p1);
+	auto hyp = point - u;
+	auto v = p2 - p1;
+
+	return u + dsga::outerProduct(v, v) * hyp / dsga::dot(v, v);
 }
 
 // same as above, different implementation, paying more attention to attenuating roundoff
-// From #6 in the paper
+// From Section 9, #6 in the paper
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::basic_vector<T, 3> project_to_line3(const dsga::vector_base<W1, T, 3u, D1> &point,
+constexpr dsga::basic_vector<T, 3> project_to_line4(const dsga::vector_base<W1, T, 3u, D1> &point,
 													const dsga::vector_base<W2, T, 3u, D2> &p1,
 													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
@@ -140,10 +171,12 @@ constexpr dsga::basic_vector<T, 3> project_to_line3(const dsga::vector_base<W1, 
 	auto hyp2 = point - p2;
 	auto v2 = p1 - p2;
 
+	// start values for p1-based approached
 	auto hyp = hyp1;
 	auto v = v1;
 	auto u = dsga::basic_vector(p1);
 
+	// if length of hyp2 is less than length of hyp1, do a p2-based approach
 	if (dsga::dot(hyp1, hyp1) > dsga::dot(hyp2, hyp2))
 	{
 		hyp = hyp2;
@@ -157,15 +190,41 @@ constexpr dsga::basic_vector<T, 3> project_to_line3(const dsga::vector_base<W1, 
 // gives minimum distance from point to a line made from line segment p1 <=> p2
 // From simple vector addition/subtraction (see project_to_line1())
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr T distance_to_line(const dsga::vector_base<W1, T, 3u, D1> &point,
-							 const dsga::vector_base<W2, T, 3u, D2> &p1,
-							 const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
+constexpr T distance_to_line1(const dsga::vector_base<W1, T, 3u, D1> &point,
+							  const dsga::vector_base<W2, T, 3u, D2> &p1,
+							  const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
 	auto hyp = point - p1;
 	auto v1 = p2 - p1;
 	auto t = dsga::dot(hyp, v1) / dsga::dot(v1, v1);
 
 	return dsga::length(hyp - (t * v1));
+}
+
+// gives minimum distance from point to a line made from line segment p1 <=> p2
+template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
+constexpr T distance_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
+							  const dsga::vector_base<W2, T, 3u, D2> &p1,
+							  const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
+{
+	auto hyp1 = point - p1;
+	auto hyp2 = point - p2;
+	auto v1 = p2 - p1;
+	auto v2 = p1 - p2;
+
+	// start values for p1-based approached
+	auto hyp = hyp1;
+	auto v = v1;
+
+	// if length of hyp2 is less than length of hyp1, do a p2-based approach
+	if (dsga::dot(hyp1, hyp1) > dsga::dot(hyp2, hyp2))
+	{
+		hyp = hyp2;
+		v = v2;
+	}
+	auto t = dsga::dot(hyp, v) / dsga::dot(v, v);
+
+	return dsga::length(hyp - (t * v));
 }
 
 // project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points
