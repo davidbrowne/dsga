@@ -372,7 +372,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2026 v18.5
+* **MSVC 2026 v18.5**
 
 ```
 [doctest] doctest version is "2.5.1"
@@ -421,6 +421,32 @@ Performs all the unit tests except where there is lack of support for ```std::is
 ```
 
 * **clang 20.1**
+
+Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+
+```
+[doctest] doctest version is "2.5.1"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2173 | 2173 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+### Ubuntu 26.04 LTS running in WSL2 for Windows 11
+
+* **gcc 16.0**
+
+```
+[doctest] doctest version is "2.5.1"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+* **clang 22.1**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

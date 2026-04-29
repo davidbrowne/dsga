@@ -52,7 +52,7 @@ namespace dsga
 
 		constexpr int CXCM_MAJOR_VERSION = 1;
 		constexpr int CXCM_MINOR_VERSION = 2;
-		constexpr int CXCM_PATCH_VERSION = 0;
+		constexpr int CXCM_PATCH_VERSION = 1;
 
 		namespace dd_real
 		{
@@ -1553,13 +1553,21 @@ namespace dsga
 			// rsqrt() - inverse square root
 			//
 
-			// there is no standard c++ version of this, so always call constexpr version
+			// there is no standard c++ version of this
 
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr T rsqrt(T value) noexcept
 			{
-				return detail::constexpr_rsqrt(value);
-			}
+				if (std::is_constant_evaluated())
+				{
+					return detail::constexpr_rsqrt(value);
+				}
+				else
+				{
+					return T(1) / std::sqrt(value);
+				}
+
+		}
 
 			template <std::integral T>
 			constexpr double rsqrt(T value) noexcept

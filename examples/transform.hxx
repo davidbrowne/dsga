@@ -97,20 +97,13 @@ namespace dsga
 		return inv;
 	}
 
-	// check if a matrix is a transformation matrix
+	// check if a matrix is a transformation matrix -- only check 3x3 and 4x4 matrices, since
+	// other matrix types won't be considered transformation matrices
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	requires (C == R) && (C > 2)
 	[[nodiscard]] constexpr bool is_transformation_matrix(const basic_matrix<T, C, R> &arg,
 														  T tolerance) noexcept
 	{
-		if constexpr (C != R)				// not a square matrix, so cannot be a transformation matrix
-		{
-			return false;
-		}
-		else if constexpr (C < 3)			// only applies to 3x3 (2D) and 4x4 (3D) matrices
-		{
-			return false;
-		}
-
 		// check if last row is [0, 0, ..., 1], if the rotation part has a determinant close to 1.0,
 		// if the columns of the rotation part are unit vectors, and if the columns are all orthogonal
 
@@ -245,7 +238,8 @@ namespace dsga
 		auto s_t = sin(theta);
 		auto v_t = T(1.0) - c_t;
 
-		auto&& [k_x, k_y, k_z] = normalize(axis);					// decompose the normalized axis into its components
+		auto norm_axis = normalize(axis);						// normalize the axis to ensure it's a unit vector
+		auto&& [k_x, k_y, k_z] = norm_axis;						// decompose the normalized axis into its components
 
 		// calculate the rotation matrix components
 		auto rot_mat = identity_matrix<T, 4>();

@@ -185,7 +185,13 @@ TEST_SUITE("test functions")
 			auto invsqrtvals = inversesqrt(vals);
 			CHECK_EQ(invsqrtvals, vec3(0.5, 0.25, 0.125));
 			CHECK_EQ(vec3(inversesqrt(4.f), inversesqrt(16.f), inversesqrt(64.f)), invsqrtvals);
-			CHECK_EQ(dsga::inversesqrt(dvec2(3.0, std::numbers::pi_v<double>)), dvec2(std::numbers::inv_sqrt3_v<double>, std::numbers::inv_sqrtpi_v<double>));
+
+
+			auto first_invsqrt = dsga::inversesqrt(dvec2(3.0, std::numbers::pi_v<double>));
+			auto second_invsqrt = dvec2(std::numbers::inv_sqrt3_v<double>, std::numbers::inv_sqrtpi_v<double>);
+			auto delta_invsqrt = dsga::abs(first_invsqrt - second_invsqrt);
+			CHECK(dsga::all(dsga::within_tolerance(delta_invsqrt, 1e-9)));
+//			CHECK_EQ(dsga::inversesqrt(dvec2(3.0, std::numbers::pi_v<double>)), dvec2(std::numbers::inv_sqrt3_v<double>, std::numbers::inv_sqrtpi_v<double>));
 			CHECK_EQ(dsga::inversesqrt(fscal(3.0f)), fscal(std::numbers::inv_sqrt3_v<float>));
 
 			// off by 1 ulp
