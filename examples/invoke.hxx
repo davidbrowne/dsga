@@ -51,7 +51,7 @@ namespace dsga
 				// check for valid index based on return vector size
 				if (index >= count)
 				{
-					throw std::out_of_range("index out of range");
+					[[ unlikely ]] throw std::out_of_range("index out of range");
 				}
 
 				// a matrix can technically index, but we want matrices
@@ -61,21 +61,21 @@ namespace dsga
 					// check for valid index based on indexable size
 					if (index >= arg.size())
 					{
-						throw std::out_of_range("index out of range");
+						[[ unlikely ]] throw std::out_of_range("index out of range");
 					}
 
 					if constexpr (has_at<T>)
 					{
-						return arg.at(index);
+						[[ likely ]] return arg.at(index);
 					}
 					else
 					{
-						return arg[index];
+						[[ likely ]] return arg[index];
 					}
 				}
 				else
 				{
-					return arg;
+					[[ likely ]] return arg;
 				}
 			}
 

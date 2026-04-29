@@ -1,5 +1,10 @@
 # Change Log
 
+### v2.2.15
+* The attributes ```[[ likely ]]``` and ```[[ unlikely ]]``` were sprinkled around (and some were removed).
+* Refactored ```determinant()``` and ```inverse()``` for matrices.
+* Refactored ```mix()``` (the version like ```lerp()```).
+
 ### v2.2.14
 * Lots of formatting and many minor improvements.
 

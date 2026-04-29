@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 14;
+	constexpr inline int DSGA_PATCH_VERSION = 15;
 
 	namespace cxcm
 	{
@@ -1235,26 +1235,26 @@ namespace dsga
 
 					if (isnan(value))
 					{
-						return detail::convert_to_quiet_nan(value);
+						[[ unlikely ]] return detail::convert_to_quiet_nan(value);
 					}
 					else if (value == std::numeric_limits<T>::infinity())
 					{
-						return T(0);
+						[[ unlikely ]] return T(0);
 					}
 					else if (value == -std::numeric_limits<T>::infinity())
 					{
-						return -std::numeric_limits<T>::quiet_NaN();
+						[[ unlikely ]] return -std::numeric_limits<T>::quiet_NaN();
 					}
 					else if (value == T(0))
 					{
-						return std::numeric_limits<T>::infinity();
+						[[ unlikely ]] return std::numeric_limits<T>::infinity();
 					}
 					else if (value < T(0))
 					{
-						return -std::numeric_limits<T>::quiet_NaN();
+						[[ unlikely ]] return -std::numeric_limits<T>::quiet_NaN();
 					}
 
-					return relaxed::rsqrt(value);
+					[[ likely ]] return relaxed::rsqrt(value);
 				}
 
 #if defined(_MSC_VER) || defined(__clang__)
@@ -1338,7 +1338,7 @@ namespace dsga
 			{
 				if (value == std::numeric_limits<T>::min())
 				{
-					throw std::domain_error("negation of min value is not a valid integral value");
+					[[ unlikely ]] throw std::domain_error("negation of min value is not a valid integral value");
 				}
 
 				[[ likely ]] return relaxed::abs(value);
@@ -1355,7 +1355,7 @@ namespace dsga
 			{
 				if (value == std::numeric_limits<T>::min())
 				{
-					throw std::domain_error("negation of min value is not a valid integral value");
+					[[ unlikely ]] throw std::domain_error("negation of min value is not a valid integral value");
 				}
 
 				[[ likely ]] return relaxed::fabs(value);
@@ -2225,11 +2225,11 @@ namespace dsga
 		{
 			if (mapper_ptr == nullptr)
 			{
-				throw std::runtime_error("can't deref nullptr");
+				[[ unlikely ]] throw std::runtime_error("can't deref nullptr");
 			}
 			else if ((mapper_index < begin_index) || (mapper_index >= end_index))
 			{
-				throw std::out_of_range("index not in range");
+				[[ unlikely ]] throw std::out_of_range("index not in range");
 			}
 
 			[[ likely ]] return (*mapper_ptr)[mapper_index];
@@ -2239,11 +2239,11 @@ namespace dsga
 		{
 			if (mapper_ptr == nullptr)
 			{
-				throw std::runtime_error("can't deref nullptr");
+				[[ unlikely ]] throw std::runtime_error("can't deref nullptr");
 			}
 			else if ((mapper_index < begin_index) || (mapper_index >= end_index))
 			{
-				throw std::out_of_range("index not in range");
+				[[ unlikely ]] throw std::out_of_range("index not in range");
 			}
 
 			[[ likely ]] return std::addressof((*mapper_ptr)[mapper_index]);
@@ -2253,7 +2253,7 @@ namespace dsga
 		{
 			if (mapper_index >= end_index)
 			{
-				throw std::runtime_error("don't increment past end_index");
+				[[ unlikely ]] throw std::runtime_error("don't increment past end_index");
 			}
 
 			[[ likely ]] ++mapper_index;
@@ -2264,7 +2264,7 @@ namespace dsga
 		{
 			if (mapper_index >= end_index)
 			{
-				throw std::runtime_error("don't increment past end_index");
+				[[ unlikely ]] throw std::runtime_error("don't increment past end_index");
 			}
 
 			indexed_vector_const_iterator temp = *this;
@@ -2276,7 +2276,7 @@ namespace dsga
 		{
 			if (mapper_index <= begin_index)
 			{
-				throw std::runtime_error("don't decrement past begin_index");
+				[[ unlikely ]] throw std::runtime_error("don't decrement past begin_index");
 			}
 
 			[[ likely ]] --mapper_index;
@@ -2287,7 +2287,7 @@ namespace dsga
 		{
 			if (mapper_index <= begin_index)
 			{
-				throw std::runtime_error("don't decrement past begin_index");
+				[[ unlikely ]] throw std::runtime_error("don't decrement past begin_index");
 			}
 
 			indexed_vector_const_iterator temp = *this;
@@ -2299,7 +2299,7 @@ namespace dsga
 		{
 			if (((mapper_index + offset) < begin_index) || ((mapper_index + offset) >= end_index))
 			{
-				throw std::out_of_range("offset not in range");
+				[[ unlikely ]] throw std::out_of_range("offset not in range");
 			}
 
 			[[ likely ]] mapper_index += offset;
@@ -2310,7 +2310,7 @@ namespace dsga
 		{
 			if (((mapper_index - offset) < begin_index) || ((mapper_index - offset) >= end_index))
 			{
-				throw std::out_of_range("offset not in range");
+				[[ unlikely ]] throw std::out_of_range("offset not in range");
 			}
 
 			[[ likely ]] mapper_index -= offset;
@@ -2321,7 +2321,7 @@ namespace dsga
 		{
 			if (mapper_ptr != iter.mapper_ptr)
 			{
-				throw std::invalid_argument("different indexed_vector source");
+				[[ unlikely ]] throw std::invalid_argument("different indexed_vector source");
 			}
 
 			[[ likely ]] return static_cast<int>(mapper_index) - static_cast<int>(iter.mapper_index);
@@ -2331,7 +2331,7 @@ namespace dsga
 		{
 			if (mapper_ptr != iter.mapper_ptr)
 			{
-				throw std::invalid_argument("different indexed_vector source");
+				[[ unlikely ]] throw std::invalid_argument("different indexed_vector source");
 			}
 
 			[[ likely ]] return ((mapper_ptr == iter.mapper_ptr) && (mapper_index == iter.mapper_index));
@@ -2341,7 +2341,7 @@ namespace dsga
 		{
 			if (mapper_ptr != iter.mapper_ptr)
 			{
-				throw std::invalid_argument("different indexed_vector source");
+				[[ unlikely ]] throw std::invalid_argument("different indexed_vector source");
 			}
 
 			[[ likely ]] return mapper_index <=> iter.mapper_index;
@@ -2351,11 +2351,11 @@ namespace dsga
 		{
 			if (mapper_ptr == nullptr)
 			{
-				throw std::runtime_error("can't deref nullptr");
+				[[ unlikely ]] throw std::runtime_error("can't deref nullptr");
 			}
 			else if (((mapper_index + offset) < begin_index) || ((mapper_index + offset) >= end_index))
 			{
-				throw std::out_of_range("index not in range");
+				[[ unlikely ]] throw std::out_of_range("index not in range");
 			}
 
 			[[ likely ]] return (*mapper_ptr)[mapper_index + offset];
@@ -4356,7 +4356,7 @@ namespace dsga
 		{
 			if (rhs == 0)
 			{
-				throw std::domain_error("(lhs % 0) is undefined");
+				[[ unlikely ]] throw std::domain_error("(lhs % 0) is undefined");
 			}
 
 			[[ likely ]] return lhs % rhs;
@@ -5618,11 +5618,11 @@ namespace dsga
 		{
 			if (any(lessThan(base, basic_vector<T, C>(0))))
 			{
-				throw std::invalid_argument("(base < 0) is UB");
+				[[ unlikely ]] throw std::invalid_argument("(base < 0) is UB");
 			}
 			else if (!all(compNot(compAnd(equal(base, basic_vector<T, C>(0)), lessThanEqual(exp, basic_vector<T, C>(0))))))
 			{
-				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
+				[[ unlikely ]] throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
 			}
 
 			[[ likely ]] return machinery::apply_unitype_make(base, exp, lambda_ops::pow_op);
@@ -5634,11 +5634,11 @@ namespace dsga
 		{
 			if (base < T(0))
 			{
-				throw std::invalid_argument("(base < 0) is UB");
+				[[ unlikely ]] throw std::invalid_argument("(base < 0) is UB");
 			}
 			else if ((base == T(0) && exp <= T(0)))
 			{
-				throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
+				[[ unlikely ]] throw std::invalid_argument("(base == 0 && exp <= 0) is UB");
 			}
 
 			[[ likely ]] return lambda_ops::pow_op(base, exp);
@@ -5789,37 +5789,16 @@ namespace dsga
 			// https://stackoverflow.com/a/58648036
 			constexpr inline auto mix1_op = []<floating_point_scalar T>(T x, T y, T a) noexcept
 			{
-//				auto formula = [x, y, a]() noexcept
-//				{
-//					T w0 = T(1.0) - a;
-//					T w1 = T(1.0) - w0;
-//					T t0 = w0 * x;
-//					T t1 = w1 * y;
-//					return t0 + t1;
-//				};
-
-				if (x == y)
-				{
-					return x;
-				}
-
-				auto val = T(0.0);
 				if (a <= T(0.5))
 				{
-					val = x + (y - x) * a;
+					// closer to x
+					return x + (y - x) * a;
 				}
 				else
 				{
-	//				val = formula();
-					val = ((T(1.0) - a) * x) + (a * y);
+					// closer to y
+					return y - (y - x) * (T(1.0) - a);
 				}
-
-				if (cxcm::isnan(val) && !cxcm::isnan(a + x + y))
-				{
-					val = cxcm::copysign(std::numeric_limits<T>::infinity(), y - x);
-				}
-
-				return val;
 			};
 			constexpr inline auto mix2_op =							[]<dimensional_scalar T, bool_scalar B>(T x, T y, B a) noexcept		{ return a ? y : x; };
 			constexpr inline auto step_op =							[]<floating_point_scalar T>(T edge, T x) noexcept					{ return ((x < edge) ? T(0) : T(1)); };
@@ -6043,7 +6022,7 @@ namespace dsga
 										   const vector_base<W2, T, C, D2> &min_val,
 										   const vector_base<W3, T, C, D3> &max_val)
 		{
-			[[ likely ]] return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
+			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
 		template <bool W, non_bool_scalar T, std::size_t C, typename D>
@@ -6051,7 +6030,7 @@ namespace dsga
 										   T min_val,
 										   T max_val)
 		{
-			[[ likely ]] return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
+			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
 		template <non_bool_scalar T>
@@ -6059,7 +6038,7 @@ namespace dsga
 										T min_val,
 										T max_val)
 		{
-			[[ likely ]] return lambda_ops::clamp_op(x, min_val, max_val);
+			return lambda_ops::clamp_op(x, min_val, max_val);
 		}
 
 		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
@@ -6130,7 +6109,7 @@ namespace dsga
 		{
 			if (any(greaterThanEqual(edge0, edge1)))
 			{
-				throw std::invalid_argument("(edge0 >= edge1) is UB");
+				[[ unlikely ]] throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
 			[[ likely ]] return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
 		}
@@ -6142,7 +6121,7 @@ namespace dsga
 		{
 			if (edge0 >= edge1)
 			{
-				throw std::invalid_argument("(edge0 >= edge1) is UB");
+				[[ unlikely ]] throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
 			[[ likely ]] return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
 		}
@@ -6154,7 +6133,7 @@ namespace dsga
 		{
 			if (edge0 >= edge1)
 			{
-				throw std::invalid_argument("(edge0 >= edge1) is UB");
+				[[ unlikely ]] throw std::invalid_argument("(edge0 >= edge1) is UB");
 			}
 			[[ likely ]] return lambda_ops::smoothstep_op(edge0, edge1, x);
 		}
@@ -6524,7 +6503,7 @@ namespace dsga
 
 			if (!index_valid)
 			{
-				throw std::out_of_range("swizzle() index out of range");
+				[[ unlikely ]] throw std::out_of_range("swizzle() index out of range");
 			}
 
 			[[ likely ]] return v[static_cast<std::size_t>(index)];
@@ -6538,7 +6517,7 @@ namespace dsga
 
 			if (!indexes_valid)
 			{
-				throw std::out_of_range("swizzle() indexes out of range");
+				[[ unlikely ]] throw std::out_of_range("swizzle() indexes out of range");
 			}
 
 			[[ likely ]] return basic_vector<T, sizeof...(Args)>{ v[static_cast<std::size_t>(Is)]... };
@@ -6849,7 +6828,6 @@ namespace dsga
 
 		// determinant() - only on square matrices
 
-		// going for efficiency
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T determinant(const basic_matrix<T, 2, 2> &arg) noexcept
 		{
@@ -6859,120 +6837,158 @@ namespace dsga
 				;
 		}
 
-		// going for efficiency
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr T determinant(const basic_matrix<T, 3, 3> &arg) noexcept
 		{
 			// same results as dot(arg[0], cross(arg[1], arg[2]))
 			return
-				+ arg[0][0] * arg[1][1] * arg[2][2]
-				+ arg[1][0] * arg[2][1] * arg[0][2]
-				+ arg[2][0] * arg[0][1] * arg[1][2]
-				- arg[2][0] * arg[1][1] * arg[0][2]
-				- arg[1][0] * arg[0][1] * arg[2][2]
-				- arg[0][0] * arg[2][1] * arg[1][2]
+				+ arg[0][0] * ( arg[1][1] * arg[2][2] - arg[1][2] * arg[2][1] ) 
+				- arg[0][1] * ( arg[1][0] * arg[2][2] - arg[1][2] * arg[2][0] ) 
+				+ arg[0][2] * ( arg[1][0] * arg[2][1] - arg[1][1] * arg[2][0] ) 
 				;
 		}
 
+		// Source - https://stackoverflow.com/a/44446912
+		// Posted by willnode, modified by community. See post 'Timeline' for change history
+		// Retrieved 2026-04-27, License - CC BY-SA 4.0
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr T determinant(const basic_matrix<T, 4, 4> &arg) noexcept
+		[[nodiscard]] constexpr T determinant(const basic_matrix<T, 4, 4> &m) noexcept
 		{
-			return
-				+ arg[0][0] * arg[1][1] * arg[2][2] * arg[3][3] + arg[0][0] * arg[2][1] * arg[3][2] * arg[1][3] + arg[0][0] * arg[3][1] * arg[1][2] * arg[2][3]
-				- arg[0][0] * arg[3][1] * arg[2][2] * arg[1][3] - arg[0][0] * arg[2][1] * arg[1][2] * arg[3][3] - arg[0][0] * arg[1][1] * arg[3][2] * arg[2][3]
-				- arg[1][0] * arg[0][1] * arg[2][2] * arg[3][3] - arg[2][0] * arg[0][1] * arg[3][2] * arg[1][3] - arg[3][0] * arg[0][1] * arg[1][2] * arg[2][3]
-				+ arg[3][0] * arg[0][1] * arg[2][2] * arg[1][3] + arg[2][0] * arg[0][1] * arg[1][2] * arg[3][3] + arg[1][0] * arg[0][1] * arg[3][2] * arg[2][3]
+			auto A2323 = m[2][2] * m[3][3] - m[2][3] * m[3][2];
+			auto A1323 = m[2][1] * m[3][3] - m[2][3] * m[3][1];
+			auto A1223 = m[2][1] * m[3][2] - m[2][2] * m[3][1];
 
-				+ arg[1][0] * arg[2][1] * arg[0][2] * arg[3][3] + arg[2][0] * arg[3][1] * arg[0][2] * arg[1][3] + arg[3][0] * arg[1][1] * arg[0][2] * arg[2][3]
-				- arg[3][0] * arg[2][1] * arg[0][2] * arg[1][3] - arg[2][0] * arg[1][1] * arg[0][2] * arg[3][3] - arg[1][0] * arg[3][1] * arg[0][2] * arg[2][3]
-				- arg[1][0] * arg[2][1] * arg[3][2] * arg[0][3] - arg[2][0] * arg[3][1] * arg[1][2] * arg[0][3] - arg[3][0] * arg[1][1] * arg[2][2] * arg[0][3]
-				+ arg[3][0] * arg[2][1] * arg[1][2] * arg[0][3] + arg[2][0] * arg[1][1] * arg[3][2] * arg[0][3] + arg[1][0] * arg[3][1] * arg[2][2] * arg[0][3]
+			auto A0323 = m[2][0] * m[3][3] - m[2][3] * m[3][0];
+			auto A0223 = m[2][0] * m[3][2] - m[2][2] * m[3][0];
+			auto A0123 = m[2][0] * m[3][1] - m[2][1] * m[3][0];
+
+			return
+				+ m[0][0] * (m[1][1] * A2323 - m[1][2] * A1323 + m[1][3] * A1223)
+				- m[0][1] * (m[1][0] * A2323 - m[1][2] * A0323 + m[1][3] * A0223)
+				+ m[0][2] * (m[1][0] * A1323 - m[1][1] * A0323 + m[1][3] * A0123)
+				- m[0][3] * (m[1][0] * A1223 - m[1][1] * A0223 + m[1][2] * A0123)
 				;
 		}
 
 		// inverse() - only on square matrices
 
-		// going for efficiency
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr basic_matrix<T, 2, 2> inverse(const basic_matrix<T, 2, 2> &arg) noexcept
 		{
-			return basic_matrix<T, 2, 2>{ arg[1][1], -arg[0][1],
-										 -arg[1][0],  arg[0][0] } / determinant(arg);
+			auto det = determinant(arg);
+			if (det == 0.0)
+			{
+				return basic_matrix<T, 2, 2>{};				// return a zero matrix if singular
+			}
+
+			// multiplying by reciprocal is faster than dividing each element by det
+			det = T(1) / det;
+
+			return basic_matrix<T, 2, 2>
+			{
+				det * +arg[1][1],
+				det * -arg[0][1],
+				det * -arg[1][0],
+				det * +arg[0][0]
+			};
 		}
 
-		// going for efficiency
 		template <floating_point_scalar T>
 		[[nodiscard]] constexpr basic_matrix<T, 3, 3> inverse(const basic_matrix<T, 3, 3> &arg) noexcept
 		{
-			return basic_matrix<T, 3, 3>{
-				+(arg[1][1] * arg[2][2] - arg[2][1] * arg[1][2]),
-				-(arg[0][1] * arg[2][2] - arg[2][1] * arg[0][2]),
-				+(arg[0][1] * arg[1][2] - arg[1][1] * arg[0][2]),
-				-(arg[1][0] * arg[2][2] - arg[2][0] * arg[1][2]),
-				+(arg[0][0] * arg[2][2] - arg[2][0] * arg[0][2]),
-				-(arg[0][0] * arg[1][2] - arg[1][0] * arg[0][2]),
-				+(arg[1][0] * arg[2][1] - arg[2][0] * arg[1][1]),
-				-(arg[0][0] * arg[2][1] - arg[2][0] * arg[0][1]),
-				+(arg[0][0] * arg[1][1] - arg[1][0] * arg[0][1])
-				} / determinant(arg);
+			auto det = determinant(arg);
+			if (det == 0.0)
+			{
+				return basic_matrix<T, 3, 3>{};				// return a zero matrix if singular
+			}
+
+			// multiplying by reciprocal is faster than dividing each element by det
+			det = T(1) / det;
+
+			return basic_matrix<T, 3, 3>
+			{
+				det * +(arg[1][1] * arg[2][2] - arg[2][1] * arg[1][2]),
+				det * -(arg[0][1] * arg[2][2] - arg[2][1] * arg[0][2]),
+				det * +(arg[0][1] * arg[1][2] - arg[1][1] * arg[0][2]),
+				det * -(arg[1][0] * arg[2][2] - arg[2][0] * arg[1][2]),
+				det * +(arg[0][0] * arg[2][2] - arg[2][0] * arg[0][2]),
+				det * -(arg[0][0] * arg[1][2] - arg[1][0] * arg[0][2]),
+				det * +(arg[1][0] * arg[2][1] - arg[2][0] * arg[1][1]),
+				det * -(arg[0][0] * arg[2][1] - arg[2][0] * arg[0][1]),
+				det * +(arg[0][0] * arg[1][1] - arg[1][0] * arg[0][1])
+			};
 		}
 
-		// going for efficiency
+		// Source - https://stackoverflow.com/a/44446912
+		// Posted by willnode, modified by community. See post 'Timeline' for change history
+		// Retrieved 2026-04-27, License - CC BY-SA 4.0
 		template <floating_point_scalar T>
-		[[nodiscard]] constexpr basic_matrix<T, 4, 4> inverse(const basic_matrix<T, 4, 4> &arg) noexcept
+		[[nodiscard]] constexpr basic_matrix<T, 4, 4> inverse(const basic_matrix<T, 4, 4> &m) noexcept
 		{
-			return basic_matrix<T, 4, 4>{
-				+ arg[1][1] * arg[2][2] * arg[3][3] + arg[2][1] * arg[3][2] * arg[1][3] + arg[3][1] * arg[1][2] * arg[2][3]
-				- arg[3][1] * arg[2][2] * arg[1][3] - arg[2][1] * arg[1][2] * arg[3][3] - arg[1][1] * arg[3][2] * arg[2][3],
+			auto A2323 = m[2][2] * m[3][3] - m[2][3] * m[3][2];
+			auto A1323 = m[2][1] * m[3][3] - m[2][3] * m[3][1];
+			auto A1223 = m[2][1] * m[3][2] - m[2][2] * m[3][1];
 
-				- arg[0][1] * arg[2][2] * arg[3][3] - arg[2][1] * arg[3][2] * arg[0][3] - arg[3][1] * arg[0][2] * arg[2][3]
-				+ arg[3][1] * arg[2][2] * arg[0][3] + arg[2][1] * arg[0][2] * arg[3][3] + arg[0][1] * arg[3][2] * arg[2][3],
+			auto A0323 = m[2][0] * m[3][3] - m[2][3] * m[3][0];
+			auto A0223 = m[2][0] * m[3][2] - m[2][2] * m[3][0];
+			auto A0123 = m[2][0] * m[3][1] - m[2][1] * m[3][0];
 
-				+ arg[0][1] * arg[1][2] * arg[3][3] + arg[1][1] * arg[3][2] * arg[0][3] + arg[3][1] * arg[0][2] * arg[1][3]
-				- arg[3][1] * arg[1][2] * arg[0][3] - arg[1][1] * arg[0][2] * arg[3][3] - arg[0][1] * arg[3][2] * arg[1][3],
+			auto A2313 = m[1][2] * m[3][3] - m[1][3] * m[3][2];
+			auto A1313 = m[1][1] * m[3][3] - m[1][3] * m[3][1];
+			auto A1213 = m[1][1] * m[3][2] - m[1][2] * m[3][1];
 
-				- arg[0][1] * arg[1][2] * arg[2][3] - arg[1][1] * arg[2][2] * arg[0][3] - arg[2][1] * arg[0][2] * arg[1][3]
-				+ arg[2][1] * arg[1][2] * arg[0][3] + arg[1][1] * arg[0][2] * arg[2][3] + arg[0][1] * arg[2][2] * arg[1][3],
+			auto A2312 = m[1][2] * m[2][3] - m[1][3] * m[2][2];
+			auto A1312 = m[1][1] * m[2][3] - m[1][3] * m[2][1];
+			auto A1212 = m[1][1] * m[2][2] - m[1][2] * m[2][1];
 
+			auto A0313 = m[1][0] * m[3][3] - m[1][3] * m[3][0];
+			auto A0213 = m[1][0] * m[3][2] - m[1][2] * m[3][0];
+			auto A0312 = m[1][0] * m[2][3] - m[1][3] * m[2][0];
 
-				- arg[1][0] * arg[2][2] * arg[3][3] - arg[2][0] * arg[3][2] * arg[1][3] - arg[3][0] * arg[1][2] * arg[2][3]
-				+ arg[3][0] * arg[2][2] * arg[1][3] + arg[2][0] * arg[1][2] * arg[3][3] + arg[1][0] * arg[3][2] * arg[2][3],
+			auto A0212 = m[1][0] * m[2][2] - m[1][2] * m[2][0];
+			auto A0113 = m[1][0] * m[3][1] - m[1][1] * m[3][0];
+			auto A0112 = m[1][0] * m[2][1] - m[1][1] * m[2][0];
 
-				+ arg[0][0] * arg[2][2] * arg[3][3] + arg[2][0] * arg[3][2] * arg[0][3] + arg[3][0] * arg[0][2] * arg[2][3]
-				- arg[3][0] * arg[2][2] * arg[0][3] - arg[2][0] * arg[0][2] * arg[3][3] - arg[0][0] * arg[3][2] * arg[2][3],
+			auto det =
+				+ m[0][0] * (m[1][1] * A2323 - m[1][2] * A1323 + m[1][3] * A1223)
+				- m[0][1] * (m[1][0] * A2323 - m[1][2] * A0323 + m[1][3] * A0223)
+				+ m[0][2] * (m[1][0] * A1323 - m[1][1] * A0323 + m[1][3] * A0123)
+				- m[0][3] * (m[1][0] * A1223 - m[1][1] * A0223 + m[1][2] * A0123);
 
-				- arg[0][0] * arg[1][2] * arg[3][3] - arg[1][0] * arg[3][2] * arg[0][3] - arg[3][0] * arg[0][2] * arg[1][3]
-				+ arg[3][0] * arg[1][2] * arg[0][3] + arg[1][0] * arg[0][2] * arg[3][3] + arg[0][0] * arg[3][2] * arg[1][3],
+			if (det == 0.0)
+			{
+				return basic_matrix<T, 4, 4>{};				// return a zero matrix if singular
+			}
 
-				+ arg[0][0] * arg[1][2] * arg[2][3] + arg[1][0] * arg[2][2] * arg[0][3] + arg[2][0] * arg[0][2] * arg[1][3]
-				- arg[2][0] * arg[1][2] * arg[0][3] - arg[1][0] * arg[0][2] * arg[2][3] - arg[0][0] * arg[2][2] * arg[1][3],
+			// multiplying by reciprocal is faster than dividing each element by det
+			det = T(1) / det;
 
+			return basic_matrix<T, 4, 4>
+			{
+				// m00 -m03
+				det * +(m[1][1] * A2323 - m[1][2] * A1323 + m[1][3] * A1223),
+				det * -(m[0][1] * A2323 - m[0][2] * A1323 + m[0][3] * A1223),
+				det * +(m[0][1] * A2313 - m[0][2] * A1313 + m[0][3] * A1213),
+				det * -(m[0][1] * A2312 - m[0][2] * A1312 + m[0][3] * A1212),
 
-				+ arg[1][0] * arg[2][1] * arg[3][3] + arg[2][0] * arg[3][1] * arg[1][3] + arg[3][0] * arg[1][1] * arg[2][3]
-				- arg[3][0] * arg[2][1] * arg[1][3] - arg[2][0] * arg[1][1] * arg[3][3] - arg[1][0] * arg[3][1] * arg[2][3],
+				// m10 -m13
+				det * -(m[1][0] * A2323 - m[1][2] * A0323 + m[1][3] * A0223),
+				det * +(m[0][0] * A2323 - m[0][2] * A0323 + m[0][3] * A0223),
+				det * -(m[0][0] * A2313 - m[0][2] * A0313 + m[0][3] * A0213),
+				det * +(m[0][0] * A2312 - m[0][2] * A0312 + m[0][3] * A0212),
 
-				- arg[0][0] * arg[2][1] * arg[3][3] - arg[2][0] * arg[3][1] * arg[0][3] - arg[3][0] * arg[0][1] * arg[2][3]
-				+ arg[3][0] * arg[2][1] * arg[0][3] + arg[2][0] * arg[0][1] * arg[3][3] + arg[0][0] * arg[3][1] * arg[2][3],
+				// m20 -m23
+				det * +(m[1][0] * A1323 - m[1][1] * A0323 + m[1][3] * A0123),
+				det * -(m[0][0] * A1323 - m[0][1] * A0323 + m[0][3] * A0123),
+				det * +(m[0][0] * A1313 - m[0][1] * A0313 + m[0][3] * A0113),
+				det * -(m[0][0] * A1312 - m[0][1] * A0312 + m[0][3] * A0112),
 
-				+ arg[0][0] * arg[1][1] * arg[3][3] + arg[1][0] * arg[3][1] * arg[0][3] + arg[3][0] * arg[0][1] * arg[1][3]
-				- arg[3][0] * arg[1][1] * arg[0][3] - arg[1][0] * arg[0][1] * arg[3][3] - arg[0][0] * arg[3][1] * arg[1][3],
-
-				- arg[0][0] * arg[1][1] * arg[2][3] - arg[1][0] * arg[2][1] * arg[0][3] - arg[2][0] * arg[0][1] * arg[1][3]
-				+ arg[2][0] * arg[1][1] * arg[0][3] + arg[1][0] * arg[0][1] * arg[2][3] + arg[0][0] * arg[2][1] * arg[1][3],
-
-
-				- arg[1][0] * arg[2][1] * arg[3][2] - arg[2][0] * arg[3][1] * arg[1][2] - arg[3][0] * arg[1][1] * arg[2][2]
-				+ arg[3][0] * arg[2][1] * arg[1][2] + arg[2][0] * arg[1][1] * arg[3][2] + arg[1][0] * arg[3][1] * arg[2][2],
-
-				+ arg[0][0] * arg[2][1] * arg[3][2] + arg[2][0] * arg[3][1] * arg[0][2] + arg[3][0] * arg[0][1] * arg[2][2]
-				- arg[3][0] * arg[2][1] * arg[0][2] - arg[2][0] * arg[0][1] * arg[3][2] - arg[0][0] * arg[3][1] * arg[2][2],
-
-				- arg[0][0] * arg[1][1] * arg[3][2] - arg[1][0] * arg[3][1] * arg[0][2] - arg[3][0] * arg[0][1] * arg[1][2]
-				+ arg[3][0] * arg[1][1] * arg[0][2] + arg[1][0] * arg[0][1] * arg[3][2] + arg[0][0] * arg[3][1] * arg[1][2],
-
-				+ arg[0][0] * arg[1][1] * arg[2][2] + arg[1][0] * arg[2][1] * arg[0][2] + arg[2][0] * arg[0][1] * arg[1][2]
-				- arg[2][0] * arg[1][1] * arg[0][2] - arg[1][0] * arg[0][1] * arg[2][2] - arg[0][0] * arg[2][1] * arg[1][2]
-				} / determinant(arg);
+				// m30 -m33
+				det * -(m[1][0] * A1223 - m[1][1] * A0223 + m[1][2] * A0123),
+				det * +(m[0][0] * A1223 - m[0][1] * A0223 + m[0][2] * A0123),
+				det * -(m[0][0] * A1213 - m[0][1] * A0213 + m[0][2] * A0113),
+				det * +(m[0][0] * A1212 - m[0][1] * A0212 + m[0][2] * A0112),
+			};
 		}
 
 		// not in glsl
