@@ -9,6 +9,7 @@
 v2.2.15
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* Updated to cxcm v1.2.1.
 * v2.2.15
     * The attributes ```[[ likely ]]``` and ```[[ unlikely ]]``` were sprinkled around (and some were removed).
     * Refactored ```determinant()``` and ```inverse()``` for matrices.
@@ -407,32 +408,6 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 24.04 LTS running in WSL2 for Windows 11
-
-* **gcc 14.2**
-
-```
-[doctest] doctest version is "2.5.1"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2189 | 2189 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-* **clang 20.1**
-
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
-
-```
-[doctest] doctest version is "2.5.1"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2173 | 2173 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
 ### Ubuntu 26.04 LTS running in WSL2 for Windows 11
 
 * **gcc 16.0**
@@ -447,6 +422,32 @@ Performs all the unit tests except where there is lack of support for ```std::is
 ```
 
 * **clang 22.1**
+
+Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+
+```
+[doctest] doctest version is "2.5.1"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2173 | 2173 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+### Ubuntu 24.04 LTS running in WSL2 for Windows 11
+
+* **gcc 14.2**
+
+```
+[doctest] doctest version is "2.5.1"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
+[doctest] Status: SUCCESS!
+```
+
+* **clang 20.1**
 
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 

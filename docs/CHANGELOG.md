@@ -1,5 +1,7 @@
 # Change Log
 
+* Updated to cxcm v1.2.1.
+
 ### v2.2.15
 * The attributes ```[[ likely ]]``` and ```[[ unlikely ]]``` were sprinkled around (and some were removed).
 * Refactored ```determinant()``` and ```inverse()``` for matrices.
