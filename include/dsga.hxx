@@ -6803,35 +6803,24 @@ namespace dsga
 
 		// outerProduct() - matrix from a column vector times a row vector
 		template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, std::size_t C2, typename D2>
-		requires ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
+			requires ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
 		[[nodiscard]] constexpr basic_matrix<T, C2, C1> outerProduct(const vector_base<W1, T, C1, D1> &lhs,
 																	 const vector_base<W2, T, C2, D2> &rhs) noexcept
 		{
-			auto val = basic_matrix<T, C2, C1>{};
-
-			[&val, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				((val[Is] = (lhs * rhs[Is])), ...);
+				return basic_matrix<T, C2, C1>{ (lhs * rhs[Is]) ...};
 			}(std::make_index_sequence<C2>{});
-
-			return val;
 		}
 
 		// transpose a matrix
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
 		[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept
 		{
-			auto val = basic_matrix<T, R, C>{};
-
-			[&val, &arg] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			return [&arg] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				(([&val, &arg] <std::size_t ...Js>(std::index_sequence <Js...>, std::size_t row) noexcept
-				{
-					((val[row][Js] = arg[Js][row]), ...);
-				}(std::make_index_sequence<C>{}, Is)), ...);
+				return basic_matrix<T, R, C>{arg.row(Is)...};
 			}(std::make_index_sequence<R>{});
-
-			return val;
 		}
 
 		// determinant() - only on square matrices
@@ -7012,6 +7001,22 @@ namespace dsga
 										   vec[1], -vec[0],	   T(0) };
 		}
 
+		namespace dm_detail
+		{
+			// create a column vector that is to be part of a diagonal matrix, where all elements
+			// are 0 except for the element at index, with the value being diagonal_source[index].
+			template <bool W, floating_point_scalar T, std::size_t C, typename D>
+			requires (C > 1)
+			[[nodiscard]] constexpr auto diagonal_column(const vector_base<W, T, C, D> &diagonal_vector, std::size_t index) noexcept
+			{
+				return 
+					[&diagonal_vector, index] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+					{
+						return basic_vector<T, C>{ (index == Is ? diagonal_vector[Is] : T(0))... };
+					}(std::make_index_sequence<C>{});
+			}
+		}	// namespace dm_detail
+
 		// not in glsl
 		//
 		// returns a symmetric diagonal matrix (square) using the vector parameter as the diagonal values,
@@ -7021,14 +7026,10 @@ namespace dsga
 		requires (C > 1)
 		[[nodiscard]] constexpr basic_matrix<T, C, C> diagonal_matrix(const vector_base<W, T, C, D> &vec) noexcept
 		{
-			auto square_mat = basic_matrix<T, C, C>{};
-
-			[&square_mat, &vec] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			return [&vec] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((square_mat[Is][Is] = vec[Is]), ...);
+				return basic_matrix<T, C, C>{ dm_detail::diagonal_column(vec, Is)... };
 			}(std::make_index_sequence<C>{});
-
-			return square_mat;
 		}
 
 		// not in glsl
@@ -7195,9 +7196,10 @@ namespace dsga
 	[[nodiscard]] constexpr basic_matrix<T, C, R> operator /(const basic_matrix<T, C, R> &lhs,
 															 T rhs) noexcept
 	{
-		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+		auto reciprocal = T(1) / rhs;		// multiplying by reciprocal is faster than dividing each element by rhs
+		return [&lhs, reciprocal] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs[Is] / rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] * reciprocal)... };
 		}(std::make_index_sequence<C>{});
 	}
 
