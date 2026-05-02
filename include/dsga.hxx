@@ -7006,7 +7006,7 @@ namespace dsga
 			// create a column vector that is to be part of a diagonal matrix, where all elements
 			// are 0 except for the element at index, with the value being diagonal_source[index].
 			template <bool W, floating_point_scalar T, std::size_t C, typename D>
-			requires (C > 1)
+			requires (C > 1) && (C <= 4)
 			[[nodiscard]] constexpr auto diagonal_column(const vector_base<W, T, C, D> &diagonal_vector, std::size_t index) noexcept
 			{
 				return 
@@ -7023,7 +7023,7 @@ namespace dsga
 		// with all other elements being 0.
 		//
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		requires (C > 1)
+		requires (C > 1) && (C <= 4)
 		[[nodiscard]] constexpr basic_matrix<T, C, C> diagonal_matrix(const vector_base<W, T, C, D> &vec) noexcept
 		{
 			return [&vec] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -7036,7 +7036,7 @@ namespace dsga
 		//
 		// make an identity matrix
 		template <floating_point_scalar T, std::size_t C>
-		requires (C > 1)
+		requires (C > 1) && (C <= 4)
 		[[nodiscard]] constexpr basic_matrix<T, C, C> identity_matrix() noexcept
 		{
 			return basic_matrix<T, C, C>(1);
@@ -7126,90 +7126,98 @@ namespace dsga
 
 	// operator + with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr basic_matrix<T, C, R> operator +(const basic_matrix<T, C, R> &lhs,
-															 T rhs) noexcept
+															 U rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs[Is] + rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] + static_cast<T>(rhs))... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	[[nodiscard]] constexpr basic_matrix<T, C, R> operator +(T lhs,
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator +(U lhs,
 															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs + rhs[Is])...};
+			return basic_matrix<T, C, R>{ (static_cast<T>(lhs) + rhs[Is])...};
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator - with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr basic_matrix<T, C, R> operator -(const basic_matrix<T, C, R> &lhs,
-															 T rhs) noexcept
+															 U rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs[Is] - rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] - static_cast<T>(rhs))... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	[[nodiscard]] constexpr basic_matrix<T, C, R> operator -(T lhs,
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator -(U lhs,
 															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs - rhs[Is])... };
+			return basic_matrix<T, C, R>{ (static_cast<T>(lhs) - rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator * with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr basic_matrix<T, C, R> operator *(const basic_matrix<T, C, R> &lhs,
-															 T rhs) noexcept
+															 U rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs[Is] * rhs)... };
+			return basic_matrix<T, C, R>{ (lhs[Is] * static_cast<T>(rhs))... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	[[nodiscard]] constexpr basic_matrix<T, C, R> operator *(T lhs,
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator *(U lhs,
 															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs * rhs[Is])... };
+			return basic_matrix<T, C, R>{ (static_cast<T>(lhs) * rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
 	// operator / with scalar
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 	[[nodiscard]] constexpr basic_matrix<T, C, R> operator /(const basic_matrix<T, C, R> &lhs,
-															 T rhs) noexcept
+															 U rhs) noexcept
 	{
-		auto reciprocal = T(1) / rhs;		// multiplying by reciprocal is faster than dividing each element by rhs
+		auto reciprocal = T(1) / static_cast<T>(rhs);		// multiplying by reciprocal is faster than dividing each element by rhs
 		return [&lhs, reciprocal] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
 			return basic_matrix<T, C, R>{ (lhs[Is] * reciprocal)... };
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	[[nodiscard]] constexpr basic_matrix<T, C, R> operator /(T lhs,
+	template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
+	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
+	[[nodiscard]] constexpr basic_matrix<T, C, R> operator /(U lhs,
 															 const basic_matrix<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return basic_matrix<T, C, R>{ (lhs / rhs[Is])... };
+			return basic_matrix<T, C, R>{ (static_cast<T>(lhs) / rhs[Is])... };
 		}(std::make_index_sequence<C>{});
 	}
 
