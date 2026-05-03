@@ -125,24 +125,14 @@ constexpr dsga::basic_vector<T, 3> project_to_line2(const dsga::vector_base<W1, 
 {
 	auto hyp1 = point - p1;
 	auto hyp2 = point - p2;
-	auto v1 = p2 - p1;
-	auto v2 = p1 - p2;
-
-	// start values for p1-based approached
-	auto hyp = hyp1;
-	auto v = v1;
-	auto u = dsga::basic_vector(p1);
-
-	// if length of hyp2 is less than length of hyp1, do a p2-based approach
 	if (dsga::dot(hyp1, hyp1) > dsga::dot(hyp2, hyp2))
 	{
-		hyp = hyp2;
-		v = v2;
-		u = dsga::basic_vector(p2);
+		return project_to_line1(point, p2, p1);
 	}
-	auto t = dsga::dot(hyp, v) / dsga::dot(v, v);
-
-	return u + (t * v);
+	else
+	{
+		return project_to_line1(point, p1, p2);
+	}
 }
 
 // same as above, different implementation

@@ -1876,11 +1876,11 @@ namespace dsga
 		}
 
 		// in general, data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr T * data() noexcept requires Writable		{ return store.data(); }
-		[[nodiscard]] constexpr const T * data() const noexcept				{ return store.data(); }
+		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable		{ return store.data(); }
+		[[nodiscard]] constexpr const T *data() const noexcept					{ return store.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr sequence_pack sequence() noexcept	{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr sequence_pack sequence() noexcept		{ return sequence_pack{}; }
 
 		template <typename ...Args>
 		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -1895,17 +1895,17 @@ namespace dsga
 		constexpr void swap(storage_wrapper &sw) noexcept requires Writable	{ store.swap(sw.store); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return store.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return store.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return store.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return store.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return store.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return store.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return store.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return store.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return store.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return store.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return store.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return store.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -2011,8 +2011,8 @@ namespace dsga
 		// physically contiguous access via pointer.
 		// DON"T ASSSUME data() contiguous order is same as operator[] "logically contiguous" order
 		// data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr T * data() noexcept requires Writable				{ return this->as_derived().data(); }
-		[[nodiscard]] constexpr const T * data() const noexcept						{ return this->as_derived().data(); }
+		[[nodiscard]] constexpr		  T *data() noexcept requires Writable			{ return this->as_derived().data(); }
+		[[nodiscard]] constexpr const T *data() const noexcept						{ return this->as_derived().data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
 		// this is only really helpful if you use data() in your API, because operator [] already adjusts for sequencing.
@@ -2585,26 +2585,26 @@ namespace dsga
 		}
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable		{ return base.data(); }
+		[[nodiscard]] constexpr		  T *data() noexcept requires Writable		{ return base.data(); }
 
 		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept				{ return base.data(); }
+		[[nodiscard]] constexpr const T *data() const noexcept					{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept				{ return sequence_pack{}; }
+		[[nodiscard]] static constexpr auto sequence() noexcept					{ return sequence_pack{}; }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return iterator(*this, iterator::begin_index); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return iterator(*this, iterator::begin_index); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return const_iterator(*this, const_iterator::begin_index); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return iterator(*this, iterator::end_index); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return iterator(*this, iterator::end_index); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return const_iterator(*this, const_iterator::end_index); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return reverse_iterator(end()); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return reverse_iterator(end()); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return const_reverse_iterator(end()); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return reverse_iterator(begin()); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return reverse_iterator(begin()); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return const_reverse_iterator(begin()); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -3016,7 +3016,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
+		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable						{ return base.data(); }
 
 		// physically contiguous
 		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
@@ -3027,17 +3027,17 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -3198,7 +3198,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
+		[[nodiscard]] constexpr		  T *data() noexcept requires Writable						{ return base.data(); }
 
 		// physically contiguous
 		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
@@ -3209,17 +3209,17 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -3472,7 +3472,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
+		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable						{ return base.data(); }
 
 		// physically contiguous
 		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
@@ -3483,17 +3483,17 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -3969,7 +3969,7 @@ namespace dsga
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
 		// physically contiguous
-		[[nodiscard]] constexpr T *data() noexcept requires Writable							{ return base.data(); }
+		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable						{ return base.data(); }
 
 		// physically contiguous
 		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
@@ -3980,17 +3980,17 @@ namespace dsga
 		constexpr void swap(basic_vector &bv) noexcept requires Writable						{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr iterator				begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -5099,72 +5099,13 @@ namespace dsga
 		// lambdas for functions
 		namespace lambda_ops
 		{
-			constexpr inline auto less_op = []<non_bool_scalar T>(T x, T y) noexcept
-			{
-				if (std::is_constant_evaluated())
-				{
-					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x < y);
-				}
-				else
-				{
-					return std::isless(x, y);
-				}
-			};
-			constexpr inline auto less_equal_op = []<non_bool_scalar T>(T x, T y) noexcept
-			{
-				if (std::is_constant_evaluated())
-				{
-					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x <= y);
-				}
-				else
-				{
-					return std::islessequal(x, y);
-				}
-			};
-			constexpr inline auto greater_op = []<non_bool_scalar T>(T x, T y) noexcept
-			{
-				if (std::is_constant_evaluated())
-				{
-					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x > y);
-				}
-				else
-				{
-					return std::isgreater(x, y);
-				}
-			};
-			constexpr inline auto greater_equal_op = []<non_bool_scalar T>(T x, T y) noexcept
-			{
-				if (std::is_constant_evaluated())
-				{
-					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x >= y);
-				}
-				else
-				{
-					return std::isgreaterequal(x, y);
-				}
-			};
-			constexpr inline auto equal_op = []<non_bool_scalar T>(T x, T y) noexcept
-			{
-				if (std::is_constant_evaluated())
-				{
-					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x == y);
-				}
-				else
-				{
-					return std::isunordered(x, y) ? false : x == y;
-				}
-			};
-			constexpr inline auto not_equal_op = []<non_bool_scalar T>(T x, T y) noexcept
-			{
-				if (std::is_constant_evaluated())
-				{
-					return (cxcm::isnan(x) || cxcm::isnan(y)) ? false : (x != y);
-				}
-				else
-				{
-					return std::isunordered(x, y) ? true : x != y;
-				}
-			};
+			constexpr inline auto less_op =				[]<non_bool_scalar T>(T x, T y) noexcept { return (x < y); };
+			constexpr inline auto less_equal_op =		[]<non_bool_scalar T>(T x, T y) noexcept { return (x <= y); };
+			constexpr inline auto greater_op =			[]<non_bool_scalar T>(T x, T y) noexcept { return (x > y); };
+			constexpr inline auto greater_equal_op =	[]<non_bool_scalar T>(T x, T y) noexcept { return (x >= y); };
+			constexpr inline auto equal_op =			[]<non_bool_scalar T>(T x, T y) noexcept { return (x == y); };
+			constexpr inline auto not_equal_op =		[]<non_bool_scalar T>(T x, T y) noexcept { return (x != y); };
+
 			constexpr inline auto bool_equal_op =		[](bool x, bool y) noexcept	{ return x == y; };
 			constexpr inline auto bool_not_equal_op =	[](bool x, bool y) noexcept	{ return x != y; };
 			constexpr inline auto comp_not_op =			[](bool x) noexcept			{ return !x; };
@@ -6622,9 +6563,9 @@ namespace dsga
 		{
 			// for each column of the matrix, get a row component, and bundle
 			// these components up into a vector that represents the row
-			return [this, &row_index]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			return [this, &row_index]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				return basic_vector<T, C>{ columns.at(Is)[row_index]... };
+				return basic_vector<T, C>{ columns[Is][row_index]... };
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6726,23 +6667,23 @@ namespace dsga
 		}
 
 		// pointer interface
-		[[nodiscard]] constexpr basic_vector<T, R> * data() noexcept				{ return columns.data(); }
-		[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept	{ return columns.data(); }
+		[[nodiscard]] constexpr		  basic_vector<T, R> *data() noexcept			{ return columns.data(); }
+		[[nodiscard]] constexpr const basic_vector<T, R> *data() const noexcept		{ return columns.data(); }
 
 		constexpr void swap(basic_matrix &bm) noexcept								{ columns.swap(bm.columns); }
 
 		// support for range-based for loop -- gives column vectors
-		[[nodiscard]] constexpr iterator				begin() noexcept			{ return columns.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept			{ return columns.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept		{ return columns.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept		{ return begin(); }
-		[[nodiscard]] constexpr iterator				end() noexcept				{ return columns.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept				{ return columns.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept		{ return columns.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept		{ return end(); }
 
-		[[nodiscard]] constexpr reverse_iterator		rbegin() noexcept			{ return columns.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept			{ return columns.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept		{ return columns.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept	{ return rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator		rend() noexcept				{ return columns.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept				{ return columns.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept		{ return columns.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept		{ return rend(); }
 
@@ -6803,7 +6744,7 @@ namespace dsga
 
 		// outerProduct() - matrix from a column vector times a row vector
 		template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, std::size_t C2, typename D2>
-			requires ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
+		requires ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
 		[[nodiscard]] constexpr basic_matrix<T, C2, C1> outerProduct(const vector_base<W1, T, C1, D1> &lhs,
 																	 const vector_base<W2, T, C2, D2> &rhs) noexcept
 		{
