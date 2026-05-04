@@ -7,6 +7,10 @@
 
 #include "dsga.hxx"
 
+// opening include guard
+#if !defined(DSGA_TOLERANCE_HXX)
+#define DSGA_TOLERANCE_HXX
+
 //
 // performing tolerance checks
 //
@@ -39,6 +43,15 @@ namespace dsga
 		return abs(x) <= static_cast<T>(abs(tolerance));
 	}
 
+	template <floating_point_scalar T, floating_point_scalar U, floating_point_scalar V>
+	requires implicitly_convertible_to<U, T> && implicitly_convertible_to<V, T>
+	[[nodiscard]] constexpr bool within_tolerance(T x,
+												  U y,
+												  V tolerance) noexcept
+	{
+		return abs(x - y) <= static_cast<T>(abs(tolerance));
+	}
+
 	template <bool W, floating_point_scalar T, std::size_t C, typename D, floating_point_scalar U>
 	requires implicitly_convertible_to<U, T>
 	[[nodiscard]] constexpr auto within_tolerance(const vector_base<W, T, C, D> &x,
@@ -51,6 +64,22 @@ namespace dsga
 		else
 		{
 			return lessThanEqual(abs(x), basic_vector<T, C>(static_cast<T>(abs(tolerance))));
+		}
+	}
+
+	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, floating_point_scalar U>
+	requires implicitly_convertible_to<U, T>
+	[[nodiscard]] constexpr auto within_tolerance(const vector_base<W1, T, C, D1> &x,
+												  const vector_base<W2, T, C, D2> &y,
+												  U tolerance) noexcept
+	{
+		if constexpr (C == 1)
+		{
+			return within_tolerance(x[0], y[0], tolerance);
+		}
+		else
+		{
+			return lessThanEqual(abs(x - y), basic_vector<T, C>(static_cast<T>(abs(tolerance))));
 		}
 	}
 
@@ -67,19 +96,35 @@ namespace dsga
 			}
 			else
 			{
-				if constexpr (std::same_as<T, U>)
-				{
-					return lessThanEqual(abs(x), abs(tolerance));
-				}
-				else
-				{
-					return lessThanEqual(abs(x), static_cast<basic_vector<T, C2>>(abs(tolerance)));
-				}
+				return lessThanEqual(abs(x), static_cast<basic_vector<T, C2>>(abs(tolerance)));
 			}
 		}
 		else		// (C2 == 1)
 		{
 			return within_tolerance(x, tolerance[0]);
+		}
+	}
+
+	template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, std::size_t C2, typename D2, bool W3, typename D3>
+	requires ((C1 == C2) || (C2 == 1))
+	[[nodiscard]] constexpr auto within_tolerance(const vector_base<W1, T, C1, D1> &x,
+												  const vector_base<W2, T, C1, D2> &y,
+												  const vector_base<W3, T, C2, D3> &tolerance) noexcept
+	{
+		if constexpr (C1 == C2)
+		{
+			if constexpr (C1 == 1 && C2 == 1)
+			{
+				return within_tolerance(x[0], y[0], tolerance[0]);
+			}
+			else
+			{
+				return lessThanEqual(abs(x - y), abs(tolerance));
+			}
+		}
+		else		// (C2 == 1)
+		{
+			return within_tolerance(x - y, tolerance[0]);
 		}
 	}
 
@@ -98,6 +143,18 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
+	template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
+	requires implicitly_convertible_to<U, T>
+	[[nodiscard]] constexpr basic_vector<bool, C> within_tolerance(const basic_matrix<T, C, R> &x,
+																   const basic_matrix<T, C, R> &y,
+																   U tolerance) noexcept
+	{
+		return [&x, &y, &tolerance] <std::size_t ...Is>(std::index_sequence<Is ...>) noexcept
+		{
+			return basic_vector<bool, C>(all(within_tolerance(x[Is], y[Is], tolerance)) ...);
+		}(std::make_index_sequence<C>{});
+	}
+
 	template <bool W, floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U, typename D>
 	requires implicitly_convertible_to<U, T>
 	[[nodiscard]] constexpr basic_vector<bool, C> within_tolerance(const basic_matrix<T, C, R> &arg,
@@ -106,6 +163,18 @@ namespace dsga
 		return [&arg, &tolerance] <std::size_t ...Is>(std::index_sequence<Is ...>) noexcept
 		{
 			return basic_vector<bool, C>(all(within_tolerance(arg[Is], tolerance[Is])) ...);
+		}(std::make_index_sequence<C>{});
+	}
+
+	template <bool W, floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U, typename D>
+	requires implicitly_convertible_to<U, T>
+	[[nodiscard]] constexpr basic_vector<bool, C> within_tolerance(const basic_matrix<T, C, R> &x,
+																   const basic_matrix<T, C, R> &y,
+																   const vector_base<W, U, C, D> &tolerance) noexcept
+	{
+		return [&x, &y, &tolerance] <std::size_t ...Is>(std::index_sequence<Is ...>) noexcept
+		{
+			return basic_vector<bool, C>(all(within_tolerance(x[Is], y[Is]), tolerance[Is]) ...);
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -120,7 +189,7 @@ namespace dsga
 												 T y,
 												 U tolerance) noexcept
 	{
-		return within_tolerance(x - y, tolerance);
+		return abs(x - y) <= static_cast<T>(abs(tolerance));
 	}
 
 	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, floating_point_scalar U>
@@ -129,7 +198,8 @@ namespace dsga
 												 const vector_base<W2, T, C, D2> &y,
 												 U tolerance) noexcept
 	{
-		return within_tolerance(distance(x, y), tolerance);
+		auto diff = x - y;
+		return dot(diff, diff) <= static_cast<T>(tolerance * tolerance);
 	}
 
 	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, floating_point_scalar U, typename D3>
@@ -152,7 +222,7 @@ namespace dsga
 											T y,
 											U tolerance) noexcept
 	{
-		return within_tolerance(x - y, tolerance);
+		return within_tolerance(x, y, tolerance);
 	}
 
 	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, floating_point_scalar U>
@@ -161,7 +231,14 @@ namespace dsga
 											const vector_base<W2, T, C, D2> &y,
 											U tolerance) noexcept
 	{
-		return all(within_tolerance(x - y, tolerance));
+		if constexpr (C == 1)
+		{
+			return within_box(x[0], y[0], tolerance);
+		}
+		else
+		{
+			return all(within_tolerance(x, y, tolerance));
+		}
 	}
 
 	template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, floating_point_scalar U, std::size_t C2, typename D3>
@@ -172,7 +249,14 @@ namespace dsga
 	{
 		if constexpr (C1 == C2)
 		{
-			return all(within_tolerance(x - y, tolerance));
+			if constexpr (C1 == 1 && C2 == 1)
+			{
+				return within_box(x[0], y[0], tolerance[0]);
+			}
+			else
+			{
+				return all(within_tolerance(x, y, tolerance));
+			}
 		}
 		else		// (C2 == 1)
 		{
@@ -189,7 +273,7 @@ namespace dsga
 											const basic_matrix<T, C, R> &y,
 											U tolerance) noexcept
 	{
-		return all(within_tolerance(x - y, tolerance));
+		return all(within_tolerance(x, y, tolerance));
 	}
 
 	template <bool W, floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U, typename D>
@@ -198,7 +282,10 @@ namespace dsga
 											const basic_matrix<T, C, R> &y,
 											const vector_base<W, U, C, D> &tolerance) noexcept
 	{
-		return all(within_tolerance(x - y, tolerance));
+		return all(within_tolerance(x, y, tolerance));
 	}
 
 }	// namespace dsga
+
+// closing include guard
+#endif
