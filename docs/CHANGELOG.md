@@ -1,5 +1,8 @@
 # Change Log
 
+* Refactored transform, tolerance, bezier, and basic example functions.
+* Refactored ```outerProduct()```. ```transpose()```, ```diagonal_matrix()```, other functions.
+* General refactoring.
 * Updated to cxcm v1.2.1.
 
 ### v2.2.15

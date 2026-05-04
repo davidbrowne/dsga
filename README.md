@@ -9,6 +9,9 @@
 v2.2.15
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* Refactored transform, tolerance, bezier, and basic example functions.
+* Refactored ```outerProduct()```. ```transpose()```, ```diagonal_matrix()```, other functions.
+* General refactoring.
 * Updated to cxcm v1.2.1.
 * v2.2.15
     * The attributes ```[[ likely ]]``` and ```[[ unlikely ]]``` were sprinkled around (and some were removed).
