@@ -11,27 +11,6 @@ using namespace dsga;
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
-// structs for demonstrating common initial sequence
-struct mock_storage
-{
-	std::array<double, 4> store;
-};
-
-struct mock_indexed
-{
-	std::array<double, 4> base;
-};
-
-struct mock_vector
-{
-	mock_indexed base;
-};
-
-struct mock_wrapper
-{
-	mock_storage base;
-};
-
 TEST_SUITE("type traits tests")
 {
 	TEST_CASE("type traits for storage_wrapper")
@@ -293,7 +272,35 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::ranges::common_range<dmat4>);
 	}
 
-	TEST_CASE("type traits for common initial sequence for anonymous union")
+	// structs for demonstrating common initial sequence
+	struct mock_storage
+	{
+		std::array<double, 4> store;
+	};
+
+	struct mock_indexed
+	{
+		std::array<double, 4> base;
+	};
+
+	struct mock_vector
+	{
+		mock_indexed base;
+	};
+
+	struct mock_wrapper
+	{
+		mock_storage base;
+	};
+
+
+#if defined(__cpp_lib_is_layout_compatible)
+	constexpr bool skip_common_initial_sequence_tests = false;
+#else
+	constexpr bool skip_common_initial_sequence_tests = true;
+#endif
+
+	TEST_CASE("type traits for common initial sequence for anonymous union" * doctest::skip(skip_common_initial_sequence_tests))
 	{
 		// for our vector and swizzling, we need to rely on union and the common initial sequence.
 		// anything written in the union via a union member that shares a common initial sequence with

@@ -103,78 +103,63 @@ constexpr T three_point_circle_radius(const dsga::vector_base<W1, T, 3u, D1> &p1
 	return T(0.5) * dsga::length(v) * dsga::length(w) * dsga::length(v + w) / dsga::length(cross_term);
 }
 
-// gives closest projection point from point to a line made from line segment p1 <=> p2
+// helper function for projecting a point onto a line, paying attention to attenuating roundoff
+template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, typename L>
+constexpr dsga::basic_vector<T, 3> project_to_line_helper(const L projection,
+														  const dsga::vector_base<W1, T, 3u, D1> &point,
+														  const dsga::vector_base<W2, T, 3u, D2> &p1,
+														  const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
+{
+	// line is zero length, so just return one of the endpoints
+	if (p1 == p2)
+		return p1;
+
+	// use the endpoint that is closer to the point as the start of the projection, to attenuate roundoff
+	auto hyp1 = point - p1;
+	auto hyp2 = point - p2;
+	if (dsga::dot(hyp1, hyp1) > dsga::dot(hyp2, hyp2))
+	{
+		// point is closer to p2
+		return projection(hyp2, p2, p1);
+	}
+	else
+	{
+		// point is closer to p1
+		return projection(hyp1, p1, p2);
+	}
+}
+
+// gives closest projection point from point to a line made from line segment p1 <=> p2, paying attention to attenuating roundoff
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr dsga::basic_vector<T, 3> project_to_line1(const dsga::vector_base<W1, T, 3u, D1> &point,
 													const dsga::vector_base<W2, T, 3u, D2> &p1,
 													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
-	auto u = dsga::basic_vector(p1);
-	auto hyp = point - u;
-	auto v = p2 - p1;
-	auto t = dsga::dot(hyp, v) / dsga::dot(v, v);
+	constexpr auto projection = [](const auto &hyp, const auto &start, const auto &end) noexcept -> dsga::basic_vector<T, 3>
+	{
+		auto v = end - start;
+		auto t = dsga::dot(hyp, v) / dsga::dot(v, v);
+		return start + (t * v);
+	};
 
-	return u + (t * v);
+	return project_to_line_helper(projection, point, p1, p2);
 }
 
-// gives closest projection point from point to a line made from line segment p1 <=> p2
+// alternate implementation of project_to_line()
+// From Section 9, #4 and #6 in the paper, paying attention to attenuating roundoff
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr dsga::basic_vector<T, 3> project_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
 													const dsga::vector_base<W2, T, 3u, D2> &p1,
 													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
 {
-	auto hyp1 = point - p1;
-	auto hyp2 = point - p2;
-	if (dsga::dot(hyp1, hyp1) > dsga::dot(hyp2, hyp2))
+	//Section 9, #4 in the paper
+	constexpr auto projection = [](const auto &hyp, const auto &start, const auto &end) noexcept -> dsga::basic_vector<T, 3>
 	{
-		return project_to_line1(point, p2, p1);
-	}
-	else
-	{
-		return project_to_line1(point, p1, p2);
-	}
-}
+		auto v = end - start;
+		return start + dsga::outerProduct(v, v) * hyp / dsga::dot(v, v);
+	};
 
-// same as above, different implementation
-// From Section 9, #4 in the paper
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::basic_vector<T, 3> project_to_line3(const dsga::vector_base<W1, T, 3u, D1> &point,
-													const dsga::vector_base<W2, T, 3u, D2> &p1,
-													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
-{
-	auto u = dsga::basic_vector(p1);
-	auto hyp = point - u;
-	auto v = p2 - p1;
-
-	return u + dsga::outerProduct(v, v) * hyp / dsga::dot(v, v);
-}
-
-// same as above, different implementation, paying more attention to attenuating roundoff
-// From Section 9, #6 in the paper
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::basic_vector<T, 3> project_to_line4(const dsga::vector_base<W1, T, 3u, D1> &point,
-													const dsga::vector_base<W2, T, 3u, D2> &p1,
-													const dsga::vector_base<W3, T, 3u, D3> &p2) noexcept
-{
-	auto hyp1 = point - p1;
-	auto v1 = p2 - p1;
-	auto hyp2 = point - p2;
-	auto v2 = p1 - p2;
-
-	// start values for p1-based approached
-	auto hyp = hyp1;
-	auto v = v1;
-	auto u = dsga::basic_vector(p1);
-
-	// if length of hyp2 is less than length of hyp1, do a p2-based approach
-	if (dsga::dot(hyp1, hyp1) > dsga::dot(hyp2, hyp2))
-	{
-		hyp = hyp2;
-		v = v2;
-		u = dsga::basic_vector(p2);
-	}
-
-	return u + dsga::outerProduct(v, v) * hyp / dsga::dot(v, v);
+	return project_to_line_helper(projection, point, p1, p2);
 }
 
 // gives minimum distance from point to a line made from line segment p1 <=> p2
@@ -191,7 +176,7 @@ constexpr T distance_to_line1(const dsga::vector_base<W1, T, 3u, D1> &point,
 	return dsga::length(hyp - (t * v1));
 }
 
-// gives minimum distance from point to a line made from line segment p1 <=> p2
+// gives minimum distance from point to a line made from line segment p1 <=> p2, paying attention to attenuating roundoff
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
 constexpr T distance_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
 							  const dsga::vector_base<W2, T, 3u, D2> &p1,
@@ -217,91 +202,72 @@ constexpr T distance_to_line2(const dsga::vector_base<W1, T, 3u, D1> &point,
 	return dsga::length(hyp - (t * v));
 }
 
-// project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points
-// From #3 in the paper
+// helper function for projecting a point to a plane, paying attention to attenuating roundoff
+template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4, typename L>
+constexpr dsga::basic_vector<T, 3> project_to_plane_helper(const L plane_projection,
+														   const dsga::vector_base<W1, T, 3u, D1> &point,
+														   const dsga::vector_base<W2, T, 3u, D2> &p1,
+														   const dsga::vector_base<W3, T, 3u, D3> &p2,
+														   const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
+{
+	auto v1 = p2 - p1;
+	auto v2 = p3 - p2;
+	auto v3 = p1 - p3;
+
+	auto dist1 = dsga::dot(v1, v1);
+	auto dist2 = dsga::dot(v2, v2);
+	auto dist3 = dsga::dot(v3, v3);
+
+	if (dist1 > dist2)
+	{
+		if (dist1 > dist3)
+			return plane_projection(point, p1, p2, p3);
+		else
+			return plane_projection(point, p3, p1, p2);
+	}
+	else
+	{
+		if (dist2 > dist3)
+			return plane_projection(point, p2, p3, p1);
+		else
+			return plane_projection(point, p3, p1, p2);
+	}
+}
+
+// project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points, attenuating roundoff
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
 constexpr dsga::basic_vector<T, 3> project_to_plane1(const dsga::vector_base<W1, T, 3u, D1> &point,
 													 const dsga::vector_base<W2, T, 3u, D2> &p1,
 													 const dsga::vector_base<W3, T, 3u, D3> &p2,
 													 const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
 {
-	auto p = [](const auto &u, auto &v, const auto &w) { return dsga::cross_matrix(v - u) * (w - u); };
-	auto p_val = p(p1, p2, p3);
-	auto p_cross = dsga::cross_matrix(p_val);
+	constexpr auto plane_projection = [](const auto &pt, const auto &pt1, const auto &pt2, const auto &pt3) noexcept
+	{
+		constexpr auto triangle_norm = [](const auto &u, const auto &v, const auto &w) noexcept { return dsga::cross((v - u), (w - u)); };
+		auto N = triangle_norm(pt1, pt2, pt3);
+		auto d = dsga::dot(N, pt1);
+		return pt - ((dsga::dot(N, pt) - d) / dsga::dot(N, N)) * N;
+	};
 
-	return p1 - p_cross * p_cross * (point - p1) / dsga::dot(p_val, p_val);
+	return project_to_plane_helper(plane_projection, point, p1, p2, p3);
 }
 
-// same as above, different implementation
+// project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points
+// From #3 in the paper, attenuating roundoff
 template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
 constexpr dsga::basic_vector<T, 3> project_to_plane2(const dsga::vector_base<W1, T, 3u, D1> &point,
 													 const dsga::vector_base<W2, T, 3u, D2> &p1,
 													 const dsga::vector_base<W3, T, 3u, D3> &p2,
 													 const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
 {
-	auto triangle_norm = [](const auto &u, auto &v, const auto &w) { return dsga::cross_matrix(v - u) * (w - u); };
-	auto N = triangle_norm(p1, p2, p3);
-	auto d = dsga::dot(N, p1);
+	constexpr auto plane_projection = [](const auto &pt, const auto &pt1, const auto &pt2, const auto &pt3) noexcept
+	{
+		constexpr auto triangle_norm = [](const auto &u, const auto &v, const auto &w) noexcept { return dsga::cross((v - u), (w - u)); };
+		auto p_val = triangle_norm(pt1, pt2, pt3);
+		auto p_cross = dsga::cross_matrix(p_val);
 
-	return point - ((dsga::dot(N, point) - d) / dsga::dot(N, N)) * N;
+		return pt1 - p_cross * p_cross * (pt - pt1) / dsga::dot(p_val, p_val);
+	};
+
+	return project_to_plane_helper(plane_projection, point, p1, p2, p3);
 }
-
-#if ATTENUATE_ROUNDOFF
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-constexpr dsga::basic_vector<T, 3> project_to_plane(const dsga::vector_base<W1, T, 3u, D1> &point,
-													const dsga::vector_base<W2, T, 3u, D2> &p1,
-													const dsga::vector_base<W3, T, 3u, D3> &p2,
-													const dsga::vector_base<W4, T, 3u, D4> &p3) noexcept
-{
-	auto p = [](const auto &u, auto &v, const auto &w) { return dsga::cross_matrix(v - u) * (w - u); };
-	auto delta_u = p3 - p2;
-	auto delta_v = p1 - p3;
-	auto delta_w = p2 - p1;
-
-	auto md2u = dsga::dot(delta_u, delta_u);
-	auto md2v = dsga::dot(delta_v, delta_v);
-	auto md2w = dsga::dot(delta_w, delta_w);
-	dsga::basic_vector<T, 3u> p_val{0};
-
-	// for p_val, choose u that maximizes (v - w).length()
-	if (md2u > md2v)
-	{
-		if (md2u > md2w)
-			p_val = p(p1, p2, p3);
-		else
-			p_val = p(p3, p1, p2);
-	}
-	else
-	{
-		if (md2v > md2w)
-			p_val = p(p2, p3, p1);
-		else
-			p_val = p(p3, p1, p2);
-	}
-
-	auto p_cross = dsga::cross_matrix(p_val);
-
-	dsga::basic_vector<T, 3u> anchor{0};
-	auto m2u = dsga::dot(p1, p1);
-	auto m2v = dsga::dot(p2, p2);
-	auto m2w = dsga::dot(p3, p3);
-
-	// for anchor point, choose u that minimizes u.length()
-	if (m2u < m2v)
-	{
-		if (m2u < m2w)
-			anchor = p1;
-		else
-			anchor = p3;
-	}
-	else
-	{
-		if (m2u < m2v)
-			anchor = p1;
-		else
-			anchor = p2;
-	}
-
-	return anchor - p_cross * p_cross * (point - anchor) / dsga::dot(p_val, p_val);
-}
-#endif

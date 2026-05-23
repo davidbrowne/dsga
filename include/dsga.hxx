@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 2;
 	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 15;
+	constexpr inline int DSGA_PATCH_VERSION = 16;
 
 	namespace cxcm
 	{
@@ -1925,7 +1925,7 @@ namespace dsga
 	{
 		return [&first, &second]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return ((!std::isunordered(first[Is], second[Is]) && (first[Is] == static_cast<T1>(second[Is]))) && ...);
+			return ((first[Is] == static_cast<T1>(second[Is])) && ...);
 		}(std::make_index_sequence<S>{});
 	}
 
@@ -5700,38 +5700,34 @@ namespace dsga
 		// lambdas for functions
 		namespace lambda_ops
 		{
-			constexpr inline auto abs_op =			[]<dimensional_scalar T>(T arg) noexcept		{ return cxcm::abs(arg); };
-			constexpr inline auto sign_op =			[]<dimensional_scalar T>(T arg) noexcept		{ return T(T(0) < arg) - T(arg < T(0)); };
-			constexpr inline auto floor_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::floor(arg); };
-			constexpr inline auto trunc_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::trunc(arg); };
-			constexpr inline auto round_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::round(arg); };
-			constexpr inline auto round_even_op =	[](floating_point_scalar auto arg) noexcept		{ return cxcm::round_even(arg); };
-			constexpr inline auto ceil_op =			[](floating_point_scalar auto arg) noexcept		{ return cxcm::ceil(arg); };
-			constexpr inline auto fract_op =		[](floating_point_scalar auto arg) noexcept		{ return cxcm::fract(arg); };
-			constexpr inline auto mod_op =			[]<floating_point_scalar T>(T x, T y) noexcept	{ return x - y * cxcm::floor(x / y); };
-			constexpr inline auto modf_op =			[]<floating_point_scalar T>(T x, T y) noexcept	{ return cxcm::isinf(x) ? T(0) : (x - y); };
-			constexpr inline auto min_op =			[]<non_bool_scalar T>(T x, T y) noexcept		{ return std::min(x ,y); };
-			constexpr inline auto max_op =			[]<non_bool_scalar T>(T x, T y) noexcept		{ return std::max(x ,y); };
+			constexpr inline auto abs_op =			[]<dimensional_scalar T>(T arg) noexcept			{ return cxcm::abs(arg); };
+			constexpr inline auto sign_op =			[]<dimensional_scalar T>(T arg) noexcept			{ return T(T(0) < arg) - T(arg < T(0)); };
+			constexpr inline auto floor_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::floor(arg); };
+			constexpr inline auto trunc_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::trunc(arg); };
+			constexpr inline auto round_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::round(arg); };
+			constexpr inline auto round_even_op =	[](floating_point_scalar auto arg) noexcept			{ return cxcm::round_even(arg); };
+			constexpr inline auto ceil_op =			[](floating_point_scalar auto arg) noexcept			{ return cxcm::ceil(arg); };
+			constexpr inline auto fract_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::fract(arg); };
+			constexpr inline auto mod_op =			[]<floating_point_scalar T>(T x, T y) noexcept		{ return x - y * cxcm::floor(x / y); };
+			constexpr inline auto modf_op =			[]<floating_point_scalar T>(T x, T y) noexcept		{ return cxcm::isinf(x) ? T(0) : (x - y); };
+			constexpr inline auto min_op =			[]<non_bool_scalar T>(T x, T y) noexcept			{ return std::min(x ,y); };
+			constexpr inline auto max_op =			[]<non_bool_scalar T>(T x, T y) noexcept			{ return std::max(x ,y); };
 			constexpr inline auto clamp_op =		[]<non_bool_scalar T>(T x, T min_val, T max_val) noexcept
 			{
-				if (std::is_constant_evaluated())
+				// this is confusing, because std::clamp is constexpr since it was introduced, so it should be usable in
+				// constant evaluation, given constexpr variables. However, both gcc and MSVC fail to compile it in that
+				// context, so we have to explicitly write out the logic here to make it work in constant evaluation contexts
+				if (x < min_val)
 				{
-					if (!cxcm::isnan(x) && !cxcm::isnan(max_val) && (x > max_val))
-					{
-						return max_val;
-					}
-					else if (!cxcm::isnan(x) && !cxcm::isnan(min_val) && (x < min_val))
-					{
-						return min_val;
-					}
-					else
-					{
-						return x;
-					}
+					return min_val;
+				}
+				else if (x > max_val)
+				{
+					return max_val;
 				}
 				else
 				{
-					return std::clamp(x, min_val, max_val);
+					return x;
 				}
 			};
 
@@ -6343,13 +6339,6 @@ namespace dsga
 								(a[0] * b[1]) - (b[0] * a[1])};
 		}
 
-		template <floating_point_scalar T>
-		[[nodiscard]] constexpr basic_vector<T, 3> cross(const basic_vector<T, 3> &a,
-														 const basic_vector<T, 3> &b) noexcept
-		{
-			return (a.yzx * b.zxy) - (a.zxy * b.yzx);
-		}
-
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
 		[[nodiscard]] constexpr T length(const vector_base<W, T, C, D> &x) noexcept
 		{
@@ -6489,8 +6478,7 @@ namespace dsga
 		using commontype = std::common_type_t<T1, T2>;
 		return [&first, &second]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
-			return ((!std::isunordered(first[Is], second[Is]) &&
-					(static_cast<commontype>(first[Is]) == static_cast<commontype>(second[Is]))) && ...);
+			return ((static_cast<commontype>(first[Is]) == static_cast<commontype>(second[Is])) && ...);
 		}(std::make_index_sequence<C>{});
 	}
 
@@ -6503,6 +6491,41 @@ namespace dsga
 		using commontype = std::common_type_t<T1, T2>;
 		return (static_cast<commontype>(first[0]) == static_cast<commontype>(second));
 	}
+
+	namespace dm_detail
+	{
+		// create a column vector that is to be part of a diagonal matrix, where all elements
+		// are 0 except for the element at index, with the value being diagonal_vector[index].
+		template <bool W, floating_point_scalar T, std::size_t C, typename D>
+		requires (C > 1) && (C <= 4)
+		[[nodiscard]] constexpr auto diagonal_column(const vector_base<W, T, C, D> &diagonal_vector, std::size_t index) noexcept
+		{
+			basic_vector<T, C> val;
+
+			[&val, &diagonal_vector, index]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				((val[Is] = (Is == index) ? diagonal_vector[index] : T(0)), ...);
+			}(std::make_index_sequence<C>{});
+
+			return val;
+		}
+
+		// create a column vector that is to be part of a diagonal matrix, where all elements
+		// are 0 except for the element at index, with the value being diagonal_number.
+		template <floating_point_scalar T, std::size_t C>
+		requires (C > 1) && (C <= 4)
+		[[nodiscard]] constexpr auto diagonal_column(T diagonal_number, std::size_t index) noexcept
+		{
+			basic_vector<T, C> val;
+
+			[&val, diagonal_number, index]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			{
+				((val[Is] = (Is == index) ? diagonal_number : T(0)), ...);
+			}(std::make_index_sequence<C>{});
+
+			return val;
+		}
+	}	// namespace dm_detail
 
 	//
 	// basic_matrix
@@ -6606,11 +6629,10 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, T> && (C == R)
 		explicit constexpr basic_matrix(U arg) noexcept
-			: columns{}
 		{
-			[this, &arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			[this, arg] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((columns.at(Is)[Is] = static_cast<T>(arg)), ...);
+				(((*this)[Is] = dm_detail::diagonal_column<T, C>(static_cast<T>(arg), Is)),...);
 			}(std::make_index_sequence<C>{});
 		}
 
@@ -6748,20 +6770,28 @@ namespace dsga
 		[[nodiscard]] constexpr basic_matrix<T, C2, C1> outerProduct(const vector_base<W1, T, C1, D1> &lhs,
 																	 const vector_base<W2, T, C2, D2> &rhs) noexcept
 		{
-			return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			basic_matrix<T, C2, C1> val;
+
+			[&val, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				return basic_matrix<T, C2, C1>{ (lhs * rhs[Is]) ...};
+				((val[Is] = lhs * rhs[Is]), ...);
 			}(std::make_index_sequence<C2>{});
+
+			return val;
 		}
 
 		// transpose a matrix
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
 		[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept
 		{
-			return [&arg] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
+			basic_matrix<T, R, C> val;
+
+			[&val, &arg] <std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 			{
-				return basic_matrix<T, R, C>{arg.row(Is)...};
+				((val[Is] = arg.row(Is)), ...);
 			}(std::make_index_sequence<R>{});
+
+			return val;
 		}
 
 		// determinant() - only on square matrices
@@ -6942,22 +6972,6 @@ namespace dsga
 										   vec[1], -vec[0],	   T(0) };
 		}
 
-		namespace dm_detail
-		{
-			// create a column vector that is to be part of a diagonal matrix, where all elements
-			// are 0 except for the element at index, with the value being diagonal_source[index].
-			template <bool W, floating_point_scalar T, std::size_t C, typename D>
-			requires (C > 1) && (C <= 4)
-			[[nodiscard]] constexpr auto diagonal_column(const vector_base<W, T, C, D> &diagonal_vector, std::size_t index) noexcept
-			{
-				return 
-					[&diagonal_vector, index] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-					{
-						return basic_vector<T, C>{ (index == Is ? diagonal_vector[Is] : T(0))... };
-					}(std::make_index_sequence<C>{});
-			}
-		}	// namespace dm_detail
-
 		// not in glsl
 		//
 		// returns a symmetric diagonal matrix (square) using the vector parameter as the diagonal values,
@@ -6967,10 +6981,14 @@ namespace dsga
 		requires (C > 1) && (C <= 4)
 		[[nodiscard]] constexpr basic_matrix<T, C, C> diagonal_matrix(const vector_base<W, T, C, D> &vec) noexcept
 		{
-			return [&vec] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			basic_matrix<T, C, C> val;
+
+			[&val, &vec] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return basic_matrix<T, C, C>{ dm_detail::diagonal_column(vec, Is)... };
+				((val[Is] = dm_detail::diagonal_column(vec, Is)),...);
 			}(std::make_index_sequence<C>{});
+
+			return val;
 		}
 
 		// not in glsl

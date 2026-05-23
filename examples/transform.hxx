@@ -252,7 +252,7 @@ namespace dsga
 		rot_mat[2].xyz = basic_vector(k_x * k_z * v_t + k_y * s_t,
 									  k_y * k_z * v_t - k_x * s_t,
 									  k_z * k_z * v_t +		  c_t);
-		rot_mat[3].xyz = origin;									// origin is the translation part of the matrix
+		rot_mat[3].xyz = origin;
 
 		return rot_mat;
 	}

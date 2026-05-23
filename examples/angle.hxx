@@ -38,14 +38,15 @@ T angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
 }
 
 // using acos() for angle (in radians) is reportedly not as good as using atan() above in angle_between().
-// acos() is pretty stable when input is near 0, but not great when close to 1 or -1
+// acos() is pretty stable when input is near 0, but reportedly not great when close to 1 or -1.
+// haven't done any extensive analysis, but acos(close_to_1) doesn't seem as unreliable as reported
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
 requires ((C == 2) || (C == 3))
 T vect_angle(const dsga::vector_base<W1, T, C, D1> &v1,
 			 const dsga::vector_base<W2, T, C, D2> &v2) noexcept
 {
-	constexpr double tolerance = 1.25e-13;
-	auto length_prod = (dsga::length(v1) * dsga::length(v2));
+	constexpr T tolerance = T(1.25e-13);
+	T length_prod = (dsga::length(v1) * dsga::length(v2));
 
 	// this is to prevent dividing by a number close to zero.
 	if (length_prod <= tolerance)
@@ -54,6 +55,6 @@ T vect_angle(const dsga::vector_base<W1, T, C, D1> &v1,
 	// from dot_product == length(v1) * length(v2) * cos(angle)
 	// cos(angle) == dot_product / (length(v1) * length(v2))
 	// angle == acos(cos(angle)) == acos(dot_product / (length(v1) * length(v2)))
-	auto cos_value = dsga::clamp((dsga::dot(v1, v2) / length_prod), -1., 1.);
+	T cos_value = dsga::clamp((dsga::dot(v1, v2) / length_prod), T(-1), T(1));
 	return std::acos(cos_value);
 }

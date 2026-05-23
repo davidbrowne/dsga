@@ -20,7 +20,8 @@ namespace dsga
 	//
 	// Basic tolerance comparisons:
 	// 
-	//	* within_tolerance(x, tolerance) - vectors/matrices treated as independent components for checks on x
+	//	* within_tolerance(x, tolerance) - vectors/matrices treated as independent components for checks on x close to 0
+	//	* within_tolerance(x, y, tolerance) - vectors/matrices treated as independent components for checks on x close to y
 	//	* within_distance(x, y, tolerance) - vectors treated as a whole for Euclidean distance check on x and y
 	//	* within_box(x, y, tolerance) - vectors/matrices treated as whole for orthogonal box check on x and y.
 	//

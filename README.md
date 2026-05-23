@@ -6,13 +6,14 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.15
+v2.2.16
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
-* Refactored transform, tolerance, bezier, and basic example functions.
-* Refactored ```outerProduct()```. ```transpose()```, ```diagonal_matrix()```, other functions.
-* General refactoring.
-* Updated to cxcm v1.2.1.
+* v2.2.16
+    * Refactored transform, tolerance, bezier, angle, and basic example functions.
+    * Refactored ```cross()```, ```clamp()```, ```outerProduct()```. ```transpose()```, ```diagonal_matrix()```, some ```basic_matrix``` constructors, and other functions.
+    * General refactoring and formatting.
+    * Updated to cxcm v1.2.1.
 * v2.2.15
     * The attributes ```[[ likely ]]``` and ```[[ unlikely ]]``` were sprinkled around (and some were removed).
     * Refactored ```determinant()``` and ```inverse()``` for matrices.
@@ -20,7 +21,7 @@ v2.2.15
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2026 v18.5
+* Microsoft Visual Studio 2026 v18.6
 * Microsoft Visual Studio 2022 v17.14
 * gcc v15.2
 * clang v22.1
@@ -347,7 +348,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.15`
+Current version: `v2.2.16`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v2.2.15](https://github.com/davidbrowne/dsga/releases)
@@ -376,7 +377,7 @@ The tests have been most recently run on:
 
 ### Windows 11 Native
 
-* **MSVC 2026 v18.5**
+* **MSVC 2026 v18.6**
 
 ```
 [doctest] doctest version is "2.5.1"
