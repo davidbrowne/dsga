@@ -19,6 +19,10 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::vector_base<Writabl
 	{
 		o << std::boolalpha;
 	}
+	else if constexpr (dsga::floating_point_scalar<T>)
+	{
+		o << std::setprecision(std::numeric_limits<double>::max_digits10);
+	}
 
 	o << "[" << derived[0];
 	for (int i = 1; i < derived.length(); ++i)
@@ -32,6 +36,10 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::basic_vector<T, Siz
 	if constexpr (std::same_as<bool, T>)
 	{
 		o << std::boolalpha;
+	}
+	else if constexpr (dsga::floating_point_scalar<T>)
+	{
+		o << std::setprecision(std::numeric_limits<double>::max_digits10);
 	}
 
 	o << "[" << v[0];
@@ -47,6 +55,10 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::indexed_vector<T, S
 	{
 		o << std::boolalpha;
 	}
+	else if constexpr (dsga::floating_point_scalar<T>)
+	{
+		o << std::setprecision(std::numeric_limits<double>::max_digits10);
+	}
 
 	o << "[" << v[0];
 	for (int i = 1; i < v.length(); ++i)
@@ -60,6 +72,10 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::storage_wrapper<T, 
 	if constexpr (std::same_as<bool, T>)
 	{
 		o << std::boolalpha;
+	}
+	else if constexpr (dsga::floating_point_scalar<T>)
+	{
+		o << std::setprecision(std::numeric_limits<double>::max_digits10);
 	}
 
 	o << "[" << v[0];

@@ -6,6 +6,7 @@
 
 #include "dsga.hxx"
 #include "stl.hxx"
+#include "tolerance.hxx"
 
 #include <string>
 #include <filesystem>
@@ -34,13 +35,17 @@ struct facet_data
 // make sure data has no infinities or NaNs
 constexpr bool definite_coordinate_triple(const dsga::vec3 &data) noexcept
 {
-	return !(dsga::any(dsga::isinf(data)) || dsga::any(dsga::isnan(data)));
+	return !(dsga::any(dsga::isinf(data)) ||
+			 dsga::any(dsga::isnan(data)));
 }
 
-// make sure normal vector has no infinities or NaNs and is not the zero-vector { 0, 0, 0 }
+// make sure normal vector has no infinities or NaNs and length is within tolerance of 1.0
 constexpr bool valid_normal_vector(const dsga::vec3 &normal) noexcept
 {
-	return definite_coordinate_triple(normal) && dsga::any(dsga::notEqual(normal, dsga::vec3(0)));
+	constexpr float tolerance = 1e-10f;
+	return
+		definite_coordinate_triple(normal) &&
+		dsga::within_tolerance(dsga::length(normal), 1.0f, tolerance);
 }
 
 // not checking for positive-only first octant data -- we are allowing zeros and negative values
@@ -49,10 +54,12 @@ constexpr bool valid_vertex_relaxed(const dsga::vec3 &vertex) noexcept
 	return definite_coordinate_triple(vertex);
 }
 
-// strict version where all vertex coordinates must be positive-definite
+// strict version where all vertex coordinates must be positive-definite, in the first octant
 constexpr bool valid_vertex_strict(const dsga::vec3 &vertex) noexcept
 {
-	return definite_coordinate_triple(vertex) && dsga::all(dsga::greaterThan(vertex, dsga::vec3(0)));
+	return 
+		definite_coordinate_triple(vertex) &&
+		dsga::all(dsga::greaterThan(vertex, dsga::vec3(0)));
 }
 
 // binary STL is little-endian, so if native is big-endian, convert float from native to little-endian and vice versa.
