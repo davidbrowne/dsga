@@ -142,7 +142,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <ControlFlowGuard>Guard</ControlFlowGuard>
-      <AdditionalOptions>/Ob3 /D "_MSVC_STL_DESTRUCTOR_TOMBSTONES"  /D "_MSVC_STL_HARDENING" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Ob3 /D "_MSVC_STL_DESTRUCTOR_TOMBSTONES" /D "_MSVC_STL_HARDENING" /bigobj %(AdditionalOptions)</AdditionalOptions>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <Optimization>Disabled</Optimization>
@@ -167,7 +167,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Ob3 /D "_MSVC_STL_DESTRUCTOR_TOMBSTONES" /D "_MSVC_STL_HARDENING" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Ob3 /D "_MSVC_STL_DESTRUCTOR_TOMBSTONES" /D "_MSVC_STL_HARDENING" /bigobj %(AdditionalOptions)</AdditionalOptions>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <TreatWarningAsError>true</TreatWarningAsError>

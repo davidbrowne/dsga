@@ -35,9 +35,9 @@ namespace dsga
 
 	// version info
 
-	constexpr inline int DSGA_MAJOR_VERSION = 2;
-	constexpr inline int DSGA_MINOR_VERSION = 2;
-	constexpr inline int DSGA_PATCH_VERSION = 16;
+	constexpr inline int DSGA_MAJOR_VERSION = 3;
+	constexpr inline int DSGA_MINOR_VERSION = 0;
+	constexpr inline int DSGA_PATCH_VERSION = 0;
 
 	namespace cxcm
 	{
@@ -1875,10 +1875,6 @@ namespace dsga
 			return store.at(static_cast<std::size_t>(index));
 		}
 
-		// in general, data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable		{ return store.data(); }
-		[[nodiscard]] constexpr const T *data() const noexcept					{ return store.data(); }
-
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr sequence_pack sequence() noexcept		{ return sequence_pack{}; }
 
@@ -2007,12 +2003,6 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept			{ return this->as_derived()[index]; }
-
-		// physically contiguous access via pointer.
-		// DON"T ASSSUME data() contiguous order is same as operator[] "logically contiguous" order
-		// data() should be used with sequence() as the "logically contiguous" offsets
-		[[nodiscard]] constexpr		  T *data() noexcept requires Writable			{ return this->as_derived().data(); }
-		[[nodiscard]] constexpr const T *data() const noexcept						{ return this->as_derived().data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
 		// this is only really helpful if you use data() in your API, because operator [] already adjusts for sequencing.
@@ -2584,12 +2574,6 @@ namespace dsga
 			return base.at(offsets.at(static_cast<std::size_t>(index)));
 		}
 
-		// physically contiguous
-		[[nodiscard]] constexpr		  T *data() noexcept requires Writable		{ return base.data(); }
-
-		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept					{ return base.data(); }
-
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept					{ return sequence_pack{}; }
 
@@ -3015,12 +2999,6 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
-		// physically contiguous
-		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable						{ return base.data(); }
-
-		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
-
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
@@ -3196,12 +3174,6 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
-
-		// physically contiguous
-		[[nodiscard]] constexpr		  T *data() noexcept requires Writable						{ return base.data(); }
-
-		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
@@ -3470,12 +3442,6 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
-
-		// physically contiguous
-		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable						{ return base.data(); }
-
-		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
@@ -3967,12 +3933,6 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
-
-		// physically contiguous
-		[[nodiscard]] constexpr		  T	*data() noexcept requires Writable						{ return base.data(); }
-
-		// physically contiguous
-		[[nodiscard]] constexpr const T *data() const noexcept									{ return base.data(); }
 
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
@@ -5700,18 +5660,26 @@ namespace dsga
 		// lambdas for functions
 		namespace lambda_ops
 		{
-			constexpr inline auto abs_op =			[]<dimensional_scalar T>(T arg) noexcept			{ return cxcm::abs(arg); };
-			constexpr inline auto sign_op =			[]<dimensional_scalar T>(T arg) noexcept			{ return T(T(0) < arg) - T(arg < T(0)); };
+			constexpr inline auto abs_op =			[]<non_bool_scalar T>(T arg) noexcept				{ return cxcm::abs(arg); };
+			constexpr inline auto sign_op =			[]<non_bool_scalar T>(T arg) noexcept				{ return T(T(0) < arg) - T(arg < T(0)); };
 			constexpr inline auto floor_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::floor(arg); };
 			constexpr inline auto trunc_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::trunc(arg); };
 			constexpr inline auto round_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::round(arg); };
 			constexpr inline auto round_even_op =	[](floating_point_scalar auto arg) noexcept			{ return cxcm::round_even(arg); };
 			constexpr inline auto ceil_op =			[](floating_point_scalar auto arg) noexcept			{ return cxcm::ceil(arg); };
 			constexpr inline auto fract_op =		[](floating_point_scalar auto arg) noexcept			{ return cxcm::fract(arg); };
-			constexpr inline auto mod_op =			[]<floating_point_scalar T>(T x, T y) noexcept		{ return x - y * cxcm::floor(x / y); };
 			constexpr inline auto modf_op =			[]<floating_point_scalar T>(T x, T y) noexcept		{ return cxcm::isinf(x) ? T(0) : (x - y); };
 			constexpr inline auto min_op =			[]<non_bool_scalar T>(T x, T y) noexcept			{ return std::min(x ,y); };
 			constexpr inline auto max_op =			[]<non_bool_scalar T>(T x, T y) noexcept			{ return std::max(x ,y); };
+			constexpr inline auto mod_op =			[]<floating_point_scalar T>(T x, T y) noexcept
+			{
+				[[ unlikely ]] if (y == 0)
+				{
+					return std::numeric_limits<T>::quiet_NaN();
+				}
+				return x - y * cxcm::floor(x / y);
+			};
+
 			constexpr inline auto clamp_op =		[]<non_bool_scalar T>(T x, T min_val, T max_val) noexcept
 			{
 				// this is confusing, because std::clamp is constexpr since it was introduced, so it should be usable in
@@ -6687,10 +6655,6 @@ namespace dsga
 
 			return *this;
 		}
-
-		// pointer interface
-		[[nodiscard]] constexpr		  basic_vector<T, R> *data() noexcept			{ return columns.data(); }
-		[[nodiscard]] constexpr const basic_vector<T, R> *data() const noexcept		{ return columns.data(); }
 
 		constexpr void swap(basic_matrix &bm) noexcept								{ columns.swap(bm.columns); }
 

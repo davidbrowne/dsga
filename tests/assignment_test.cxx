@@ -18,16 +18,6 @@ using namespace dsga;
 
 template <bool W1, dsga::dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 requires W1
-constexpr void pointer_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, const dsga::vector_base<W2, T, C, D2> &src) noexcept
-{
-	[&] <std::size_t ...Is, std::size_t ...Js>(std::index_sequence<Is ...>, std::index_sequence<Js ...> /* dummy */) noexcept
-	{
-		((dest.data()[Is] = src.data()[Js]), ...);
-	}(D1::sequence(), D2::sequence());
-}
-
-template <bool W1, dsga::dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires W1
 constexpr void iterator_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, const dsga::vector_base<W2, T, C, D2> &src) noexcept
 {
 	auto dest_iter = dest.begin();
@@ -140,25 +130,6 @@ TEST_SUITE("test assignment")
 	constexpr uvec2 utwo(0x207ef45f, 0xe518c41d);
 	constexpr uvec3 uthree(0xae50d46b, 0x10712fd0, 0x47946919);
 	constexpr uvec4 ufour(0x686e22e1, 0x4b79b211, 0x5f70e079, 0x5c30ee44);
-
-	// use vector_base functions sequence() and data() to perform assignment
-	TEST_CASE("pointer interface assignment")
-	{
-		const auto src = vec4(100, 200, 300, 400);
-		auto dest = vec4(0);
-
-		pointer_interface_copy(dest, src);
-		CHECK_EQ(dest, src);
-
-		pointer_interface_copy(dest.wzyx, src);
-		CHECK_EQ(dest, vec4(400, 300, 200, 100));
-
-		pointer_interface_copy(dest, src.wzyx);
-		CHECK_EQ(dest, vec4(400, 300, 200, 100));
-
-		pointer_interface_copy(dest.xzwy, src.wyxz);
-		CHECK_EQ(dest, vec4(400, 300, 200, 100));
-	}
 
 	// use iterators from vector_base to perform assignment
 	TEST_CASE("iterator interface assignment")

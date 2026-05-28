@@ -1,5 +1,10 @@
 # Change Log
 
+### v3.0.0
+* Major version bump with breaking changes to the API
+* Removed the ```data()``` interface for all vector types and matrix types, in order to remove the possibilty of pointer overruns.
+* Minor refactoring.
+
 ### v2.2.16
 * Refactored transform, tolerance, bezier, angle, and basic example functions.
 * Refactored ```cross()```, ```clamp()```, ```outerProduct()```. ```transpose()```, ```diagonal_matrix()```, some ```basic_matrix``` constructors, and other functions.

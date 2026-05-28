@@ -6,9 +6,13 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v2.2.16
+v3.0.0
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v3.0.0
+    * Major version bump with breaking changes to the API
+    * Removed the ```data()``` interface for all vector types and matrix types, in order to remove the possibilty of pointer overruns.
+    * Minor refactoring.
 * v2.2.16
     * Refactored transform, tolerance, bezier, angle, and basic example functions.
     * Refactored ```cross()```, ```clamp()```, ```outerProduct()```. ```transpose()```, ```diagonal_matrix()```, some ```basic_matrix``` constructors, and other functions.
@@ -22,7 +26,7 @@ v2.2.16
 ## Tested Compilers
 ### Regularly Tested
 * Microsoft Visual Studio 2026 v18.6
-* Microsoft Visual Studio 2022 v17.14
+* Microsoft Visual Studio 2022 v17.14 (has some constexpr variable limitations)
 * gcc v15.2
 * clang v22.1
 
@@ -348,10 +352,10 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v2.2.16`
+Current version: `v3.0.0`
 
 * Everything major has some tests, but code coverage is not 100%.
-* [Last Release: v2.2.15](https://github.com/davidbrowne/dsga/releases)
+* [Last Release: v3.0.0](https://github.com/davidbrowne/dsga/releases)
 * [Change Log](docs/CHANGELOG.md)
 
 ### The next steps
@@ -383,8 +387,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2189 | 2189 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2177 | 2177 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -394,8 +398,8 @@ The tests have been most recently run on:
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2189 | 2189 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2177 | 2177 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -407,8 +411,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2173 | 2173 passed | 0 failed |
+[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
+[doctest] assertions: 2161 | 2161 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -420,8 +424,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2189 | 2189 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2177 | 2177 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -433,8 +437,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2173 | 2173 passed | 0 failed |
+[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
+[doctest] assertions: 2161 | 2161 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -446,8 +450,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2189 | 2189 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2177 | 2177 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -459,8 +463,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2173 | 2173 passed | 0 failed |
+[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
+[doctest] assertions: 2161 | 2161 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -472,8 +476,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2189 | 2189 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
+[doctest] assertions: 2177 | 2177 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -485,8 +489,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2173 | 2173 passed | 0 failed |
+[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
+[doctest] assertions: 2161 | 2161 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -498,8 +502,8 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] doctest version is "2.5.1"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
-[doctest] assertions: 2173 | 2173 passed | 0 failed |
+[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
+[doctest] assertions: 2161 | 2161 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
