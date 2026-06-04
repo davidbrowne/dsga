@@ -418,11 +418,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 16.0**
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2177 | 2177 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2184 | 2184 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -431,11 +431,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
-[doctest] assertions: 2161 | 2161 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
+[doctest] assertions: 2168 | 2168 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -444,11 +444,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 14.2**
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2177 | 2177 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2184 | 2184 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -457,11 +457,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
-[doctest] assertions: 2161 | 2161 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
+[doctest] assertions: 2168 | 2168 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -470,11 +470,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 * **gcc 12.3**
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2177 | 2177 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2184 | 2184 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -483,11 +483,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
-[doctest] assertions: 2161 | 2161 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
+[doctest] assertions: 2168 | 2168 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -496,11 +496,11 @@ Performs all the unit tests except where there is lack of support for ```std::is
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
-[doctest] assertions: 2161 | 2161 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
+[doctest] assertions: 2168 | 2168 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
