@@ -18,8 +18,8 @@
 
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
 requires ((C == 2) || (C == 3))
-T angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
-				const dsga::vector_base<W2, T, C, D2> &v2) noexcept
+T angle_between(const dsga::vec_interface<W1, T, C, D1> &v1,
+				const dsga::vec_interface<W2, T, C, D2> &v2) noexcept
 {
 	// scale the vectors to be the same length.
 	// this makes the sum and difference of the two vectors intersect perpendicularly,
@@ -42,8 +42,8 @@ T angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
 // haven't done any extensive analysis, but acos(close_to_1) doesn't seem as unreliable as reported
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
 requires ((C == 2) || (C == 3))
-T vect_angle(const dsga::vector_base<W1, T, C, D1> &v1,
-			 const dsga::vector_base<W2, T, C, D2> &v2) noexcept
+T vect_angle(const dsga::vec_interface<W1, T, C, D1> &v1,
+			 const dsga::vec_interface<W2, T, C, D2> &v2) noexcept
 {
 	constexpr T tolerance = T(1.25e-13);
 	T length_prod = (dsga::length(v1) * dsga::length(v2));

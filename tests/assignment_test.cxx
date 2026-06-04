@@ -14,11 +14,12 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 
 template <bool W1, dsga::dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 requires W1
-constexpr void iterator_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, const dsga::vector_base<W2, T, C, D2> &src) noexcept
+constexpr void iterator_interface_copy(dsga::vec_interface<W1, T, C, D1> &dest, const dsga::vec_interface<W2, T, C, D2> &src) noexcept
 {
 	auto dest_iter = dest.begin();
 	auto src_iter = src.cbegin();
@@ -26,8 +27,8 @@ constexpr void iterator_interface_copy(dsga::vector_base<W1, T, C, D1> &dest, co
 		*dest_iter++ = *src_iter++;
 }
 
-// test swap() for basic_vector. basic_Vector swap() uses storage_wrapper.swap() under the hood
-// swap() doesn't work as well conceptually for indexed_vector
+// test swap() for vec. vec swap() uses vec_storage.swap() under the hood
+// swap() doesn't work as well conceptually for swizzle_vec
 TEST_SUITE("vector swap")
 {
 	TEST_CASE("1d swap")
@@ -131,7 +132,7 @@ TEST_SUITE("test assignment")
 	constexpr uvec3 uthree(0xae50d46b, 0x10712fd0, 0x47946919);
 	constexpr uvec4 ufour(0x686e22e1, 0x4b79b211, 0x5f70e079, 0x5c30ee44);
 
-	// use iterators from vector_base to perform assignment
+	// use iterators from vec_interface to perform assignment
 	TEST_CASE("iterator interface assignment")
 	{
 		const auto src = vec4(100, 200, 300, 400);
@@ -150,7 +151,7 @@ TEST_SUITE("test assignment")
 		CHECK_EQ(dest, vec4(400, 300, 200, 100));
 	}
 
-	// all standard assignment *is* implemented inside the class, so each dimension of basic_vector has its own implementation
+	// all standard assignment *is* implemented inside the class, so each dimension of vec has its own implementation
 	TEST_CASE("vector standard assignment")
 	{
 		SUBCASE("1D standard assignment =")
@@ -233,7 +234,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator +=")
 	{
-		SUBCASE("basic_vector operator +=")
+		SUBCASE("vec operator +=")
 		{
 			iscal v1(20);
 			v1 += 10;
@@ -252,7 +253,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(2026, 2030, 2028));
 		}
 
-		SUBCASE("indexed_vector operator +=")
+		SUBCASE("swizzle_vec operator +=")
 		{
 			ivec3 v3(1, 2, 3);
 			v3.zx += 40;
@@ -268,7 +269,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator -=")
 	{
-		SUBCASE("basic_vector operator -=")
+		SUBCASE("vec operator -=")
 		{
 			iscal v1(200);
 			v1 -= 10;
@@ -287,7 +288,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(-27, -27, 0));
 		}
 
-		SUBCASE("indexed_vector operator -=")
+		SUBCASE("swizzle_vec operator -=")
 		{
 			ivec3 v3(100, 200, 300);
 			v3.zx -= 40;
@@ -303,7 +304,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator *=")
 	{
-		SUBCASE("basic_vector operator *=")
+		SUBCASE("vec operator *=")
 		{
 			iscal v1(20);
 			v1 *= 10;
@@ -322,7 +323,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(1000000, 4500000, 1800000));
 		}
 
-		SUBCASE("indexed_vector operator *=")
+		SUBCASE("swizzle_vec operator *=")
 		{
 			ivec3 v3(1, 2, 3);
 			v3.zx *= 40;
@@ -338,7 +339,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator /=")
 	{
-		SUBCASE("basic_vector operator /=")
+		SUBCASE("vec operator /=")
 		{
 			iscal v1(200);
 			v1 /= 10;
@@ -357,7 +358,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(1, 1, 2));
 		}
 
-		SUBCASE("indexed_vector operator /=")
+		SUBCASE("swizzle_vec operator /=")
 		{
 			ivec3 v3(1000, 2000, 3000);
 			v3.zx /= 40;
@@ -373,7 +374,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator %=")
 	{
-		SUBCASE("basic_vector operator %=")
+		SUBCASE("vec operator %=")
 		{
 			iscal v1(20);
 			v1 %= 13;
@@ -392,7 +393,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(0, 0, 1));
 		}
 
-		SUBCASE("indexed_vector operator %=")
+		SUBCASE("swizzle_vec operator %=")
 		{
 			ivec3 v3(1000, 2000, 3000);
 			v3.zx %= 473;
@@ -408,7 +409,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator <<=")
 	{
-		SUBCASE("basic_vector operator <<=")
+		SUBCASE("vec operator <<=")
 		{
 			iscal v1(20);
 			v1 <<= 3;
@@ -427,7 +428,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(81920, 131072, 851968));
 		}
 
-		SUBCASE("indexed_vector operator <<=")
+		SUBCASE("swizzle_vec operator <<=")
 		{
 			ivec3 v3(20, 30, 40);
 			v3.zx <<= 4;
@@ -443,7 +444,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator >>=")
 	{
-		SUBCASE("basic_vector operator >>=")
+		SUBCASE("vec operator >>=")
 		{
 			iscal v1(1234);
 			v1 >>= 3;
@@ -462,7 +463,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, ivec3(40, 7, 2));
 		}
 
-		SUBCASE("indexed_vector operator >>=")
+		SUBCASE("swizzle_vec operator >>=")
 		{
 			ivec3 v3(655360, 122880, 163840);
 			v3.zx >>= 4;
@@ -477,7 +478,7 @@ TEST_SUITE("test assignment")
 	}
 	TEST_CASE("vector operator &=")
 	{
-		SUBCASE("basic_vector operator &=")
+		SUBCASE("vec operator &=")
 		{
 			uscal v1(0x276a9d76);
 			v1 &= 0x3810fc6au;
@@ -496,7 +497,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, uvec3(0x00400000, 0x00400020, 0x04000008));
 		}
 
-		SUBCASE("indexed_vector operator &=")
+		SUBCASE("swizzle_vec operator &=")
 		{
 			uvec3 v3(0x328ad958, 0x817f512d, 0x961d14e0);
 			v3.zx &= 0x6de37037u;
@@ -512,7 +513,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator |=")
 	{
-		SUBCASE("basic_vector operator |=")
+		SUBCASE("vec operator |=")
 		{
 			uscal v1(0x276a9d76);
 			v1 |= 0x3810fc6au;
@@ -531,7 +532,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, uvec3(0xfeffffff, 0xfffbfeff, 0xfff9ffff));
 		}
 
-		SUBCASE("indexed_vector operator |=")
+		SUBCASE("swizzle_vec operator |=")
 		{
 			uvec3 v3(0x328ad958, 0x817f512d, 0x961d14e0);
 			v3.zx |= 0x6de37037u;
@@ -547,7 +548,7 @@ TEST_SUITE("test assignment")
 
 	TEST_CASE("vector operator ^=")
 	{
-		SUBCASE("basic_vector operator ^=")
+		SUBCASE("vec operator ^=")
 		{
 			uscal v1(0x276a9d76);
 			v1 ^= 0x3810fc6au;
@@ -566,7 +567,7 @@ TEST_SUITE("test assignment")
 			CHECK_EQ(v3, uvec3(0xbac9d3ec, 0x3890dad5, 0xc3118f7c));
 		}
 
-		SUBCASE("indexed_vector operator ^=")
+		SUBCASE("swizzle_vec operator ^=")
 		{
 			uvec3 v3(0x328ad958, 0x817f512d, 0x961d14e0);
 			v3.zx ^= 0x6de37037u;

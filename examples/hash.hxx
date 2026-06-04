@@ -26,9 +26,9 @@ constexpr std::size_t hash_combine(std::size_t seed, const T &t) noexcept
 }
 
 template <dsga::dimensional_scalar T, std::size_t S>
-struct std::hash<dsga::basic_vector<T, S>>
+struct std::hash<dsga::vec<T, S>>
 {
-	std::size_t operator()(const dsga::basic_vector<T, S> &v) const noexcept
+	std::size_t operator()(const dsga::vec<T, S> &v) const noexcept
 	{
 		std::size_t seed = 0;
 
@@ -42,9 +42,9 @@ struct std::hash<dsga::basic_vector<T, S>>
 };
 
 template <dsga::dimensional_scalar T, std::size_t S>
-struct std::hash<dsga::storage_wrapper<T, S>>
+struct std::hash<dsga::vec_storage<T, S>>
 {
-	std::size_t operator()(const dsga::storage_wrapper<T, S> &v) const noexcept
+	std::size_t operator()(const dsga::vec_storage<T, S> &v) const noexcept
 	{
 		std::size_t seed = 0;
 
@@ -58,9 +58,9 @@ struct std::hash<dsga::storage_wrapper<T, S>>
 };
 
 template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct std::hash<dsga::indexed_vector<T, S, C, Is...>>
+struct std::hash<dsga::swizzle_vec<T, S, C, Is...>>
 {
-	std::size_t operator()(const dsga::indexed_vector<T, S, C, Is...> &v) const noexcept
+	std::size_t operator()(const dsga::swizzle_vec<T, S, C, Is...> &v) const noexcept
 	{
 		std::size_t seed = 0;
 
@@ -74,9 +74,9 @@ struct std::hash<dsga::indexed_vector<T, S, C, Is...>>
 };
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-struct std::hash<dsga::basic_matrix<T, C, R>>
+struct std::hash<dsga::mat<T, C, R>>
 {
-	std::size_t operator()(const dsga::basic_matrix<T, C, R> &m) const noexcept
+	std::size_t operator()(const dsga::mat<T, C, R> &m) const noexcept
 	{
 		std::size_t seed = 0;
 

@@ -17,92 +17,92 @@ The vectors structs, matrix struct, and all the corresponding functions are defi
 namespace dsga
 {
     template <dimensional_scalar T, std::size_t Size>
-    struct basic_vector;
+    struct vec;
     // ...
 
     template <floating_point_scalar T, std::size_t Columns, std::size_t Rows>
-    struct basic_matrix;
+    struct mat;
     // ...
 
     // specialized using types
 
     // boolean vectors
-    using bscal = dsga::basic_vector<bool, 1>;        // not in glsl
-    using bvec2 = dsga::basic_vector<bool, 2>;
-    using bvec3 = dsga::basic_vector<bool, 3>;
-    using bvec4 = dsga::basic_vector<bool, 4>;
+    using bscal = dsga::vec<bool, 1>;        // not in glsl
+    using bvec2 = dsga::vec<bool, 2>;
+    using bvec3 = dsga::vec<bool, 3>;
+    using bvec4 = dsga::vec<bool, 4>;
 
     // int vectors
-    using iscal = dsga::basic_vector<int, 1>;         // not in glsl
-    using ivec2 = dsga::basic_vector<int, 2>;
-    using ivec3 = dsga::basic_vector<int, 3>;
-    using ivec4 = dsga::basic_vector<int, 4>;
+    using iscal = dsga::vec<int, 1>;         // not in glsl
+    using ivec2 = dsga::vec<int, 2>;
+    using ivec3 = dsga::vec<int, 3>;
+    using ivec4 = dsga::vec<int, 4>;
 
     // unsigned int vectors
-    using uscal = dsga::basic_vector<unsigned, 1>;    // not in glsl
-    using uvec2 = dsga::basic_vector<unsigned, 2>;
-    using uvec3 = dsga::basic_vector<unsigned, 3>;
-    using uvec4 = dsga::basic_vector<unsigned, 4>;
+    using uscal = dsga::vec<unsigned, 1>;    // not in glsl
+    using uvec2 = dsga::vec<unsigned, 2>;
+    using uvec3 = dsga::vec<unsigned, 3>;
+    using uvec4 = dsga::vec<unsigned, 4>;
 
     // long long vectors (not in glsl)
-    using llscal = dsga::basic_vector<long long, 1>;
-    using llvec2 = dsga::basic_vector<long long, 2>;
-    using llvec3 = dsga::basic_vector<long long, 3>;
-    using llvec4 = dsga::basic_vector<long long, 4>;
+    using llscal = dsga::vec<long long, 1>;
+    using llvec2 = dsga::vec<long long, 2>;
+    using llvec3 = dsga::vec<long long, 3>;
+    using llvec4 = dsga::vec<long long, 4>;
 
     // unsigned long long vectors (not in glsl)
-    using ullscal = dsga::basic_vector<unsigned long long, 1>;
-    using ullvec2 = dsga::basic_vector<unsigned long long, 2>;
-    using ullvec3 = dsga::basic_vector<unsigned long long, 3>;
-    using ullvec4 = dsga::basic_vector<unsigned long long, 4>;
+    using ullscal = dsga::vec<unsigned long long, 1>;
+    using ullvec2 = dsga::vec<unsigned long long, 2>;
+    using ullvec3 = dsga::vec<unsigned long long, 3>;
+    using ullvec4 = dsga::vec<unsigned long long, 4>;
 
     // float vectors with out an 'f' prefix -- this is from glsl
-    using scal = dsga::basic_vector<float, 1>;        // not in glsl
-    using vec2 = dsga::basic_vector<float, 2>;
-    using vec3 = dsga::basic_vector<float, 3>;
-    using vec4 = dsga::basic_vector<float, 4>;
+    using scal = dsga::vec<float, 1>;        // not in glsl
+    using vec2 = dsga::vec<float, 2>;
+    using vec3 = dsga::vec<float, 3>;
+    using vec4 = dsga::vec<float, 4>;
 
     // also float vectors, but using the common naming convention (not in glsl)
-    using fscal = dsga::basic_vector<float, 1>;
-    using fvec2 = dsga::basic_vector<float, 2>;
-    using fvec3 = dsga::basic_vector<float, 3>;
-    using fvec4 = dsga::basic_vector<float, 4>;
+    using fscal = dsga::vec<float, 1>;
+    using fvec2 = dsga::vec<float, 2>;
+    using fvec3 = dsga::vec<float, 3>;
+    using fvec4 = dsga::vec<float, 4>;
 
     // double vectors
-    using dscal = dsga::basic_vector<double, 1>;      // not in glsl
-    using dvec2 = dsga::basic_vector<double, 2>;
-    using dvec3 = dsga::basic_vector<double, 3>;
-    using dvec4 = dsga::basic_vector<double, 4>;
+    using dscal = dsga::vec<double, 1>;      // not in glsl
+    using dvec2 = dsga::vec<double, 2>;
+    using dvec3 = dsga::vec<double, 3>;
+    using dvec4 = dsga::vec<double, 4>;
 
     // float matrices
-    using mat2x2 = dsga::basic_matrix<float, 2, 2>;
-    using mat2x3 = dsga::basic_matrix<float, 2, 3>;
-    using mat2x4 = dsga::basic_matrix<float, 2, 4>;
-    using mat3x2 = dsga::basic_matrix<float, 3, 2>;
-    using mat3x3 = dsga::basic_matrix<float, 3, 3>;
-    using mat3x4 = dsga::basic_matrix<float, 3, 4>;
-    using mat4x2 = dsga::basic_matrix<float, 4, 2>;
-    using mat4x3 = dsga::basic_matrix<float, 4, 3>;
-    using mat4x4 = dsga::basic_matrix<float, 4, 4>;
+    using mat2x2 = dsga::mat<float, 2, 2>;
+    using mat2x3 = dsga::mat<float, 2, 3>;
+    using mat2x4 = dsga::mat<float, 2, 4>;
+    using mat3x2 = dsga::mat<float, 3, 2>;
+    using mat3x3 = dsga::mat<float, 3, 3>;
+    using mat3x4 = dsga::mat<float, 3, 4>;
+    using mat4x2 = dsga::mat<float, 4, 2>;
+    using mat4x3 = dsga::mat<float, 4, 3>;
+    using mat4x4 = dsga::mat<float, 4, 4>;
 
-    using mat2 = dsga::basic_matrix<float, 2, 2>;
-    using mat3 = dsga::basic_matrix<float, 3, 3>;
-    using mat4 = dsga::basic_matrix<float, 4, 4>;
+    using mat2 = dsga::mat<float, 2, 2>;
+    using mat3 = dsga::mat<float, 3, 3>;
+    using mat4 = dsga::mat<float, 4, 4>;
 
     // double matrices
-    using dmat2x2 = dsga::basic_matrix<double, 2, 2>;
-    using dmat2x3 = dsga::basic_matrix<double, 2, 3>;
-    using dmat2x4 = dsga::basic_matrix<double, 2, 4>;
-    using dmat3x2 = dsga::basic_matrix<double, 3, 2>;
-    using dmat3x3 = dsga::basic_matrix<double, 3, 3>;
-    using dmat3x4 = dsga::basic_matrix<double, 3, 4>;
-    using dmat4x2 = dsga::basic_matrix<double, 4, 2>;
-    using dmat4x3 = dsga::basic_matrix<double, 4, 3>;
-    using dmat4x4 = dsga::basic_matrix<double, 4, 4>;
+    using dmat2x2 = dsga::mat<double, 2, 2>;
+    using dmat2x3 = dsga::mat<double, 2, 3>;
+    using dmat2x4 = dsga::mat<double, 2, 4>;
+    using dmat3x2 = dsga::mat<double, 3, 2>;
+    using dmat3x3 = dsga::mat<double, 3, 3>;
+    using dmat3x4 = dsga::mat<double, 3, 4>;
+    using dmat4x2 = dsga::mat<double, 4, 2>;
+    using dmat4x3 = dsga::mat<double, 4, 3>;
+    using dmat4x4 = dsga::mat<double, 4, 4>;
 
-    using dmat2 = dsga::basic_matrix<double, 2, 2>;
-    using dmat3 = dsga::basic_matrix<double, 3, 3>;
-    using dmat4 = dsga::basic_matrix<double, 4, 4>;
+    using dmat2 = dsga::mat<double, 2, 2>;
+    using dmat3 = dsga::mat<double, 3, 3>;
+    using dmat4 = dsga::mat<double, 4, 4>;
 
     //
     // bring the vector and matrix free functions into the dsga namespace
@@ -131,9 +131,9 @@ dsga::iscal some_scalar = 34;
 dsga::ivec3 some_vector = some_scalar.xxx;
 ```
 
-The usual vectors that we create in ```dsga``` are of type ```basic_vector```. The "scalar" types are really ```basic_vector``` of dimension 1. The vectors used for swizzling, of type ```indexed_vector```, can be of dimension 1 through 4, so having the ability to have a ```basic_vector``` of dimension 1 is analogous to a 1 dimensional swizzle.
+The usual vectors that we create in ```dsga``` are of type ```vec```. The "scalar" types are really ```vec``` of dimension 1. The vectors used for swizzling, of type ```swizzle_vec```, can be of dimension 1 through 4, so having the ability to have a ```vec``` of dimension 1 is analogous to a 1 dimensional swizzle.
 
-There doesn't appear to be a a lot of utility for dimension 1 ```basic_vector```s, so in the future they may be removed. However, swizzling is very important for dimension 1 ```indexed_vector```s, so they will never be removed.
+There doesn't appear to be a a lot of utility for dimension 1 ```vec```s, so in the future they may be removed. However, swizzling is very important for dimension 1 ```swizzle_vec```s, so they will never be removed.
 
 ### Swizzling
 
@@ -148,14 +148,14 @@ vec3 smaller_vec(big_vec.zyx);
 
 Swizzling uses dot notation, e.g., ```foo.xy, bar.zw, baz.xxyy```. This gives you a type of vector that is a view on the data of the original vector. The swizzles are part of the original vector, and they have the same lifetime. The "x" index means the first value in the vector, "y" means the second, "z" means the third, and "w" means the fourth, so "xyzw" are the possible values in a swizzle, depending on the size of the original vector. In [GLSL](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf), there are 3 different domains for swizzling: ```xyzw```, ```rgba```, and ```stpq```. We use "xyzw" when talking about spatial coordinates, "rgba" when talking about color coordinates, and "stpq" when talking about texture coordinates. Since dsga is intended for geometry and algebra, we only felt the need to support the "xyzw" set for swizzling.
 
-Dot notation swizzle vectors (```indexed_vector```) _can not_ also be swizzled, only ```basic_vector``` types, e.g., dvec2, uvec3. You can create a ```basic_vector``` from a dot notation swizzle vector, and then that can be swizzled.
+Dot notation swizzle vectors (```swizzle_vec```) _can not_ also be swizzled, only ```vec``` types, e.g., dvec2, uvec3. You can create a ```vec``` from a dot notation swizzle vector, and then that can be swizzled.
 
 ```c++
-auto some_vec = uvec4(0, 1, 2, 3);      // 4 dimensional basic_vector
-auto some_swiz = some_vec.xyz;          // 3 dimensional indexed_vector
-auto swiz_twice1 = some_vec.xyz.yx;     // compile error, can't swizzle indexed_vector
-auto swiz_twice2 = some_swiz.yx;        // compile error, can't swizzle indexed_vector
-auto swiz_again = uvec2(some_swiz).yx;  // ok, converted to basic_vector first
+auto some_vec = uvec4(0, 1, 2, 3);      // 4 dimensional vec
+auto some_swiz = some_vec.xyz;          // 3 dimensional swizzle_vec
+auto swiz_twice1 = some_vec.xyz.yx;     // compile error, can't swizzle swizzle_vec
+auto swiz_twice2 = some_swiz.yx;        // compile error, can't swizzle swizzle_vec
+auto swiz_again = uvec2(some_swiz).yx;  // ok, converted to vec first
 ```
 
 A 1 dimensional vector can only refer to "x", but it can do so up to 4 times in a swizzle:
@@ -167,19 +167,19 @@ auto length_four_vec = vec4(length_one_vec.xxxx);
 
 Similarly, dimension 2 vectors can refer to combinations of "xy", dimension 3 vectors can refer to combinations of "xyz", and dimension 4 vectors can refer to combinations of "xyzw". Since the maximum size of a vector is 4, that is the maximum number of swizzle characters you can use.
 
-Swizzling to a size of 1 may be another reason to allow ```basic_vector```s of dimension 1:
+Swizzling to a size of 1 may be another reason to allow ```vec```s of dimension 1:
 ```c++
 vec4 big_vec;
 ...
 fscal z_val = big_vec.z;
 ```
 
-Dimension 1 vectors, whether ```basic_vector``` (e.g., iscal) or ```indexed_vector``` (from a dot-notation swizzle), are treated as scalar values in most all operations and functions. The values returned from the operations and functions, where only vectors of dimension 1 and fundamental types are arguments, return scalar values of fundamental types, e.g., float, double, bool, int, etc.
+Dimension 1 vectors, whether ```vec``` (e.g., iscal) or ```swizzle_vec``` (from a dot-notation swizzle), are treated as scalar values in most all operations and functions. The values returned from the operations and functions, where only vectors of dimension 1 and fundamental types are arguments, return scalar values of fundamental types, e.g., float, double, bool, int, etc.
 ```c++
-auto value1 = dsga::ivec2(34) + 8;             // value1 is of type dsga::basic_vector<int, 2>
+auto value1 = dsga::ivec2(34) + 8;             // value1 is of type dsga::vec<int, 2>
 auto value2 = dsga::iscal(34) + 8;             // value2 is of type int
 
-auto some_vec = dsga::ivec4(12, 54, 88, 99);   // some_vec is of type dsga::basic_vector<int,4>
+auto some_vec = dsga::ivec4(12, 54, 88, 99);   // some_vec is of type dsga::vec<int,4>
 auto value3 = dsga::iscal(34) + some_vec.y;    // value3 is of type int
 auto value4 = some_vec.z + some_vec.x;         // value4 is of type int
 auto value5 = 100 + some_vec.w;                // value5 is of type int
@@ -192,26 +192,26 @@ vec4 big_vec;
 big_vec.xyx = vec3(1, 2, 3);    // compile error, trying to assign to position "x" more than once
 big_vec.zyx = big_vec.xzz;      // ok, data destinations are all unique even if sources are not
 ```
-We also have ways to swizzle at runtime. The ```swizzle()``` function takes a vector and a variable number of indexes into the vector, and returns either a ```basic_vector``` if number of indexes > 1, or a scalar value for a single index applied to the vector. This is not in GLSL. Will return a scalar value if only one index argument. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
+We also have ways to swizzle at runtime. The ```swizzle()``` function takes a vector and a variable number of indexes into the vector, and returns either a ```vec``` if number of indexes > 1, or a scalar value for a single index applied to the vector. This is not in GLSL. Will return a scalar value if only one index argument. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
 ```c++
 template <bool W, dimensional_scalar T, std::size_t C, typename D, typename Arg>
 requires std::convertible_to<Arg, std::size_t>
-inline auto swizzle(const vector_base<W, T, C, D> &v, const Arg &index);
+inline auto swizzle(const vec_interface<W, T, C, D> &v, const Arg &index);
 
 template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
 requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
-inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is);
+inline vec<T, sizeof...(Args)> swizzle(const vec_interface<W, T, C, D> &v, const Args &...Is);
 ```
 
 For example:
 ```c++
-auto some_vec = uvec3(0, 1, 2);                      // returns a basic_vector<unsigned int, 3>
+auto some_vec = uvec3(0, 1, 2);                      // returns a vec<unsigned int, 3>
 auto swiz_1d = swizzle(some_vec, 1);                 // returns an unsigned int
-auto swiz_2d = swizzle(some_vec, 2, 0);              // returns a basic_vector<unsigned int, 2>
+auto swiz_2d = swizzle(some_vec, 2, 0);              // returns a vec<unsigned int, 2>
 auto swiz_3d = swizzle(some_vec, 2, 0, 3);           // runtime error, all indexes must be less than Count (Count == 3 in this case) for some_vec
-auto swiz_4d = swizzle(some_vec, 2, 0, 0, 1);        // returns a basic_vector<unsigned int, 4>
+auto swiz_4d = swizzle(some_vec, 2, 0, 0, 1);        // returns a vec<unsigned int, 4>
 auto swiz_5d = swizzle(some_vec, 2, 0, 0, 1, 2);     // compile error, can't have dimension 5 vectors
-auto some_swiz = swizzle(some_vec, 1, 1, 1, 1).zxwy; // returns a copy of an indexed_vector - does not dangle
+auto some_swiz = swizzle(some_vec, 1, 1, 1, 1).zxwy; // returns a copy of an swizzle_vec - does not dangle
 
 // Equivalent, with runtime vs. compile time:
 // swizzle(some_vec, 2, 0, 0, 1) <==> uvec4(some_vec.zxxy)
@@ -266,7 +266,7 @@ For vector swizzles, only *writable* swizzles can use ```operator []``` for writ
 
 ### Iterators
 
-Both the vector and matrix structs support ```begin()/cbegin()/rbegin()/crbegin()``` and ```end()/cend()/rend()/crend()``` iterator creation functions in order to provide non-const and const iterators. The ```indexed_vector``` iterators pass the ```std::random_access_iterator``` concept. This gives us access to:
+Both the vector and matrix structs support ```begin()/cbegin()/rbegin()/crbegin()``` and ```end()/cend()/rend()/crend()``` iterator creation functions in order to provide non-const and const iterators. The ```swizzle_vec``` iterators pass the ```std::random_access_iterator``` concept. This gives us access to:
 
 * Standard Library Algorithms
 * [Range-based for loop](https://en.cppreference.com/w/cpp/language/range-for)
@@ -277,17 +277,6 @@ Both the vector and matrix structs support ```std::tuple_element<>```, ```std::t
 
 * Data structures in same manner as ```tuple```
 * [Structured Binding](https://en.cppreference.com/w/cpp/language/structured_binding)
-
-### Low-level Pointer Access
-
-Both the vector and matrix structs support ```data()``` and ```size()``` in order to provide pointer access to the underlying data. The parameter pack returned by ```sequence()``` can also be helpful here to map the physical order from ```data()``` to the logical order (only useful for generic vector situations or when using ```indexed_vector```). *Hopefully*, no one wants to use pointer data to manipulate or access the data structures, but this approach exists if it is deemed appropriate:
-
-* ```T *data()``` gives a pointer to the underlying vector elements or matrix columns, in physical order.
-* ```std::size_t size()``` gives the number of elements in the vector or number of columns in the matrix.
-* ```std::index_sequence<Is...> sequence()``` (only for vectors) gives a parameter pack that maps the physical order to the logical order. For a ```basic_vector``` those are the same, but for an ```indexed_vector``` they are mostly not the same. Pack expansion and folding are tools that might help with the low-level pointer access for vectors.
-* ```std::array<std::size_t, Count> offsets``` is an array with same data that is in ```sequence()```, just in another data structure. Each vector class has this static member variable.
-
-The value returned by ```size()``` is not the length of the underlying ```data()```, but it is the size of the ```sequence()```/```offsets``` view of the data. ```dsga::basic_vector<>``` is contiguous, and the ```data()``` is in order, but for ```dsga::indexed_vector<>``` it definitely mostly is not in order, which is the whole point of the struct.
 
 ## Vector
 
@@ -323,15 +312,15 @@ GLSL does not support the types ```long long``` or ```unsigned long long```, but
 
 ### Rule of Six For Vectors
 
-The six special functions are all defaulted for ```basic_vector```.
+The six special functions are all defaulted for ```vec```.
 ```c++
-constexpr basic_vector() noexcept = default;
-constexpr ~basic_vector() noexcept = default;
+constexpr vec() noexcept = default;
+constexpr ~vec() noexcept = default;
 
-constexpr basic_vector(const basic_vector &) noexcept = default;
-constexpr basic_vector(basic_vector &&) noexcept = default;
-constexpr basic_vector &operator =(const basic_vector &) noexcept = default;
-constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
+constexpr vec(const vec &) noexcept = default;
+constexpr vec(vec &&) noexcept = default;
+constexpr vec &operator =(const vec &) noexcept = default;
+constexpr vec &operator =(vec &&) noexcept = default;
 ```
 
 ### Vector Constructors
@@ -339,7 +328,7 @@ constexpr basic_vector &operator =(basic_vector &&) noexcept = default;
 
 ```c++
 template <typename U>
-explicit constexpr basic_vector(U value) noexcept;
+explicit constexpr vec(U value) noexcept;
 ```
 
 * **Multiple Scalar Arguments** - the scalar parameters must be convertible to the underlying type, and there is one for each element to initialize the vector. For example, where C == 4:
@@ -349,7 +338,7 @@ template <typename U1, typename U2, typename U3, typename U4>
 requires
     std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
     std::convertible_to<U3, T> && std::convertible_to<U4, T>
-explicit constexpr basic_vector(U1 xvalue,
+explicit constexpr vec(U1 xvalue,
                                 U2 yvalue,
                                 U3 zvalue,
                                 U4 wvalue) noexcept;
@@ -360,15 +349,15 @@ explicit constexpr basic_vector(U1 xvalue,
 ```c++
 // variadic constructor of scalar and vector arguments
 template <typename ... Args>
-constexpr basic_vector(const Args & ...args) noexcept;
+constexpr vec(const Args & ...args) noexcept;
 ```
 
 ### Vector Member Functions
 
 These are the members that are not part of the [index interface](#index-interface), [iterator interface](#iterators), the [tuple protocol](#tuple-protocol), or the [pointer interface](#low-level-pointer-access).
 
-* ```operator =``` - assignment operator. The vector needs to be the same length and underlying types must be convertible. All ```basic_vector```s are writable, but not all ```indexed_vector```s.
-* ```set()``` - like assignment, but copies all the individual argument values into a vector. All ```basic_vector```s are writable, but not all ```indexed_vector```s.
+* ```operator =``` - assignment operator. The vector needs to be the same length and underlying types must be convertible. All ```vec```s are writable, but not all ```swizzle_vec```s.
+* ```set()``` - like assignment, but copies all the individual argument values into a vector. All ```vec```s are writable, but not all ```swizzle_vec```s.
 * ```int length()``` - returns the number of elements in a vector. This is part of the spec, and is the same as ```size()``` except it has a different return type.
 
 #### Valarray Functions
@@ -534,15 +523,15 @@ dmat4x2, dmat4x3, dmat4x4/dmat4 - 4 column double matrices
 
 ### Rule of Six For Matrices
 
-The six special functions are all defaulted for ```basic_matrix```.
+The six special functions are all defaulted for ```mat```.
 ```c++
-constexpr basic_matrix() noexcept = default;
-constexpr ~basic_matrix() noexcept = default;
+constexpr mat() noexcept = default;
+constexpr ~mat() noexcept = default;
 
-constexpr basic_matrix(const basic_matrix &) noexcept = default;
-constexpr basic_matrix(basic_matrix &&) noexcept = default;
-constexpr basic_matrix &operator =(const basic_matrix &) noexcept = default;
-constexpr basic_matrix &operator =(basic_matrix &&) noexcept = default;
+constexpr mat(const mat &) noexcept = default;
+constexpr mat(mat &&) noexcept = default;
+constexpr mat &operator =(const mat &) noexcept = default;
+constexpr mat &operator =(mat &&) noexcept = default;
 ```
 
 ### Matrix Constructors
@@ -551,14 +540,14 @@ constexpr basic_matrix &operator =(basic_matrix &&) noexcept = default;
 ```c++
 // diagonal constructor for square matrices
 template <typename U>
-constexpr basic_matrix(U arg) noexcept;
+constexpr mat(U arg) noexcept;
 ```
 
 * **Single Matrix Argument, same type** - any matrix can be used to create another matrix, regardless of any size differences. If they are the same size, then the defaulted copy/move constructor will be called. If they are different sizes, then this constructor intializes what it can of the matrix as if the rows and columns were intersected with the argument's rows and columns. If there are matrix elements that are not initialized by the matrix argument, they will be set to 0. If it is a square matrix, and a diagonal element has not been initialized, it will be set to 1.
 
 ```c++
 template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
-constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept;
+constexpr mat(const mat<U, Cols, Rows> &arg) noexcept;
 ```
 
 * **Single Matrix Argument, different type** - for matrices of the same dimensions, where the matrix type is implicitly convertible to the type of matrix you are trying to construct.
@@ -566,7 +555,7 @@ constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept;
 ```c++
 template <floating_point_scalar U>
 requires implicitly_convertible_to<U, T>
-constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept;
+constexpr mat(const mat<U, C, R> &arg) noexcept;
 ```
 
 * **Variable Arguments** - any combination of scalar values and vectors can be arguments to the constructor, as long as there is enough data to initialize all the matrix elements, and as long as the types are convertible. It is fine if an argument has more data than necessary to complete the matrix initialization, as long as some of the argument data is used. It is an error to pass unused arguments:
@@ -574,7 +563,7 @@ constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept;
 ```c++
 // variadic constructor of scalar and vector arguments
 template <typename ... Args>
-constexpr basic_matrix(const Args & ...args) noexcept;
+constexpr mat(const Args & ...args) noexcept;
 ``` 
 
 ### Matrix Member Functions
@@ -586,8 +575,8 @@ These are the members that are not part of the [iterator interface](#iterators),
 * **int column_length()** - like ```length()``` but for rows. Returns the number of rows as an ```int```.
 * **std::size_t size()** - returns the number of columns as as a ```std::size_t```.
 * **std::size_t column_size()** - like ```size()``` but for rows. Returns the number of rows as a ```std::size_t```.
-* **operator []** - a generic way to access matrix data. The values returned by this operator are the columns of the matrix, which are of type ```basic_vector```. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing. Along with ```operator []``` in ```basic_vector```, we can access individual matrix elements with notation such as **auto val = my_matrix[col][row];**.
-* **row()** - this returns a ```basic_vector``` that represents a row of the matrix.
+* **operator []** - a generic way to access matrix data. The values returned by this operator are the columns of the matrix, which are of type ```vec```. Can be used for both reading and writing, assuming it isn't const or otherwise not allowed for writing. Along with ```operator []``` in ```vec```, we can access individual matrix elements with notation such as **auto val = my_matrix[col][row];**.
+* **row()** - this returns a ```vec``` that represents a row of the matrix.
 
 ### Matrix Operators
 The matrix operators all work component-wise, except for ```operator *```, which performs linear algebraic functions with vectors and other matrices.

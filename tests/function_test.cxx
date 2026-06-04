@@ -16,6 +16,7 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 constexpr auto single_ordinate_cubic_bezier_eval(vec4 cubic_control_points, float t) noexcept
 {
@@ -631,9 +632,9 @@ TEST_SUITE("test functions")
 		auto runtime_swizzle1 = swizzle(v, 3, 3, 3);
 		auto runtime_swizzle2 = swizzle(v, 2);
 
-		CHECK_EQ(runtime_swizzle, basic_vector(4.0, 3.0, 2.0));
-		CHECK_EQ(member_swizzle_swizzle, basic_vector(1.0, 2.0, 3.0));
-		CHECK_EQ(runtime_swizzle1, basic_vector(4.0, 4.0, 4.0));
+		CHECK_EQ(runtime_swizzle, vec(4.0, 3.0, 2.0));
+		CHECK_EQ(member_swizzle_swizzle, vec(1.0, 2.0, 3.0));
+		CHECK_EQ(runtime_swizzle1, vec(4.0, 4.0, 4.0));
 		CHECK_EQ(runtime_swizzle2, 3.0);
 	}
 
@@ -782,26 +783,26 @@ TEST_SUITE("valarray-style vector member functions")
 	{
 		CHECK_EQ(dsga::ivec4(-1, 10, 2, -8).min(), -8);
 
-		CHECK_UNARY(std::isnan(dsga::basic_vector{std::numeric_limits<double>::quiet_NaN(), 2., 3., 4.}.min()));
-		CHECK_EQ(dsga::basic_vector{1., std::numeric_limits<double>::quiet_NaN(), 3., 4.}.min(), 1.);
-		CHECK_EQ(dsga::basic_vector{1., 2., 3., std::numeric_limits<double>::quiet_NaN()}.min(), 1.);
+		CHECK_UNARY(std::isnan(dsga::vec{std::numeric_limits<double>::quiet_NaN(), 2., 3., 4.}.min()));
+		CHECK_EQ(dsga::vec{1., std::numeric_limits<double>::quiet_NaN(), 3., 4.}.min(), 1.);
+		CHECK_EQ(dsga::vec{1., 2., 3., std::numeric_limits<double>::quiet_NaN()}.min(), 1.);
 	}
 
 	TEST_CASE("vector max()")
 	{
 		CHECK_EQ(dsga::ivec4(-1, 10, 2, -8).max(), 10);
 
-		CHECK_UNARY(std::isnan(dsga::basic_vector{std::numeric_limits<double>::quiet_NaN(), 2., 3., 4.}.max()));
-		CHECK_EQ(dsga::basic_vector{1., std::numeric_limits<double>::quiet_NaN(), 3., 4.}.max(), 4.);
-		CHECK_EQ(dsga::basic_vector{1., 2., 3., std::numeric_limits<double>::quiet_NaN()}.max(), 3.);
+		CHECK_UNARY(std::isnan(dsga::vec{std::numeric_limits<double>::quiet_NaN(), 2., 3., 4.}.max()));
+		CHECK_EQ(dsga::vec{1., std::numeric_limits<double>::quiet_NaN(), 3., 4.}.max(), 4.);
+		CHECK_EQ(dsga::vec{1., 2., 3., std::numeric_limits<double>::quiet_NaN()}.max(), 3.);
 	}
 
 	TEST_CASE("vector sum()")
 	{
 		CHECK_EQ(dsga::ivec4(-1, 10, 2, -8).sum(), 3);
 
-		CHECK_UNARY(std::isnan(dsga::basic_vector{std::numeric_limits<double>::quiet_NaN(), 2., 3.}.sum()));
-		CHECK_UNARY(std::isnan(dsga::basic_vector{1., std::numeric_limits<double>::quiet_NaN(), 3.}.sum()));
-		CHECK_UNARY(std::isnan(dsga::basic_vector{1., 2., std::numeric_limits<double>::quiet_NaN()}.sum()));
+		CHECK_UNARY(std::isnan(dsga::vec{std::numeric_limits<double>::quiet_NaN(), 2., 3.}.sum()));
+		CHECK_UNARY(std::isnan(dsga::vec{1., std::numeric_limits<double>::quiet_NaN(), 3.}.sum()));
+		CHECK_UNARY(std::isnan(dsga::vec{1., 2., std::numeric_limits<double>::quiet_NaN()}.sum()));
 	}
 }

@@ -14,6 +14,7 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 // operators are implemented without regard to any specific dimension, so we can test generically
 TEST_SUITE("test operators")

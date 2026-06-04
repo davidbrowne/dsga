@@ -1,8 +1,26 @@
 # Change Log
 
+### v3.1.0
+* Minor version bump with some breaking changes to the API.
+* Updated to doctest v2.5.2
+* Renamed the 5 main classes, deprecating the old names.
+    * **basic_vector** -> **vec**
+    * **basic_matrix** -> **mat**
+    * **vector_base** -> **vec_interface**
+    * **indexed_vector** -> **swizzle_vec**
+    * **storage_vector** -> **vec_storage**
+* Microsoft Visual Studio 2022 will no longer be directly supported. Testing may possibly occur using the VS2022 toolset on VS2026.
+* Removed deprecated function ```logicalNot()```, replaced by ```compNot()```.
+* CMake support rewritten.
+    * Install target with ```cmake --install``` support.
+    * ```dsga::dsga``` imported ```INTERFACE``` target for ```target_link_libraries```.
+    * CMake config file for ```find_package``` support.
+    * CMake target for linking with other projects.
+    * Compiler flags for MSVC, gcc, and clang.
+
 ### v3.0.0
 * Major version bump with breaking changes to the API
-* Removed the ```data()``` interface for all vector types and matrix types, in order to remove the possibilty of pointer overruns.
+* Removed the ```data()``` interface for all vector types and matrix types, in order to remove/mitigate the possibilty of pointer overruns.
 * Minor refactoring.
 
 ### v2.2.16

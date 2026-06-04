@@ -200,8 +200,10 @@
     <ClInclude Include="..\examples\transform.hxx" />
     <ClInclude Include="..\examples\valarray_convert.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />
+    <ClInclude Include="..\tests\dsga_doctest.hxx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\cmake\dsga-config.cmake.in" />
     <None Include="..\docs\API.md" />
     <None Include="..\docs\CHANGELOG.md" />
     <None Include="..\docs\DETAILS.md" />
@@ -224,6 +226,11 @@
     <ClCompile Include="..\tests\constructor_test.cxx" />
     <ClCompile Include="..\tests\conversion_test.cxx" />
     <ClCompile Include="..\tests\function_test.cxx" />
+    <ClCompile Include="..\tests\iterator_test.cxx" />
+    <ClCompile Include="..\tests\main.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\tests\operator_test.cxx" />
     <ClCompile Include="..\tests\swizzle_test.cxx" />
     <ClCompile Include="..\tests\traits_test.cxx" />

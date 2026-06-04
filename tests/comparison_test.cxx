@@ -14,6 +14,7 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 //
 // make sure that exact equality comparisons (==, !=) work so we can trust the rest of the tests.
@@ -27,9 +28,9 @@ TEST_SUITE("test equality comparisons")
 	static constexpr ivec2	two		(0, 1);
 	static constexpr iscal	one		(0);
 
-	TEST_CASE("basic_vector equality comparisons")
+	TEST_CASE("vec equality comparisons")
 	{
-		SUBCASE("1D basic_vector equality comparisons")
+		SUBCASE("1D vec equality comparisons")
 		{
 			CHECK_EQ(one, iscal(0));
 			CHECK_EQ(iscal(0), iscal(0));
@@ -38,7 +39,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(one, iscal(-1));
 		}
 
-		SUBCASE("2D basic_vector equality comparisons")
+		SUBCASE("2D vec equality comparisons")
 		{
 			CHECK_EQ(two, ivec2(0, 1));
 			CHECK_EQ(ivec2(0, 1), ivec2(0, 1));
@@ -47,7 +48,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(two, ivec2(0, -1));
 		}
 
-		SUBCASE("3D basic_vector equality comparisons")
+		SUBCASE("3D vec equality comparisons")
 		{
 			CHECK_EQ(three, ivec3(0, 1, 2));
 			CHECK_EQ(ivec3(0, 1, 2), ivec3(0, 1, 2));
@@ -56,7 +57,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(three, ivec3(0, -1, 2));
 		}
 
-		SUBCASE("4D basic_vector equality comparisons")
+		SUBCASE("4D vec equality comparisons")
 		{
 			CHECK_EQ(four, ivec4(0, 1, 2, 3));
 			CHECK_EQ(ivec4(0, 1, 2, 3), ivec4(0, 1, 2, 3));
@@ -66,9 +67,9 @@ TEST_SUITE("test equality comparisons")
 		}
 	}
 
-	TEST_CASE("indexed_vector equality comparisons")
+	TEST_CASE("swizzle_vec equality comparisons")
 	{
-		SUBCASE("1D indexed_vector equality comparison")
+		SUBCASE("1D swizzle_vec equality comparison")
 		{
 			CHECK_EQ(one.x, two.x);
 			CHECK_EQ(one.x, three.x);
@@ -81,7 +82,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(three.z, four.w);
 		}
 
-		SUBCASE("2D indexed_vector equality comparison")
+		SUBCASE("2D swizzle_vec equality comparison")
 		{
 			CHECK_EQ(one.xx, two.xx);
 			CHECK_EQ(one.xx, three.xx);
@@ -94,7 +95,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(three.yz, four.yw);
 		}
 
-		SUBCASE("3D indexed_vector equality comparison")
+		SUBCASE("3D swizzle_vec equality comparison")
 		{
 			CHECK_EQ(one.xxx, two.xxx);
 			CHECK_EQ(one.xxx, three.xxx);
@@ -107,7 +108,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(three.xyz, four.xyw);
 		}
 
-		SUBCASE("4D indexed_vector equality comparison")
+		SUBCASE("4D swizzle_vec equality comparison")
 		{
 			CHECK_EQ(one.xxxx, two.xxxx);
 			CHECK_EQ(one.xxxx, three.xxxx);
@@ -121,9 +122,9 @@ TEST_SUITE("test equality comparisons")
 		}
 	}
 
-	TEST_CASE("equality comparing basic_vector with indexed_vector")
+	TEST_CASE("equality comparing vec with swizzle_vec")
 	{
-		SUBCASE("1D basic_vector with indexed_vector equality comparisons")
+		SUBCASE("1D vec with swizzle_vec equality comparisons")
 		{
 			CHECK_EQ(one.x, iscal(0));
 			CHECK_EQ(two.x, iscal(0));
@@ -144,7 +145,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(four.x, iscal(5));
 		}
 
-		SUBCASE("2D basic_vector with indexed_vector equality comparisons")
+		SUBCASE("2D vec with swizzle_vec equality comparisons")
 		{
 			CHECK_EQ(one.xx, ivec2(0, 0));
 			CHECK_EQ(two.xy, ivec2(0, 1));
@@ -158,7 +159,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_EQ(ivec2(44, 66).xy, ivec2(44, 66));
 		}
 
-		SUBCASE("3D basic_vector with indexed_vector equality comparisons")
+		SUBCASE("3D vec with swizzle_vec equality comparisons")
 		{
 			CHECK_EQ(one.xxx, ivec3(0, 0, 0));
 			CHECK_EQ(two.xyy, ivec3(0, 1, 1));
@@ -172,7 +173,7 @@ TEST_SUITE("test equality comparisons")
 			CHECK_NE(ivec3(10, 20, 30).xzy, ivec3(30, 10, 20));
 		}
 
-		SUBCASE("4D basic_vector with indexed_vector equality comparisons")
+		SUBCASE("4D vec with swizzle_vec equality comparisons")
 		{
 			CHECK_EQ(one.xxxx, ivec4(0, 0, 0, 0));
 			CHECK_EQ(two.xyyx, ivec4(0, 1, 1, 0));

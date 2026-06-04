@@ -6,7 +6,7 @@
 
 #include "dsga.hxx"
 #include <version>					// feature test macros
-using namespace dsga;
+
 
 #if defined(__clang__)
 // clang 10.0 does not like colors on windows (link problems with isatty and fileno)
@@ -15,16 +15,18 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 TEST_SUITE("test swizzling access")
 {
-	static ivec4	four(0, 1, 2, 3);
-	static ivec3	three(4, 5, 6);
-	static ivec2	two(7, 8);
-	static iscal	one(9);
+	static dsga::ivec4	four(0, 1, 2, 3);
+	static dsga::ivec3	three(4, 5, 6);
+	static dsga::ivec2	two(7, 8);
+	static dsga::iscal	one(9);
 
 	TEST_CASE("access through all swizzles for vecs sizes 1-2 (in xyzw space) - checking for typos and index matching")
 	{
+		using namespace dsga;
 		SUBCASE("1D swizzling")
 		{
 			// 0				x				// legal lvalue
@@ -116,6 +118,7 @@ TEST_SUITE("test swizzling access")
 
 	TEST_CASE("access through all swizzles for vecs length 3 (in xyzw space) - checking for typos and index matching")
 	{
+		using namespace dsga;
 		SUBCASE("3D swizzling")
 		{
 			// 0 0 0			xxx
@@ -352,13 +355,14 @@ TEST_SUITE("test swizzling access")
 
 TEST_SUITE("test 4D swizzling access through all swizzles for vecs length 4 (in xyzw space) - checking for typos and index matching")
 {
-	static ivec4	four(0, 1, 2, 3);
-	static ivec3	three(4, 5, 6);
-	static ivec2	two(7, 8);
-	static iscal	one(9);
+	static dsga::ivec4	four(0, 1, 2, 3);
+	static dsga::ivec3	three(4, 5, 6);
+	static dsga::ivec2	two(7, 8);
+	static dsga::iscal	one(9);
 
 	TEST_CASE("first index is x")
 	{
+		using namespace dsga;
 		// 0 0 0 0			xxxx
 		// 0 0 0 1			xxxy
 		// 0 0 0 2			xxxz
@@ -591,6 +595,7 @@ TEST_SUITE("test 4D swizzling access through all swizzles for vecs length 4 (in 
 
 	TEST_CASE("first index is y")
 	{
+		using namespace dsga;
 		// 1 0 0 0			yxxx
 		// 1 0 0 1			yxxy
 		// 1 0 0 2			yxxz
@@ -822,6 +827,7 @@ TEST_SUITE("test 4D swizzling access through all swizzles for vecs length 4 (in 
 
 	TEST_CASE("first index is z")
 	{
+		using namespace dsga;
 		// 2 0 0 0			zxxx
 		// 2 0 0 1			zxxy
 		// 2 0 0 2			zxxz
@@ -1045,6 +1051,7 @@ TEST_SUITE("test 4D swizzling access through all swizzles for vecs length 4 (in 
 
 	TEST_CASE("first index is w")
 	{
+		using namespace dsga;
 		// 3 0 0 0			wxxx
 		// 3 0 0 1			wxxy
 		// 3 0 0 2			wxxz
@@ -1244,6 +1251,7 @@ TEST_SUITE("lvalue swizzle copy assignment")
 {
 	TEST_CASE("lvalue swizzle copy assignment for 1D and 2D")
 	{
+		using namespace dsga;
 		// make sure we can assign to these swizzle cases as lvalues
 
 		SUBCASE("1D swizzling lvalues")
@@ -1294,6 +1302,7 @@ TEST_SUITE("lvalue swizzle copy assignment")
 
 	TEST_CASE("lvalue swizzle copy assignment for 3D")
 	{
+		using namespace dsga;
 		// swizzles that can be lvalues
 
 		// 0 1 2			xyz
@@ -1393,6 +1402,7 @@ TEST_SUITE("lvalue swizzle copy assignment")
 
 	TEST_CASE("lvalue swizzle copy assignment for 4D - starting index x or y")
 	{
+		using namespace dsga;
 		// swizzles that can be lvalues
 
 		// 0 1 2 3			xyzw
@@ -1540,6 +1550,7 @@ TEST_SUITE("lvalue swizzle copy assignment")
 
 	TEST_CASE("lvalue swizzle copy assignment for 4D - starting index z or w")
 	{
+		using namespace dsga;
 		// swizzles that can be lvalues
 
 		// 2 0 1 3			zxyw
@@ -1690,6 +1701,7 @@ TEST_SUITE("test swizzling applications")
 {
 	TEST_CASE("structured binding (which requires) tuple interface (tuple_size, tuple_element, get)")
 	{
+		using namespace dsga;
 		ivec4	four	(0, 1, 2, 3);
 		ivec3	three	(4, 5, 6);
 		ivec2	two		(7, 8);
@@ -1713,7 +1725,7 @@ TEST_SUITE("test swizzling applications")
 			auto &[three_z1, three_x2] = three.zx;
 			auto &[four_y1, four_w2, four_z3, four_x4] = four.ywzx;
 
-			// indexed_vector
+			// swizzle_vec
 			CHECK_EQ(one_x1,	one.x);
 			CHECK_EQ(one_x2,	one.x);
 			CHECK_EQ(one_x3,	one.x);
@@ -1755,6 +1767,7 @@ TEST_SUITE("test swizzling applications")
 
 	TEST_CASE("range-for loop (which requires) begin/end/deref(*)/prefix ++ interface")
 	{
+		using namespace dsga;
 		ivec4	four(0, 1, 2, 3);
 		[[ maybe_unused ]] ivec3	three(4, 5, 6);
 		[[ maybe_unused ]] ivec2	two(7, 8);
@@ -1764,7 +1777,7 @@ TEST_SUITE("test swizzling applications")
 		{
 			ivec4 four_dest(0);
 
-			// for basic_vector
+			// for vec
 
 			// recreate input one at a time
 			// "int &" deduced for "auto &"
@@ -1782,7 +1795,7 @@ TEST_SUITE("test swizzling applications")
 			const ivec4 const_data(19, 28, 37, 46);
 			ivec4 data_dest(0);
 
-			// for basic_vector
+			// for vec
 
 			// recreate input one at a time
 			// "const int &" deduced for "auto &"
@@ -1799,7 +1812,7 @@ TEST_SUITE("test swizzling applications")
 		{
 			ivec4 mutable_data(0, 0, 0, 0);
 
-			// for indexed_vector
+			// for swizzle_vec
 
 			// add index squared to whatever is accessed from the swizzle
 			for (int dest_indx = 0; auto &loop_var : mutable_data)
@@ -1811,12 +1824,12 @@ TEST_SUITE("test swizzling applications")
 			CHECK_EQ(mutable_data, ivec4(0, 1, 4, 9));
 		}
 
-		SUBCASE("range-for non-const indexed_vector")
+		SUBCASE("range-for non-const swizzle_vec")
 		{
 			ivec4 non_const_data(55, 64, 73, 82);
 			ivec4 data_dest(0);
 
-			// for indexed_vector
+			// for swizzle_vec
 
 			// recreate input one at a time
 			// "int &" deduced for "auto &"
@@ -1829,12 +1842,12 @@ TEST_SUITE("test swizzling applications")
 			CHECK_EQ(data_dest, ivec4(73, 82, 55, 64));
 		}
 
-		SUBCASE("range-for const indexed_vector")
+		SUBCASE("range-for const swizzle_vec")
 		{
 			const ivec4 const_data(19, 28, 37, 46);
 			ivec4 data_dest(0);
 
-			// for indexed_vector
+			// for swizzle_vec
 
 			// recreate input one at a time
 			// "const int &" deduced for "auto &"
@@ -1847,11 +1860,11 @@ TEST_SUITE("test swizzling applications")
 			CHECK_EQ(data_dest, ivec4(37, 46, 19, 28));
 		}
 
-		SUBCASE("range-for indexed_vector allows aliasing")
+		SUBCASE("range-for swizzle_vec allows aliasing")
 		{
 			ivec4 mutable_data(0, 0, 0, 0);
 
-			// for indexed_vector
+			// for swizzle_vec
 
 			// add index to whatever is accessed from the swizzle
 			for (int dest_indx = 0; auto &loop_var : mutable_data.wzyx)
@@ -1866,6 +1879,7 @@ TEST_SUITE("test swizzling applications")
 
 	TEST_CASE("index_vector iterators")
 	{
+		using namespace dsga;
 		SUBCASE("forward and reverse iterator")
 		{
 			auto source = dsga::ivec4(11, 22, 33, 44).xyzw;
@@ -1881,6 +1895,7 @@ TEST_SUITE("test swizzling applications")
 
 	TEST_CASE("typical usage but without math")
 	{
+		using namespace dsga;
 		SUBCASE("first case")
 		{
 			// vector declarations
@@ -1948,11 +1963,12 @@ TEST_SUITE("test swizzling applications")
 
 TEST_SUITE("test self-assignment mutate")
 {
-	ivec4 fwd{0, 1, 2, 3};
-	ivec4 rev{3, 2, 1, 0};
+	dsga::ivec4 fwd{0, 1, 2, 3};
+	dsga::ivec4 rev{3, 2, 1, 0};
 
 	TEST_CASE("multiple ways to accomplish same swizzling mutation")
 	{
+		using namespace dsga;
 		auto val1 = fwd;
 		val1.xyzw = val1.wzyx;
 		CHECK_UNARY(all(equal(val1, rev)));

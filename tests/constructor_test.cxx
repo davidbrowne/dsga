@@ -14,6 +14,7 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 TEST_SUITE("test vector constructors")
 {
@@ -242,13 +243,13 @@ TEST_SUITE("test vector constructors")
 
 	TEST_CASE("CTAD deduction guide construction")
 	{
-		// CTAD for dsga::basic_vector
-		auto v1 = dsga::basic_vector{1, 2, 3};
-		auto v2 = dsga::basic_vector{2.2, 3, 4, 5.5};
-		auto v3 = dsga::basic_vector{true};
+		// CTAD for dsga::vec
+		auto v1 = dsga::vec{1, 2, 3};
+		auto v2 = dsga::vec{2.2, 3, 4, 5.5};
+		auto v3 = dsga::vec{true};
 
-		auto v4 = dsga::basic_vector{v1};
-		auto v5 = dsga::basic_vector{v2.zy};
+		auto v4 = dsga::vec{v1};
+		auto v5 = dsga::vec{v2.zy};
 
 		CHECK_NE(v1, ivec3(1, 2, 4));
 		CHECK_EQ(v1, ivec3(1, 2, 3));
@@ -257,9 +258,9 @@ TEST_SUITE("test vector constructors")
 		CHECK_EQ(v4, v1);
 		CHECK_EQ(v5, v2.zy);
 
-		// CTAD for dsga::storage_wrapper
-		auto s1 = dsga::storage_wrapper{1.1, 2.2, 3, true};
-		CHECK_EQ(s1, dsga::storage_wrapper<double, 4>{1.1, 2.2, 3.0, 1.0});
+		// CTAD for dsga::vec_storage
+		auto s1 = dsga::vec_storage{1.1, 2.2, 3, true};
+		CHECK_EQ(s1, dsga::vec_storage<double, 4>{1.1, 2.2, 3.0, 1.0});
 	}
 }
 

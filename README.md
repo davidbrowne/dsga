@@ -6,27 +6,44 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v3.0.0
+v3.1.0
+
+## Note
+Use v3.0.0 for the latest stable release version. The next stable release will be v4.0.0. The versions between v3.0.0 and v4.0.0 are for testing out breaking changes to the API and for working on the documentation, so they may be unstable. Suggest that users either get v3.0.0 or wait till the release version v.4.0.0 and not update to the versions inbetween.
+
+## Future Plans
+* Doxygen documentation.
+* Removal of API.md once we have the Doxygen documentation.
+* Additional example classes built on top of the core library.
+* Release v4.0.0 with more breaking changes to the API and the addition of the new documentation.
+* Add more tests and try to get close to 100% code coverage.
 
 ## [Latest Major Changes](docs/CHANGELOG.md)
+* v3.1.0
+    * Minor version bump with some breaking changes to the API.
+    * Updated to doctest v2.5.2
+    * Renamed the 5 main classes, deprecating the old names.
+         * **basic_vector** -> **vec**
+         * **basic_matrix** -> **mat**
+         * **vector_base** -> **vec_interface**
+         * **indexed_vector** -> **swizzle_vec**
+         * **storage_vector** -> **vec_storage**
+    * Microsoft Visual Studio 2022 will no longer be directly supported. Testing may possibly occur using the VS2022 toolset on VS2026.
+    * Removed deprecated function ```logicalNot()```, replaced by ```compNot()```.
+    * CMake support rewritten.
+         * Install target with ```cmake --install``` support.
+         * ```dsga::dsga``` imported ```INTERFACE``` target for ```target_link_libraries```.
+         * CMake config file for ```find_package``` support.
+         * CMake target for linking with other projects.
+         * Compiler flags for MSVC, gcc, and clang.
 * v3.0.0
-    * Major version bump with breaking changes to the API
-    * Removed the ```data()``` interface for all vector types and matrix types, in order to remove the possibilty of pointer overruns.
+    * Major version bump with breaking changes to the API.
+    * Removed the ```data()``` interface for all vector types and matrix types, in order to remove/mitigate the possibilty of pointer overruns.
     * Minor refactoring.
-* v2.2.16
-    * Refactored transform, tolerance, bezier, angle, and basic example functions.
-    * Refactored ```cross()```, ```clamp()```, ```outerProduct()```. ```transpose()```, ```diagonal_matrix()```, some ```basic_matrix``` constructors, and other functions.
-    * General refactoring and formatting.
-    * Updated to cxcm v1.2.1.
-* v2.2.15
-    * The attributes ```[[ likely ]]``` and ```[[ unlikely ]]``` were sprinkled around (and some were removed).
-    * Refactored ```determinant()``` and ```inverse()``` for matrices.
-    * Refactored ```mix()``` (the version like ```lerp()```).
 
 ## Tested Compilers
 ### Regularly Tested
 * Microsoft Visual Studio 2026 v18.6
-* Microsoft Visual Studio 2022 v17.14 (has some constexpr variable limitations)
 * gcc v15.2
 * clang v22.1
 
@@ -56,20 +73,20 @@ v3.0.0
 // get a 2D vector that is perpendicular (rotated 90 degrees counter-clockwise)
 // to a 2D vector in the plane
 template <dsga::floating_point_scalar T>
-constexpr auto get_perpendicular1(const dsga::basic_vector<T, 2> &some_vec) noexcept
+constexpr auto get_perpendicular1(const dsga::vec<T, 2> &some_vec) noexcept
 {
     auto cos90 = 0.0f;
     auto sin90 = 1.0f;
 
     // rotation matrix -- components in column major order
-    return dsga::basic_matrix<T, 2, 2>(cos90, sin90, -sin90, cos90) * some_vec;
+    return dsga::mat<T, 2, 2>(cos90, sin90, -sin90, cos90) * some_vec;
 }
 
 // same as above, different implementation
 template <dsga::floating_point_scalar T>
-constexpr auto get_perpendicular2(const dsga::basic_vector<T, 2> &some_vec) noexcept
+constexpr auto get_perpendicular2(const dsga::vec<T, 2> &some_vec) noexcept
 {
-    return dsga::basic_vector<T, 2>(-1, 1) * some_vec.yx;
+    return dsga::vec<T, 2>(-1, 1) * some_vec.yx;
 }
 ```
 
@@ -153,8 +170,8 @@ constexpr auto simple_cubic_bezier_eval(dsga::vec2 p0, dsga::vec2 p1, dsga::vec2
 
 template <bool W1, dsga::floating_point_scalar T, std::size_t C, class D1, bool W2, class D2>
 requires ((C > 1) && (C < 4))
-auto angle_between(const dsga::vector_base<W1, T, C, D1> &v1,
-                   const dsga::vector_base<W2, T, C, D2> &v2)
+auto angle_between(const dsga::vec_interface<W1, T, C, D1> &v1,
+                   const dsga::vec_interface<W2, T, C, D2> &v2)
 {
     auto a = v1 * dsga::length(v2);
     auto b = v2 * dsga::length(v1);
@@ -212,21 +229,21 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 // cross product
 //
 
-// arguments are of the vector_base class type, and this function will be used if any passed argument is of type indexed_vector
+// arguments are of the vec_interface class type, so both swizzle_vec and vec types (of length 3) can be used.
 template <bool W1, dsga::floating_point_scalar T1, typename D1, bool W2, dsga::floating_point_scalar T2, typename D2>
-[[nodiscard]] constexpr auto cross(const dsga::vector_base<W1, T1, 3, D1> &a,
-                                   const dsga::vector_base<W2, T2, 3, D2> &b) noexcept
+[[nodiscard]] constexpr auto cross(const dsga::vec_interface<W1, T1, 3, D1> &a,
+                                   const dsga::vec_interface<W2, T2, 3, D2> &b) noexcept
 {
     // CTAD gets us the type and size for the vector
-    return dsga::basic_vector((a[1] * b[2]) - (b[1] * a[2]),
-                              (a[2] * b[0]) - (b[2] * a[0]),
-                              (a[0] * b[1]) - (b[0] * a[1]));
+    return dsga::vec((a[1] * b[2]) - (b[1] * a[2]),
+                     (a[2] * b[0]) - (b[2] * a[0]),
+                     (a[0] * b[1]) - (b[0] * a[1]));
 }
 
-// arguments are of type basic_vector, and there is a compact swizzled implementation
+// another approach using swizzles of vec type arguments
 template <dsga::floating_point_scalar T1, dsga::floating_point_scalar T2>
-[[nodiscard]] constexpr auto cross(const dsga::basic_vector<T1, 3> &a,
-                                   const dsga::basic_vector<T2, 3> &b) noexcept
+[[nodiscard]] constexpr auto cross(const dsga::vec<T1, 3> &a,
+                                   const dsga::vec<T2, 3> &b) noexcept
 {
     return (a.yzx * b.zxy) - (a.zxy * b.yzx);
 }
@@ -246,7 +263,7 @@ The following links to the shading specification should help with understanding 
       dvec3 swizzled_value = value.xxx; 
 
       // dsga
-      // dscal is an alias for dsga::basic_vector<double, 1>
+      // dscal is an alias for dsga::vec<double, 1>
       dsga::dscal value = 10.0;
       dsga::dvec3 swizzled_value = value.xxx; 
       ```
@@ -271,11 +288,6 @@ The following links to the shading specification should help with understanding 
     * [Assignments](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#assignments)
     * [Expressions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#expressions)
     * [Vector and Matrix Operations](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-and-matrix-operations)
-    * [Out-of-Bounds Accesses](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#out-of-bounds-accesses): we have asserts for operator[] vectors and matrices, which help with debug runtimes and constexpr variable validity. These asserts (and others in the library) can be disabled by adding the following prior to including the header ```dsga.hxx```:
-      ```c++
-      #define DSGA_DISABLE_ASSERTS
-      #include "dsga.hxx"
-      ```
  
 * [Built-In Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#built-in-functions): we support the additional types ```std::size_t```, ```unsigned long long```, and ```signed long long``` in the functions where appropriate. We also added bit conversion functions between these 64-bit integral types and ```double```.
 
@@ -286,7 +298,7 @@ The following links to the shading specification should help with understanding 
     * [Common Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#common-functions): there are also scalar versions of these functions, but where c++ does the same thing, it might be easier to use the ```std::``` version instead of the ```dsga::``` version.
     * [Geometric Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#geometric-functions): ```ftransform()``` is not implemented as it is only for GLSL vertex shader programs.
     * [Matrix Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#matrix-functions)
-    * [Vector Relational Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-relational-functions): GLSL has a vector function ```not()```, but ```not``` is a c++ keyword. Instead of naming this function ```not()```, we name it ```logicalNot()```.
+    * [Vector Relational Functions](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html#vector-relational-functions): GLSL has a vector function ```not()```, but ```not``` is a c++ keyword. Instead of naming this function ```not()```, we name it ```compNot()```.
 
       In addition, we have added the non-GLSL convenience function ```none()```, which returns ```!any()```.
 
@@ -294,7 +306,7 @@ The following links to the shading specification should help with understanding 
 
 To make the vectors and matrices as useful as possible in a C++ context, various C++ customization points were implemented or interfaces partially emulated, e.g., ```std::valarray<>```. There are many options for data access. For ```dsga``` vectors and matrices, we have:
 
-* Swizzle access like GLSL (vector only)
+* Swizzle access like GLSL (vec only, not swizzle_vec)
     * Only from the set of { x, y, z, w }, e.g., ```foo.wyxz```
 * ```std::tuple``` protocol, structured bindings
     * ```get```
@@ -313,18 +325,10 @@ To make the vectors and matrices as useful as possible in a C++ context, various
     * ```operator []```
     * ```size```
     * ```length```
-* Pointer access (physical), ```std::span``` (for contiguous range types ```dsga::basic_vector``` and ```dsga::basic_matrix```)
-    * ```data```
-        * vector - pointer to scalars of concept type ```dsga::dimensional_scalar```
-        * matrix - pointer to column vectors whose scalars are of concept type ```dsga::floating_point_scalar```
-    * ```size```
-    * vector only - these ordering facilities allow logical use of ```data```
-        * ```offsets```
-        * ```sequence```
 * Type Conversions
     * ```to_vector``` - from both ```std::array``` and C style arrays
     * ```to_matrix``` - from both ```std::array``` and C style arrays
-    * ```to_array``` - from both ```dsga::basic_matrix``` and ```dsga::vector_base``` to ```std::array```
+    * ```to_array``` - from both ```dsga::mat``` and ```dsga::vec_interface``` to ```std::array```
     * [```std::span``` example](examples/span_convert.hxx)
 * Text output
     * [```std::ostream``` example](examples/ostream_output.hxx)
@@ -340,13 +344,11 @@ To make the vectors and matrices as useful as possible in a C++ context, various
 
 ## Installation
 
-This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). Things are defined in the ```dsga``` namespace. The types provided by this library can be seen summarized in the [documentation](docs/DOCUMENTATION.md), [using directives](docs/DOCUMENTATION.md#types-and-functions).
+This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). You can just copy dsga.hxx, or you can get it installed via CMake. Things are defined in the ```dsga``` namespace. The types provided by this library can be seen summarized in the [documentation](docs/DOCUMENTATION.md), [using directives](docs/DOCUMENTATION.md#types-and-functions).
 
 Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
 
-There are asserts in the codebase that can be disabled by defining the macro ```DSGA_DISABLE_ASSERTS```.
-
-This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2022/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE. While debugging this on Linux (WSL2: Windows Subsystem for Linux) with gcc in Visual Studio Code, we created a [.natvis](vscode/dsga-vscode.natvis) file for that too.
+This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2026/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
 
 This is a c++20 library, so that needs to be the minimum standard that you tell the compiler to use.
 
@@ -357,11 +359,6 @@ Current version: `v3.0.0`
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v3.0.0](https://github.com/davidbrowne/dsga/releases)
 * [Change Log](docs/CHANGELOG.md)
-
-### The next steps
-* Refining API documentation.
-* Working on better ```cmake``` support.
-* Add more tests.
 
 ## Usage
 
@@ -384,22 +381,22 @@ The tests have been most recently run on:
 * **MSVC 2026 v18.6**
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2177 | 2177 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2184 | 2184 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **gcc 15.2** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  109 |  109 passed | 0 failed | 0 skipped
-[doctest] assertions: 2177 | 2177 passed | 0 failed |
+[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
+[doctest] assertions: 2184 | 2184 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -408,15 +405,15 @@ The tests have been most recently run on:
 Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
 
 ```
-[doctest] doctest version is "2.5.1"
+[doctest] doctest version is "2.5.2"
 [doctest] run with "--help" for options
 ===============================================================================
-[doctest] test cases:  108 |  108 passed | 0 failed | 1 skipped
-[doctest] assertions: 2161 | 2161 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
+[doctest] assertions: 2168 | 2168 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 26.04 LTS running in WSL2 for Windows 11
+### Ubuntu 26.04 LTS running in WSL for Windows 11
 
 * **gcc 16.0**
 
@@ -442,7 +439,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 24.04 LTS running in WSL2 for Windows 11
+### Ubuntu 24.04 LTS running in WSL for Windows 11
 
 * **gcc 14.2**
 
@@ -468,7 +465,7 @@ Performs all the unit tests except where there is lack of support for ```std::is
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 22.04.3 LTS running in WSL2 for Windows 11
+### Ubuntu 22.04.3 LTS running in WSL for Windows 11
 
 * **gcc 12.3**
 

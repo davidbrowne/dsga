@@ -17,13 +17,14 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 
 // fill vectors from spans
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+constexpr void copy_to_vector(dsga::vec<T, S> &lhs, std::span<U, E> rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -32,7 +33,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
+constexpr void copy_to_vector(dsga::vec<T, S> &lhs, std::span<const U, E> rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -41,7 +42,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, 
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs)
+constexpr void copy_to_vector(dsga::vec<T, S> &lhs, std::span<U, E> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -50,7 +51,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<U, E> rhs
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<U, T>
-constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, E> rhs)
+constexpr void copy_to_vector(dsga::vec<T, S> &lhs, std::span<const U, E> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -61,7 +62,7 @@ constexpr void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::span<const U, 
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E != 0) && (E != std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<T, U>
-constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::vec<T, S> &rhs)
 {
 	constexpr std::size_t count = std::min(S, E);
 	for (std::size_t i = 0; i < count; ++i)
@@ -70,7 +71,7 @@ constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T,
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U, std::size_t E>
 requires ((E == 0) || (E == std::dynamic_extent)) && dsga::non_bool_scalar<U> && std::convertible_to<T, U>
-constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T, S> &rhs)
+constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::vec<T, S> &rhs)
 {
 	const std::size_t count = std::min(S, lhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -81,7 +82,7 @@ constexpr void copy_from_vector(std::span<U, E> lhs, const dsga::basic_vector<T,
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U>
 requires std::convertible_to<U, T>
-void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::valarray<U> rhs)
+void copy_to_vector(dsga::vec<T, S> &lhs, std::valarray<U> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -92,7 +93,7 @@ void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::valarray<U> rhs)
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U>
 requires std::convertible_to<T, U>
-void copy_from_vector(std::valarray<U> &lhs, const dsga::basic_vector<T, S> &rhs)
+void copy_from_vector(std::valarray<U> &lhs, const dsga::vec<T, S> &rhs)
 {
 	const std::size_t count = std::min(S, lhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -102,7 +103,7 @@ void copy_from_vector(std::valarray<U> &lhs, const dsga::basic_vector<T, S> &rhs
 // create a valarray from a vector
 
 template <dsga::dimensional_scalar T, std::size_t S>
-auto to_valarray(const dsga::basic_vector<T, S> &v)
+auto to_valarray(const dsga::vec<T, S> &v)
 {
 	return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 	{
@@ -226,7 +227,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(val2, vec_arr[3]);
 
 			//
-			// wrap a span around a basic_vector
+			// wrap a span around a vec
 			//
 
 			ivec4 dest{};
@@ -246,7 +247,7 @@ TEST_SUITE("test conversions")
 		[[ maybe_unused ]] constexpr std::array<double, 16> const_float_data = { 0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15. };
 		std::array<int, 16> non_const_int_data { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 
-		SUBCASE("1D basic_vector primitive conversions")
+		SUBCASE("1D vec primitive conversions")
 		{
 			iscal simple_data(999);
 			iscal simple_dest;
@@ -304,7 +305,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(-10, get<0>(get_tester));
 		}
 
-		SUBCASE("2D basic_vector primitive conversions")
+		SUBCASE("2D vec primitive conversions")
 		{
 			ivec2 simple_data(999, 9999);
 			ivec2 simple_dest;
@@ -364,7 +365,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(-20, get<1>(get_tester));
 		}
 
-		SUBCASE("3D basic_vector primitive conversions")
+		SUBCASE("3D vec primitive conversions")
 		{
 			ivec3 simple_data(999, 9999, 99999);
 			ivec3 simple_dest;
@@ -426,7 +427,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(-30, get<2>(get_tester));
 		}
 
-		SUBCASE("4D basic_vector primitive conversions")
+		SUBCASE("4D vec primitive conversions")
 		{
 			ivec4 simple_data(999, 9999, 99999, 999999);
 			ivec4 simple_dest;
@@ -490,7 +491,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(-40, get<3>(get_tester));
 		}
 
-		SUBCASE("1D indexed_vector primitive conversions")
+		SUBCASE("1D swizzle_vec primitive conversions")
 		{
 			iscal somevec(50);
 
@@ -517,7 +518,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(-10, get<0>(get_tester.x));
 		}
 
-		SUBCASE("2D indexed_vector primitive conversions")
+		SUBCASE("2D swizzle_vec primitive conversions")
 		{
 			ivec2 somevec(50, 60);
 
@@ -545,7 +546,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(-20, get<0>(get_tester.yx));
 		}
 
-		SUBCASE("3D indexed_vector primitive conversions")
+		SUBCASE("3D swizzle_vec primitive conversions")
 		{
 			ivec3 somevec(50, 60, 70);
 
@@ -574,7 +575,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(-20, get<0>(get_tester.yzx));
 		}
 
-		SUBCASE("4D indexed_vector primitive conversions")
+		SUBCASE("4D swizzle_vec primitive conversions")
 		{
 			ivec4 somevec(50, 60, 70, 80);
 
@@ -605,9 +606,9 @@ TEST_SUITE("test conversions")
 		}
 	}
 
-	TEST_CASE("indexed_vector conversions")
+	TEST_CASE("swizzle_vec conversions")
 	{
-		SUBCASE("1D indexed_vector conversions")
+		SUBCASE("1D swizzle_vec conversions")
 		{
 			// the three conversion operators
 
@@ -628,7 +629,7 @@ TEST_SUITE("test conversions")
 			CHECK_EQ(val4, std::asin(1.0));
 		}
 
-		SUBCASE("2D indexed_vector conversions")
+		SUBCASE("2D swizzle_vec conversions")
 		{
 			// the two conversion operators
 
@@ -642,7 +643,7 @@ TEST_SUITE("test conversions")
 			CHECK_NE(val2, fvec2(6.0f, 4.0f));
 		}
 
-		SUBCASE("3D indexed_vector conversions")
+		SUBCASE("3D swizzle_vec conversions")
 		{
 			// the two conversion operators
 
@@ -656,7 +657,7 @@ TEST_SUITE("test conversions")
 			CHECK_NE(val2, fvec3(4.0f, 5.0f, 6.0f));
 		}
 
-		SUBCASE("4D indexed_vector conversions")
+		SUBCASE("4D swizzle_vec conversions")
 		{
 			// the two conversion operators
 
@@ -673,7 +674,7 @@ TEST_SUITE("test conversions")
 
 	TEST_CASE("conversion operators (1D only)")
 	{
-		// the only basic_vector with conversion operators is
+		// the only vec with conversion operators is
 		// for 1D, as we want them to mimic the scalar type.
 
 		const int val1 = cx_one;										// implicit conversion
@@ -694,7 +695,7 @@ TEST_SUITE("test conversions")
 		CHECK_EQ(val3, std::asin(1.0));
 	}
 
-	TEST_CASE("basic_vector conversion constructors")
+	TEST_CASE("vec conversion constructors")
 	{
 		// conversion constructors remove the need for conversion operators.
 		// conversion operators can also cause ambiguities with the conversion constructors.

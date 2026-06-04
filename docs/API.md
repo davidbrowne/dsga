@@ -131,7 +131,7 @@ Are implicit conversions allowed for non-boolean arithmetic purposes?
 template <std::size_t Size, std::size_t Count, std::size_t ...Is>
 concept indexable = detail::valid_index_count<Count, Is...>() && detail::valid_range_indexes<Size, Is...>();
 ```
-Do the argument indexes and count/size make for valid indirect indexing, such as for ```indexed_vector```.
+Do the argument indexes and count/size make for valid indirect indexing, such as for ```swizzle_vec```.
 
 Size and Count are two different things, with Size being the physical number of elements, and Count being the logical number of elements. Count must be the ```sizeof...Is```, and for every one of the Is, it must be smaller than Size.
 
@@ -147,7 +147,7 @@ template <std::size_t Size, std::size_t Count, std::size_t ...Is>
 requires indexable<Size, Count, Is...>
 constexpr inline bool writable_swizzle = detail::unique_indexes(std::index_sequence<Is...>{});
 ```
-Used for the Writable template parameter of a ```indexed_vector```. Can a particular swizzle be used as an lvalue reference. All of the swizzle indexes must have been used at most once, e.g., for ```xyz```, Writable is true, and for ```xyx```, Writable is false (assuming that all other requirements are met).
+Used for the Writable template parameter of a ```swizzle_vec```. Can a particular swizzle be used as an lvalue reference. All of the swizzle indexes must have been used at most once, e.g., for ```xyz```, Writable is true, and for ```xyx```, Writable is false (assuming that all other requirements are met).
 
 #### ```degrees_per_radian_v```
 ```c++
@@ -167,7 +167,7 @@ inline constexpr T radians_per_degree_v = std::numbers::pi_v<T> / T(180);
 * [```make_index_range```](#make_index_range)
 * [```make_closed_index_range```](#make_closed_index_range)
 * [```make_array_sequence```](#make_array_sequence)
-* Using Directives for Creating ```indexed_vector```s
+* Using Directives for Creating ```swizzle_vec```s
   * [```dexvec1```](#dexvec1)
   * [```dexvec2```](#dexvec2)
   * [```dexvec3```](#dexvec3)
@@ -179,7 +179,7 @@ template <dimensional_scalar T, std::size_t Size>
 requires dimensional_storage<T, Size>
 using dimensional_storage_t = std::array<T, Size>;
 ```
-The underlying storage type for ```storage_wrappper``` and ```indexed_vector```. It is contiguous, and it has contiguous iterators.
+The underlying storage type for ```storage_wrappper``` and ```swizzle_vec```. It is contiguous, and it has contiguous iterators.
 
 #### ```make_index_range```
 ```c++
@@ -200,40 +200,40 @@ This gives a closed interval in a ```std::index_sequence``` -> [Start, End]. If 
 template <detail::sequence_indexable auto vals>
 using make_array_sequence = decltype(detail::indexable_to_sequence<vals>(std::make_index_sequence<vals.size()>{}));
 ```
-This gives a ```std::index_sequence``` that contains the elements of a constexpr ```std::array<T, N> vals```, where ```T``` is convertible to a ```std::size_t``` and none of the elements are negative. Constexpr non-type template parameter```vals``` doesn't have to be of type ```std::array<T, N>```, but it must have constexpr member functions ```size``` and ```operator []```, both of whose return values are convertible to ```std::size_t```, e.g., ```dsga::basic_vector<T, N>```, as long as all values in the vector are non-negative and ```std::convertible_to<T, std::size_t>``` is true.
+This gives a ```std::index_sequence``` that contains the elements of a constexpr ```std::array<T, N> vals```, where ```T``` is convertible to a ```std::size_t``` and none of the elements are negative. Constexpr non-type template parameter```vals``` doesn't have to be of type ```std::array<T, N>```, but it must have constexpr member functions ```size``` and ```operator []```, both of whose return values are convertible to ```std::size_t```, e.g., ```dsga::vec<T, N>```, as long as all values in the vector are non-negative and ```std::convertible_to<T, std::size_t>``` is true.
 
-#### Using Directives for Creating ```indexed_vector```s
+#### Using Directives for Creating ```swizzle_vec```s
 
 #### ```dexvec1```
 ```c++
 template <typename T, std::size_t Size, std::size_t I>
-using dexvec1 = indexed_vector<std::remove_cvref_t<T>, Size, 1, I>;
+using dexvec1 = swizzle_vec<std::remove_cvref_t<T>, Size, 1, I>;
 ```
-Convenience using directive for creating a ```indexed_vector``` for ```Count == 1```.
+Convenience using directive for creating a ```swizzle_vec``` for ```Count == 1```.
 
 #### ```dexvec2```
 ```c++
 template <typename T, std::size_t Size, std::size_t ...Is>
 requires (sizeof...(Is) == 2)
-using dexvec2 = indexed_vector<std::remove_cvref_t<T>, Size, 2, Is...>;
+using dexvec2 = swizzle_vec<std::remove_cvref_t<T>, Size, 2, Is...>;
 ```
-Convenience using directive for creating a ```indexed_vector``` for ```Count == 2```.
+Convenience using directive for creating a ```swizzle_vec``` for ```Count == 2```.
 
 #### ```dexvec3```
 ```c++
 template <typename T, std::size_t Size, std::size_t ...Is>
 requires (sizeof...(Is) == 3)
-using dexvec3 = indexed_vector<std::remove_cvref_t<T>, Size, 3, Is...>;
+using dexvec3 = swizzle_vec<std::remove_cvref_t<T>, Size, 3, Is...>;
 ```
-Convenience using directive for creating a ```indexed_vector``` for ```Count == 3```.
+Convenience using directive for creating a ```swizzle_vec``` for ```Count == 3```.
 
 #### ```dexvec4```
 ```c++
 template <typename T, std::size_t Size, std::size_t ...Is>
 requires (sizeof...(Is) == 4)
-using dexvec4 = indexed_vector<std::remove_cvref_t<T>, Size, 4, Is...>;
+using dexvec4 = swizzle_vec<std::remove_cvref_t<T>, Size, 4, Is...>;
 ```
-Convenience using directive for creating a ```indexed_vector``` for ```Count == 4```.
+Convenience using directive for creating a ```swizzle_vec``` for ```Count == 4```.
 
 ### Utility Functions
 
@@ -273,101 +273,100 @@ Not a vector or matrix function. Not in GLSL. This functionality was added to ``
 
 ### Class Templates
 
-* [```basic_vector```](#basic_vector)
-* [```basic_matrix```](#basic_matrix)
-* [```indexed_vector```](#indexed_vector)
-  * [```indexed_vector_iterator```](#indexed_vector_iterator)
-  * [```indexed_vector_const_iterator```](#indexed_vector_const_iterator)
-* [```vector_base```](#vector_base)
-* [```storage_wrapper```](#storage_wrapper)
+* [```vec```](#vec)
+* [```mat```](#mat)
+* [```swizzle_vec```](#swizzle_vec)
+  * [```swizzle_vec_iterator```](#swizzle_vec_iterator)
+  * [```swizzle_vec_const_iterator```](#swizzle_vec_const_iterator)
+* [```vec_interface```](#vec_interface)
+* [```vec_storage```](#vec_storage)
 
-This diagram explores the relationships between the various ```dsga``` template classes, which are actually all structs. The main two template structs are ```basic_vector``` and ```basic_matrix```. The other structs are in support of those two primary components.
+This diagram explores the relationships between the various ```dsga``` template classes, which are actually all structs. The main two template structs are ```vec``` and ```mat```. The other structs are in support of those two primary components.
 
 ![dsga class diagram](./dsga.svg)
 
-#### ```storage_wrapper```
+#### ```vec_storage```
 ```c++
 template <dimensional_scalar T, std::size_t Size>
 requires dimensional_storage<T, Size>
-struct storage_wrapper;
+struct vec_storage;
 ```
-This struct is structurally equivalent to [```indexed_vector```](#indexed_vector). They both wrap a data member of type ```dimensional_storage_t```. When comparing an [```indexed_vector```](#indexed_vector) and ```dimensional_storage_t``` of the same type and size, as members in a union, they satisfy the type trait ```std::is_corresponding_member```. For a union of many members of [```indexed_vector```](#indexed_vector) and a member of ```dimensional_storage_t```, these all share a [common initial sequence](https://en.cppreference.com/w/cpp/language/data_members). This allows us to read any of the union members without having to make a member active first (via writing). An anonymous union of a ```storage_wrapper``` and multiple swizzles of [```indexed_vector```](#indexed_vector) instantiations constitutes the data of a [```basic_vector```](#basic_vector).
+This struct is structurally equivalent to [```swizzle_vec```](#swizzle_vec). They both wrap a data member of type ```dimensional_storage_t```. When comparing an [```swizzle_vec```](#swizzle_vec) and ```dimensional_storage_t``` of the same type and size, as members in a union, they satisfy the type trait ```std::is_corresponding_member```. For a union of many members of [```swizzle_vec```](#swizzle_vec) and a member of ```dimensional_storage_t```, these all share a [common initial sequence](https://en.cppreference.com/w/cpp/language/data_members). This allows us to read any of the union members without having to make a member active first (via writing). An anonymous union of a ```vec_storage``` and multiple swizzles of [```swizzle_vec```](#swizzle_vec) instantiations constitutes the data of a [```vec```](#vec).
 
-```storage_wrapper``` is not part of the GLSL specification, but it is used by [```basic_vector```](#basic_vector) for writing data to storage. It has been designed to have a similar API to [```basic_vector```](#basic_vector).
+```vec_storage``` is not part of the GLSL specification, but it is used by [```vec```](#vec) for writing data to storage. It has been designed to have a similar API to [```vec```](#vec).
 
 * Template Parameters
-  * ```T``` - type of the ```storage_wrapper``` elements. Must satisfy [```dimensional_scalar```](#dimensional_scalar).
-  * ```Size``` - number of ```storage_wrapper``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
+  * ```T``` - type of the ```vec_storage``` elements. Must satisfy [```dimensional_scalar```](#dimensional_scalar).
+  * ```Size``` - number of ```vec_storage``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
 * Non-Static Data Members
-  * [```store```](#storage_wrapperstore)
+  * [```store```](#vec_storagestore)
 * Static Data Members
-  * [```Count```](#storage_wrappercount)
-  * [```Writable```](#storage_wrapperwritable)
-  * [```offsets```](#storage_wrapperoffsets)
-  * [```size``` (```std::integral_constant```)](#storage_wrappersize-stdintegral_constant)
+  * [```Count```](#vec_storagecount)
+  * [```Writable```](#vec_storagewritable)
+  * [```offsets```](#vec_storageoffsets)
+  * [```size``` (```std::integral_constant```)](#vec_storagesize-stdintegral_constant)
 * Static Member Functions
-  * [```size``` (theoretical function)](#storage_wrappersize-theoretical-function)
-  * [```sequence```](#storage_wrappersequence)
+  * [```size``` (theoretical function)](#vec_storagesize-theoretical-function)
+  * [```sequence```](#vec_storagesequence)
 * Non-Static Member Functions
-  * [```length```](#storage_wrapperlength)
-  * [```operator []```](#storage_wrapperoperator-)
-  * [```data```](#storage_wrapperdata)
-  * [```set```](#storage_wrapperset)
-  * [```swap```](#storage_wrapperswap)
-  * [Iterators](#storage_wrapper-iterators)
+  * [```length```](#vec_storagelength)
+  * [```operator []```](#vec_storageoperator-)
+  * [```set```](#vec_storageset)
+  * [```swap```](#vec_storageswap)
+  * [Iterators](#vec_storage-iterators)
 * Using Directives
-  * [```sequence_pack```](#storage_wrappersequence_pack)
+  * [```sequence_pack```](#vec_storagesequence_pack)
   * ```value_type```
   * ```iterator```
   * ```const_iterator```
   * ```reverse_iterator```
   * ```const_reverse_iterator```
 
-* [Free Functions](#storage_wrapper-free-functions)
-* [Class Template Argument Deduction (CTAD)](#storage_wrapper-ctad)
+* [Free Functions](#vec_storage-free-functions)
+* [Class Template Argument Deduction (CTAD)](#vec_storage-ctad)
 
-##### ```storage_wrapper::store```
+##### ```vec_storage::store```
 ```c++
 dimensional_storage_t<T, Size> store;
 ```
 The data member for the storage.
 
-##### ```storage_wrapper::Count```
+##### ```vec_storage::Count```
 ```c++
 static constexpr std::size_t Count = Size;
 ```
-The static variable that holds the number of items that we are handling. It is always the same value as the template parameter ```Size```. It is unnecessary for this class, but it is used here to be in solidarity with ```indexed_vector```, where ```Size``` and ```Count``` are often not the same value.
+The static variable that holds the number of items that we are handling. It is always the same value as the template parameter ```Size```. It is unnecessary for this class, but it is used here to be in solidarity with ```swizzle_vec```, where ```Size``` and ```Count``` are often not the same value.
 
-##### ```storage_wrapper::Writable```
+##### ```vec_storage::Writable```
 ```c++
 static constexpr bool Writable = true;
 ```
-This static variable is always true for all ```storage_wrapper```s. It is unnecessary for this class, but it is used in here to be in solidarity with ```indexed_vector```, where Writable is not always true (mostly false actually).
+This static variable is always true for all ```vec_storage```s. It is unnecessary for this class, but it is used in here to be in solidarity with ```swizzle_vec```, where Writable is not always true (mostly false actually).
 
-##### ```storage_wrapper::offsets```
+##### ```vec_storage::offsets```
 ```c++
 static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 ```
-The static ```std::array``` for how the physical representation is mapped to the logical representation. For ```storage_wrapper```, the physical and logical representations are the same, i.e., a contiguous representation, and the sequence ascends from 0.
+The static ```std::array``` for how the physical representation is mapped to the logical representation. For ```vec_storage```, the physical and logical representations are the same, i.e., a contiguous representation, and the sequence ascends from 0.
 
-##### ```storage_wrapper::size``` (```std::integral_constant```)
+##### ```vec_storage::size``` (```std::integral_constant```)
 ```c++
 static constexpr std::integral_constant<std::size_t, Count> size = {};
 ```
 
-##### ```storage_wrapper::size``` (theoretical function)
+##### ```vec_storage::size``` (theoretical function)
 ```c++
 [[nodiscard]] static constexpr std::size_t size() const noexcept;
 ```
 Return the number of components in the struct. The declaration for ```size()``` is a fiction due to the fact that this function does not exist; however, the static ```std::integral_constant``` ```size``` has an ```operator()()``` that operates exactly as the above declaration. This approach of using a ```std::integral_constant``` for ```size``` is supposed to be an up and coming idiom in the C++ standard for all new standard library components with constant sizes.
 
-##### ```storage_wrapper::length```
+##### ```vec_storage::length```
 ```c++
 [[nodiscard]] constexpr int length() const noexcept;
 ```
 The GLSL specification requires that the ```length method``` behave as a member function, returning the number of components in the struct.
 
-##### ```storage_wrapper::operator []```
+##### ```vec_storage::operator []```
 ```c++
 template <typename U>
 requires std::convertible_to<U, std::size_t>
@@ -377,36 +376,29 @@ template <typename U>
 requires std::convertible_to<U, std::size_t>
 [[nodiscard]] constexpr const T &operator [](const U &index) const noexcept;
 ```
-Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account. For ```storage_wrapper```, the elements are contiguous, so the physical and logical mapping is the same.
+Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account. For ```vec_storage```, the elements are contiguous, so the physical and logical mapping is the same.
 
-##### ```storage_wrapper::data```
-```c++
-[[nodiscard]] constexpr T * data() noexcept requires Writable;
-[[nodiscard]] constexpr const T * data() const noexcept;
-```
-Data access through pointers. Use with ```sequence``` or ```offsets``` for physical to logical mapping.
-
-##### ```storage_wrapper::sequence```
+##### ```vec_storage::sequence```
 ```c++
 [[nodiscard]] static constexpr auto sequence() noexcept;
 ```
-The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. For ```storage_wrapper```, the physical and logical representation are the same, i.e., a contiguous representation, and the sequence ascends from 0.
+The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. For ```vec_storage```, the physical and logical representation are the same, i.e., a contiguous representation, and the sequence ascends from 0.
 
-##### ```storage_wrapper::set```
+##### ```vec_storage::set```
 ```c++
 template <typename ...Args>
 requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 constexpr void set(Args ...args) noexcept;
 ```
-Set all the values of a ```storage_wrapper``` via parameter copies. This prevents aliasing issues with references.
+Set all the values of a ```vec_storage``` via parameter copies. This prevents aliasing issues with references.
 
-##### ```storage_wrapper::swap```
+##### ```vec_storage::swap```
 ```c++
-constexpr void swap(storage_wrapper &sw) noexcept requires Writable;
+constexpr void swap(vec_storage &sw) noexcept requires Writable;
 ```
 Swap the data using the underlying ```dimensional_storage_t```'s ```swap``` function.
 
-##### ```storage_wrapper``` Iterators
+##### ```vec_storage``` Iterators
 ```c++
 [[nodiscard]] constexpr auto begin() noexcept requires Writable;
 [[nodiscard]] constexpr auto begin() const noexcept;
@@ -424,107 +416,106 @@ Swap the data using the underlying ```dimensional_storage_t```'s ```swap``` func
 ```
 These contiguous iterators are supplied by the underlying ```dimensional_storage_t```.
 
-##### ```storage_wrapper::sequence_pack```
+##### ```vec_storage::sequence_pack```
 ```c++
 using sequence_pack = std::make_index_sequence<Count>;
 ```
 The instantiation of ```std::index_sequence``` that represents the physical to logical mapping. ```sequence``` returns an instance of this type.
 
-##### ```storage_wrapper``` Free Functions
+##### ```vec_storage``` Free Functions
 
 ```c++
 template <dimensional_scalar T, std::size_t Size>
-constexpr void swap(storage_wrapper<T, Size> &lhs, storage_wrapper<T, Size> &rhs) noexcept;
+constexpr void swap(vec_storage<T, Size> &lhs, vec_storage<T, Size> &rhs) noexcept;
 ```
-Free function ```swap``` wraps the member function ```storage_wrapper::swap```.
+Free function ```swap``` wraps the member function ```vec_storage::swap```.
 
 ```c++
 template <dimensional_scalar T1, std::size_t C, dimensional_scalar T2>
 requires implicitly_convertible_to<T2, T1>
-constexpr bool operator ==(const storage_wrapper<T1, C> &first,
-                           const storage_wrapper<T2, C> &second) noexcept;
+constexpr bool operator ==(const vec_storage<T1, C> &first,
+                           const vec_storage<T2, C> &second) noexcept;
 ```
 Returns whether all the components are exactly equal.
 
 ```c++
 template <dimensional_scalar T1, std::size_t C, dimensional_scalar T2>
 requires implicitly_convertible_to<T2, T1>
-constexpr bool operator !=(const storage_wrapper<T1, C> &first,
-                           const storage_wrapper<T2, C> &second) noexcept;
+constexpr bool operator !=(const vec_storage<T1, C> &first,
+                           const vec_storage<T2, C> &second) noexcept;
 ```
 Function automatically generated from ```operator ==```. Returns whether any of the components are not exactly equal.
 
-##### ```storage_wrapper``` CTAD
+##### ```vec_storage``` CTAD
 ```c++
 template <dimensional_scalar T, dimensional_scalar ...U>
-storage_wrapper(T, U...) -> storage_wrapper<T, 1 + sizeof...(U)>;
+vec_storage(T, U...) -> vec_storage<T, 1 + sizeof...(U)>;
 ```
-[Class template argument deduction (CTAD)](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) for ```storage_wrapper```.
+[Class template argument deduction (CTAD)](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) for ```vec_storage```.
 
-#### ```vector_base```
+#### ```vec_interface```
 ```c++
 template <bool Writable, dimensional_scalar T, std::size_t Count, typename Derived>
 requires dimensional_storage<T, Count>
-struct vector_base;
+struct vec_interface;
 ```
-This [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class is inherited by derived classes [```basic_vector```](#basic_vector) and [```indexed_vector```](#indexed_vector). It has no data members of its own. Most all of the vector operators and free functions operate on ```vector_base``` instead of the derived vectors, as we want to treat the two derived vector types as similarly as possible.
+This [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) base class is inherited by derived classes [```vec```](#vec) and [```swizzle_vec```](#swizzle_vec). It has no data members of its own. Most all of the vector operators and free functions operate on ```vec_interface``` instead of the derived vectors, as we want to treat the two derived vector types as similarly as possible.
 
 * Template Parameters
-  * ```Writable``` - certain derived classes are not writable, namely most template instantiations of ```indexed_vector```. If ```Writable``` is false, then ```vector_base``` is effectively const.
+  * ```Writable``` - certain derived classes are not writable, namely most template instantiations of ```swizzle_vec```. If ```Writable``` is false, then ```vec_interface``` is effectively const.
   * ```T``` - type of the vector elements. Must satisfy [```dimensional_scalar```](#dimensional_scalar).
   * ```Count``` - number of logical vector elements. Must satisfy [```dimensional_size```](#dimensional_size).
-  * ```Derived``` - the type of this derived class for which ```vector_base``` is a CRTP base class.
+  * ```Derived``` - the type of this derived class for which ```vec_interface``` is a CRTP base class.
 * Non-Static Data Members
   * None.
 * Static Data Members
-  * [```size``` (```std::integral_constant```)](#vector_basesize-stdintegral_constant)
+  * [```size``` (```std::integral_constant```)](#vec_interfacesize-stdintegral_constant)
 * Static Member Functions
-  * [```size``` (theoretical function)](#vector_basesize-theoretical-function)
-  * [```sequence```](#vector_basesequence)
+  * [```size``` (theoretical function)](#vec_interfacesize-theoretical-function)
+  * [```sequence```](#vec_interfacesequence)
 * Non-Static Member Functions
-  * [```length```](#vector_baselength)
-  * [```as_derived```](#vector_baseas_derived)
-  * [```operator []```](#vector_baseoperator-)
-  * [```data```](#vector_basedata)
-  * [```set```](#vector_baseset)
-  * [Iterators](#vector_base-iterators)
+  * [```length```](#vec_interfacelength)
+  * [```as_derived```](#vec_interfaceas_derived)
+  * [```operator []```](#vec_interfaceoperator-)
+  * [```set```](#vec_interfaceset)
+  * [Iterators](#vec_interface-iterators)
   * [```std::valarray```](https://en.cppreference.com/w/cpp/numeric/valarray) API
-    * [```apply```](#vector_baseapply)
-    * [```query```](#vector_basequery) - not in ```std::valarray```
-    * [```shift```](#vector_baseshift)
-    * [```cshift```](#vector_basecshift)
-    * [```min```](#vector_basemin)
-    * [```max```](#vector_basemax)
-    * [```sum```](#vector_basesum)
+    * [```apply```](#vec_interfaceapply)
+    * [```query```](#vec_interfacequery) - not in ```std::valarray```
+    * [```shift```](#vec_interfaceshift)
+    * [```cshift```](#vec_interfacecshift)
+    * [```min```](#vec_interfacemin)
+    * [```max```](#vec_interfacemax)
+    * [```sum```](#vec_interfacesum)
 * [Vector Operators](#vector-operators)
 * [Vector Free Functions](#vector-free-functions)
 
-##### ```vector_base::size``` (```std::integral_constant```)
+##### ```vec_interface::size``` (```std::integral_constant```)
 ```c++
 static constexpr std::integral_constant<std::size_t, Count> size = {};
 ```
 
-##### ```vector_base::size``` (theoretical function)
+##### ```vec_interface::size``` (theoretical function)
 ```c++
 [[nodiscard]] static constexpr std::size_t size() const noexcept;
 ```
 Return the number of components in the derived struct. The declaration for ```size()``` is a fiction due to the fact that this function does not exist; however, the static ```std::integral_constant``` ```size``` has an ```operator()()``` that operates exactly as the above declaration. This approach of using a ```std::integral_constant``` for ```size``` is supposed to be an up and coming idiom in the C++ standard for all new standard library components with constant sizes.
 
-##### ```vector_base::length```
+##### ```vec_interface::length```
 ```c++
 [[nodiscard]] constexpr int length() const noexcept;
 ```
 The GLSL specification requires that the ```length method``` behave as a member function, returning the number of components in the struct.
 
-##### ```vector_base::as_derived```
+##### ```vec_interface::as_derived```
 ```c++
 [[nodiscard]] constexpr Derived &as_derived() noexcept requires Writable;
 
 [[nodiscard]] constexpr const Derived &as_derived() const noexcept;
 ```
-Since this is a CRTP base class, one of the template type parameters is for the class/struct that derived from ```vector_base```. This function returns a reference to the derived class/struct version of the ```vector_base```.
+Since this is a CRTP base class, one of the template type parameters is for the class/struct that derived from ```vec_interface```. This function returns a reference to the derived class/struct version of the ```vec_interface```.
 
-##### ```vector_base::operator []```
+##### ```vec_interface::operator []```
 ```c++
 template <typename U>
 requires std::convertible_to<U, std::size_t>
@@ -536,21 +527,13 @@ requires std::convertible_to<U, std::size_t>
 ```
 Data access through the indexing operator. This CRTP function calls the derived class/struct version of the function.
 
-##### ```vector_base::data```
-```c++
-[[nodiscard]] constexpr T * data() noexcept requires Writable;
-
-[[nodiscard]] constexpr const T * data() const noexcept;
-```
-Data access through pointers. Use with ```sequence``` or ```offsets``` for physical to logical mapping. This CRTP function calls the derived class/struct version of the function.
-
-##### ```vector_base::sequence```
+##### ```vec_interface::sequence```
 ```c++
 [[nodiscard]] static constexpr auto sequence() noexcept;
 ```
 The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. This CRTP function calls the derived class/struct version of the function.
 
-##### ```vector_base::set```
+##### ```vec_interface::set```
 ```c++
 template <typename ...Args>
 requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -558,7 +541,7 @@ constexpr void set(Args ...args) noexcept;
 ```
 Set all the values of the derived struct/class via parameter copies. This prevents aliasing issues with references. This CRTP function calls the derived class/struct version of the function.
 
-##### ```vector_base``` Iterators
+##### ```vec_interface``` Iterators
 ```c++
 [[nodiscard]] constexpr auto begin() noexcept requires Writable;
 [[nodiscard]] constexpr auto begin() const noexcept;
@@ -576,87 +559,86 @@ Set all the values of the derived struct/class via parameter copies. This preven
 ```
 These CRTP functions call the derived class/struct versions of the functions.
 
-##### ```vector_base::apply```
+##### ```vec_interface::apply```
 ```c++
 template <typename UnOp>
 requires (std::same_as<T, std::invoke_result_t<UnOp, T>> || std::same_as<T, std::invoke_result_t<UnOp, const T &>>)
-[[nodiscard]] constexpr basic_vector<T, Count> apply(UnOp op) const noexcept;
+[[nodiscard]] constexpr vec<T, Count> apply(UnOp op) const noexcept;
 ```
 Applies a lambda/function/function object/callable to every element of a vector, in element order (order only matters if callable is side-effecting and/or has state). The callable must take either a ```T``` or ```const T &```, and it must return a ```T```. Returns a vector of the results.
 
-##### ```vector_base::query```
+##### ```vec_interface::query```
 ```c++
 template <typename UnOp>
 requires (std::same_as<bool, std::invoke_result_t<UnOp, T>> || std::same_as<bool, std::invoke_result_t<UnOp, const T &>>)
-[[nodiscard]] constexpr basic_vector<bool, Count> query(UnOp op) const noexcept;
+[[nodiscard]] constexpr vec<bool, Count> query(UnOp op) const noexcept;
 ```
 Applies a predicate lambda/function/function object/callable to every element of a vector, in element order (order only matters if callable is side-effecting and/or has state). The callable must take either a ```T``` or ```const T &```, and it must return a ```bool```. Returns a vector of the results. Not in GLSL nor ```std::valarray```.
 
-##### ```vector_base::shift```
+##### ```vec_interface::shift```
 ```c++
-[[nodiscard]] constexpr basic_vector<T, Count> shift(int by) const noexcept;
+[[nodiscard]] constexpr vec<T, Count> shift(int by) const noexcept;
 ```
 Zero-filling shift the elements of the vector. Returns a vector of the results.
 
-##### ```vector_base::cshift```
+##### ```vec_interface::cshift```
 ```c++
-[[nodiscard]] constexpr basic_vector<T, Count> cshift(int by) const noexcept;
+[[nodiscard]] constexpr vec<T, Count> cshift(int by) const noexcept;
 ```
 Circular shift of the elements of the vector. Returns a vector of the results.
 
-##### ```vector_base::min```
+##### ```vec_interface::min```
 ```c++
 [[nodiscard]] constexpr T min() const noexcept requires non_bool_scalar<T>;
 ```
 Returns the smallest element.
 
-##### ```vector_base::max```
+##### ```vec_interface::max```
 ```c++
 [[nodiscard]] constexpr T max() const noexcept requires non_bool_scalar<T>;
 ```
 Returns the largest element.
 
-##### ```vector_base::sum```
+##### ```vec_interface::sum```
 ```c++
 [[nodiscard]] constexpr T sum() const noexcept requires non_bool_scalar<T>;
 ```
 Returns the sum of all elements.
 
-#### ```indexed_vector```
+#### ```swizzle_vec```
 ```c++
 template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 requires indexable<T, Size, Count, Is...>
-struct indexed_vector<T, Size, Count, Is...>
-    : vector_base<writable_swizzle<Size, Count, Is...>, T, Count, indexed_vector<T, Size, Count, Is...>>;
+struct swizzle_vec<T, Size, Count, Is...>
+    : vec_interface<writable_swizzle<Size, Count, Is...>, T, Count, swizzle_vec<T, Size, Count, Is...>>;
 ```
-One of the two vector types that inherit from [```vector_base```](#vector_base). This type represents a [swizzle](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) of a [```basic_vector```](#basic_vector). It is a physically non-contiguous, logically contiguous vector. It is not expected to be used except as the swizzle members of the anonymous union in a [```basic_vector```](#basic_vector). A [```basic_vector```](#basic_vector) is easily constructed from or assigned to from an ```indexed_vector```.
+One of the two vector types that inherit from [```vec_interface```](#vec_interface). This type represents a [swizzle](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)) of a [```vec```](#vec). It is a physically non-contiguous, logically contiguous vector. It is not expected to be used except as the swizzle members of the anonymous union in a [```vec```](#vec). A [```vec```](#vec) is easily constructed from or assigned to from an ```swizzle_vec```.
 
-Like [```storage_wrapper```](#storage_wrapper), this struct wraps a data member of type ```dimensional_storage_t```.
+Like [```vec_storage```](#vec_storage), this struct wraps a data member of type ```dimensional_storage_t```.
 
-Since this vector type is physically non-contiguous, the iterator structs are not contiguous. The two iterator structs [```indexed_vector_iterator```](#indexed_vector_iterator) and [```indexed_vector_const_iterator```](#indexed_vector_const_iterator) are [random-access iterators](https://en.cppreference.com/w/cpp/iterator/random_access_iterator).
+Since this vector type is physically non-contiguous, the iterator structs are not contiguous. The two iterator structs [```swizzle_vec_iterator```](#swizzle_vec_iterator) and [```swizzle_vec_const_iterator```](#swizzle_vec_const_iterator) are [random-access iterators](https://en.cppreference.com/w/cpp/iterator/random_access_iterator).
 
 Size and Count are two different things, with Size being the physical number of elements, and Count being the logical number of elements. Count must be the ```sizeof...(Is)```, and for every one of the ```Is```, the value must be smaller than Size.
 
 * Template Parameters
-  * ```T``` - type of the ```indexed_vector``` elements. Must satisfy [```dimensional_scalar```](#dimensional_scalar).
-  * ```Size``` - physical number of ```indexed_vector``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
-  * ```Count``` - logical number of ```indexed_vector``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
-  * ```Is...``` - a parameter pack of the logical indexes for an ```indexed_vector```. Count must be the ```sizeof...(Is)```, and for every one of the ```Is```, the value must be smaller than Size.
+  * ```T``` - type of the ```swizzle_vec``` elements. Must satisfy [```dimensional_scalar```](#dimensional_scalar).
+  * ```Size``` - physical number of ```swizzle_vec``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
+  * ```Count``` - logical number of ```swizzle_vec``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
+  * ```Is...``` - a parameter pack of the logical indexes for an ```swizzle_vec```. Count must be the ```sizeof...(Is)```, and for every one of the ```Is```, the value must be smaller than Size.
 * Non-Static Data Members
-  * [```base```](#indexed_vectorbase)
+  * [```base```](#swizzle_vecbase)
 * Static Data Members
-  * [```Writable```](#indexed_vectorwritable)
-  * [```offsets```](#indexed_vectoroffsets)
+  * [```Writable```](#swizzle_vecwritable)
+  * [```offsets```](#swizzle_vecoffsets)
 * Static Member Functions
-  * [```sequence```](#indexed_vectorsequence)
+  * [```sequence```](#swizzle_vecsequence)
 * Non-Static Member Functions
-  * [```operator []```](#indexed_vectoroperator-)
-  * [```operator =```](#indexed_vectoroperator--assignment)
-  * [```data```](#indexed_vectordata)
-  * [```set```](#indexed_vectorset)
-  * [Iterators](#indexed_vector-iterators)
+  * [```operator []```](#swizzle_vecoperator-)
+  * [```operator =```](#swizzle_vecoperator--assignment)
+  * [```set```](#swizzle_vecset)
+  * [Iterators](#swizzle_vec-iterators)
 * Using Directives
-  * [```sequence_pack```](#indexed_vectorsequence_pack)
+  * [```sequence_pack```](#swizzle_vecsequence_pack)
   * ```value_type```
   * ```iterator```
   * ```const_iterator```
@@ -665,25 +647,25 @@ Size and Count are two different things, with Size being the physical number of 
 * [Vector Operators](#vector-operators)
 * [Vector Free Functions](#vector-free-functions)
 
-##### ```indexed_vector::base```
+##### ```swizzle_vec::base```
 ```c++
 dimensional_storage_t<T, Size> base;
 ```
 The data member for the storage.
 
-##### ```indexed_vector::Writable```
+##### ```swizzle_vec::Writable```
 ```c++
 static constexpr bool Writable = writable_swizzle<Size, Count, Is...>;
 ```
 Is this a writable vector. All of the ```Is...``` must be unique for this vector to be writable. If not writable, then it is effectively const.
 
-##### ```indexed_vector::offsets```
+##### ```swizzle_vec::offsets```
 ```c++
 static constexpr std::array<std::size_t, Count> offsets;
 ```
 The static ```std::array``` for how the physical representation is mapped to the logical representation.
 
-##### ```indexed_vector::operator []```
+##### ```swizzle_vec::operator []```
 ```c++
 template <typename U>
 requires std::convertible_to<U, std::size_t>
@@ -693,31 +675,23 @@ template <typename U>
 requires std::convertible_to<U, std::size_t>
 [[nodiscard]] constexpr const T &operator [](const U &index) const noexcept;
 ```
-Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account, so no need to use [```sequence```](#indexed_vectorsequence) or [```offsets```](#indexed_vectoroffsets) with this operator.
+Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account, so no need to use [```sequence```](#swizzle_vecsequence) or [```offsets```](#swizzle_vecoffsets) with this operator.
 
-##### ```indexed_vector::operator =``` (Assignment)
+##### ```swizzle_vec::operator =``` (Assignment)
 ```c++
 template <bool W, dimensional_scalar U, typename D>
 requires Writable && implicitly_convertible_to<U, T>
-constexpr indexed_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept;
+constexpr swizzle_vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept;
 ```
-The assignment operator. It can be assigned from objects that inherit from ```vector_base```. Can assign only to lvalues.
+The assignment operator. It can be assigned from objects that inherit from ```vec_interface```. Can assign only to lvalues.
 
-##### ```indexed_vector::data```
-```c++
-[[nodiscard]] constexpr T *data() noexcept requires Writable;
-
-[[nodiscard]] constexpr const T *data() const noexcept;
-```
-Data access through pointers. Use with [```sequence```](#indexed_vectorsequence) or [```offsets```](#indexed_vectoroffsets) for physical to logical mapping.
-
-##### ```indexed_vector::sequence```
+##### ```swizzle_vec::sequence```
 ```c++
 [[nodiscard]] static constexpr auto sequence() noexcept;
 ```
-The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. This is best used with [```data```](#indexed_vectordata) to manually access the elements for the logical representation.
+The ```std::index_sequence``` for how the physical representation is mapped to the logical representation.
 
-##### ```indexed_vector::set```
+##### ```swizzle_vec::set```
 ```c++
 template <typename ... Args>
 requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
@@ -725,7 +699,7 @@ constexpr void set(Args ...args) noexcept;
 ```
 Set all the vector element values via parameter copies. This prevents aliasing issues with references.
 
-##### ```indexed_vector``` Iterators
+##### ```swizzle_vec``` Iterators
 ```c++
 [[nodiscard]] constexpr auto begin() noexcept requires Writable;
 [[nodiscard]] constexpr auto begin() const noexcept;
@@ -741,64 +715,63 @@ Set all the vector element values via parameter copies. This prevents aliasing i
 [[nodiscard]] constexpr auto rend() const noexcept;
 [[nodiscard]] constexpr auto crend() const noexcept;
 ```
-[Random-access iterators](https://en.cppreference.com/w/cpp/iterator/random_access_iterator) of types [```indexed_vector_iterator```](#indexed_vector_iterator) and [```indexed_vector_const_iterator```](#indexed_vector_const_iterator).
+[Random-access iterators](https://en.cppreference.com/w/cpp/iterator/random_access_iterator) of types [```swizzle_vec_iterator```](#swizzle_vec_iterator) and [```swizzle_vec_const_iterator```](#swizzle_vec_const_iterator).
 
-##### ```indexed_vector::sequence_pack```
+##### ```swizzle_vec::sequence_pack```
 ```c++
 using sequence_pack = std::index_sequence<Is...>;
 ```
 The sequence pack is formed by the variadic ```Is...``` from the template parameter pack.
 
-#### ```indexed_vector_iterator```
+#### ```swizzle_vec_iterator```
 ```c++
 template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
 requires indexable<T, Size, Count, Is...>
-struct indexed_vector_iterator : indexed_vector_const_iterator<T, Size, Count, Is...>;
+struct swizzle_vec_iterator : swizzle_vec_const_iterator<T, Size, Count, Is...>;
 ```
-[Random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator) for [```indexed_vector```](#indexed_vector)s. Inspired by ```std::array```'s iterator, even though it is a contiguous iterator. It implements the normal API for a [random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator).
+[Random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator) for [```swizzle_vec```](#swizzle_vec)s. Inspired by ```std::array```'s iterator, even though it is a contiguous iterator. It implements the normal API for a [random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator).
 
-#### ```indexed_vector_const_iterator```
+#### ```swizzle_vec_const_iterator```
 ```c++
 template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ... Is>
 requires indexable<T, Size, Count, Is...>
-struct indexed_vector_const_iterator;
+struct swizzle_vec_const_iterator;
 ```
-Const [random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator) for [```indexed_vector```](#indexed_vector)s. Inspired by ```std::array```'s iterator, even though it is a contiguous iterator. It implements the normal API for a const [random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator).
+Const [random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator) for [```swizzle_vec```](#swizzle_vec)s. Inspired by ```std::array```'s iterator, even though it is a contiguous iterator. It implements the normal API for a const [random-access iterator](https://en.cppreference.com/w/cpp/iterator/random_access_iterator).
 
-#### ```basic_vector```
+#### ```vec```
 ```c++
 template <dimensional_scalar T, std::size_t Size>
 requires dimensional_storage<T, Size>
-struct basic_vector : vector_base<true, T, Size, basic_vector<T, Size>>;
+struct vec : vec_interface<true, T, Size, vec<T, Size>>;
 ```
-This is the primary struct for vectors. One of the two vector types that inherit from [```vector_base```](#vector_base). ```basic_vector```s can be [swizzled](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)), where a swizzle is one of its anonymous union members of type [```indexed_vector```](#indexed_vector). The anonymous union also has a [```storage_wrapper```](#storage_wrapper) member, and the ```basic_vector``` member functions operate on its instances through this data member. All the anonymous union members share a [common initial sequence](https://en.cppreference.com/w/cpp/language/data_members), which means they can be read by any member, regardless of whether it is the active member.
+This is the primary struct for vectors. One of the two vector types that inherit from [```vec_interface```](#vec_interface). ```vec```s can be [swizzled](https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)), where a swizzle is one of its anonymous union members of type [```swizzle_vec```](#swizzle_vec). The anonymous union also has a [```vec_storage```](#vec_storage) member, and the ```vec``` member functions operate on its instances through this data member. All the anonymous union members share a [common initial sequence](https://en.cppreference.com/w/cpp/language/data_members), which means they can be read by any member, regardless of whether it is the active member.
 
-The different sized versions of ```basic_vector``` are individually partially specialized, with sizes from 1 to 4. Each partial specialization has different data members as part of its anonymous union, due to the fact that the swizzles are different depending on ```Size```.
+The different sized versions of ```vec``` are individually partially specialized, with sizes from 1 to 4. Each partial specialization has different data members as part of its anonymous union, due to the fact that the swizzles are different depending on ```Size```.
 
 * Template Parameters
-  * ```T``` - type of the ```basic_vector``` elements. Must satisfy [```dimensional_scalar```](#dimensional_scalar).
-  * ```Size``` - physical number of ```basic_vector``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
-* [```basic_vector``` Constructors](#basic_vector-constructors)
+  * ```T``` - type of the ```vec``` elements. Must satisfy [```dimensional_scalar```](#dimensional_scalar).
+  * ```Size``` - physical number of ```vec``` elements. Must satisfy [```dimensional_size```](#dimensional_size).
+* [```vec``` Constructors](#vec-constructors)
 * Non-Static Data Members
   * Anonymous Union
-    * [```base```](#basic_vectorbase)
-    * [```basic_vector``` Swizzles](#basic_vector-swizzles)
+    * [```base```](#vecbase)
+    * [```vec``` Swizzles](#vec-swizzles)
 * Static Data Members
-  * [```Size```](#basic_vectorsize)
-  * [```Count```](#basic_vectorcount)
-  * [```Writable```](#basic_vectorwritable)
-  * [```offsets```](#basic_vectoroffsets)
+  * [```Size```](#vecsize)
+  * [```Count```](#veccount)
+  * [```Writable```](#vecwritable)
+  * [```offsets```](#vecoffsets)
 * Static Member Functions
-  * [```sequence```](#basic_vectorsequence)
+  * [```sequence```](#vecsequence)
 * Non-Static Member Functions
-  * [```operator []```](#basic_vectoroperator-)
-  * [```operator =```](#basic_vectoroperator--assignment)
-  * [```data```](#basic_vectordata)
-  * [```set```](#basic_vectorset)
-  * [```swap```](#basic_vectorswap)
-  * [Iterators](#basic_vector-iterators)
+  * [```operator []```](#vecoperator-)
+  * [```operator =```](#vecoperator--assignment)
+  * [```set```](#vecset)
+  * [```swap```](#vecswap)
+  * [Iterators](#vec-iterators)
 * Using Directives
-  * [```sequence_pack```](#basic_vectorsequence_pack)
+  * [```sequence_pack```](#vecsequence_pack)
   * ```value_type```
   * ```iterator```
   * ```const_iterator```
@@ -806,21 +779,21 @@ The different sized versions of ```basic_vector``` are individually partially sp
   * ```const_reverse_iterator```
 * [Vector Operators](#vector-operators)
 * [Vector Free Functions](#vector-free-functions)
-* [```basic_vector``` Free Functions](#basic_vector-free-functions)
-* [Class Template Argument Deduction (CTAD)](#basic_vector-ctad)
+* [```vec``` Free Functions](#vec-free-functions)
+* [Class Template Argument Deduction (CTAD)](#vec-ctad)
 
-##### ```basic_vector``` Constructors
+##### ```vec``` Constructors
 ```c++
-constexpr basic_vector() noexcept = default;
-constexpr basic_vector(const basic_vector &) noexcept = default;
-constexpr basic_vector(basic_vector &&) noexcept = default;
+constexpr vec() noexcept = default;
+constexpr vec(const vec &) noexcept = default;
+constexpr vec(vec &&) noexcept = default;
 ```
 Default constructors.
 
 ```c++
 template <typename U>
 requires std::convertible_to<U, T>
-explicit constexpr basic_vector(U value) noexcept;
+explicit constexpr vec(U value) noexcept;
 ```
 All elements of the vector initialized to the same value.
 
@@ -829,39 +802,39 @@ template <typename U1, typename U2, typename U3, typename U4>
 requires
     std::convertible_to<U1, T> && std::convertible_to<U2, T> &&
     std::convertible_to<U3, T> && std::convertible_to<U4, T>
-explicit constexpr basic_vector(U1 xvalue,
+explicit constexpr vec(U1 xvalue,
                                 U2 yvalue,
                                 U3 zvalue,
                                 U4 wvalue) noexcept;
 ```
-Each of the elements have a scalar value passed in to initialize them. The above declaration is for a ```basic_vector``` of ```Size == 4```. ```basic_vector```s where ```Size == 3``` and ```Size == 2``` have similar constructors based on the number of their elements.
+Each of the elements have a scalar value passed in to initialize them. The above declaration is for a ```vec``` of ```Size == 4```. ```vec```s where ```Size == 3``` and ```Size == 2``` have similar constructors based on the number of their elements.
 
 ```c++
 template <bool W, dimensional_scalar U, typename D>
 requires implicitly_convertible_to<U, T>
-explicit(false) constexpr basic_vector(const vector_base<W, U, Count, D> &other) noexcept;
+explicit(false) constexpr vec(const vec_interface<W, U, Count, D> &other) noexcept;
 ```
-Initialize a ```basic_vector``` from any of the vector types that derived from ```vector_base```.
+Initialize a ```vec``` from any of the vector types that derived from ```vec_interface```.
 
 ```c++
 template <typename U, typename ... Args>
 requires (detail::valid_vector_component<U, T>::value) && (detail::valid_vector_component<Args, T>::value && ...) && detail::met_component_count<Count, U, Args...>
-explicit constexpr basic_vector(const U &u, const Args & ...args) noexcept;
+explicit constexpr vec(const U &u, const Args & ...args) noexcept;
 ```
-Variadic constructor. Can take a combination of vectors, scalars, and matrixes as arguments to initialize the ```basic_vector```.
+Variadic constructor. Can take a combination of vectors, scalars, and matrixes as arguments to initialize the ```vec```.
 
 ```c++
-constexpr basic_vector(const std::initializer_list<T> &init_list) noexcept;
+constexpr vec(const std::initializer_list<T> &init_list) noexcept;
 ```
 An intializer list of values. If too few values for the vector, the rest of the elements will be set to 0. If too many values for the vector, the rest of the initialization list will be ignored.
 
-##### ```basic_vector::base```
+##### ```vec::base```
 ```c++
-storage_wrapper<T, Size> base;
+vec_storage<T, Size> base;
 ```
-The anonymous union data member through which ```basic_vector``` accesses the vector elements.
+The anonymous union data member through which ```vec``` accesses the vector elements.
 
-##### ```basic_vector``` Swizzles
+##### ```vec``` Swizzles
 ```c++
 dexvec1<T, Size, 0> x;
 ...
@@ -876,7 +849,7 @@ dexvec4<T, Size, 0, 0, 0, 0> xxxx;
 ...
 ...
 ```
-The other anonymous union data members are all swizzles of the ```basic_vector```. They are of type ```indexed_vector```.
+The other anonymous union data members are all swizzles of the ```vec```. They are of type ```swizzle_vec```.
 
 A swizzle data member is named with 1 to 4 element reference characters, e.g., ```xy```, ```wxwz```. Depending on the value of ```Count```, there are restrictions on the swizzle element access. ```x``` maps to the first element, ```y``` maps to the second element, ```z``` maps to the third element, and ```w``` maps to the fourth element.
 
@@ -901,31 +874,31 @@ Can use {````x````, ````y````, ````z````, ````w````} for swizzle names.
 
 Examples: ```w```, ```yw```, ```zwx```, ```wyxz```.
 
-##### ```basic_vector::Size```
+##### ```vec::Size```
 ```c++
 static constexpr std::size_t Size;
 ```
-Since we instantiate partial specializations of ```basic_vector```, we manually set this value for each of the partial specializations. The value must satisfy [```dimensional_size```](#dimensional_size). For the partial specializations, there is no template parameter Size available to use within the class/struct, and this static data member simulates such a template parameter.
+Since we instantiate partial specializations of ```vec```, we manually set this value for each of the partial specializations. The value must satisfy [```dimensional_size```](#dimensional_size). For the partial specializations, there is no template parameter Size available to use within the class/struct, and this static data member simulates such a template parameter.
 
-##### ```basic_vector::Count```
+##### ```vec::Count```
 ```c++
 static constexpr std::size_t Count = Size;
 ```
-The static variable that holds the number of items that we are handling. It is always the same value as the template parameter ```Size```. It is unnecessary for this class, but it is used here to be in solidarity with ```indexed_vector```, where ```Size``` and ```Count``` are often not the same value.
+The static variable that holds the number of items that we are handling. It is always the same value as the template parameter ```Size```. It is unnecessary for this class, but it is used here to be in solidarity with ```swizzle_vec```, where ```Size``` and ```Count``` are often not the same value.
 
-##### ```basic_vector::Writable```
+##### ```vec::Writable```
 ```c++
 static constexpr bool Writable = true;
 ```
-This static variable is always true for all ```basic_vector```s. It is unnecessary for this class, but it is used in here to be in solidarity with ```indexed_vector```, where Writable is not always true (mostly false actually).
+This static variable is always true for all ```vec```s. It is unnecessary for this class, but it is used in here to be in solidarity with ```swizzle_vec```, where Writable is not always true (mostly false actually).
 
-##### ```basic_vector::offsets```
+##### ```vec::offsets```
 ```c++
 static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 ```
-The static ```std::array``` for how the physical representation is mapped to the logical representation. For ```basic_vector```, the physical and logical representations are the same, i.e., a contiguous representation, and the sequence ascends from 0.
+The static ```std::array``` for how the physical representation is mapped to the logical representation. For ```vec```, the physical and logical representations are the same, i.e., a contiguous representation, and the sequence ascends from 0.
 
-##### ```basic_vector::operator []```
+##### ```vec::operator []```
 ```c++
 template <typename U>
 requires std::convertible_to<U, std::size_t>
@@ -935,31 +908,23 @@ template <typename U>
 requires std::convertible_to<U, std::size_t>
 [[nodiscard]] constexpr const T &operator [](const U &index) const noexcept;
 ```
-Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account. For ```basic_vector```, the elements are contiguous, so the physical and logical mapping is the same.
+Data access through the indexing operator. The indexing operator already takes the physical to logical data mapping into account. For ```vec```, the elements are contiguous, so the physical and logical mapping is the same.
 
-##### ```basic_vector::operator =``` (Assignment)
+##### ```vec::operator =``` (Assignment)
 ```c++
 template <bool W, dimensional_scalar U, typename D>
 requires Writable && implicitly_convertible_to<U, T>
-constexpr basic_vector &operator =(const vector_base<W, U, Count, D> &other) & noexcept;
+constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept;
 ```
-The assignment operator. It can be assigned from objects that inherit from ```vector_base```. Can assign only to lvalues.
+The assignment operator. It can be assigned from objects that inherit from ```vec_interface```. Can assign only to lvalues.
 
-##### ```basic_vector::data```
-```c++
-[[nodiscard]] constexpr T *data() noexcept requires Writable;
-
-[[nodiscard]] constexpr const T *data() const noexcept;
-```
-Data access through pointers. Use with ```sequence``` or ```offsets``` for physical to logical mapping. For ```basic_vector```, the elements are contiguous, so the physical and logical mapping is the same.
-
-##### ```basic_vector::sequence```
+##### ```vec::sequence```
 ```c++
 [[nodiscard]] static constexpr auto sequence() noexcept;
 ```
-The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. For ```basic_vector```, the physical and logical representation are the same, i.e., a contiguous representation, and the sequence ascends from 0.
+The ```std::index_sequence``` for how the physical representation is mapped to the logical representation. For ```vec```, the physical and logical representation are the same, i.e., a contiguous representation, and the sequence ascends from 0.
 
-##### ```basic_vector::set```
+##### ```vec::set```
 ```c++
 template <typename ...Args>
 requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
@@ -967,13 +932,13 @@ constexpr void set(Args ...args) noexcept;
 ```
 Set all the vector element values via parameter copies. This prevents aliasing issues with references.
 
-##### ```basic_vector::swap```
+##### ```vec::swap```
 ```c++
-constexpr void swap(basic_vector &bv) noexcept requires Writable;
+constexpr void swap(vec &bv) noexcept requires Writable;
 ```
 Swap the data using the underlying ```dimensional_storage_t```'s ```swap``` function.
 
-##### ```basic_vector``` Iterators
+##### ```vec``` Iterators
 ```c++
 [[nodiscard]] constexpr auto begin() noexcept requires Writable;
 [[nodiscard]] constexpr auto begin() const noexcept;
@@ -989,145 +954,144 @@ Swap the data using the underlying ```dimensional_storage_t```'s ```swap``` func
 [[nodiscard]] constexpr auto rend() const noexcept;
 [[nodiscard]] constexpr auto crend() const noexcept;
 ```
-These contiguous iterators are supplied indirectly by the underlying ```dimensional_storage_t```. Each data member of the anonymous union, whether a ```storage_wrapper``` or an ```indexed_vector```, has a single data member of type ```dimensional_storage_t```. The iterators are accessed through ```base```.
+These contiguous iterators are supplied indirectly by the underlying ```dimensional_storage_t```. Each data member of the anonymous union, whether a ```vec_storage``` or an ```swizzle_vec```, has a single data member of type ```dimensional_storage_t```. The iterators are accessed through ```base```.
 
-##### ```basic_vector::sequence_pack```
+##### ```vec::sequence_pack```
 ```c++
 using sequence_pack = std::make_index_sequence<Count>;
 ```
 The instantiation of ```std::index_sequence``` that represents the physical to logical mapping. ```sequence``` returns an instance of this type.
 
-##### ```basic_vector``` Free Functions
+##### ```vec``` Free Functions
 ```c++
 template <dimensional_scalar T, std::size_t Size>
-constexpr void swap(basic_vector<T, Size> &lhs, basic_vector<T, Size> &rhs) noexcept;
+constexpr void swap(vec<T, Size> &lhs, vec<T, Size> &rhs) noexcept;
 ```
-Free function ```swap``` wraps the member function ```basic_vector::swap```.
+Free function ```swap``` wraps the member function ```vec::swap```.
 
-##### ```basic_vector``` CTAD
+##### ```vec``` CTAD
 ```c++
 template <dimensional_scalar T, dimensional_scalar ...U>
-basic_vector(T, U...) -> basic_vector<T, 1 + sizeof...(U)>;
+vec(T, U...) -> vec<T, 1 + sizeof...(U)>;
 
 template <bool W, dimensional_scalar T, std::size_t C, typename D>
-basic_vector(const vector_base<W, T, C, D> &) -> basic_vector<T, C>;
+vec(const vec_interface<W, T, C, D> &) -> vec<T, C>;
 ```
-[Class template argument deduction (CTAD)](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) for ```basic_vector```.
+[Class template argument deduction (CTAD)](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) for ```vec```.
 
-#### ```basic_matrix```
+#### ```mat```
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
 requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
-struct basic_matrix;
+struct mat;
 ```
-The struct that represents a matrix. The matrix elements are stored column order, as an array of column [```basic_vector```](#basic_vector)s. The terminology looks backwards, with number of columns coming before the number of rows, but it makes sense from a data storage perspective. It is also how GLSL does it.
+The struct that represents a matrix. The matrix elements are stored column order, as an array of column [```vec```](#vec)s. The terminology looks backwards, with number of columns coming before the number of rows, but it makes sense from a data storage perspective. It is also how GLSL does it.
 
 * Template Parameters
-  * ```T``` - type of the ```basic_matrix``` elements. Must satisfy [```floating_point_scalar```](#floating_point_scalar).
+  * ```T``` - type of the ```mat``` elements. Must satisfy [```floating_point_scalar```](#floating_point_scalar).
   * ```C``` - number of columns, ```where 2 <= C <= 4```.
   * ```R``` - number of rows, ```where 2 <= R <= 4```.
-* [```basic_matrix``` Constructors](#basic_matrix-constructors)
+* [```mat``` Constructors](#mat-constructors)
 * Non-Static Data Members
-  * [```columns```](#basic_matrixcolumns)
+  * [```columns```](#matcolumns)
 * Static Data Members
-  * [```ComponentCount```](#basic_matrixcomponentcount)
-  * [```size``` (```std::integral_constant```)](#basic_matrixsize-stdintegral_constant)
-  * [```column_size``` (```std::integral_constant```)](#basic_matrixcolumn_size-stdintegral_constant)
+  * [```ComponentCount```](#matcomponentcount)
+  * [```size``` (```std::integral_constant```)](#matsize-stdintegral_constant)
+  * [```column_size``` (```std::integral_constant```)](#matcolumn_size-stdintegral_constant)
 * Static Member Functions
-  * [```size``` (theoretical function)](#basic_matrixsize-theoretical-function)
-  * [```column_size``` (theoretical function)](#basic_matrixcolumn_size-theoretical-function)
+  * [```size``` (theoretical function)](#matsize-theoretical-function)
+  * [```column_size``` (theoretical function)](#matcolumn_size-theoretical-function)
 * Non-Static Member Functions
-  * [```length```](#basic_matrixlength)
-  * [```column_length```](#basic_matrixcolumn_length)
-  * [```operator []```](#basic_matrixoperator-)
-  * [```operator =```](#basic_matrixoperator--assignment)
-  * [```data```](#basic_matrixdata)
-  * [```row```](#basic_matrixrow)
-  * [```swap```](#basic_matrixswap)
-  * [Iterators](#basic_matrix-iterators)
+  * [```length```](#matlength)
+  * [```column_length```](#matcolumn_length)
+  * [```operator []```](#matoperator-)
+  * [```operator =```](#matoperator--assignment)
+  * [```row```](#matrow)
+  * [```swap```](#matswap)
+  * [Iterators](#mat-iterators)
 * [Matrix Operators](#matrix-operators)
 * [Matrix Free Functions](#matrix-free-functions)
-* [```basic_matrix``` Free Functions](#basic_matrix-free-functions)
+* [```mat``` Free Functions](#mat-free-functions)
 
-##### ```basic_matrix``` Constructors
+##### ```mat``` Constructors
 ```c++
-constexpr basic_matrix() noexcept = default;
-constexpr basic_matrix(const basic_matrix &) noexcept = default;
-constexpr basic_matrix(basic_matrix &&) noexcept = default;
+constexpr mat() noexcept = default;
+constexpr mat(const mat &) noexcept = default;
+constexpr mat(mat &&) noexcept = default;
 ```
 Default constructors.
 
 ```c++
 template <typename U, typename ... Args>
 requires (detail::valid_matrix_component<U, T>::value) && (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, U, Args...>
-explicit constexpr basic_matrix(const U &u, const Args & ...args) noexcept;
+explicit constexpr mat(const U &u, const Args & ...args) noexcept;
 ```
-Variadic constructor. Can take a combination of vectors and scalars as arguments to initialize the ```basic_matrix```.
+Variadic constructor. Can take a combination of vectors and scalars as arguments to initialize the ```mat```.
 
 ```c++
 template <typename U>
 requires std::convertible_to<U, T> && (C == R)
-explicit constexpr basic_matrix(U arg) noexcept;
+explicit constexpr mat(U arg) noexcept;
 ```
 Diagonal constructor for square matrices.
 
 ```c++
 template <floating_point_scalar U>
 requires implicitly_convertible_to<U, T>
-explicit(false) constexpr basic_matrix(const basic_matrix<U, C, R> &arg) noexcept;
+explicit(false) constexpr mat(const mat<U, C, R> &arg) noexcept;
 
 template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
 requires implicitly_convertible_to<U, T> && (Cols != C || Rows != R)
-explicit(false) constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept;
+explicit(false) constexpr mat(const mat<U, Cols, Rows> &arg) noexcept;
 
 template <floating_point_scalar U, std::size_t Cols, std::size_t Rows>
 requires (!implicitly_convertible_to<U, T> && std::convertible_to<U, T>)
-explicit constexpr basic_matrix(const basic_matrix<U, Cols, Rows> &arg) noexcept;
+explicit constexpr mat(const mat<U, Cols, Rows> &arg) noexcept;
 ```
 Constructors that take a matrix as an argument, but not a normal copy constructor (see default constructors).
 
 ```c++
-constexpr basic_matrix(const std::initializer_list<T> &init_list) noexcept;
+constexpr mat(const std::initializer_list<T> &init_list) noexcept;
 ```
 An intializer list of values. If too few values for the matrix, the rest of the elements will be set to 0. If too many values for the matrix, the rest of the initialization list will be ignored.
 
-##### ```basic_matrix::columns```
+##### ```mat::columns```
 ```c++
-std::array<basic_vector<T, R>, C> columns;
+std::array<vec<T, R>, C> columns;
 ```
 The matrix elements' storage.
 
-##### ```basic_matrix::ComponentCount```
+##### ```mat::ComponentCount```
 ```c++
 static constexpr std::size_t ComponentCount = C * R;
 ```
 The number of matrix elements.
 
-##### ```basic_matrix::size``` (```std::integral_constant```)
+##### ```mat::size``` (```std::integral_constant```)
 ```c++
 static constexpr std::integral_constant<std::size_t, C> size = {};
 ```
 Holds the number of columns, which is the row size.
 
-##### ```basic_matrix::column_size``` (```std::integral_constant```)
+##### ```mat::column_size``` (```std::integral_constant```)
 ```c++
 static constexpr std::integral_constant<std::size_t, R> column_size = {};
 ```
 Holds the number of rows, which is the column size.
 
-##### ```basic_matrix::size``` (theoretical function)
+##### ```mat::size``` (theoretical function)
 ```c++
 [[nodiscard]] static constexpr std::size_t size() const noexcept;
 ```
 Return the number of columns, which is the row size. The declaration for ```size()``` is a fiction due to the fact that this function does not exist; however, the static ```std::integral_constant``` ```size``` has an ```operator()()``` that operates exactly as the above declaration. This approach of using a ```std::integral_constant``` for ```size``` is supposed to be an up and coming idiom in the C++ standard for all new standard library components with constant sizes.
 
-##### ```basic_matrix::column_size``` (theoretical function)
+##### ```mat::column_size``` (theoretical function)
 ```c++
 [[nodiscard]] constexpr std::size_t column_size() const noexcept;
 ```
 Return the number of rows, which is the column size. The declaration for ```column_size()``` is a fiction due to the fact that this function does not exist; however, the static ```std::integral_constant``` ```column_size``` has an ```operator()()``` that operates exactly as the above declaration. This approach of using a ```std::integral_constant``` for ```size``` (and here also ```column_size```) is supposed to be an up and coming idiom in the C++ standard for all new standard library components with constant sizes.
 
-##### ```basic_matrix::length```
+##### ```mat::length```
 ```c++
 [[nodiscard]] constexpr int length() const noexcept;
 ```
@@ -1135,55 +1099,47 @@ Return the number of columns. This is also the row length.
 
 The GLSL specification requires that the ```length method``` behave as a member function.
 
-##### ```basic_matrix::column_length```
+##### ```mat::column_length```
 ```c++
 [[nodiscard]] constexpr int column_length() const noexcept;
 ```
 Return the number of rows.
 
-##### ```basic_matrix::operator []```
+##### ```mat::operator []```
 ```c++
 template <typename U>
 requires std::convertible_to<U, std::size_t>
-[[nodiscard]] constexpr basic_vector<T, R> &operator [](const U &index) noexcept;
+[[nodiscard]] constexpr vec<T, R> &operator [](const U &index) noexcept;
 
 template <typename U>
 requires std::convertible_to<U, std::size_t>
-[[nodiscard]] constexpr const basic_vector<T, R> &operator [](const U &index) const noexcept;
+[[nodiscard]] constexpr const vec<T, R> &operator [](const U &index) const noexcept;
 ```
 Data access through the indexing operator.
 
-##### ```basic_matrix::operator =``` (Assignment)
+##### ```mat::operator =``` (Assignment)
 ```c++
 template <floating_point_scalar U>
 requires implicitly_convertible_to<U, T>
-constexpr basic_matrix &operator =(const basic_matrix<U, C, R> &other) & noexcept;
+constexpr mat &operator =(const mat<U, C, R> &other) & noexcept;
 ```
 The assignment operator. Can assign only to lvalues.
 
-##### ```basic_matrix::data```
-```c++
-[[nodiscard]] constexpr basic_vector<T, R> * data() noexcept;
-
-[[nodiscard]] constexpr const basic_vector<T, R> * data() const noexcept;
-```
-Data access through pointers.
-
-##### ```basic_matrix::row```
+##### ```mat::row```
 ```c++
 template <typename U>
 requires std::convertible_to<U, std::size_t>
-[[nodiscard]] constexpr basic_vector<T, C> row(const U &row_index) const noexcept;
+[[nodiscard]] constexpr vec<T, C> row(const U &row_index) const noexcept;
 ```
 Return a row from the column-order matrix.
 
-##### ```basic_matrix::swap```
+##### ```mat::swap```
 ```c++
-constexpr void swap(basic_matrix &bm) noexcept;
+constexpr void swap(mat &bm) noexcept;
 ```
 Swap the data using the underlying ```std::array```'s ```swap``` function.
 
-##### ```basic_matrix``` Iterators
+##### ```mat``` Iterators
 ```c++
 [[nodiscard]] constexpr auto begin() noexcept;
 [[nodiscard]] constexpr auto begin() const noexcept;
@@ -1201,94 +1157,94 @@ Swap the data using the underlying ```std::array```'s ```swap``` function.
 ```
 These contiguous ```std::array``` iterators are accessed through ```columns```.
 
-##### ```basic_matrix``` Free Functions
+##### ```mat``` Free Functions
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-constexpr void swap(basic_matrix<T, C, R> &lhs, basic_matrix<T, C, R> &rhs) noexcept;
+constexpr void swap(mat<T, C, R> &lhs, mat<T, C, R> &rhs) noexcept;
 ```
-Free function ```swap``` wraps the member function ```basic_matrix::swap```.
+Free function ```swap``` wraps the member function ```mat::swap```.
 
 ### Class Template Instantiations
 These instantiations represent the classes (structs) that are provided by GLSL, with a few others not in GLSL.
 
 ```c++
 // boolean vectors
-using bscal = basic_vector<bool, 1>;
-using bvec2 = basic_vector<bool, 2>;
-using bvec3 = basic_vector<bool, 3>;
-using bvec4 = basic_vector<bool, 4>;
+using bscal = vec<bool, 1>;
+using bvec2 = vec<bool, 2>;
+using bvec3 = vec<bool, 3>;
+using bvec4 = vec<bool, 4>;
 
 // int vectors
-using iscal = basic_vector<int, 1>;
-using ivec2 = basic_vector<int, 2>;
-using ivec3 = basic_vector<int, 3>;
-using ivec4 = basic_vector<int, 4>;
+using iscal = vec<int, 1>;
+using ivec2 = vec<int, 2>;
+using ivec3 = vec<int, 3>;
+using ivec4 = vec<int, 4>;
 
 // unsigned int vectors
-using uscal = basic_vector<unsigned, 1>;
-using uvec2 = basic_vector<unsigned, 2>;
-using uvec3 = basic_vector<unsigned, 3>;
-using uvec4 = basic_vector<unsigned, 4>;
+using uscal = vec<unsigned, 1>;
+using uvec2 = vec<unsigned, 2>;
+using uvec3 = vec<unsigned, 3>;
+using uvec4 = vec<unsigned, 4>;
 
 // long long vectors (not in GLSL)
-using llscal = basic_vector<long long, 1>;
-using llvec2 = basic_vector<long long, 2>;
-using llvec3 = basic_vector<long long, 3>;
-using llvec4 = basic_vector<long long, 4>;
+using llscal = vec<long long, 1>;
+using llvec2 = vec<long long, 2>;
+using llvec3 = vec<long long, 3>;
+using llvec4 = vec<long long, 4>;
 
 // unsigned long long vectors (not in GLSL)
-using ullscal = basic_vector<unsigned long long, 1>;
-using ullvec2 = basic_vector<unsigned long long, 2>;
-using ullvec3 = basic_vector<unsigned long long, 3>;
-using ullvec4 = basic_vector<unsigned long long, 4>;
+using ullscal = vec<unsigned long long, 1>;
+using ullvec2 = vec<unsigned long long, 2>;
+using ullvec3 = vec<unsigned long long, 3>;
+using ullvec4 = vec<unsigned long long, 4>;
 
 // float vectors with out an 'f' prefix -- this is from GLSL
-using scal = basic_vector<float, 1>;
-using vec2 = basic_vector<float, 2>;
-using vec3 = basic_vector<float, 3>;
-using vec4 = basic_vector<float, 4>;
+using scal = vec<float, 1>;
+using vec2 = vec<float, 2>;
+using vec3 = vec<float, 3>;
+using vec4 = vec<float, 4>;
 
 // also float vectors, but using the common naming convention (not in GLSL)
-using fscal = basic_vector<float, 1>;
-using fvec2 = basic_vector<float, 2>;
-using fvec3 = basic_vector<float, 3>;
-using fvec4 = basic_vector<float, 4>;
+using fscal = vec<float, 1>;
+using fvec2 = vec<float, 2>;
+using fvec3 = vec<float, 3>;
+using fvec4 = vec<float, 4>;
 
 // double vectors
-using dscal = basic_vector<double, 1>;
-using dvec2 = basic_vector<double, 2>;
-using dvec3 = basic_vector<double, 3>;
-using dvec4 = basic_vector<double, 4>;
+using dscal = vec<double, 1>;
+using dvec2 = vec<double, 2>;
+using dvec3 = vec<double, 3>;
+using dvec4 = vec<double, 4>;
 
 // float matrices
-using mat2x2 = basic_matrix<float, 2, 2>;
-using mat2x3 = basic_matrix<float, 2, 3>;
-using mat2x4 = basic_matrix<float, 2, 4>;
-using mat3x2 = basic_matrix<float, 3, 2>;
-using mat3x3 = basic_matrix<float, 3, 3>;
-using mat3x4 = basic_matrix<float, 3, 4>;
-using mat4x2 = basic_matrix<float, 4, 2>;
-using mat4x3 = basic_matrix<float, 4, 3>;
-using mat4x4 = basic_matrix<float, 4, 4>;
+using mat2x2 = mat<float, 2, 2>;
+using mat2x3 = mat<float, 2, 3>;
+using mat2x4 = mat<float, 2, 4>;
+using mat3x2 = mat<float, 3, 2>;
+using mat3x3 = mat<float, 3, 3>;
+using mat3x4 = mat<float, 3, 4>;
+using mat4x2 = mat<float, 4, 2>;
+using mat4x3 = mat<float, 4, 3>;
+using mat4x4 = mat<float, 4, 4>;
 
-using mat2 = basic_matrix<float, 2, 2>;
-using mat3 = basic_matrix<float, 3, 3>;
-using mat4 = basic_matrix<float, 4, 4>;
+using mat2 = mat<float, 2, 2>;
+using mat3 = mat<float, 3, 3>;
+using mat4 = mat<float, 4, 4>;
 
 // double matrices
-using dmat2x2 = basic_matrix<double, 2, 2>;
-using dmat2x3 = basic_matrix<double, 2, 3>;
-using dmat2x4 = basic_matrix<double, 2, 4>;
-using dmat3x2 = basic_matrix<double, 3, 2>;
-using dmat3x3 = basic_matrix<double, 3, 3>;
-using dmat3x4 = basic_matrix<double, 3, 4>;
-using dmat4x2 = basic_matrix<double, 4, 2>;
-using dmat4x3 = basic_matrix<double, 4, 3>;
-using dmat4x4 = basic_matrix<double, 4, 4>;
+using dmat2x2 = mat<double, 2, 2>;
+using dmat2x3 = mat<double, 2, 3>;
+using dmat2x4 = mat<double, 2, 4>;
+using dmat3x2 = mat<double, 3, 2>;
+using dmat3x3 = mat<double, 3, 3>;
+using dmat3x4 = mat<double, 3, 4>;
+using dmat4x2 = mat<double, 4, 2>;
+using dmat4x3 = mat<double, 4, 3>;
+using dmat4x4 = mat<double, 4, 4>;
 
-using dmat2 = basic_matrix<double, 2, 2>;
-using dmat3 = basic_matrix<double, 3, 3>;
-using dmat4 = basic_matrix<double, 4, 4>;
+using dmat2 = mat<double, 2, 2>;
+using dmat3 = mat<double, 3, 3>;
+using dmat4 = mat<double, 4, 4>;
 ```
 
 ### Vector Operators
@@ -1330,41 +1286,41 @@ using dmat4 = basic_matrix<double, 4, 4>;
 ##### Vector Unary Plus
 ```c++
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto operator +(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto operator +(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### Vector Unary Minus
 ```c++
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto operator -(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### Vector Unary Increment
 ```c++
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
 requires W
-constexpr auto &operator ++(vector_base<W, T, C, D> &arg) noexcept;
+constexpr auto &operator ++(vec_interface<W, T, C, D> &arg) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
 requires W
-constexpr auto operator ++(vector_base<W, T, C, D> &arg, int) noexcept;
+constexpr auto operator ++(vec_interface<W, T, C, D> &arg, int) noexcept;
 ```
 
 ##### Vector Unary Decrement
 ```c++
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
 requires W
-constexpr auto &operator --(vector_base<W, T, C, D> &arg) noexcept;
+constexpr auto &operator --(vec_interface<W, T, C, D> &arg) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
 requires W
-constexpr auto operator --(vector_base<W, T, C, D> &arg, int) noexcept;
+constexpr auto operator --(vec_interface<W, T, C, D> &arg, int) noexcept;
 ```
 
 ##### Vector Unary Bit-wise One's Complement
 ```c++
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto operator ~(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto operator ~(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 #### Vector Binary Operators
@@ -1373,180 +1329,180 @@ template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-[[nodiscard]] constexpr auto operator +(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator +(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-[[nodiscard]] constexpr auto operator +(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator +(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 [[nodiscard]] constexpr auto operator +(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Minus
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-[[nodiscard]] constexpr auto operator -(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator -(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-[[nodiscard]] constexpr auto operator -(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator -(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 [[nodiscard]] constexpr auto operator -(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Times
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-[[nodiscard]] constexpr auto operator *(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator *(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-[[nodiscard]] constexpr auto operator *(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator *(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 [[nodiscard]] constexpr auto operator *(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Division
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-[[nodiscard]] constexpr auto operator /(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator /(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-[[nodiscard]] constexpr auto operator /(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator /(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 [[nodiscard]] constexpr auto operator /(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Modulus
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-[[nodiscard]] constexpr auto operator %(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator %(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-[[nodiscard]] constexpr auto operator %(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator %(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 [[nodiscard]] constexpr auto operator %(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Right Shift
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-[[nodiscard]] constexpr auto operator >>(const vector_base<W1, T1, C1, D1> &lhs,
-                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator >>(const vec_interface<W1, T1, C1, D1> &lhs,
+                                         const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-[[nodiscard]] constexpr auto operator >>(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator >>(const vec_interface<W, T, C, D> &lhs,
                                          U rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 [[nodiscard]] constexpr auto operator >>(U lhs,
-                                         const vector_base<W, T, C, D> &rhs) noexcept;
+                                         const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Left Shift
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-[[nodiscard]] constexpr auto operator <<(const vector_base<W1, T1, C1, D1> &lhs,
-                                         const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator <<(const vec_interface<W1, T1, C1, D1> &lhs,
+                                         const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-[[nodiscard]] constexpr auto operator <<(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator <<(const vec_interface<W, T, C, D> &lhs,
                                          U rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
 [[nodiscard]] constexpr auto operator <<(U lhs,
-                                         const vector_base<W, T, C, D> &rhs) noexcept;
+                                         const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Bitwise And
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
-[[nodiscard]] constexpr auto operator &(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator &(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-[[nodiscard]] constexpr auto operator &(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator &(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 [[nodiscard]] constexpr auto operator &(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Bitwise Or
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
-[[nodiscard]] constexpr auto operator |(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator |(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-[[nodiscard]] constexpr auto operator |(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator |(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 [[nodiscard]] constexpr auto operator |(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 ##### Vector Binary Bitwise Xor
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
 requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
-[[nodiscard]] constexpr auto operator ^(const vector_base<W1, T1, C1, D1> &lhs,
-                                        const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator ^(const vec_interface<W1, T1, C1, D1> &lhs,
+                                        const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-[[nodiscard]] constexpr auto operator ^(const vector_base<W, T, C, D> &lhs,
+[[nodiscard]] constexpr auto operator ^(const vec_interface<W, T, C, D> &lhs,
                                         U rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
 [[nodiscard]] constexpr auto operator ^(U lhs,
-                                        const vector_base<W, T, C, D> &rhs) noexcept;
+                                        const vec_interface<W, T, C, D> &rhs) noexcept;
 ```
 
 #### Vector Compound Assignment Operators
@@ -1555,17 +1511,17 @@ requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) &&
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1>
-constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator +=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-constexpr auto &operator +=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator +=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
-constexpr auto &operator +=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator +=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1573,17 +1529,17 @@ constexpr auto &operator +=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1>
-constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator -=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-constexpr auto &operator -=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator -=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
-constexpr auto &operator -=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator -=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1591,17 +1547,17 @@ constexpr auto &operator -=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1>
-constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator *=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-constexpr auto &operator *=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator *=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
-constexpr auto &operator *=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator *=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1609,17 +1565,17 @@ constexpr auto &operator *=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1>
-constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator /=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-constexpr auto &operator /=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator /=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
 requires W && implicitly_convertible_to<U, T>
-constexpr auto &operator /=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator /=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1627,17 +1583,17 @@ constexpr auto &operator /=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1>
-constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator %=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-constexpr auto &operator %=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator %=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T>
-constexpr auto &operator %=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator %=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1645,17 +1601,17 @@ constexpr auto &operator %=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1>
-constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
-                             const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator >>=(vec_interface<W1, T1, C, D1> &lhs,
+                             const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-constexpr auto &operator >>=(vector_base<W1, T1, C, D1> &lhs,
-                             const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator >>=(vec_interface<W1, T1, C, D1> &lhs,
+                             const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T>
-constexpr auto &operator >>=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator >>=(vec_interface<W, T, C, D> &lhs,
                              U rhs) noexcept;
 ```
 
@@ -1663,17 +1619,17 @@ constexpr auto &operator >>=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1>
-constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
-                             const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator <<=(vec_interface<W1, T1, C, D1> &lhs,
+                             const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-constexpr auto &operator <<=(vector_base<W1, T1, C, D1> &lhs,
-                             const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator <<=(vec_interface<W1, T1, C, D1> &lhs,
+                             const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T>
-constexpr auto &operator <<=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator <<=(vec_interface<W, T, C, D> &lhs,
                              U rhs) noexcept;
 ```
 
@@ -1681,17 +1637,17 @@ constexpr auto &operator <<=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
-constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator &=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
-constexpr auto &operator &=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator &=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
-constexpr auto &operator &=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator &=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1699,17 +1655,17 @@ constexpr auto &operator &=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
-constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator |=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
-constexpr auto &operator |=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator |=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
-constexpr auto &operator |=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator |=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1717,17 +1673,17 @@ constexpr auto &operator |=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
-constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, C, D2> &rhs) noexcept;
+constexpr auto &operator ^=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, C, D2> &rhs) noexcept;
 
 template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
 requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
-constexpr auto &operator ^=(vector_base<W1, T1, C, D1> &lhs,
-                            const vector_base<W2, T2, 1, D2> &rhs) noexcept;
+constexpr auto &operator ^=(vec_interface<W1, T1, C, D1> &lhs,
+                            const vec_interface<W2, T2, 1, D2> &rhs) noexcept;
 
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
 requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
-constexpr auto &operator ^=(vector_base<W, T, C, D> &lhs,
+constexpr auto &operator ^=(vec_interface<W, T, C, D> &lhs,
                             U rhs) noexcept;
 ```
 
@@ -1737,12 +1693,12 @@ constexpr auto &operator ^=(vector_base<W, T, C, D> &lhs,
 ```c++
 template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
 requires implicitly_convertible_to<T2, T1>
-constexpr bool operator ==(const vector_base<W1, T1, C, D1> &first,
-                           const vector_base<W2, T2, C, D2> &second) noexcept;
+constexpr bool operator ==(const vec_interface<W1, T1, C, D1> &first,
+                           const vec_interface<W2, T2, C, D2> &second) noexcept;
 
 template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-constexpr bool operator ==(const vector_base<W1, T, C, D1> &first,
-                           const vector_base<W2, T, C, D2> &second) noexcept;
+constexpr bool operator ==(const vec_interface<W1, T, C, D1> &first,
+                           const vec_interface<W2, T, C, D2> &second) noexcept;
 ```
 If a signature of ```operator ==``` is not matched, ```c++20``` will swap the argument order to see if there is a match.
 
@@ -1750,7 +1706,7 @@ If a signature of ```operator ==``` is not matched, ```c++20``` will swap the ar
 ```c++20``` automatically creates ```operator !=``` from [```operator ==```](#vector-equals).
 
 ### Vector Free Functions
-We have two different vector types, ```basic_vector``` and ```indexed_vector```. We want the vector functions take work for both types, so most of the vector functions take instances of the vector types' common base class, ```vector_base```.
+We have two different vector types, ```vec``` and ```swizzle_vec```. We want the vector functions take work for both types, so most of the vector functions take instances of the vector types' common base class, ```vec_interface```.
 
 Most of the functions perform their operation component-wise. There are some functions that treat the vector geometrically and treat the components as part of a whole.
 
@@ -1840,89 +1796,89 @@ Most of the functions perform their operation component-wise. There are some fun
 ##### ```radians```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto radians(const vector_base<W, T, C, D> &deg) noexcept;
+[[nodiscard]] constexpr auto radians(const vec_interface<W, T, C, D> &deg) noexcept;
 ```
 
 ##### ```degrees```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto degrees(const vector_base<W, T, C, D> &rad) noexcept;
+[[nodiscard]] constexpr auto degrees(const vec_interface<W, T, C, D> &rad) noexcept;
 ```
 
 ##### ```sin```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto sin(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto sin(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```cos```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto cos(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto cos(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```tan```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto tan(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto tan(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```asin```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto asin(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto asin(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```acos```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto acos(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto acos(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```atan```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto atan(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto atan(const vec_interface<W, T, C, D> &arg) noexcept;
 
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] inline auto atan(const vector_base<W1, T, C, D1> &y,
-                               const vector_base<W2, T, C, D2> &x) noexcept;
+[[nodiscard]] inline auto atan(const vec_interface<W1, T, C, D1> &y,
+                               const vec_interface<W2, T, C, D2> &x) noexcept;
 ```
 
 ##### ```sinh```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto sinh(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto sinh(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```cosh```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto cosh(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto cosh(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```tanh```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto tanh(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto tanh(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```asinh```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto asinh(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto asinh(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```acosh```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto acosh(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto acosh(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```atanh```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto atanh(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto atanh(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 #### Exponential Functions
@@ -1930,50 +1886,50 @@ template <bool W, floating_point_scalar T, std::size_t C, typename D>
 ##### ```pow```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] inline auto pow(const vector_base<W1, T, C, D1> &base,
-                              const vector_base<W2, T, C, D2> &exp) noexcept;
+[[nodiscard]] inline auto pow(const vec_interface<W1, T, C, D1> &base,
+                              const vec_interface<W2, T, C, D2> &exp) noexcept;
 ```
 
 ##### ```exp```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto exp(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto exp(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```log```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto log(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto log(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```exp2```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto exp2(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto exp2(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```log2```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] inline auto log2(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] inline auto log2(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```sqrt```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto sqrt(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto sqrt(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```inversesqrt```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto inversesqrt(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto inversesqrt(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```fast_inversesqrt```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto fast_inversesqrt(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto fast_inversesqrt(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 Not in GLSL. May or may not actually be faster that ```rsqrt()```, for which this function is an approximation for. For ```float```, this function is 100% in agreement with ```rsqrt()```. For ```double```, the relationship to ```rsqrt()``` is:
   * 0 ulps: ~68.58%
@@ -1986,60 +1942,60 @@ Not in GLSL. May or may not actually be faster that ```rsqrt()```, for which thi
 ```c++
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
 requires (!unsigned_scalar<T>)
-[[nodiscard]] constexpr auto abs(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto abs(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```sign```
 ```c++
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
 requires (!unsigned_scalar<T>)
-[[nodiscard]] constexpr auto sign(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto sign(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```floor```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto floor(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto floor(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```trunc```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto trunc(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto trunc(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```round```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto round(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto round(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```roundEven```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto roundEven(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto roundEven(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```ceil```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto ceil(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto ceil(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```fract```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto fract(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto fract(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 
 ##### ```mod```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto mod(const vector_base<W1, T, C, D1> &x,
-                                 const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto mod(const vec_interface<W1, T, C, D1> &x,
+                                 const vec_interface<W2, T, C, D2> &y) noexcept;
 
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto mod(const vector_base<W, T, C, D> &x,
+[[nodiscard]] constexpr auto mod(const vec_interface<W, T, C, D> &x,
                                  T y) noexcept;
 ```
 
@@ -2047,41 +2003,41 @@ template <bool W, floating_point_scalar T, std::size_t C, typename D>
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 requires W2
-[[nodiscard]] constexpr auto modf(const vector_base<W1, T, C, D1> &arg,
-                                  vector_base<W2, T, C, D2> &i) noexcept;
+[[nodiscard]] constexpr auto modf(const vec_interface<W1, T, C, D1> &arg,
+                                  vec_interface<W2, T, C, D2> &i) noexcept;
 ```
 
 ##### ```min```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto min(const vector_base<W1, T, C, D1> &x,
-                                 const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto min(const vec_interface<W1, T, C, D1> &x,
+                                 const vec_interface<W2, T, C, D2> &y) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto min(const vector_base<W, T, C, D> &x,
+[[nodiscard]] constexpr auto min(const vec_interface<W, T, C, D> &x,
                                  T y) noexcept;
 ```
 
 ##### ```max```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto max(const vector_base<W1, T, C, D1> &x,
-                                 const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto max(const vec_interface<W1, T, C, D1> &x,
+                                 const vec_interface<W2, T, C, D2> &y) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto max(const vector_base<W, T, C, D> &x,
+[[nodiscard]] constexpr auto max(const vec_interface<W, T, C, D> &x,
                                  T y) noexcept;
 ```
 
 ##### ```clamp```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-[[nodiscard]] constexpr auto clamp(const vector_base<W1, T, C, D1> &x,
-                                   const vector_base<W2, T, C, D2> &min_val,
-                                   const vector_base<W3, T, C, D3> &max_val) noexcept;
+[[nodiscard]] constexpr auto clamp(const vec_interface<W1, T, C, D1> &x,
+                                   const vec_interface<W2, T, C, D2> &min_val,
+                                   const vec_interface<W3, T, C, D3> &max_val) noexcept;
 
 template <bool W, non_bool_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto clamp(const vector_base<W, T, C, D> &x,
+[[nodiscard]] constexpr auto clamp(const vec_interface<W, T, C, D> &x,
                                    T min_val,
                                    T max_val) noexcept;
 ```
@@ -2089,144 +2045,144 @@ template <bool W, non_bool_scalar T, std::size_t C, typename D>
 ##### ```mix```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-[[nodiscard]] constexpr auto mix(const vector_base<W1, T, C, D1> &x,
-                                 const vector_base<W2, T, C, D2> &y,
-                                 const vector_base<W3, T, C, D3> &a) noexcept;
+[[nodiscard]] constexpr auto mix(const vec_interface<W1, T, C, D1> &x,
+                                 const vec_interface<W2, T, C, D2> &y,
+                                 const vec_interface<W3, T, C, D3> &a) noexcept;
 
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto mix(const vector_base<W1, T, C, D1> &x,
-                                 const vector_base<W2, T, C, D2> &y,
+[[nodiscard]] constexpr auto mix(const vec_interface<W1, T, C, D1> &x,
+                                 const vec_interface<W2, T, C, D2> &y,
                                  T a) noexcept;
 
 template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, bool_scalar B, typename D3>
-[[nodiscard]] constexpr auto mix(const vector_base<W1, T, C, D1> &x,
-                                 const vector_base<W2, T, C, D2> &y,
-                                 const vector_base<W3, B, C, D3> &a) noexcept;
+[[nodiscard]] constexpr auto mix(const vec_interface<W1, T, C, D1> &x,
+                                 const vec_interface<W2, T, C, D2> &y,
+                                 const vec_interface<W3, B, C, D3> &a) noexcept;
 ```
 
 ##### ```step```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto step(const vector_base<W1, T, C, D1> &edge,
-                                  const vector_base<W2, T, C, D2> &x) noexcept;
+[[nodiscard]] constexpr auto step(const vec_interface<W1, T, C, D1> &edge,
+                                  const vec_interface<W2, T, C, D2> &x) noexcept;
 
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
 [[nodiscard]] constexpr auto step(T edge,
-                                  const vector_base<W, T, C, D> &x) noexcept;
+                                  const vec_interface<W, T, C, D> &x) noexcept;
 ```
 
 ##### ```smoothstep```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-[[nodiscard]] constexpr auto smoothstep(const vector_base<W1, T, C, D1> &edge0,
-                                        const vector_base<W2, T, C, D2> &edge1,
-                                        const vector_base<W3, T, C, D3> &x) noexcept;
+[[nodiscard]] constexpr auto smoothstep(const vec_interface<W1, T, C, D1> &edge0,
+                                        const vec_interface<W2, T, C, D2> &edge1,
+                                        const vec_interface<W3, T, C, D3> &x) noexcept;
 
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
 [[nodiscard]] constexpr auto smoothstep(T edge0,
                                         T edge1,
-                                        const vector_base<W, T, C, D> &x) noexcept;
+                                        const vec_interface<W, T, C, D> &x) noexcept;
 ```
 
 ##### ```isnan```
 ```c++
 template <floating_point_scalar T, std::size_t C>
-[[nodiscard]] constexpr auto isnan(const basic_vector<T, C> &arg) noexcept;
+[[nodiscard]] constexpr auto isnan(const vec<T, C> &arg) noexcept;
 
 template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-[[nodiscard]] constexpr auto isnan(const indexed_vector<T, S, C, Is...> &arg) noexcept;
+[[nodiscard]] constexpr auto isnan(const swizzle_vec<T, S, C, Is...> &arg) noexcept;
 ```
-These functions can not use ```vector_base``` as the parameter type. They must be specialized for the actual types, not the base type. This is due to the C++ Standard Library implementation, at least for MSVC.
+These functions can not use ```vec_interface``` as the parameter type. They must be specialized for the actual types, not the base type. This is due to the C++ Standard Library implementation, at least for MSVC.
 
 ##### ```isinf```
 ```c++
 template <floating_point_scalar T, std::size_t C>
-[[nodiscard]] constexpr auto isinf(const basic_vector<T, C> &arg) noexcept;
+[[nodiscard]] constexpr auto isinf(const vec<T, C> &arg) noexcept;
 
 template <floating_point_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-[[nodiscard]] constexpr auto isinf(const indexed_vector<T, S, C, Is...> &arg) noexcept;
+[[nodiscard]] constexpr auto isinf(const swizzle_vec<T, S, C, Is...> &arg) noexcept;
 ```
-These functions can not use ```vector_base``` as the parameter type. They must be specialized for the actual types, not the base type. This is due to the C++ Standard Library implementation, at least for MSVC.
+These functions can not use ```vec_interface``` as the parameter type. They must be specialized for the actual types, not the base type. This is due to the C++ Standard Library implementation, at least for MSVC.
 
 ##### ```floatBitsToInt```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto floatBitsToInt(const vector_base<W, float, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto floatBitsToInt(const vec_interface<W, float, C, D> &arg) noexcept;
 ```
 
 ##### ```floatBitsToUint```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto floatBitsToUint(const vector_base<W, float, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto floatBitsToUint(const vec_interface<W, float, C, D> &arg) noexcept;
 ```
 
 ##### ```doubleBitsToLongLong```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto doubleBitsToLongLong(const vector_base<W, double, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto doubleBitsToLongLong(const vec_interface<W, double, C, D> &arg) noexcept;
 ```
 Not in GLSL.
 
 ##### ```doubleBitsToUlongLong```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto doubleBitsToUlongLong(const vector_base<W, double, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto doubleBitsToUlongLong(const vec_interface<W, double, C, D> &arg) noexcept;
 ```
 Not in GLSL.
 
 ##### ```intBitsToFloat```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto intBitsToFloat(const vector_base<W, int, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto intBitsToFloat(const vec_interface<W, int, C, D> &arg) noexcept;
 ```
 
 ##### ```uintBitsToFloat```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto uintBitsToFloat(const vector_base<W, unsigned int, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto uintBitsToFloat(const vec_interface<W, unsigned int, C, D> &arg) noexcept;
 ```
 
 ##### ```longLongBitsToDouble```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto longLongBitsToDouble(const vector_base<W, long long, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto longLongBitsToDouble(const vec_interface<W, long long, C, D> &arg) noexcept;
 ```
 Not in GLSL.
 
 ##### ```ulongLongBitsToDouble```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto ulongLongBitsToDouble(const vector_base<W, unsigned long long, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto ulongLongBitsToDouble(const vec_interface<W, unsigned long long, C, D> &arg) noexcept;
 ```
 Not in GLSL.
 
 ##### ```fma```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-[[nodiscard]] inline auto fma(const vector_base<W1, T, C, D1> &a,
-                              const vector_base<W2, T, C, D2> &b,
-                              const vector_base<W3, T, C, D3> &c) noexcept;
+[[nodiscard]] inline auto fma(const vec_interface<W1, T, C, D1> &a,
+                              const vec_interface<W2, T, C, D2> &b,
+                              const vec_interface<W3, T, C, D3> &c) noexcept;
 ```
 
 ##### ```frexp```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 requires W2
-[[nodiscard]] inline auto frexp(const vector_base<W1, T, C, D1> &x,
-                                vector_base<W2, int, C, D2> &exp) noexcept;
+[[nodiscard]] inline auto frexp(const vec_interface<W1, T, C, D1> &x,
+                                vec_interface<W2, int, C, D2> &exp) noexcept;
 ```
 
 ##### ```ldexp```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] inline auto ldexp(const vector_base<W1, T, C, D1> &x,
-                                const vector_base<W2, int, C, D2> &exp) noexcept;
+[[nodiscard]] inline auto ldexp(const vec_interface<W1, T, C, D1> &x,
+                                const vec_interface<W2, int, C, D2> &exp) noexcept;
 ```
 
 ##### ```byteswap```
 ```c++
 template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto byteswap(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr auto byteswap(const vec_interface<W, T, C, D> &arg) noexcept;
 ```
 Not in GLSL. This functionality was added to ```c++23```, but since this is a ```c++20``` library, we have to provide the underlying implementation ourselves.
 
@@ -2235,72 +2191,72 @@ Not in GLSL. This functionality was added to ```c++23```, but since this is a ``
 ##### ```length```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr auto length(const vector_base<W, T, C, D> &x) noexcept;
+[[nodiscard]] constexpr auto length(const vec_interface<W, T, C, D> &x) noexcept;
 ```
 
 ##### ```distance```
 ```c++
 template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
-[[nodiscard]] constexpr auto distance(const vector_base<W1, T1, C, D1> &p0,
-                                      const vector_base<W2, T2, C, D2> &p1) noexcept;
+[[nodiscard]] constexpr auto distance(const vec_interface<W1, T1, C, D1> &p0,
+                                      const vec_interface<W2, T2, C, D2> &p1) noexcept;
 ```
 
 ##### ```innerProduct```
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-[[nodiscard]] constexpr auto innerProduct(const vector_base<W1, T1, C, D1> &x,
-                                          const vector_base<W2, T2, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto innerProduct(const vec_interface<W1, T1, C, D1> &x,
+                                          const vec_interface<W2, T2, C, D2> &y) noexcept;
 ```
 Not in GLSL. This is just like ```dot```, except without the floating-point restriction.
 
 ##### ```dot```
 ```c++
 template <bool W1, floating_point_scalar T1, std::size_t C, typename D1, bool W2, floating_point_scalar T2, typename D2>
-[[nodiscard]] constexpr auto dot(const vector_base<W1, T1, C, D1> &x,
-                                 const vector_base<W2, T2, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto dot(const vec_interface<W1, T1, C, D1> &x,
+                                 const vec_interface<W2, T2, C, D2> &y) noexcept;
 ```
 
 ##### ```cross```
 ```c++
 template <bool W1, floating_point_scalar T1, typename D1, bool W2, floating_point_scalar T2, typename D2>
-[[nodiscard]] constexpr auto cross(const vector_base<W1, T1, 3, D1> &a,
-                                   const vector_base<W2, T2, 3, D2> &b) noexcept;
+[[nodiscard]] constexpr auto cross(const vec_interface<W1, T1, 3, D1> &a,
+                                   const vec_interface<W2, T2, 3, D2> &b) noexcept;
 
 template <floating_point_scalar T1, floating_point_scalar T2>
-[[nodiscard]] constexpr auto cross(const basic_vector<T1, 3> &a,
-                                   const basic_vector<T2, 3> &b) noexcept;
+[[nodiscard]] constexpr auto cross(const vec<T1, 3> &a,
+                                   const vec<T2, 3> &b) noexcept;
 ```
 
 ##### ```normalize```
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
 requires (C > 1)
-[[nodiscard]] constexpr auto normalize(const vector_base<W, T, C, D> &x) noexcept;
+[[nodiscard]] constexpr auto normalize(const vec_interface<W, T, C, D> &x) noexcept;
 ```
 
 ##### ```faceforward```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
 requires (C > 1)
-[[nodiscard]] constexpr auto faceforward(const vector_base<W1, T, C, D1> &n,
-                                         const vector_base<W2, T, C, D2> &i,
-                                         const vector_base<W3, T, C, D3> &nref) noexcept;
+[[nodiscard]] constexpr auto faceforward(const vec_interface<W1, T, C, D1> &n,
+                                         const vec_interface<W2, T, C, D2> &i,
+                                         const vec_interface<W3, T, C, D3> &nref) noexcept;
 ```
 
 ##### ```reflect```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 requires (C > 1)
-[[nodiscard]] constexpr auto reflect(const vector_base<W1, T, C, D1> &i,
-                                     const vector_base<W2, T, C, D2> &n) noexcept;
+[[nodiscard]] constexpr auto reflect(const vec_interface<W1, T, C, D1> &i,
+                                     const vec_interface<W2, T, C, D2> &n) noexcept;
 ```
 
 ##### ```refract```
 ```c++
 template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
 requires (C > 1)
-[[nodiscard]] constexpr auto refract(const vector_base<W1, T, C, D1> &i,
-                                     const vector_base<W2, T, C, D2> &n,
+[[nodiscard]] constexpr auto refract(const vec_interface<W1, T, C, D1> &i,
+                                     const vec_interface<W2, T, C, D2> &n,
                                      T eta) noexcept;
 ```
 
@@ -2309,72 +2265,72 @@ requires (C > 1)
 ##### ```lessThan```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto lessThan(const vector_base<W1, T, C, D1> &x,
-                                      const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto lessThan(const vec_interface<W1, T, C, D1> &x,
+                                      const vec_interface<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```lessThanEqual```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto lessThanEqual(const vector_base<W1, T, C, D1> &x,
-                                           const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto lessThanEqual(const vec_interface<W1, T, C, D1> &x,
+                                           const vec_interface<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```greaterThan```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto greaterThan(const vector_base<W1, T, C, D1> &x,
-                                         const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto greaterThan(const vec_interface<W1, T, C, D1> &x,
+                                         const vec_interface<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```greaterThanEqual```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto greaterThanEqual(const vector_base<W1, T, C, D1> &x,
-                                              const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto greaterThanEqual(const vec_interface<W1, T, C, D1> &x,
+                                              const vec_interface<W2, T, C, D2> &y) noexcept;
 ```
 
 ##### ```equal```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto equal(const vector_base<W1, T, C, D1> &x,
-                                   const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto equal(const vec_interface<W1, T, C, D1> &x,
+                                   const vec_interface<W2, T, C, D2> &y) noexcept;
 
 template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto equal(const vector_base<W1, bool, C, D1> &x,
-                                   const vector_base<W2, bool, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto equal(const vec_interface<W1, bool, C, D1> &x,
+                                   const vec_interface<W2, bool, C, D2> &y) noexcept;
 ```
 
 ##### ```notEqual```
 ```c++
 template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto notEqual(const vector_base<W1, T, C, D1> &x,
-                                      const vector_base<W2, T, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto notEqual(const vec_interface<W1, T, C, D1> &x,
+                                      const vec_interface<W2, T, C, D2> &y) noexcept;
 
 template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto notEqual(const vector_base<W1, bool, C, D1> &x,
-                                      const vector_base<W2, bool, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto notEqual(const vec_interface<W1, bool, C, D1> &x,
+                                      const vec_interface<W2, bool, C, D2> &y) noexcept;
 
 ```
 
 ##### ```any```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr bool any(const vector_base<W, bool, C, D> &x) noexcept;
+[[nodiscard]] constexpr bool any(const vec_interface<W, bool, C, D> &x) noexcept;
 ```
 Not a component-wise operation. Relies on all values.
 
 ##### ```all```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr bool all(const vector_base<W, bool, C, D> &x) noexcept;
+[[nodiscard]] constexpr bool all(const vec_interface<W, bool, C, D> &x) noexcept;
 ```
 Not a component-wise operation. Relies on all values.
 
 ##### ```none```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr bool none(const vector_base<W, bool, C, D> &x) noexcept;
+[[nodiscard]] constexpr bool none(const vec_interface<W, bool, C, D> &x) noexcept;
 ```
 Not in GLSL. Same effect as ```!any(vec)```.
 
@@ -2383,23 +2339,23 @@ Not a component-wise operation. Relies on all values.
 ##### ```compNot```
 ```c++
 template <bool W, std::size_t C, typename D>
-[[nodiscard]] constexpr auto compNot(const vector_base<W, bool, C, D> &x) noexcept;
+[[nodiscard]] constexpr auto compNot(const vec_interface<W, bool, C, D> &x) noexcept;
 ```
 This function takes the place of GLSL function ```not```. We can't define a function named ```not``` in C++ because it is a reserved keyword. This performs a component-wise ```not`` operation on the boolean inputs.
 
 ##### ```compAnd```
 ```c++
 template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto compAnd(const vector_base<W1, bool, C, D1> &x,
-                                     const vector_base<W2, bool, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto compAnd(const vec_interface<W1, bool, C, D1> &x,
+                                     const vec_interface<W2, bool, C, D2> &y) noexcept;
 ```
 Not in GLSL. The function returns a vector from performing component-wise ```and``` operations of the boolean inputs.
 
 ##### ```compOr```
 ```c++
 template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-[[nodiscard]] constexpr auto compOr(const vector_base<W1, bool, C, D1> &x,
-                                    const vector_base<W2, bool, C, D2> &y) noexcept;
+[[nodiscard]] constexpr auto compOr(const vec_interface<W1, bool, C, D1> &x,
+                                    const vec_interface<W2, bool, C, D2> &y) noexcept;
 ```
 Not in GLSL. The function returns a vector from performing component-wise ```or``` operations of the boolean inputs.
 
@@ -2407,13 +2363,13 @@ Not in GLSL. The function returns a vector from performing component-wise ```or`
 ```c++
 template <bool W, dimensional_scalar T, std::size_t C, typename D, typename Arg>
 requires std::convertible_to<Arg, std::size_t>
-inline auto swizzle(const vector_base<W, T, C, D> &v, const Arg &index);
+inline auto swizzle(const vec_interface<W, T, C, D> &v, const Arg &index);
 
 template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
 requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 0) && (sizeof...(Args) <= 4)
-inline basic_vector<T, sizeof...(Args)> swizzle(const vector_base<W, T, C, D> &v, const Args &...Is);
+inline vec<T, sizeof...(Args)> swizzle(const vec_interface<W, T, C, D> &v, const Args &...Is);
 ```
-Not in GLSL. Runtime function for swizzling. Returns a stand-alone ```dsga::basic_vector``` version of a swizzle, instead of a ```dsga::indexed_vector``` data member. Will return a scalar value if only one index argument. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
+Not in GLSL. Runtime function for swizzling. Returns a stand-alone ```dsga::vec``` version of a swizzle, instead of a ```dsga::swizzle_vec``` data member. Will return a scalar value if only one index argument. If the index arguments are invalid (out of bounds), this function will throw a ```std::out_of_range()``` exception. Inspired by the [Odin Programming Language](https://odin-lang.org/docs/overview/#swizzle-operations).
 
 ### Scalar Functions
 Scalar versions of most of the vector free functions exist. It is not recommended to use them if there is a function in the C++ Standard Library that does the same thing.
@@ -2446,31 +2402,31 @@ The linear algebraic binary operators use linear algebraic concepts to multiply 
 ##### Matrix Unary Plus
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-[[nodiscard]] constexpr auto operator +(const basic_matrix<T, C, R> &arg) noexcept;
+[[nodiscard]] constexpr auto operator +(const mat<T, C, R> &arg) noexcept;
 ```
 
 ##### Matrix Unary Minus
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-[[nodiscard]] constexpr auto operator -(const basic_matrix<T, C, R> &arg) noexcept;
+[[nodiscard]] constexpr auto operator -(const mat<T, C, R> &arg) noexcept;
 ```
 
 ##### Matrix Unary Increment
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-constexpr auto &operator ++(basic_matrix<T, C, R> &arg) noexcept;
+constexpr auto &operator ++(mat<T, C, R> &arg) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-constexpr auto operator ++(basic_matrix<T, C, R> &arg, int) noexcept;
+constexpr auto operator ++(mat<T, C, R> &arg, int) noexcept;
 ```
 
 ##### Matrix Unary Decrement
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-constexpr auto &operator --(basic_matrix<T, C, R> &arg) noexcept;
+constexpr auto &operator --(mat<T, C, R> &arg) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-constexpr auto operator --(basic_matrix<T, C, R> &arg, int) noexcept;
+constexpr auto operator --(mat<T, C, R> &arg, int) noexcept;
 ```
 
 #### Matrix Binary Operators
@@ -2478,57 +2434,57 @@ constexpr auto operator --(basic_matrix<T, C, R> &arg, int) noexcept;
 ##### Matrix Binary Plus
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-[[nodiscard]] constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
+[[nodiscard]] constexpr auto operator +(const mat<T, C, R> &lhs,
                                         U rhs) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
 [[nodiscard]] constexpr auto operator +(U lhs,
-                                        const basic_matrix<T, C, R> &rhs) noexcept;
+                                        const mat<T, C, R> &rhs) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-[[nodiscard]] constexpr auto operator +(const basic_matrix<T, C, R> &lhs,
-                                        const basic_matrix<U, C, R> &rhs) noexcept
+[[nodiscard]] constexpr auto operator +(const mat<T, C, R> &lhs,
+                                        const mat<U, C, R> &rhs) noexcept
 ```
 
 ##### Matrix Binary Minus
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-[[nodiscard]] constexpr auto operator -(const basic_matrix<T, C, R> &lhs,
+[[nodiscard]] constexpr auto operator -(const mat<T, C, R> &lhs,
                                         U rhs) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
 [[nodiscard]] constexpr auto operator -(U lhs,
-                                        const basic_matrix<T, C, R> &rhs) noexcept;
+                                        const mat<T, C, R> &rhs) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-[[nodiscard]] constexpr auto operator -(const basic_matrix<T, C, R> &lhs,
-                                        const basic_matrix<U, C, R> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator -(const mat<T, C, R> &lhs,
+                                        const mat<U, C, R> &rhs) noexcept;
 ```
 
 ##### Matrix Binary Times
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
+[[nodiscard]] constexpr auto operator *(const mat<T, C, R> &lhs,
                                         U rhs) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
 [[nodiscard]] constexpr auto operator *(U lhs,
-                                        const basic_matrix<T, C, R> &rhs) noexcept;
+                                        const mat<T, C, R> &rhs) noexcept;
 ```
 
 ##### Matrix Binary Division
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
-[[nodiscard]] constexpr auto operator /(const basic_matrix<T, C, R> &lhs,
+[[nodiscard]] constexpr auto operator /(const mat<T, C, R> &lhs,
                                         U rhs) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R, non_bool_scalar U>
 [[nodiscard]] constexpr auto operator /(U lhs,
-                                        const basic_matrix<T, C, R> &rhs) noexcept;
+                                        const mat<T, C, R> &rhs) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-[[nodiscard]] constexpr auto operator /(const basic_matrix<T, C, R> &lhs,
-                                        const basic_matrix<U, C, R> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator /(const mat<T, C, R> &lhs,
+                                        const mat<U, C, R> &rhs) noexcept;
 ```
 
 #### Matrix Linear Algebraic Operations
@@ -2536,16 +2492,16 @@ template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_
 ##### Matrix Linear Algebraic Vector Times Matrix
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
-[[nodiscard]] constexpr auto operator *(const vector_base<W, U, R, D> &lhs,
-                                        const basic_matrix<T, C, R> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator *(const vec_interface<W, U, R, D> &lhs,
+                                        const mat<T, C, R> &rhs) noexcept;
 ```
 For performing a ```vector * matrix``` operation, the vector is treated as if it were transposed, i.e., a row vector, as is the result.
 
 ##### Matrix Linear Algebraic Matrix Times Vector
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, non_bool_scalar U, typename D>
-[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C, R> &lhs,
-                                        const vector_base<W, U, C, D> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator *(const mat<T, C, R> &lhs,
+                                        const vec_interface<W, U, C, D> &rhs) noexcept;
 ```
 For performing a ```matrix * vector``` operation, the vector is treated as if it were a column vector, as is the result.
 
@@ -2553,8 +2509,8 @@ For performing a ```matrix * vector``` operation, the vector is treated as if it
 ```c++
 template <floating_point_scalar T, std::size_t C1, std::size_t R1, floating_point_scalar U, std::size_t C2, std::size_t R2>
 requires (C1 == R2)
-[[nodiscard]] constexpr auto operator *(const basic_matrix<T, C1, R1> &lhs,
-                                        const basic_matrix<U, C2, R2> &rhs) noexcept;
+[[nodiscard]] constexpr auto operator *(const mat<T, C1, R1> &lhs,
+                                        const mat<U, C2, R2> &rhs) noexcept;
 ```
 
 #### Matrix Comparison Operators
@@ -2563,8 +2519,8 @@ requires (C1 == R2)
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
 requires implicitly_convertible_to<U, T>
-constexpr bool operator ==(const basic_matrix<T, C, R> &lhs,
-                           const basic_matrix<U, C, R> &rhs) noexcept;
+constexpr bool operator ==(const mat<T, C, R> &lhs,
+                           const mat<U, C, R> &rhs) noexcept;
 ```
 If a signature of ```operator ==``` is not matched, ```c++20``` will swap the argument order to see if there is a match.
 
@@ -2584,8 +2540,8 @@ The matrix functions treat a matrix as an entity instead of as a collection of c
 ##### ```matrixCompMult```
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U>
-[[nodiscard]] constexpr auto matrixCompMult(const basic_matrix<T, C, R> &lhs,
-                                            const basic_matrix<U, C, R> &rhs) noexcept;
+[[nodiscard]] constexpr auto matrixCompMult(const mat<T, C, R> &lhs,
+                                            const mat<U, C, R> &rhs) noexcept;
 ```
 This function exists because ```operator *``` is used for linear algebraic purposes instead of component-wise multiplication.
 
@@ -2593,34 +2549,34 @@ This function exists because ```operator *``` is used for linear algebraic purpo
 ```c++
 template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
 requires (floating_point_scalar<T1> || floating_point_scalar<T2>) && ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
-[[nodiscard]] constexpr auto outerProduct(const vector_base<W1, T1, C1, D1> &lhs,
-                                          const vector_base<W2, T2, C2, D2> &rhs) noexcept;
+[[nodiscard]] constexpr auto outerProduct(const vec_interface<W1, T1, C1, D1> &lhs,
+                                          const vec_interface<W2, T2, C2, D2> &rhs) noexcept;
 ```
 
 ##### ```transpose```
 ```c++
 template <floating_point_scalar T, std::size_t C, std::size_t R>
-[[nodiscard]] constexpr basic_matrix<T, R, C> transpose(const basic_matrix<T, C, R> &arg) noexcept;
+[[nodiscard]] constexpr mat<T, R, C> transpose(const mat<T, C, R> &arg) noexcept;
 ```
 
 ##### ```determinant```
 ```c++
 template <floating_point_scalar T, std::size_t C>
 requires ((2 <= C) && (C <= 4))
-[[nodiscard]] constexpr auto determinant(const basic_matrix<T, C, C> &arg) noexcept;
+[[nodiscard]] constexpr auto determinant(const mat<T, C, C> &arg) noexcept;
 ```
 
 ##### ```inverse```
 ```c++
 template <floating_point_scalar T>
 requires ((2 <= C) && (C <= 4))
-[[nodiscard]] constexpr auto inverse(const basic_matrix<T, C, C> &arg) noexcept;
+[[nodiscard]] constexpr auto inverse(const mat<T, C, C> &arg) noexcept;
 ```
 
 ##### ```cross_matrix```
 ```c++
 template <bool W, floating_point_scalar T, typename D>
-[[nodiscard]] constexpr basic_matrix<T, 3, 3> cross_matrix(const vector_base<W, T, 3, D> &vec) noexcept;
+[[nodiscard]] constexpr mat<T, 3, 3> cross_matrix(const vec_interface<W, T, 3, D> &vec) noexcept;
 ```
 ```cross(u, v) == cross_matrix(u) * v == u * cross_matrix(v)```. This creates a matrix that can be used to compute the cross product when multiplied by a vector. This is not in GLSL.
 
@@ -2628,7 +2584,7 @@ template <bool W, floating_point_scalar T, typename D>
 ```c++
 template <bool W, floating_point_scalar T, std::size_t C, typename D>
 requires (C > 1)
-[[nodiscard]] constexpr basic_matrix<T, C, C> diagonal_matrix(const vector_base<W, T, C, D> &vec) noexcept;
+[[nodiscard]] constexpr mat<T, C, C> diagonal_matrix(const vec_interface<W, T, C, D> &vec) noexcept;
 ```
 This creates a symmetric diagonal matrix (square matrix) using the vector parameter for the diagonal values, with all other matrix elements having value 0. This is not in GLSL.
 
@@ -2643,36 +2599,36 @@ These functions allow the vector and matrix classes in ```namespace dsga``` to i
 ```c++
 template <dimensional_scalar T, std::size_t S>
 requires dimensional_storage<T, S>
-[[nodiscard]] constexpr basic_vector<T, S> to_vector(const std::array<T, S> &arg) noexcept;
+[[nodiscard]] constexpr vec<T, S> to_vector(const std::array<T, S> &arg) noexcept;
 
 template <dimensional_scalar T, std::size_t S>
 requires dimensional_storage<T, S>
-[[nodiscard]] constexpr basic_vector<T, S> to_vector(const T(&arg)[S]) noexcept;
+[[nodiscard]] constexpr vec<T, S> to_vector(const T(&arg)[S]) noexcept;
 ```
-Convenience functions for converting a ```std::array```  or ```C-style array``` to a ```basic_vector```. The array types must satisfy the ```dimensional_storage``` concept.
+Convenience functions for converting a ```std::array```  or ```C-style array``` to a ```vec```. The array types must satisfy the ```dimensional_storage``` concept.
 
 ##### Convert To Array
 ```c++
 template <bool W, dimensional_scalar T, std::size_t C, typename D>
-[[nodiscard]] constexpr std::array<T, C> to_array(const vector_base<W, T, C, D> &arg) noexcept;
+[[nodiscard]] constexpr std::array<T, C> to_array(const vec_interface<W, T, C, D> &arg) noexcept;
 
 template <floating_point_scalar T, std::size_t C, std::size_t R>
 requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
-[[nodiscard]] constexpr std::array<T, C * R> to_array(const basic_matrix<T, C, R> &arg) noexcept;
+[[nodiscard]] constexpr std::array<T, C * R> to_array(const mat<T, C, R> &arg) noexcept;
 ```
-Convenience functions for converting a vector or matrix to a ```std::array```. For the vector classes, the elements are written to the array in logical order (as opposed to physical order). For ```basic_matrix```, the elements are written to the array in column-order.
+Convenience functions for converting a vector or matrix to a ```std::array```. For the vector classes, the elements are written to the array in logical order (as opposed to physical order). For ```mat```, the elements are written to the array in column-order.
 
 ##### Convert To Matrix
 ```c++
 template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
 requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
-[[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept;
+[[nodiscard]] constexpr dsga::mat<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept;
 
 template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
 requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
-[[nodiscard]] constexpr dsga::basic_matrix<T, C, R> to_matrix(const T(&arg)[S]) noexcept;
+[[nodiscard]] constexpr dsga::mat<T, C, R> to_matrix(const T(&arg)[S]) noexcept;
 ```
-Convenience functions for converting a ```std::array```  or ```C-style array``` to a ```basic_matrix```. The array types must store the data in column-order.
+Convenience functions for converting a ```std::array```  or ```C-style array``` to a ```mat```. The array types must store the data in column-order.
 
 ### Tuple Protocol
 The non-iterator classes in ```namespace dsga``` support the tuple protocol. The most important use case is for [structured bindings](https://en.cppreference.com/w/cpp/language/structured_binding).
@@ -2683,96 +2639,96 @@ The non-iterator classes in ```namespace dsga``` support the tuple protocol. The
 
 ##### Get
 ```c+++
-// storage_wrapper
+// vec_storage
 
 template <int N, dimensional_scalar T, std::size_t S>
 requires (N >= 0) && (N < S)
-[[nodiscard]] constexpr auto & get(storage_wrapper<T, S> & arg) noexcept;
+[[nodiscard]] constexpr auto & get(vec_storage<T, S> & arg) noexcept;
 
 template <int N, dimensional_scalar T, std::size_t S>
 requires (N >= 0) && (N < S)
-[[nodiscard]] constexpr const auto & get(const storage_wrapper<T, S> & arg) noexcept;
+[[nodiscard]] constexpr const auto & get(const vec_storage<T, S> & arg) noexcept;
 
 template <int N, dimensional_scalar T, std::size_t S>
 requires (N >= 0) && (N < S)
-[[nodiscard]] constexpr auto && get(storage_wrapper<T, S> && arg) noexcept;
+[[nodiscard]] constexpr auto && get(vec_storage<T, S> && arg) noexcept;
 
 template <int N, dimensional_scalar T, std::size_t S>
 requires (N >= 0) && (N < S)
-[[nodiscard]] constexpr const auto && get(const storage_wrapper<T, S> && arg) noexcept;
+[[nodiscard]] constexpr const auto && get(const vec_storage<T, S> && arg) noexcept;
 
-// vector_base -- covers use for basic_vector and indexed_vector
+// vec_interface -- covers use for vec and swizzle_vec
 
 template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 requires W && (N >= 0) && (N < C)
-[[nodiscard]] constexpr auto & get(vector_base<W, T, C, D> & arg) noexcept;
+[[nodiscard]] constexpr auto & get(vec_interface<W, T, C, D> & arg) noexcept;
 
 template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 requires (N >= 0) && (N < C)
-[[nodiscard]] constexpr const auto & get(const vector_base<W, T, C, D> & arg) noexcept;
+[[nodiscard]] constexpr const auto & get(const vec_interface<W, T, C, D> & arg) noexcept;
 
 template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 requires (N >= 0) && (N < C)
-[[nodiscard]] constexpr auto && get(vector_base<W, T, C, D> && arg) noexcept;
+[[nodiscard]] constexpr auto && get(vec_interface<W, T, C, D> && arg) noexcept;
 
 template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
 requires (N >= 0) && (N < C)
-[[nodiscard]] constexpr const auto && get(const vector_base<W, T, C, D> && arg) noexcept;
+[[nodiscard]] constexpr const auto && get(const vec_interface<W, T, C, D> && arg) noexcept;
 
-// basic_matrix
-
-template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
-requires (N >= 0) && (N < C)
-[[nodiscard]] constexpr auto & get(dsga::basic_matrix<T, C, R> & arg) noexcept;
+// mat
 
 template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 requires (N >= 0) && (N < C)
-[[nodiscard]] constexpr const auto & get(const dsga::basic_matrix<T, C, R> & arg) noexcept;
+[[nodiscard]] constexpr auto & get(dsga::mat<T, C, R> & arg) noexcept;
 
 template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 requires (N >= 0) && (N < C)
-[[nodiscard]] constexpr auto && get(dsga::basic_matrix<T, C, R> && arg) noexcept;
+[[nodiscard]] constexpr const auto & get(const dsga::mat<T, C, R> & arg) noexcept;
 
 template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
 requires (N >= 0) && (N < C)
-[[nodiscard]] constexpr const auto && get(const dsga::basic_matrix<T, C, R> && arg) noexcept;
+[[nodiscard]] constexpr auto && get(dsga::mat<T, C, R> && arg) noexcept;
+
+template <int N, dimensional_scalar T, std::size_t C, std::size_t R>
+requires (N >= 0) && (N < C)
+[[nodiscard]] constexpr const auto && get(const dsga::mat<T, C, R> && arg) noexcept;
 ```
 The ```get``` free functions for all ref-qualifier versions of arguments, defined in ```namespace dsga```. This allows ADL for finding the correct ```get``` function.
 
 ##### Tuple Size
 ```c+++
 template<dsga::dimensional_scalar T, std::size_t S>
-struct std::tuple_size<dsga::storage_wrapper<T, S>> : std::integral_constant<std::size_t, S>;
+struct std::tuple_size<dsga::vec_storage<T, S>> : std::integral_constant<std::size_t, S>;
 
 template<dsga::dimensional_scalar T, std::size_t S>
-struct std::tuple_size<dsga::basic_vector<T, S>> : std::integral_constant<std::size_t, S>;
+struct std::tuple_size<dsga::vec<T, S>> : std::integral_constant<std::size_t, S>;
 
 template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct std::tuple_size<dsga::indexed_vector<T, S, C, Is...>> : std::integral_constant<std::size_t, C>;
+struct std::tuple_size<dsga::swizzle_vec<T, S, C, Is...>> : std::integral_constant<std::size_t, C>;
 
 template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D>
-struct std::tuple_size<dsga::vector_base<W, T, C, D>> : std::integral_constant<std::size_t, C>;
+struct std::tuple_size<dsga::vec_interface<W, T, C, D>> : std::integral_constant<std::size_t, C>;
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-struct std::tuple_size<dsga::basic_matrix<T, C, R>> : std::integral_constant<std::size_t, C>;
+struct std::tuple_size<dsga::mat<T, C, R>> : std::integral_constant<std::size_t, C>;
 ```
 Specialized versions of ```std::tuple_size``` for ```namespace dsga``` classes/structs.
 
 ##### Tuple Element
 ```c+++
 template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
-struct std::tuple_element<I, dsga::storage_wrapper<T, S>>;
+struct std::tuple_element<I, dsga::vec_storage<T, S>>;
 
 template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
-struct std::tuple_element<I, dsga::basic_vector<T, S>>;
+struct std::tuple_element<I, dsga::vec<T, S>>;
 
 template <std::size_t I, dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct std::tuple_element<I, dsga::indexed_vector<T, S, C, Is...>>;
+struct std::tuple_element<I, dsga::swizzle_vec<T, S, C, Is...>>;
 
 template <std::size_t I, bool W, dsga::dimensional_scalar T, std::size_t C, typename D>
-struct std::tuple_element<I, dsga::vector_base<W, T, C, D>>;
+struct std::tuple_element<I, dsga::vec_interface<W, T, C, D>>;
 
 template <std::size_t I, dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-struct std::tuple_element<I, dsga::basic_matrix<T, C, R>>;
+struct std::tuple_element<I, dsga::mat<T, C, R>>;
 ```
 Specialized versions of ```std::tuple_element``` for ```namespace dsga``` classes/structs.

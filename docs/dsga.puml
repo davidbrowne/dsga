@@ -5,7 +5,6 @@
 	{
 		+ {abstract} set()
 		+ {abstract} operator[]()
-		+ {abstract} data()
 		+ {abstract} sequence()
 		+ {abstract} iterator access()
 	}
@@ -13,11 +12,10 @@
 		Conceptual interface, not real :
 		Could be made into a c++ concept
 	end note
-	abstract vector_base <Writable, T, Count, Derived>
+	abstract vec_interface <Writable, T, Count, Derived>
 	{
 		+ CRTP set()
 		+ CRTP operator[]()
-		+ CRTP data()
 		+ CRTP sequence()
 		+ CRTP iterator access()
 		+ length()
@@ -32,64 +30,60 @@
 		+ max()
 		+ sum()
 	}
-	struct indexed_vector_const_iterator<T, Size, Count, ...Is>
+	struct swizzle_vec_const_iterator<T, Size, Count, ...Is>
 	{
-		+ mapper_ptr : const indexed_vector<T, Size, Count, Is ...> *
+		+ mapper_ptr : const swizzle_vec<T, Size, Count, Is ...> *
 		+ mapper_index : std::ptrdiff_t
-		+ iterator functions()
+		+ iterator access()
 	}
-	struct indexed_vector_iterator<T, Size, Count, ...Is>
+	struct swizzle_vec_iterator<T, Size, Count, ...Is>
 	{
-		+ iterator functions()
+		+ iterator access()
 	}
-	struct basic_vector<T, Size>
+	struct vec<T, Size>
 	{
 		+ union
 		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
 		+ operator=()
-		+ data()
 		+ sequence()
-		+ iterator functions()
+		+ iterator access()
 		+ swap()
 	}
-	annotation basic_vector::anonymous_union
+	annotation vec::anonymous_union
 	{
 		+ base
 		+ swizzles
 	}
-	struct storage_wrapper<T, Size>
+	struct vec_storage<T, Size>
 	{
 		+ store : std::array<T, Size>
 		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
-		+ data()
 		+ sequence()
 		+ iterator access()
 		+ length()
 		+ size()
 		+ swap()
 	}
-	struct indexed_vector<T, Size, Count, ...Is>
+	struct swizzle_vec<T, Size, Count, ...Is>
 	{
 		+ base : std::array<T, Size>
 		+ {static} offsets : std::array<T, Count>
 		+ set()
 		+ operator[]()
 		+ operator=()
-		+ data()
 		+ sequence()
 		+ iterator access()
 	}
-	struct basic_matrix<T, Cols, Rows>
+	struct mat<T, Cols, Rows>
 	{
-		+ columns : std::array<basic_vector<T, Rows>, Cols>
+		+ columns : std::array<vec<T, Rows>, Cols>
 		+ row()
 		+ operator[]()
 		+ operator=()
-		+ data()
 		+ iterator access()
 		+ length()
 		+ column_length()
@@ -97,23 +91,23 @@
 		+ column_size()
 		+ swap()
 	}
-	vector_base <|-- basic_vector: CRTP inherits
-	vector_base <|-- indexed_vector : CRTP inherits
-	indexed_vector_const_iterator <|-- indexed_vector_iterator : const_cast<>
-	"CRTP duck type" ^.. basic_vector : duck implements
-	"CRTP duck type" ^.. indexed_vector : duck implements
-	basic_vector::anonymous_union::base "1" *-- "1" storage_wrapper : base
-	basic_vector::anonymous_union::swizzles "1" *-- "many" indexed_vector : swizzles
-	basic_vector::union "1" *-- "1" basic_vector::anonymous_union
+	vec_interface <|-- vec: CRTP inherits
+	vec_interface <|-- swizzle_vec : CRTP inherits
+	swizzle_vec_const_iterator <|-- swizzle_vec_iterator : const_cast<>
+	"CRTP duck type" ^.. vec : duck implements
+	"CRTP duck type" ^.. swizzle_vec : duck implements
+	vec::anonymous_union::base "1" *-- "1" vec_storage : base
+	vec::anonymous_union::swizzles "1" *-- "many" swizzle_vec : swizzles
+	vec::union "1" *-- "1" vec::anonymous_union
 	note right on link
 	  Nested anonymous union where
 	  all members have a common initial
 	  sequence with each other
 	end note
-	indexed_vector_const_iterator::mapper_ptr "1" *-- "many" indexed_vector : mapper_ptr
-	indexed_vector_iterator::mapper_ptr "1" *-- "many" indexed_vector : mapper_ptr
-	"CRTP duck type" <. vector_base : Derived CRTP
-	basic_matrix::columns "1" *-- "Cols" basic_vector : columns
-	basic_vector -[hidden]left- indexed_vector
-	storage_wrapper .[hidden]right. basic_matrix
+	swizzle_vec_const_iterator::mapper_ptr "1" *-- "many" swizzle_vec : mapper_ptr
+	swizzle_vec_iterator::mapper_ptr "1" *-- "many" swizzle_vec : mapper_ptr
+	"CRTP duck type" <. vec_interface : Derived CRTP
+	mat::columns "1" *-- "Cols" vec : columns
+	vec -[hidden]left- swizzle_vec
+	vec_storage .[hidden]right. mat
 @enduml

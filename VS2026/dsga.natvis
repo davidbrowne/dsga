@@ -29,7 +29,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::storage_wrapper&lt;*,*&gt;">
+	<Type Name="dsga::vec_storage&lt;*,*&gt;">
 		<DisplayString>{store,view(dsga)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T2} }}</DisplayString></Synthetic>
@@ -37,7 +37,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::vector_base&lt;*,*,*,*&gt;">
+	<Type Name="dsga::vec_interface&lt;*,*,*,*&gt;">
 		<DisplayString>{*($T4 *)this}</DisplayString>
 		<Expand HideRawView="true">
 			<ExpandedItem>*($T4 *)this</ExpandedItem>
@@ -45,14 +45,14 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::basic_vector&lt;*,*&gt;">
+	<Type Name="dsga::vec&lt;*,*&gt;">
 		<DisplayString>{base}</DisplayString>
 		<Expand>
 			<ExpandedItem>base</ExpandedItem>
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::basic_matrix&lt;*,*,*&gt;">
+	<Type Name="dsga::mat&lt;*,*,*&gt;">
 		<DisplayString Condition="$T2 == 2">[{columns[0]}, {columns[1]}]</DisplayString>
 		<DisplayString Condition="$T2 == 3">[{columns[0]}, {columns[1]}, {columns[2]}]</DisplayString>
 		<DisplayString Condition="$T2 == 4">[{columns[0]}, {columns[1]}, {columns[2]}, {columns[3]}]</DisplayString>
@@ -64,7 +64,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" IncludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>[{base[$T4],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
@@ -79,7 +79,7 @@
 		</Expand>
 	</Type>
 	
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*&gt;" ExcludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
@@ -88,7 +88,7 @@
 		</Expand>
 	</Type>
 	
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" IncludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>[{base[$T4],g}, {base[$T5],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
@@ -104,7 +104,7 @@
 		</Expand>
 	</Type>
 	
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*&gt;" ExcludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
@@ -114,7 +114,7 @@
 		</Expand>
 	</Type>
 	
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" IncludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
@@ -131,7 +131,7 @@
 		</Expand>
 	</Type>
 	
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*&gt;" ExcludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
@@ -142,7 +142,7 @@
 		</Expand>
 	</Type>
 	
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" IncludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*,*,*,*&gt;" IncludeView="indexed">
 		<DisplayString>[{base[$T4],g}, {base[$T5],g}, {base[$T6],g}, {base[$T7],g}]</DisplayString>
 		<Expand HideRawView="true">
 			<Item Name="base">base,view(dsga)</Item>
@@ -160,7 +160,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector&lt;*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
+	<Type Name="dsga::swizzle_vec&lt;*,*,*,*,*,*,*&gt;" ExcludeView="indexed">
 		<DisplayString>{*this,view(indexed)}</DisplayString>
 		<Expand>
 			<Synthetic Name="values"><DisplayString>{{ size = {$T3} }}</DisplayString></Synthetic>
@@ -172,8 +172,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*&gt;">
-		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt;" />
+	<Type Name="dsga::swizzle_vec_iterator&lt;*,*,*,*&gt;">
+		<AlternativeType Name="dsga::swizzle_vec_const_iterator&lt;*,*,*,*&gt;" />
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ end }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
@@ -184,8 +184,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt;">
-		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt;" />
+	<Type Name="dsga::swizzle_vec_iterator&lt;*,*,*,*,*&gt;">
+		<AlternativeType Name="dsga::swizzle_vec_const_iterator&lt;*,*,*,*,*&gt;" />
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ end }}</DisplayString>
@@ -197,8 +197,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt;">
-		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt;" />
+	<Type Name="dsga::swizzle_vec_iterator&lt;*,*,*,*,*,*&gt;">
+		<AlternativeType Name="dsga::swizzle_vec_const_iterator&lt;*,*,*,*,*,*&gt;" />
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6],g} }}</DisplayString>
@@ -211,8 +211,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt;">
-		<AlternativeType Name="dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt;" />
+	<Type Name="dsga::swizzle_vec_iterator&lt;*,*,*,*,*,*,*&gt;">
+		<AlternativeType Name="dsga::swizzle_vec_const_iterator&lt;*,*,*,*,*,*,*&gt;" />
 		<DisplayString Condition="mapper_index == 0">{{ value = {(*mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 1">{{ value = {(*mapper_ptr).base[$T5],g} }}</DisplayString>
 		<DisplayString Condition="mapper_index == 2">{{ value = {(*mapper_ptr).base[$T6],g} }}</DisplayString>
@@ -226,8 +226,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*&gt; &gt;">
-		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*&gt; &gt;" />
+	<Type Name="std::reverse_iterator&lt;dsga::swizzle_vec_iterator&lt;*,*,*,*&gt; &gt;">
+		<AlternativeType Name="std::reverse_iterator&lt;dsga::swizzle_vec_const_iterator&lt;*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString>{{ ??? }}</DisplayString>
@@ -238,8 +238,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*&gt; &gt;">
-		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*&gt; &gt;" />
+	<Type Name="std::reverse_iterator&lt;dsga::swizzle_vec_iterator&lt;*,*,*,*,*&gt; &gt;">
+		<AlternativeType Name="std::reverse_iterator&lt;dsga::swizzle_vec_const_iterator&lt;*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5],g} }}</DisplayString>
@@ -251,8 +251,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*&gt; &gt;">
-		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*&gt; &gt;" />
+	<Type Name="std::reverse_iterator&lt;dsga::swizzle_vec_iterator&lt;*,*,*,*,*,*&gt; &gt;">
+		<AlternativeType Name="std::reverse_iterator&lt;dsga::swizzle_vec_const_iterator&lt;*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5],g} }}</DisplayString>
@@ -265,8 +265,8 @@
 		</Expand>
 	</Type>
 
-	<Type Name="std::reverse_iterator&lt;dsga::indexed_vector_iterator&lt;*,*,*,*,*,*,*&gt; &gt;">
-		<AlternativeType Name="std::reverse_iterator&lt;dsga::indexed_vector_const_iterator&lt;*,*,*,*,*,*,*&gt; &gt;" />
+	<Type Name="std::reverse_iterator&lt;dsga::swizzle_vec_iterator&lt;*,*,*,*,*,*,*&gt; &gt;">
+		<AlternativeType Name="std::reverse_iterator&lt;dsga::swizzle_vec_const_iterator&lt;*,*,*,*,*,*,*&gt; &gt;" />
 		<DisplayString Condition="current.mapper_index == 0">{{ rend }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 1">{{ value = {(*current.mapper_ptr).base[$T4],g} }}</DisplayString>
 		<DisplayString Condition="current.mapper_index == 2">{{ value = {(*current.mapper_ptr).base[$T5],g} }}</DisplayString>

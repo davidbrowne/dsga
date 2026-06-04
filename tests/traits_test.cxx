@@ -10,12 +10,13 @@ using namespace dsga;
 
 //#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
+#include "dsga_doctest.hxx"
 
 TEST_SUITE("type traits tests")
 {
-	TEST_CASE("type traits for storage_wrapper")
+	TEST_CASE("type traits for vec_storage")
 	{
-		using dwrap4 = dsga::storage_wrapper<double, 4u>;
+		using dwrap4 = dsga::vec_storage<double, 4u>;
 		auto dwrap4_var = dwrap4{};
 
 		CHECK_UNARY(std::is_standard_layout_v<dwrap4>);
@@ -54,10 +55,10 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::ranges::common_range<dwrap4>);
 	}
 
-	TEST_CASE("type traits for vector_base")
+	TEST_CASE("type traits for vec_interface")
 	{
-		using vb1 = vector_base<true, double, 4, dsga::basic_vector<double, 4>>;
-		using vb2 = vector_base<true, double, 4, dsga::indexed_vector<double, 4, 4, 0, 1, 2, 3>>;
+		using vb1 = vec_interface<true, double, 4, dsga::vec<double, 4>>;
+		using vb2 = vec_interface<true, double, 4, dsga::swizzle_vec<double, 4, 4, 0, 1, 2, 3>>;
 
 		// iterator concepts
 		CHECK_UNARY(std::contiguous_iterator<decltype(std::declval<vb1>().begin())>);
@@ -81,9 +82,9 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::ranges::common_range<vb2>);
 	}
 
-	TEST_CASE("type traits for basic_vector")
+	TEST_CASE("type traits for vec")
 	{
-		using dvec4 = dsga::basic_vector<double, 4u>;
+		using dvec4 = dsga::vec<double, 4u>;
 		auto dvec4_var = dvec4{};
 
 		CHECK_UNARY(std::is_standard_layout_v<dvec4>);
@@ -125,10 +126,10 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::ranges::common_range<dvec4>);
 	}
 
-	TEST_CASE("type traits for indexed_vector")
+	TEST_CASE("type traits for swizzle_vec")
 	{
-		using dswizzle1 = dsga::indexed_vector<double, 1u, 1u, 0u>;
-		using dswizzle4 = dsga::indexed_vector<double, 4u, 4u, 0u, 1u, 2u, 3u>;
+		using dswizzle1 = dsga::swizzle_vec<double, 1u, 1u, 0u>;
+		using dswizzle4 = dsga::swizzle_vec<double, 4u, 4u, 0u, 1u, 2u, 3u>;
 
 		CHECK_UNARY(std::is_standard_layout_v<dswizzle4>);
 		CHECK_UNARY(std::is_default_constructible_v<dswizzle4>);
@@ -144,8 +145,8 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &, dswizzle4 &>);
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &, dswizzle4 &&>);
 
-		// this is true for rvalue indexed_vector assigned from other indexed_vector, just not from vector_base.
-		// this needs to be true for std::swap() on dsga::basic_vector to work -- dsga::indexed_vector must be std::is_move_assignable_v<>
+		// this is true for rvalue swizzle_vec assigned from other swizzle_vec, just not from vec_interface.
+		// this needs to be true for std::swap() on dsga::vec to work -- dsga::swizzle_vec must be std::is_move_assignable_v<>
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &>);
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &&>);
 
@@ -169,9 +170,9 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::ranges::common_range<dswizzle4>);
 	}
 
-	TEST_CASE("type traits for indexed_vector_const_iterator")
+	TEST_CASE("type traits for swizzle_vec_const_iterator")
 	{
-		using const_iter_t = dsga::indexed_vector_const_iterator<double, 4, 4, 3, 0, 1, 2>;
+		using const_iter_t = dsga::swizzle_vec_const_iterator<double, 4, 4, 3, 0, 1, 2>;
 
 		CHECK_UNARY(std::is_standard_layout_v<const_iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<const_iter_t>);
@@ -200,9 +201,9 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY_FALSE(std::contiguous_iterator<const_iter_t>);
 	}
 
-	TEST_CASE("type traits for indexed_vector_iterator")
+	TEST_CASE("type traits for swizzle_vec_iterator")
 	{
-		using iter_t = dsga::indexed_vector_iterator<double, 4, 4, 3, 0, 1, 2>;
+		using iter_t = dsga::swizzle_vec_iterator<double, 4, 4, 3, 0, 1, 2>;
 
 		CHECK_UNARY(std::is_standard_layout_v<iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<iter_t>);
@@ -231,9 +232,9 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY_FALSE(std::contiguous_iterator<iter_t>);
 	}
 
-	TEST_CASE("type traits for basic_matrix")
+	TEST_CASE("type traits for mat")
 	{
-		using dmat4 = dsga::basic_matrix<double, 4u, 4u>;
+		using dmat4 = dsga::mat<double, 4u, 4u>;
 		auto dmat4_var = dmat4{};
 
 		CHECK_UNARY(std::is_standard_layout_v<dmat4>);
@@ -332,25 +333,25 @@ TEST_SUITE("type traits tests")
 #if defined(__cpp_lib_is_layout_compatible)
 
 		// proof that we are using the common initial sequence ***properly*** by introducing
-		// dsga::storage_wrapper<> for the anonymous union instead of just adding a std::array<>:
+		// dsga::vec_storage<> for the anonymous union instead of just adding a std::array<>:
 
 		CHECK_UNARY(std::is_corresponding_member(&mock_storage::store, &mock_indexed::base));		// using two structs of the same type form
-		CHECK_UNARY_FALSE(std::is_corresponding_member(&mock_storage::store, &mock_vector::base));	// analogous to using std::array<> and dsga::indexed_vector<> at same level of anonymous union
-		CHECK_UNARY(std::is_corresponding_member(&mock_wrapper::base, &mock_vector::base));			// analogous to using dsga::storage_wrapper<> and dsga::indexed_vector<> at same level of anonymous union
+		CHECK_UNARY_FALSE(std::is_corresponding_member(&mock_storage::store, &mock_vector::base));	// analogous to using std::array<> and dsga::swizzle_vec<> at same level of anonymous union
+		CHECK_UNARY(std::is_corresponding_member(&mock_wrapper::base, &mock_vector::base));			// analogous to using dsga::vec_storage<> and dsga::swizzle_vec<> at same level of anonymous union
 
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 1>::store, &dsga::indexed_vector<int, 1, 1, 0>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 2>::store, &dsga::indexed_vector<int, 2, 2, 1, 0>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 3>::store, &dsga::indexed_vector<int, 3, 3, 2, 0, 1>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 1, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 2, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::storage_wrapper<int, 4>::store, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 2, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 1, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::base, &dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 2, 3, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
-		CHECK_UNARY(std::is_corresponding_member(&dsga::indexed_vector<int, 4, 3, 3, 3, 3>::base, &dsga::indexed_vector<int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::vec_storage<int, 1>::store, &dsga::swizzle_vec<int, 1, 1, 0>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::vec_storage<int, 2>::store, &dsga::swizzle_vec<int, 2, 2, 1, 0>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::vec_storage<int, 3>::store, &dsga::swizzle_vec<int, 3, 3, 2, 0, 1>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::vec_storage<int, 4>::store, &dsga::swizzle_vec<int, 4, 1, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::vec_storage<int, 4>::store, &dsga::swizzle_vec<int, 4, 2, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::vec_storage<int, 4>::store, &dsga::swizzle_vec<int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::vec_storage<int, 4>::store, &dsga::swizzle_vec<int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 1, 3>::base, &dsga::swizzle_vec<int, 4, 2, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 1, 3>::base, &dsga::swizzle_vec<int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 1, 3>::base, &dsga::swizzle_vec<int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 2, 3, 3>::base, &dsga::swizzle_vec<int, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 2, 3, 3>::base, &dsga::swizzle_vec<int, 4, 4, 3, 3, 3, 3>::base));
+		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 3, 3, 3, 3>::base, &dsga::swizzle_vec<int, 4, 4, 3, 3, 3, 3>::base));
 
 #endif
 	}

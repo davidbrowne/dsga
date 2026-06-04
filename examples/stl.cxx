@@ -143,7 +143,7 @@ constexpr dsga::vec3 right_handed_normal(const dsga::vec3 &v1, const dsga::vec3 
 // std::scientific format only counts digits *after* the decimal point.
 // see https://www.zverovich.net/2023/06/04/printing-double.html
 template <dsga::dimensional_scalar T, std::size_t Size>
-inline std::ostream &operator<<(std::ostream &o, const dsga::basic_vector<T, Size> &v)
+inline std::ostream &operator<<(std::ostream &o, const dsga::vec<T, Size> &v)
 {
 	o << std::scientific << v[0];
 	for (int i = 1; i < v.length(); ++i)

@@ -11,7 +11,7 @@
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U>
 requires std::convertible_to<U, T>
-void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::valarray<U> rhs)
+void copy_to_vector(dsga::vec<T, S> &lhs, std::valarray<U> rhs)
 {
 	const std::size_t count = std::min(S, rhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -22,7 +22,7 @@ void copy_to_vector(dsga::basic_vector<T, S> &lhs, std::valarray<U> rhs)
 
 template <dsga::dimensional_scalar T, std::size_t S, typename U>
 requires std::convertible_to<T, U>
-void copy_from_vector(std::valarray<U> &lhs, const dsga::basic_vector<T, S> &rhs)
+void copy_from_vector(std::valarray<U> &lhs, const dsga::vec<T, S> &rhs)
 {
 	const std::size_t count = std::min(S, lhs.size());
 	for (std::size_t i = 0; i < count; ++i)
@@ -32,7 +32,7 @@ void copy_from_vector(std::valarray<U> &lhs, const dsga::basic_vector<T, S> &rhs
 // create a valarray from a vector
 
 template <dsga::dimensional_scalar T, std::size_t S>
-std::valarray<T> to_valarray(const dsga::basic_vector<T, S> &v)
+std::valarray<T> to_valarray(const dsga::vec<T, S> &v)
 {
 	return[&]<std::size_t ...Is>(std::index_sequence<Is...>)
 	{

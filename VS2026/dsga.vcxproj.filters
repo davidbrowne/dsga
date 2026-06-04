@@ -63,6 +63,9 @@
     <ClInclude Include="..\examples\transform.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\tests\dsga_doctest.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
@@ -77,6 +80,7 @@
     </None>
     <None Include="..\docs\API.md" />
     <None Include="..\docs\CHANGELOG.md" />
+    <None Include="..\cmake\dsga-config.cmake.in" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\LICENSE_1_0.txt" />
@@ -117,6 +121,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\examples\stl.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\iterator_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\main.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

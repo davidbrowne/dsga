@@ -63,14 +63,14 @@ namespace dsga
 	// get the inverse of a 2D transformation matrix -- other matrix types won't give the proper inverse
 	
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr basic_matrix<T, 3, 3> transform_inverse(const basic_matrix<T, 3, 3> &arg) noexcept
+	[[nodiscard]] constexpr mat<T, 3, 3> transform_inverse(const mat<T, 3, 3> &arg) noexcept
 	{
 		// transpose of rotation part of arg is the inverse of the rotation part
-		auto rot = basic_matrix<T, 2, 2>(arg);
+		auto rot = mat<T, 2, 2>(arg);
 		auto rot_transpose = transpose(rot);
 
 		// create inverse matrix with initially only the rotation inverse part
-		auto inv = basic_matrix<T, 3, 3>(rot_transpose);
+		auto inv = mat<T, 3, 3>(rot_transpose);
 
 		// invert the translation part (origin) of arg and put it in inverse matrix
 		inv[2].xy = -(rot_transpose * arg[2].xy);
@@ -81,15 +81,15 @@ namespace dsga
 	// get the inverse of a 3D transformation matrix -- other matrix types won't give the proper inverse
 
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr basic_matrix<T, 4, 4> transform_inverse(const basic_matrix<T, 4, 4> &arg) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> transform_inverse(const mat<T, 4, 4> &arg) noexcept
 	{
 		// transpose of rotation part of arg is the inverse of the rotation part,
 		// due to orthonormal rotation matrix where determinant == +1
-		auto rot = basic_matrix<T, 3, 3>(arg);
+		auto rot = mat<T, 3, 3>(arg);
 		auto rot_transpose = transpose(rot);
 
 		// create inverse matrix with initially only the rotation inverse part
-		auto inv = basic_matrix<T, 4, 4>(rot_transpose);
+		auto inv = mat<T, 4, 4>(rot_transpose);
 
 		// invert the translation part (origin) of arg and put it in inverse matrix
 		inv[3].xyz = -(rot_transpose * arg[3].xyz);
@@ -101,19 +101,19 @@ namespace dsga
 	// other matrix types won't be considered transformation matrices
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
 	requires (C == R) && (C > 2)
-	[[nodiscard]] constexpr bool is_transformation_matrix(const basic_matrix<T, C, R> &arg,
+	[[nodiscard]] constexpr bool is_transformation_matrix(const mat<T, C, R> &arg,
 														  T tolerance) noexcept
 	{
 		// check if last row is [0, 0, ..., 1], if the rotation part has a determinant close to 1.0,
 		// if the columns of the rotation part are unit vectors, and if the columns are all orthogonal
 
 		// is the last row close to [0, 0, ..., 1]
-		auto last_row = basic_vector<T, C>(T(0));
+		auto last_row = vec<T, C>(T(0));
 		last_row[C - 1] = T(1.0);																// set the last element to 1.0, the rest are 0.0
 		bool last_row_success = all(within_tolerance(last_row - arg.row(C - 1), tolerance));	// check if the last row is close to [0, 0, ..., 1]
 
 		// is the determinant close to 1.0
-		auto rotation_part = basic_matrix<T, C - 1, C - 1>(arg);
+		auto rotation_part = mat<T, C - 1, C - 1>(arg);
 		bool determinant_success = within_tolerance(determinant(rotation_part) - T(1.0), tolerance);
 
 		// are all rotation columns unit vectors
@@ -151,7 +151,7 @@ namespace dsga
 
 	//
 	template <bool W, floating_point_scalar T, typename D>
-	[[nodiscard]] constexpr basic_matrix<T, 3, 3> translation_matrix(const vector_base<W, T, 2, D> &translation) noexcept
+	[[nodiscard]] constexpr mat<T, 3, 3> translation_matrix(const vec_interface<W, T, 2, D> &translation) noexcept
 	{
 		auto trans_mat = identity_matrix<T, 3>();			// create an identity matrix
 		trans_mat[2].xy = translation;						// set the translation part
@@ -160,7 +160,7 @@ namespace dsga
 
 	//
 	template <bool W, floating_point_scalar T, typename D>
-	[[nodiscard]] constexpr basic_matrix<T, 4, 4> translation_matrix(const vector_base<W, T, 3, D> &translation) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> translation_matrix(const vec_interface<W, T, 3, D> &translation) noexcept
 	{
 		auto trans_mat = identity_matrix<T, 4>();			// create an identity matrix
 		trans_mat[3].xyz = translation;						// set the translation part
@@ -169,14 +169,14 @@ namespace dsga
 
 	// make a 2D rotation matrix for a given theta.
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr basic_matrix<T, 3, 3> rot_2d(T theta) noexcept
+	[[nodiscard]] constexpr mat<T, 3, 3> rot_2d(T theta) noexcept
 	{
 		auto cos_theta = cos(theta);
 		auto sin_theta = sin(theta);
 
 		auto rot_mat = identity_matrix<T, 3>();
-		rot_mat[0].xy = basic_vector( cos_theta, sin_theta);
-		rot_mat[1].xy = basic_vector(-sin_theta, cos_theta);
+		rot_mat[0].xy = vec( cos_theta, sin_theta);
+		rot_mat[1].xy = vec(-sin_theta, cos_theta);
 
 		return rot_mat;
 	}
@@ -184,14 +184,14 @@ namespace dsga
 	// make a 3D matrix for rotating about the X axis for a given theta.
 	// also known as an A axis rotation.
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr basic_matrix<T, 4, 4> rot_x_axis(T theta) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> rot_x_axis(T theta) noexcept
 	{
 		auto cos_theta = cos(theta);
 		auto sin_theta = sin(theta);
 
 		auto rot_mat = identity_matrix<T, 4>();
-		rot_mat[1].yz = basic_vector( cos_theta, sin_theta);
-		rot_mat[2].yz = basic_vector(-sin_theta, cos_theta);
+		rot_mat[1].yz = vec( cos_theta, sin_theta);
+		rot_mat[2].yz = vec(-sin_theta, cos_theta);
 
 		return rot_mat;
 	}
@@ -199,14 +199,14 @@ namespace dsga
 	// make a 3D matrix for rotating about the Y axis for a given theta.
 	// also known as an B axis rotation.
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr basic_matrix<T, 4, 4> rot_y_axis(T theta) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> rot_y_axis(T theta) noexcept
 	{
 		auto cos_theta = cos(theta);
 		auto sin_theta = sin(theta);
 
 		auto rot_mat = identity_matrix<T, 4>();
-		rot_mat[0].xyz = basic_vector(cos_theta, T(0.0), -sin_theta);
-		rot_mat[2].xyz = basic_vector(sin_theta, T(0.0),  cos_theta);
+		rot_mat[0].xyz = vec(cos_theta, T(0.0), -sin_theta);
+		rot_mat[2].xyz = vec(sin_theta, T(0.0),  cos_theta);
 
 		return rot_mat;
 	}
@@ -214,14 +214,14 @@ namespace dsga
 	// make a 3D matrix for rotating about the Z axis for a given theta.
 	// also known as an C axis rotation.
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr basic_matrix<T, 4, 4> rot_z_axis(T theta) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> rot_z_axis(T theta) noexcept
 	{
 		auto cos_theta = cos(theta);
 		auto sin_theta = sin(theta);
 
 		auto rot_mat = identity_matrix<T, 4>();
-		rot_mat[0].xy = basic_vector( cos_theta, sin_theta);
-		rot_mat[1].xy = basic_vector(-sin_theta, cos_theta);
+		rot_mat[0].xy = vec( cos_theta, sin_theta);
+		rot_mat[1].xy = vec(-sin_theta, cos_theta);
 
 		return rot_mat;
 	}
@@ -230,9 +230,9 @@ namespace dsga
 	// k must be a 3D unit vector, i.e., length(k) == 1.0.
 	// the tranlation part of the matrix is [0, 0, 0]
 	template <bool W1, floating_point_scalar T, typename D1, bool W2, typename D2>
-	[[nodiscard]] constexpr basic_matrix<T, 4, 4> rot_any_axis(T theta,
-															   const vector_base<W1, T, 3, D1> &axis,
-															   const vector_base<W2, T, 3, D2> &origin) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> rot_any_axis(T theta,
+															   const vec_interface<W1, T, 3, D1> &axis,
+															   const vec_interface<W2, T, 3, D2> &origin) noexcept
 	{
 		auto c_t = cos(theta);
 		auto s_t = sin(theta);
@@ -243,13 +243,13 @@ namespace dsga
 
 		// calculate the rotation matrix components
 		auto rot_mat = identity_matrix<T, 4>();
-		rot_mat[0].xyz = basic_vector(k_x * k_x * v_t +		  c_t,
+		rot_mat[0].xyz = vec(k_x * k_x * v_t +		  c_t,
 									  k_x * k_y * v_t + k_z * s_t,
 									  k_x * k_z * v_t - k_y * s_t);
-		rot_mat[1].xyz = basic_vector(k_x * k_y * v_t - k_z * s_t,
+		rot_mat[1].xyz = vec(k_x * k_y * v_t - k_z * s_t,
 									  k_y * k_y * v_t +		  c_t,
 									  k_y * k_z * v_t + k_x * s_t);
-		rot_mat[2].xyz = basic_vector(k_x * k_z * v_t + k_y * s_t,
+		rot_mat[2].xyz = vec(k_x * k_z * v_t + k_y * s_t,
 									  k_y * k_z * v_t - k_x * s_t,
 									  k_z * k_z * v_t +		  c_t);
 		rot_mat[3].xyz = origin;
@@ -259,10 +259,10 @@ namespace dsga
 
 	// prettify a transformation matrix to take care of the rotation part to recover from any drift away from an orthonormal matrix
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr basic_matrix<T, 4, 4> renormalize_transformation_matrix(const basic_matrix<T, 4, 4> &mat, T tol) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> renormalize_transformation_matrix(const mat<T, 4, 4> &mat, T tol) noexcept
 	{
 		auto snap_to_zero = [tol](T x) noexcept { return abs(x) <= tol ? T(0) : x; };
-		auto fix_for_zeros = [&snap_to_zero](const basic_vector<T, 3> &v) noexcept { return v.apply(snap_to_zero); };
+		auto fix_for_zeros = [&snap_to_zero](const vec<T, 3> &v) noexcept { return v.apply(snap_to_zero); };
 
 		// create a copy of the matrix, so that we can modify it
 		auto fixed_mat = identity_matrix<T, 4>();

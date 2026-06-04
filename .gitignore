@@ -16,3 +16,6 @@
 /VS2026/dsga/x64
 /VS2026/x64
 /VS2026/enc_temp_folder/548bdd432c44d74bf48784a7f21c8738
+/build-clang
+/build-msvc
+/build-gcc

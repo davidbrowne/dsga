@@ -21,7 +21,7 @@ namespace dsga
 		struct is_dsga_matrix : std::false_type	{};
 
 		template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-		struct is_dsga_matrix<dsga::basic_matrix<T, C, R>> : std::true_type	{};
+		struct is_dsga_matrix<dsga::mat<T, C, R>> : std::true_type	{};
 
 		template <typename T>
 		constexpr bool is_dsga_matrix_v = is_dsga_matrix<T>::value;
@@ -87,12 +87,12 @@ namespace dsga
 
 	// not in GLSL
 	// return a vector created by invoking an operation element-wise to a variable number of arguments that are either
-	// dimensional_scalar or basic_matrix --  if an argument isn't a vector of dimensional_scalars of length C, it can
+	// dimensional_scalar or mat --  if an argument isn't a vector of dimensional_scalars of length C, it can
 	// be a single scalar that will be used C times (the length of the return vector) -- similarly, if an argument is
 	// a matrix, it will be used C times (the length of the return vector) -- usually the arguments will be vectors of
 	// the same length C or a std::array or std::span of matrices of the same length C.
 	//
-	// the Op must return a dsga::dimensional_scalar type, since invoke() returns a dsga::basic_vector of the results.
+	// the Op must return a dsga::dimensional_scalar type, since invoke() returns a dsga::vec of the results.
 	// this also means that C must be greater than 1 for vectors (no longer supporting length 1 vectors)
 	template <std::size_t C, typename Op, typename ...Ts>
 	requires (C >= 1) && (C <= 4)
@@ -106,7 +106,7 @@ namespace dsga
 		return [&op_invoke]<std::size_t ...Is>(std::index_sequence<Is...>)
 		{
 			// using "{" and "}" for the constructor evaluates arguments left-to-right
-			return basic_vector{op_invoke(Is) ...};
+			return vec{op_invoke(Is) ...};
 		}(std::make_index_sequence<C>{});
 	}
 }

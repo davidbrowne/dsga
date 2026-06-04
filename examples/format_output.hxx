@@ -83,10 +83,10 @@ struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
 };
 
 template<typename T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::storage_wrapper<T, Size>, CharT> : std::formatter<T, CharT>
+struct std::formatter<dsga::vec_storage<T, Size>, CharT> : std::formatter<T, CharT>
 {
 	template <typename FormatContext>
-	auto format(const dsga::storage_wrapper<T, Size> &sw, FormatContext &ctx) const
+	auto format(const dsga::vec_storage<T, Size> &sw, FormatContext &ctx) const
 	{
 		std::format_to(ctx.out(), "[");
 
@@ -106,10 +106,10 @@ struct std::formatter<dsga::storage_wrapper<T, Size>, CharT> : std::formatter<T,
 };
 
 template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived, typename CharT>
-struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : std::formatter<T, CharT>
+struct std::formatter<dsga::vec_interface<Writable, T, Count, Derived>, CharT> : std::formatter<T, CharT>
 {
 	template <typename FormatContext>
-	auto format(const dsga::vector_base<Writable, T, Count, Derived> &v, FormatContext &ctx) const
+	auto format(const dsga::vec_interface<Writable, T, Count, Derived> &v, FormatContext &ctx) const
 	{
 		std::format_to(ctx.out(), "[");
 
@@ -129,31 +129,31 @@ struct std::formatter<dsga::vector_base<Writable, T, Count, Derived>, CharT> : s
 };
 
 template <typename CharT, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-struct std::formatter<dsga::indexed_vector<T, Size, Count, Is...>, CharT>
-	: std::formatter<dsga::vector_base<dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::indexed_vector<T, Size, Count, Is...>>, CharT>
+struct std::formatter<dsga::swizzle_vec<T, Size, Count, Is...>, CharT>
+	: std::formatter<dsga::vec_interface<dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::swizzle_vec<T, Size, Count, Is...>>, CharT>
 {
 };
 
 template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::basic_vector<T, Size>, CharT>
-	: std::formatter<dsga::vector_base<true, T, Size, dsga::basic_vector<T, Size>>, CharT>
+struct std::formatter<dsga::vec<T, Size>, CharT>
+	: std::formatter<dsga::vec_interface<true, T, Size, dsga::vec<T, Size>>, CharT>
 {
 };
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R, typename CharT>
-struct std::formatter<dsga::basic_matrix<T, C, R>, CharT> : std::formatter<dsga::basic_vector<T, R>, CharT>
+struct std::formatter<dsga::mat<T, C, R>, CharT> : std::formatter<dsga::vec<T, R>, CharT>
 {
 	template <typename FormatContext>
-	auto format(const dsga::basic_matrix<T, C, R> &m, FormatContext &ctx) const
+	auto format(const dsga::mat<T, C, R> &m, FormatContext &ctx) const
 	{
 		std::format_to(ctx.out(), "[");
 
-		std::formatter<dsga::basic_vector<T, R>, CharT>::format(m[0], ctx);
+		std::formatter<dsga::vec<T, R>, CharT>::format(m[0], ctx);
 		if constexpr (C > 1)
 		{
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				((std::format_to(ctx.out(), ", "), std::formatter<dsga::basic_vector<T, R>, CharT>::format(m[Is], ctx)), ...);
+				((std::format_to(ctx.out(), ", "), std::formatter<dsga::vec<T, R>, CharT>::format(m[Is], ctx)), ...);
 			}(dsga::make_index_range<1, C>{});
 		}
 
@@ -189,7 +189,7 @@ auto from_format_hexfloat_chars(std::string_view sv, T &val)
 //
 
 template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived>
-inline void test_format_vector_base(const dsga::vector_base<Writable, T, Count, Derived> &v)
+inline void test_format_vec_interface(const dsga::vec_interface<Writable, T, Count, Derived> &v)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", v);
@@ -215,7 +215,7 @@ inline void test_format_array(const std::array<T, Size> &arr)
 }
 
 template <typename T, std::size_t Size>
-inline void test_format_storage_wrapper(const dsga::storage_wrapper<T, Size> &sw)
+inline void test_format_vec_storage(const dsga::vec_storage<T, Size> &sw)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", sw);
@@ -228,7 +228,7 @@ inline void test_format_storage_wrapper(const dsga::storage_wrapper<T, Size> &sw
 }
 
 template <dsga::dimensional_scalar T, std::size_t Size>
-inline void test_format_vector(const dsga::basic_vector<T, Size> &v)
+inline void test_format_vector(const dsga::vec<T, Size> &v)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", v);
@@ -241,7 +241,7 @@ inline void test_format_vector(const dsga::basic_vector<T, Size> &v)
 }
 
 template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-inline void test_format_indexed_vector(const dsga::indexed_vector<T, Size, Count, Is...> &v)
+inline void test_format_swizzle_vec(const dsga::swizzle_vec<T, Size, Count, Is...> &v)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", v);
@@ -254,7 +254,7 @@ inline void test_format_indexed_vector(const dsga::indexed_vector<T, Size, Count
 }
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-inline void test_format_matrix(const dsga::basic_matrix<T, C, R> &m)
+inline void test_format_matrix(const dsga::mat<T, C, R> &m)
 {
 	// std::format interface
 	std::cout << std::format("{}\n", m);
