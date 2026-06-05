@@ -18,7 +18,7 @@ Use v3.0.0 for the latest stable release version. The next stable release will b
 * Release v4.0.0 with more breaking changes to the API and the addition of the new documentation.
 * Add more tests and try to get close to 100% code coverage.
 
-## [Latest Major Changes](docs/CHANGELOG.md)
+## [Latest Major Changes](CHANGELOG.md)
 * v3.1.0
     * Minor version bump with some breaking changes to the API.
     * Updated to doctest v2.5.2
@@ -306,7 +306,7 @@ The following links to the shading specification should help with understanding 
 
 To make the vectors and matrices as useful as possible in a C++ context, various C++ customization points were implemented or interfaces partially emulated, e.g., ```std::valarray<>```. There are many options for data access. For ```dsga``` vectors and matrices, we have:
 
-* Swizzle access like GLSL (vec only, not swizzle_vec)
+* Swizzle access like GLSL (**vec** only, not **swizzle_vec**)
     * Only from the set of { x, y, z, w }, e.g., ```foo.wyxz```
 * ```std::tuple``` protocol, structured bindings
     * ```get```
@@ -321,7 +321,7 @@ To make the vectors and matrices as useful as possible in a C++ context, various
     * ```cend```
     * ```rend```
     * ```crend```
-* Index access (logical)
+* Index access (logical order, not necessarily physical order)
     * ```operator []```
     * ```size```
     * ```length```
@@ -341,6 +341,9 @@ To make the vectors and matrices as useful as possible in a C++ context, various
     * ```min```
     * ```max```
     * ```sum```
+* Pointer access (no longer applicable as of v3.0.0)
+    * ```data``` - removed in v3.0.0 to remove/mitigate the possibilty of pointer overruns
+    * ```sequence``` - returns a ```std::array``` of the logical indexes of the vector or matrix elements
 
 ## Installation
 
@@ -354,11 +357,11 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v3.0.0`
+Current version: `v3.1.0`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v3.0.0](https://github.com/davidbrowne/dsga/releases)
-* [Change Log](docs/CHANGELOG.md)
+* [Change Log](CHANGELOG.md)
 
 ## Usage
 
@@ -368,141 +371,44 @@ The [documentation](docs/DOCUMENTATION.md) explains more about how the vector an
 
 More in depth explanation can be found in the [details](docs/DETAILS.md).
 
-## Testing
+## [Testing](PLATFORMS.md)
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
 All tests are currently 100% PASSING on all the testing platforms and compilers.
 
-The tests have been most recently run on:
+## dsga v3.1.0 Testing Status
 
-### Windows 11 Native
+### Native Windows 11
 
-* **MSVC 2026 v18.6**
+| Compiler | Status |
+| --- | --- |
+| MSVC 2026 v18.6 | PASSING |
+| gcc 15.2 | PASSING |
+| clang 22.1 | PASSING |
 
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2184 | 2184 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
+### Ubuntu 26.04
 
-* **gcc 15.2** on Windows, [MSYS2](https://www.msys2.org/) distribution:
+| Compiler | Status |
+| --- | --- |
+| gcc 16.0 | PASSING |
+| clang 22.1 | PASSING |
 
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2184 | 2184 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
+### Ubuntu 24.04
 
-* **clang 22.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases):
+| Compiler | Status |
+| --- | --- |
+| gcc 14.2 | PASSING |
+| clang 20.1 | PASSING |
 
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
+### Ubuntu 22.04
 
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2168 | 2168 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
+| Compiler | Status |
+| --- | --- |
+| gcc 11.4 | PASSING |
+| gcc 12.3 | PASSING |
+| clang 16.0 | PASSING |
 
-### Ubuntu 26.04 LTS running in WSL for Windows 11
-
-* **gcc 16.0**
-
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2184 | 2184 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-* **clang 22.1**
-
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
-
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2168 | 2168 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-### Ubuntu 24.04 LTS running in WSL for Windows 11
-
-* **gcc 14.2**
-
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2184 | 2184 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-* **clang 20.1**
-
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
-
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2168 | 2168 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-### Ubuntu 22.04.3 LTS running in WSL for Windows 11
-
-* **gcc 12.3**
-
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2184 | 2184 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-* **gcc 11.4**
-
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
-
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2168 | 2168 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
-
-* **clang 16.0**
-
-Performs all the unit tests except where there is lack of support for ```std::is_corresponding_member<>```, and this is protected with a feature test macro.
-
-```
-[doctest] doctest version is "2.5.2"
-[doctest] run with "--help" for options
-===============================================================================
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2168 | 2168 passed | 0 failed |
-[doctest] Status: SUCCESS!
-```
 
 ## License
 [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)

@@ -205,12 +205,13 @@
   <ItemGroup>
     <None Include="..\cmake\dsga-config.cmake.in" />
     <None Include="..\docs\API.md" />
-    <None Include="..\docs\CHANGELOG.md" />
+    <None Include="..\CHANGELOG.md" />
     <None Include="..\docs\DETAILS.md" />
     <None Include="..\docs\DOCUMENTATION.md" />
     <None Include="..\docs\dsga.puml" />
     <None Include="..\docs\dsga.svg" />
     <None Include="..\docs\MOTIVATION.md" />
+    <None Include="..\PLATFORMS.md" />
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>

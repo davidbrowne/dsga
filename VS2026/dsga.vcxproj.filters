@@ -79,8 +79,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\docs\API.md" />
-    <None Include="..\docs\CHANGELOG.md" />
+    <None Include="..\CHANGELOG.md" />
     <None Include="..\cmake\dsga-config.cmake.in" />
+    <None Include="..\PLATFORMS.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\LICENSE_1_0.txt" />
