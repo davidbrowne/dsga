@@ -1965,7 +1965,6 @@ namespace dsga
 	//		size() - relies on Count template parameter
 	//		length() - relies on Count template parameter
 	//		sequence() - relies on sequence() in Derived - the physical order to logical order mapping
-	//		as_base() - a reference to the Derived base class vec_interface
 	//		as_derived() - relies on Derived template parameter - useful for returning references to Derived when you just have a vec_interface
 	//		begin(), end(), cbegin(), cend(), rbegin(), rend(), crbegin(), crend() - iterator functions that rely on Derived
 	//
@@ -1984,10 +1983,6 @@ namespace dsga
 		// CRTP access to Derived class
 		[[nodiscard]] constexpr Derived &as_derived() noexcept requires Writable	{ return static_cast<Derived &>(*this); }
 		[[nodiscard]] constexpr const Derived &as_derived() const noexcept			{ return static_cast<const Derived &>(*this); }
-
-		// for debugging and testing
-		[[nodiscard]] constexpr auto &as_base() noexcept requires Writable			{ return *this; }
-		[[nodiscard]] constexpr const auto &as_base() const noexcept				{ return *this; }
 
 		// logically contiguous write access to all data that allows for self-assignment that works properly
 		template <typename ...Args>
@@ -2135,6 +2130,10 @@ namespace dsga
 				return ((*this)[Is] + ...);
 			}(std::make_index_sequence<Count>{});
 		}
+
+protected:
+
+		~vec_interface() = default;
 
 	};	// struct vec_interface
 

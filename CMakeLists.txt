@@ -90,9 +90,16 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 		-flto=auto
 		-march=native
 	)
-	set(DSGA_LINK_FLAGS_RELEASE
-		-fuse-ld=lld    # use lld for LTO link performance
-	)
+	# GCC on Windows (MinGW) has lld interop issues with LTO: lld defaults to the
+	# Windows GUI subsystem and fails with "undefined symbol: WinMain". Use the
+	# default linker there; lld is reliable for GCC/Clang on Linux and Clang on Windows.
+	if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		set(DSGA_LINK_FLAGS_RELEASE "")
+	else()
+		set(DSGA_LINK_FLAGS_RELEASE
+			-fuse-ld=lld    # use lld for LTO link performance
+		)
+	endif()
 endif()
 
 # Helper function to apply compiler and linker flags to a dev target
@@ -172,4 +179,21 @@ if(PROJECT_IS_TOP_LEVEL)
 		dsga_set_compile_flags(dsga_examples)
 	endif()
 
+	# --- Shader demo ---
+	option(BUILD_SHADER_DEMO "Build the shader demo" ON)
+	if(BUILD_SHADER_DEMO)
+		add_executable(dsga_shader_demo examples/shader_demo.cxx)
+		target_link_libraries(dsga_shader_demo PRIVATE dsga::dsga)
+		dsga_set_compile_flags(dsga_shader_demo)
+	endif()
+
+	# --- Line closest points example ---
+	option(BUILD_LINE_CLOSEST_POINTS "Build the line closest points example" ON)
+	if(BUILD_LINE_CLOSEST_POINTS)
+		add_executable(dsga_line_closest_points examples/line_closest_points.cxx)
+		target_link_libraries(dsga_line_closest_points PRIVATE dsga::dsga)
+		dsga_set_compile_flags(dsga_line_closest_points)
+	endif()
+
 endif()
+

@@ -19,6 +19,14 @@ Use v3.0.0 for the latest stable release version. The next stable release will b
 * Add more tests and try to get close to 100% code coverage.
 
 ## [Latest Major Changes](CHANGELOG.md)
+* Latest Changes
+    * Added two new examples
+        * line_closest_points - finds the closest points between two lines in 3D space, and the distance between those points.
+        * shader_demo - a simple shader demo that uses dsga for vector and matrix math, and demonstrates how to use the library in a shader-like context.
+    * Removed ```as_base()``` from **vec_interface**, since it was not really necessary.
+    * Added protected destructor to **vec_interface** to prevent deletion through a base class pointer.
+
+
 * v3.1.0
     * Minor version bump with some breaking changes to the API.
     * Updated to doctest v2.5.2
@@ -28,7 +36,7 @@ Use v3.0.0 for the latest stable release version. The next stable release will b
          * **vector_base** -> **vec_interface**
          * **indexed_vector** -> **swizzle_vec**
          * **storage_vector** -> **vec_storage**
-    * Microsoft Visual Studio 2022 will no longer be directly supported. Testing may possibly occur using the VS2022 toolset on VS2026.
+    * Microsoft Visual Studio 2022 will no longer be directly supported or updated. Testing may possibly occur using the VS2022 toolset on VS2026.
     * Removed deprecated function ```logicalNot()```, replaced by ```compNot()```.
     * CMake support rewritten.
          * Install target with ```cmake --install``` support.
@@ -43,7 +51,7 @@ Use v3.0.0 for the latest stable release version. The next stable release will b
 
 ## Tested Compilers
 ### Regularly Tested
-* Microsoft Visual Studio 2026 v18.6
+* Microsoft Visual Studio 2026 v18.7
 * gcc v15.2
 * clang v22.1
 
@@ -383,7 +391,7 @@ All tests are currently 100% PASSING on all the testing platforms and compilers.
 
 | Compiler | Status |
 | --- | --- |
-| MSVC 2026 v18.6 | PASSING |
+| MSVC 2026 v18.7 | PASSING |
 | gcc 15.2 | PASSING |
 | clang 22.1 | PASSING |
 
@@ -409,12 +417,14 @@ All tests are currently 100% PASSING on all the testing platforms and compilers.
 | gcc 12.3 | PASSING |
 | clang 16.0 | PASSING |
 
+#### Note:
+* All Ubuntu distributions are running in WSL on Windows 11.
 
 ## License
 [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)
 
 ```
-//          Copyright David Browne 2020-2025.
+//          Copyright David Browne 2020-2026.
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)

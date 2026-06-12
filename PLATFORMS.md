@@ -10,7 +10,7 @@ All tests are currently 100% PASSING on all the tested platforms and compilers.
 
 | Compiler | Status |
 | --- | --- |
-| MSVC 2026 v18.6 | PASSING |
+| MSVC 2026 18.7 | PASSING |
 | gcc 15.2 | PASSING |
 | clang 22.1 | PASSING |
 
@@ -38,13 +38,13 @@ All tests are currently 100% PASSING on all the tested platforms and compilers.
 
 #### Note:
 * All Ubuntu distributions are running in WSL on Windows 11.
-* The testing compilers that don't implement ```std::is_corresponding_member<>``` (**all clang compilers, gcc v11.4**) don't run the 16 tests that rely on that type trait (protected with a feature test macro).
+* The testing compilers that don't implement ```std::is_corresponding_member<>``` (**all clang compilers, gcc 11.4**) don't run the 16 tests that rely on that type trait (protected with a feature test macro).
 
 ## Latest Results
 
 ### Windows 11 Native
 
-* **MSVC 2026 v18.6**
+* **MSVC 2026 18.7**
 
 ```
 [doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
@@ -68,7 +68,7 @@ All tests are currently 100% PASSING on all the tested platforms and compilers.
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 26.04 LTS running in WSL for Windows 11
+### Ubuntu 26
 
 * **gcc 16.0**
 
@@ -86,7 +86,7 @@ All tests are currently 100% PASSING on all the tested platforms and compilers.
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 24.04 LTS running in WSL for Windows 11
+### Ubuntu 24.04
 
 * **gcc 14.2**
 
@@ -104,7 +104,7 @@ All tests are currently 100% PASSING on all the tested platforms and compilers.
 [doctest] Status: SUCCESS!
 ```
 
-### Ubuntu 22.04.3 LTS running in WSL for Windows 11
+### Ubuntu 22.04
 
 * **gcc 12.3**
 

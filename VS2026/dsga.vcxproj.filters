@@ -86,6 +86,7 @@
   <ItemGroup>
     <Text Include="..\LICENSE_1_0.txt" />
     <Text Include="..\CMakeLists.txt" />
+    <Text Include="..\cmake_and_dsga.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cxx">
@@ -128,6 +129,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\tests\main.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\shader_demo.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\line_closest_points.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

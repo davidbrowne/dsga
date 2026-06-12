@@ -1,5 +1,12 @@
 # Change Log
 
+### Latest Changes
+* Added two new examples
+    * line_closest_points - finds the closest points between two lines in 3D space, and the distance between those points.
+    * shader_demo - a simple shader demo that uses dsga for vector and matrix math, and demonstrates how to use the library in a shader-like context.
+* Removed ```as_base()``` from **vec_interface**, since it was not really necessary.
+* Added protected destructor to **vec_interface** to prevent deletion through a base class pointer.
+
 ### v3.1.0
 * Minor version bump with some breaking changes to the API.
 * Updated to doctest v2.5.2

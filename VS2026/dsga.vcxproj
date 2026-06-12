@@ -216,9 +216,18 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\CMakeLists.txt" />
+    <Text Include="..\cmake_and_dsga.txt" />
     <Text Include="..\LICENSE_1_0.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\examples\line_closest_points.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\examples\shader_demo.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\examples\stl.cxx" />
     <ClCompile Include="..\src\main.cxx" />
     <ClCompile Include="..\src\nanobench.cxx" />
