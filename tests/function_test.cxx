@@ -742,7 +742,7 @@ TEST_SUITE("valarray-style vector member functions")
 		auto v3 = dsga::dvec4{-std::numeric_limits<double>::infinity(), 500.0, 55.0, std::numeric_limits<double>::quiet_NaN()};
 		auto q1 = v1.query([](auto val) {return (val % 2) == 0; });
 		auto q2 = v2.query([](auto val) {return (val % 4) == 0; });
-		auto q3 = v3.query(dsga::cxcm::isfinite<double>);
+		auto q3 = v3.query(dsga::detail::cxcm::isfinite<double>);
 
 		CHECK_EQ(q1, dsga::bvec4{false, true, false, true});
 		CHECK_EQ(q2, dsga::bvec4{true, false, true, false});

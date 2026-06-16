@@ -1,6 +1,8 @@
 # Change Log
 
-### Latest Changes
+### v3.2.0
+* Upgraded to cxcm v1.3.0.
+* Moved cxcm namespace from ```cxcm``` to ```detail::cxcm```.
 * Added two new examples
     * line_closest_points - finds the closest points between two lines in 3D space, and the distance between those points.
     * shader_demo - a simple shader demo that uses dsga for vector and matrix math, and demonstrates how to use the library in a shader-like context.
