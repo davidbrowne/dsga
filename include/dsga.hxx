@@ -36,7 +36,7 @@ namespace dsga
 	// version info
 
 	constexpr inline int DSGA_MAJOR_VERSION = 3;
-	constexpr inline int DSGA_MINOR_VERSION = 2;
+	constexpr inline int DSGA_MINOR_VERSION = 3;
 	constexpr inline int DSGA_PATCH_VERSION = 0;
 
 	namespace detail
@@ -1794,13 +1794,17 @@ namespace dsga
 	template <typename T>
 	concept dimensional_scalar = (non_bool_scalar<T> || bool_scalar<T>);
 
-	// want the size to be between 1 and 4, inclusive
-	template <std::size_t Size>
-	concept dimensional_size = ((Size >= 1) && (Size <= 4));
+	// for vectors,want the size to be between 1 and 4, inclusive
+	template <std::size_t N>
+	concept vec_dimension = ((N >= 1) && (N <= 4));
+
+	// for matrices, want the size of both columns and rowsto be between 2 and 4, inclusive
+	template <std::size_t N>
+	concept mat_dimension = ((N >= 2) && (N <= 4));
 
 	// dimensional storage needs the arithmetic type and size restrictions
 	template <typename T, std::size_t Size>
-	concept dimensional_storage = dimensional_scalar<T> && dimensional_size<Size>;
+	concept dimensional_storage = dimensional_scalar<T> && vec_dimension<Size>;
 
 	// we want dimensional_storage_t to have length from 1 to 4 (1 gives just a sneaky kind of T that can swizzle),
 	// and the storage has to have room for all the data. We also need dimensional_storage_t to support operator[] to access
@@ -1844,7 +1848,7 @@ namespace dsga
 		template <std::size_t Count, std::size_t ...Is>
 		consteval bool valid_index_count() noexcept
 		{
-			return (sizeof...(Is) == Count) && dimensional_size<Count>;
+			return (sizeof...(Is) == Count) && vec_dimension<Count>;
 		}
 
 		// are the values of Is... in the range 0 <= Is... < Size
@@ -2026,7 +2030,7 @@ namespace dsga
 		// logical and physically contiguous access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) requires Writable
+		[[nodiscard]] constexpr T &operator [](const U &index)
 		{
 			return store.at(static_cast<std::size_t>(index));
 		}
@@ -2042,7 +2046,7 @@ namespace dsga
 		[[nodiscard]] static constexpr sequence_pack sequence() noexcept		{ return sequence_pack{}; }
 
 		template <typename ...Args>
-		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
 		constexpr void set(Args ...args) noexcept
 		{
 			[this, &args...]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
@@ -2051,20 +2055,20 @@ namespace dsga
 			}(std::make_index_sequence<Count>{});
 		}
 
-		constexpr void swap(vec_storage &sw) noexcept requires Writable	{ store.swap(sw.store); }
+		constexpr void swap(vec_storage &sw) noexcept	{ store.swap(sw.store); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return store.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept						{ return store.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return store.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return store.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept							{ return store.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return store.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return store.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept						{ return store.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return store.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return store.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept							{ return store.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return store.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -2310,6 +2314,9 @@ protected:
 		}(std::make_index_sequence<S>{});
 	}
 
+
+
+
 	// swizzle_vec will act as a swizzle of a vec, the result of "component group notation". vec relies
 	// on the anonymous union of swizzle_vec data members. both swizzle_vec and vec have their own storage
 	// (linked via anonymous union and common initial sequence).
@@ -2334,6 +2341,59 @@ protected:
 	//
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 	struct swizzle_vec;
+
+	//
+	// type traits to get the scalar type and size of a vec or swizzle_vec
+	//
+
+	// get the scalar type of a vec or swizzle_vec
+
+	template <typename V>
+	struct vec_scalar;
+
+	template <dimensional_scalar T, std::size_t S>
+	struct vec_scalar<vec<T, S>>
+	{
+		using type = T;
+	};
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	struct vec_scalar<swizzle_vec<T, Size, Count, Is...>>
+	{
+		using type = T;
+	};
+
+	template <typename V>
+	using vec_scalar_t = vec_scalar<V>::type;
+
+	// get the number of accessible elements in a vec or swizzle_vec
+
+	template <typename V>
+	struct vec_size;
+
+	template <dimensional_scalar T, std::size_t S>
+	struct vec_size<vec<T, S>>
+	{
+		static constexpr std::size_t value = S;
+	};
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	struct vec_size<swizzle_vec<T, Size, Count, Is...>>
+	{
+		static constexpr std::size_t value = Count;
+	};
+
+	template <typename V>
+	inline constexpr std::size_t vec_size_v = vec_size<V>::value;
+
+	// concept to check if a type is vec-like, i.e., it has the vec_scalar_t and vec_size_v type traits defined for it
+
+	template <typename V>
+	concept vec_like = requires
+	{
+		typename vec_scalar_t<V>;
+		{ vec_size_v<V> } -> std::convertible_to<std::size_t>;
+	};
 
 	//
 	// random-access iterators for swizzle_vec so they can participate in range-for loop amongst other things.
@@ -2809,7 +2869,7 @@ protected:
 	//
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
+	requires mat_dimension<C> && mat_dimension<R>
 	struct mat;
 
 	//
@@ -3117,7 +3177,7 @@ protected:
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
+		requires implicitly_convertible_to<U, T>
 		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0]);
@@ -3125,7 +3185,7 @@ protected:
 		}
 
 		template <typename U>
-		requires Writable && implicitly_convertible_to<U, T>
+		requires implicitly_convertible_to<U, T>
 		constexpr vec &operator =(U value) & noexcept
 		{
 			set(value);
@@ -3152,7 +3212,7 @@ protected:
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
@@ -3162,20 +3222,20 @@ protected:
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(vec &bv) noexcept requires Writable						{ base.swap(bv.base); }
+		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept						{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept							{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept						{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept							{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -3186,7 +3246,7 @@ protected:
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename U>
-		requires Writable && std::convertible_to<U, T>
+		requires std::convertible_to<U, T>
 		constexpr void set(U value) noexcept
 		{
 			base.set(value);
@@ -3318,7 +3378,7 @@ protected:
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
+		requires implicitly_convertible_to<U, T>
 		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0], other[1]);
@@ -3328,7 +3388,7 @@ protected:
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
@@ -3338,20 +3398,20 @@ protected:
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(vec &bv) noexcept requires Writable						{ base.swap(bv.base); }
+		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept						{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept							{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept						{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept							{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -3362,7 +3422,7 @@ protected:
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
-		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
 			base.set(args...);
@@ -3586,7 +3646,7 @@ protected:
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
+		requires implicitly_convertible_to<U, T>
 		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0], other[1], other[2]);
@@ -3596,7 +3656,7 @@ protected:
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
@@ -3606,20 +3666,20 @@ protected:
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(vec &bv) noexcept requires Writable						{ base.swap(bv.base); }
+		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept						{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept							{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept						{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept							{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -3630,7 +3690,7 @@ protected:
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
-		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
 			base.set(args...);
@@ -4077,7 +4137,7 @@ protected:
 		//
 
 		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
+		requires implicitly_convertible_to<U, T>
 		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
 		{
 			set(other[0], other[1], other[2], other[3]);
@@ -4087,7 +4147,7 @@ protected:
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept requires Writable		{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
 
 		// logically and physically contiguous - used by operator [] for access to data
 		template <typename U>
@@ -4097,20 +4157,20 @@ protected:
 		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
 		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
 
-		constexpr void swap(vec &bv) noexcept requires Writable						{ base.swap(bv.base); }
+		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
-		[[nodiscard]] constexpr		  iterator			begin() noexcept requires Writable		{ return base.begin(); }
+		[[nodiscard]] constexpr		  iterator			begin() noexcept						{ return base.begin(); }
 		[[nodiscard]] constexpr const_iterator			begin() const noexcept					{ return base.cbegin(); }
 		[[nodiscard]] constexpr const_iterator			cbegin() const noexcept					{ return begin(); }
-		[[nodiscard]] constexpr		  iterator			end() noexcept requires Writable		{ return base.end(); }
+		[[nodiscard]] constexpr		  iterator			end() noexcept							{ return base.end(); }
 		[[nodiscard]] constexpr const_iterator			end() const noexcept					{ return base.cend(); }
 		[[nodiscard]] constexpr const_iterator			cend() const noexcept					{ return end(); }
 
-		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept requires Writable		{ return base.rbegin(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rbegin() noexcept						{ return base.rbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rbegin() const noexcept					{ return base.crbegin(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crbegin() const noexcept				{ return rbegin(); }
-		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept requires Writable		{ return base.rend(); }
+		[[nodiscard]] constexpr		  reverse_iterator	rend() noexcept							{ return base.rend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	rend() const noexcept					{ return base.crend(); }
 		[[nodiscard]] constexpr const_reverse_iterator	crend() const noexcept					{ return rend(); }
 
@@ -4121,7 +4181,7 @@ protected:
 		// logically and physically contiguous - used by set() for write access to data
 		// allows for self-assignment without aliasing issues
 		template <typename ...Args>
-		requires Writable && (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
+		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> && ...)
 		constexpr void set(Args ...args) noexcept
 		{
 			base.set(args...);
@@ -6614,7 +6674,7 @@ protected:
 		// create a column vector that is to be part of a diagonal matrix, where all elements
 		// are 0 except for the element at index, with the value being diagonal_vector[index].
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		requires (C > 1) && (C <= 4)
+		requires mat_dimension<C>
 		[[nodiscard]] constexpr auto diagonal_column(const vec_interface<W, T, C, D> &diagonal_vector, std::size_t index) noexcept
 		{
 			vec<T, C> val;
@@ -6630,7 +6690,7 @@ protected:
 		// create a column vector that is to be part of a diagonal matrix, where all elements
 		// are 0 except for the element at index, with the value being diagonal_number.
 		template <floating_point_scalar T, std::size_t C>
-		requires (C > 1) && (C <= 4)
+		requires mat_dimension<C>
 		[[nodiscard]] constexpr auto diagonal_column(T diagonal_number, std::size_t index) noexcept
 		{
 			vec<T, C> val;
@@ -6649,7 +6709,7 @@ protected:
 	//
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
+	requires mat_dimension<C> && mat_dimension<R>
 	struct mat
 	{
 		static constexpr std::size_t ComponentCount = C * R;
@@ -6879,7 +6939,7 @@ protected:
 
 		// outerProduct() - matrix from a column vector times a row vector
 		template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, std::size_t C2, typename D2>
-		requires ((C1 >= 2) && (C1 <= 4)) && ((C2 >= 2) && (C2 <= 4))
+		requires mat_dimension<C1> && mat_dimension<C2>
 		[[nodiscard]] constexpr mat<T, C2, C1> outerProduct(const vec_interface<W1, T, C1, D1> &lhs,
 															const vec_interface<W2, T, C2, D2> &rhs) noexcept
 		{
@@ -7091,7 +7151,7 @@ protected:
 		// with all other elements being 0.
 		//
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		requires (C > 1) && (C <= 4)
+		requires mat_dimension<C>
 		[[nodiscard]] constexpr mat<T, C, C> diagonal_matrix(const vec_interface<W, T, C, D> &vec) noexcept
 		{
 			mat<T, C, C> val;
@@ -7108,7 +7168,7 @@ protected:
 		//
 		// make an identity matrix
 		template <floating_point_scalar T, std::size_t C>
-		requires (C > 1) && (C <= 4)
+		requires mat_dimension<C>
 		[[nodiscard]] constexpr mat<T, C, C> identity_matrix() noexcept
 		{
 			return mat<T, C, C>(1);
@@ -7499,7 +7559,7 @@ protected:
 	// converting from array to a mat
 
 	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
-	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
+	requires (mat_dimension<C> && mat_dimension<R>) && (C * R <= S)
 	[[nodiscard]] constexpr mat<T, C, R> to_matrix(const std::array<T, S> &arg) noexcept
 	{
 		return [&arg]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
@@ -7514,7 +7574,7 @@ protected:
 	}
 
 	template <std::size_t C, std::size_t R, floating_point_scalar T, std::size_t S>
-	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4))) && (C * R <= S)
+	requires (mat_dimension<C> && mat_dimension<R>) && (C * R <= S)
 	[[nodiscard]] constexpr mat<T, C, R> to_matrix(const T(&arg)[S]) noexcept
 	{
 		return [&arg]<std::size_t ...Js>(std::index_sequence <Js...>) noexcept
@@ -7531,7 +7591,7 @@ protected:
 	// converting from internal matrix type to std::array
 
 	template <floating_point_scalar T, std::size_t C, std::size_t R>
-	requires (((C >= 2) && (C <= 4)) && ((R >= 2) && (R <= 4)))
+	requires (mat_dimension<C> && mat_dimension<R>)
 	[[nodiscard]] constexpr std::array<T, C * R> to_array(const mat<T, C, R> &arg) noexcept
 	{
 		auto matrix_tuple = [&arg]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept

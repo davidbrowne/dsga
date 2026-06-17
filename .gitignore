@@ -19,3 +19,4 @@
 /build-clang
 /build-msvc
 /build-gcc
+/build-trace

@@ -1,5 +1,12 @@
 # Change Log
 
+### v3.3.0
+* Removed Writable from classes/structs and member functions where it is always true.
+* Renamed concept `dimensional_size` to `vec_dimension`.
+* Created new concept `mat_dimension` for matrix row and column sizes.
+* Added new concepts `vec_scalar` and `vec_size` for vector element type and vector size.
+* Added new concept `vec_like` for vector-like types, which includes both `vec` and `swizzle_vec`.
+
 ### v3.2.0
 * Upgraded to cxcm v1.3.0.
 * Moved cxcm namespace from ```cxcm``` to ```detail::cxcm```.

@@ -6,7 +6,7 @@
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ## Current Version
-v3.1.0
+v3.3.0
 
 ## Note
 Use v3.0.0 for the latest stable release version. The next stable release will be v4.0.0. The versions between v3.0.0 and v4.0.0 are for testing out breaking changes to the API and for working on the documentation, so they may be unstable. Suggest that users either get v3.0.0 or wait till the release version v.4.0.0 and not update to the versions inbetween.
@@ -19,6 +19,12 @@ Use v3.0.0 for the latest stable release version. The next stable release will b
 * Add more tests and try to get close to 100% code coverage.
 
 ## [Latest Major Changes](CHANGELOG.md)
+* v3.3.0
+    * Removed Writable from classes/structs and member functions where it is always true.
+    * Renamed concept `dimensional_size` to `vec_dimension`.
+    * Created new concept `mat_dimension` for matrix row and column sizes.
+    * Added new concepts `vec_scalar` and `vec_size` for vector element type and vector size.
+    * Added new concept `vec_like` for vector-like types, which includes both `vec` and `swizzle_vec`.
 * v3.2.0
     * Upgraded to cxcm v1.3.0.
     * Moved cxcm namespace from ```cxcm``` to ```detail::cxcm```.
@@ -365,7 +371,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ## Status
 
-Current version: `v3.1.0`
+Current version: `v3.3.0`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v3.0.0](https://github.com/davidbrowne/dsga/releases)
