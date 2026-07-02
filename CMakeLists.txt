@@ -1,12 +1,8 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(dsga VERSION 3.0.0)
-
-# file(GLOB SRC_FILES  CONFIGURE_DEPENDS src/*.cxx)
-# file(GLOB TEST_FILES CONFIGURE_DEPENDS tests/*.cxx)
-# file(GLOB EXAMPLE_FILES CONFIGURE_DEPENDS examples/*.cxx)
 
 set(SRC_FILES
 	src/main.cxx
@@ -26,6 +22,7 @@ set(TEST_FILES
 	tests/swizzle_test.cxx
 	tests/traits_test.cxx
 	tests/utility_test.cxx
+	tests/negative_test.cxx
 )
 
 set(EXAMPLE_FILES
@@ -34,6 +31,7 @@ set(EXAMPLE_FILES
 
 # --- Remove /Ob2 from CMake's default MSVC Release flags to avoid conflict with our /Ob3 ---
 if(MSVC)
+	string(REPLACE "/Ob0" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "/Ob2" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
@@ -88,7 +86,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	set(DSGA_COMPILE_FLAGS_RELEASE
 		-O3
 		-flto=auto
-		-march=native
 	)
 	# GCC on Windows (MinGW) has lld interop issues with LTO: lld defaults to the
 	# Windows GUI subsystem and fails with "undefined symbol: WinMain". Use the
@@ -164,10 +161,15 @@ if(PROJECT_IS_TOP_LEVEL)
 	# --- Tests ---
 	option(BUILD_TESTS "Build the dsga test suite" ON)
 	if(BUILD_TESTS)
+		enable_testing()
+
 		add_executable(dsga_tests ${TEST_FILES})
 		target_link_libraries(dsga_tests PRIVATE dsga::dsga)
 		target_include_directories(dsga_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/dev_3rd)
 		dsga_set_compile_flags(dsga_tests)
+
+		include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/doctest.cmake")
+		doctest_discover_tests(dsga_tests)
 	endif()
 
 	# --- Examples ---

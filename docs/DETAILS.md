@@ -20,12 +20,10 @@ We want to use both types of vectors in the same way, for constructors, equality
 It provides the following functions that can be used to generically manipulate and access vector data:
 * **set()** - relies on CRTP ```set()```, which sets all the data in the vector to new values. Since this modifies the data, it is only enabled if it is writable. This function helps prevent aliasing issues that might occur otherwise, e.g., ```foo = foo.zyx;``` could have a problem with a naive implementation.
 * **operator[]** - relies on CRTP ```operator[]```, which is a reference to a single data value. If writable then can use as an lvalue. The data is in logical order.
-* **sequence()** - relies on CRTP ```sequence()```. The physical order to logical order mapping in a parameter pack.
 * **iterator functions** - relies on CRTP ```begin()```, ```crend()```, etc.
 *  **length()** - relies on ```Count``` template parameter, and it returns type ```int```.
 * **size()** - relies on ```Count``` template parameter, and it returns type ```std::size_t```.
 * **as_derived()** - relies on the type of the derived class - useful for returning derived references to ```this``` when you just have a ```vec_interface```.
-* **as_base()**
 
 ## Inside vec
 

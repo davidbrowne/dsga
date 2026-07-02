@@ -37,7 +37,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 3;
 	constexpr inline int DSGA_MINOR_VERSION = 3;
-	constexpr inline int DSGA_PATCH_VERSION = 0;
+	constexpr inline int DSGA_PATCH_VERSION = 1;
 
 	namespace detail
 	{
@@ -2004,16 +2004,6 @@ namespace dsga
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
 
-		//
-		// the underlying ordered storage sequence for this physical storage - logical contiguous order is same as physical contiguous order.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Count>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
-
 		// underlying storage
 		dimensional_storage_t<T, Size> store;
 
@@ -2041,9 +2031,6 @@ namespace dsga
 		{
 			return store.at(static_cast<std::size_t>(index));
 		}
-
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr sequence_pack sequence() noexcept		{ return sequence_pack{}; }
 
 		template <typename ...Args>
 		requires (sizeof...(Args) == Count) && (std::convertible_to<Args, T> &&...)
@@ -2164,9 +2151,6 @@ namespace dsga
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept			{ return this->as_derived()[index]; }
-
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous.
-		[[nodiscard]] static constexpr auto sequence() noexcept						{ return Derived::sequence(); }
 
 		// number of accessible T elements - required by spec
 		[[nodiscard]] static constexpr int length() noexcept						{ return Count; }
@@ -2314,9 +2298,6 @@ protected:
 		}(std::make_index_sequence<S>{});
 	}
 
-
-
-
 	// swizzle_vec will act as a swizzle of a vec, the result of "component group notation". vec relies
 	// on the anonymous union of swizzle_vec data members. both swizzle_vec and vec have their own storage
 	// (linked via anonymous union and common initial sequence).
@@ -2326,9 +2307,10 @@ protected:
 	// Count is the number of elements accessible in swizzle -- often works alongside with vec's Size
 	// Is... are the number of swizzlable values available -- there are Count of them, and their values are in the range:  0 <= Is < Size
 
-	// we want swizzle_vec (vector swizzles) to have length from 1 to 4 (1 is just a sneaky type of T swizzle) in order
-	// to work with the vec which also has these lengths. The number of indexes is the same as the Count, between 1 and 4.
-	// The indexes are valid for indexing into the values in the storage which is Size big.
+	// we want swizzle_vec (vector swizzles) to have length from 1 to 4 in order to work with the vec
+	// which also has these lengths. The number of indices is the same as the Count, between 1 and 4.
+	// The indices are valid for indexing into the values in the storage (which has Size elements) if
+	// the index values are in the range 0 <= Is < Size.
 
 	// the type of a vec swizzle
 	// 
@@ -2336,8 +2318,8 @@ protected:
 	//
 	//		T - the scalar type stored
 	//		Size - the number of actual elements in storage
-	//		Count - the number of indexes available to access ScalarType data
-	//		Is - an ordered variable set of indexes into the storage -- there will be Count of them
+	//		Count - the number of indices available to access ScalarType data
+	//		Is - an ordered variable set of indices into the storage -- there will be Count of them
 	//
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 	struct swizzle_vec;
@@ -2346,7 +2328,7 @@ protected:
 	// type traits to get the scalar type and size of a vec or swizzle_vec
 	//
 
-	// get the scalar type of a vec or swizzle_vec
+	// get the scalar type of a vec or swizzle_vec or vec_interface
 
 	template <typename V>
 	struct vec_scalar;
@@ -2363,10 +2345,42 @@ protected:
 		using type = T;
 	};
 
-	template <typename V>
-	using vec_scalar_t = vec_scalar<V>::type;
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	struct vec_scalar<vec_interface<W, T, C, D>>
+	{
+		using type = T;
+	};
 
-	// get the number of accessible elements in a vec or swizzle_vec
+	template <typename V>
+	using vec_scalar_t = vec_scalar<std::remove_cvref_t<V>>::type;
+
+	// get the derived type of a vec or swizzle_vec or vec_interface
+
+	template <typename V>
+	struct vec_derived;
+
+	template <dimensional_scalar T, std::size_t S>
+	struct vec_derived<vec<T, S>>
+	{
+		using type = vec<T, S>;
+	};
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	struct vec_derived<swizzle_vec<T, Size, Count, Is...>>
+	{
+		using type = swizzle_vec<T, Size, Count, Is...>;
+	};
+
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	struct vec_derived<vec_interface<W, T, C, D>>
+	{
+		using type = D;
+	};
+
+	template <typename V>
+	using vec_derived_t = vec_derived<std::remove_cvref_t<V>>::type;
+
+	// get the number of accessible elements in a vec or swizzle_vec or vec_interface
 
 	template <typename V>
 	struct vec_size;
@@ -2383,17 +2397,149 @@ protected:
 		static constexpr std::size_t value = Count;
 	};
 
-	template <typename V>
-	inline constexpr std::size_t vec_size_v = vec_size<V>::value;
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	struct vec_size<vec_interface<W, T, C, D>>
+	{
+		static constexpr std::size_t value = C;
+	};
 
-	// concept to check if a type is vec-like, i.e., it has the vec_scalar_t and vec_size_v type traits defined for it
+	template <typename V>
+	inline constexpr std::size_t vec_size_v = vec_size<std::remove_cvref_t<V>>::value;
+
+	// get whether V is allowed to be an l-value in a vec or swizzle_vec or vec_interface
 
 	template <typename V>
-	concept vec_like = requires
+	struct vec_writable;
+
+	template <dimensional_scalar T, std::size_t S>
+	struct vec_writable<vec<T, S>>
+	{
+		static constexpr bool value = true;
+	};
+
+	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
+	struct vec_writable<swizzle_vec<T, Size, Count, Is...>>
+	{
+		static constexpr bool value = writable_swizzle<Size, Count, Is...>;
+	};
+
+	template <bool W, dimensional_scalar T, std::size_t C, typename D>
+	struct vec_writable<vec_interface<W, T, C, D>>
+	{
+		static constexpr bool value = W;
+	};
+
+	template <typename V>
+	inline constexpr bool vec_writable_v = vec_writable<std::remove_cvref_t<V>>::value;
+
+
+
+
+
+	//
+	// has_set: checks that V has a set() member callable with exactly
+	// vec_size_v<V> arguments of type vec_scalar_t<V>
+	//
+
+	template <typename V, typename Seq>
+	struct has_set_trait : std::false_type {};
+
+	template <typename V, std::size_t... Is>
+	struct has_set_trait<V, std::index_sequence<Is...>>
+	{
+		static constexpr bool value = requires(V v, decltype((void(Is), vec_scalar_t<V>{}))... args)
+		{
+			v.set(args...);
+		};
+	};
+
+	template <typename V>
+	concept has_set = has_set_trait<V, std::make_index_sequence<vec_size_v<V>>>::value;
+
+	//
+	// vec_like: read-only, vec-shaped types (vec, swizzle_vec, etc.)
+	//
+
+	template <typename V>
+	concept vec_like = requires (const std::remove_cvref_t<V> cv, int i_int, std::size_t i_size)
 	{
 		typename vec_scalar_t<V>;
-		{ vec_size_v<V> } -> std::convertible_to<std::size_t>;
+		typename vec_derived_t<V>;
+		requires vec_dimension<vec_size_v<V>>;
+		requires dimensional_scalar<vec_scalar_t<V>>;
+		{ vec_writable_v<V> } -> std::convertible_to<bool>;
+		{ std::remove_cvref_t<V>::size() } -> std::convertible_to<std::size_t>;
+
+		// operator[] for both index types
+		{ cv[i_int] } -> std::convertible_to<vec_scalar_t<V>>;
+		{ cv[i_size] } -> std::convertible_to<vec_scalar_t<V>>;
+
+		// const iteration
+		{ *cv.begin() } -> std::convertible_to<vec_scalar_t<V>>;
+		{ *cv.rbegin() } -> std::convertible_to<vec_scalar_t<V>>;
+		requires std::bidirectional_iterator<decltype(cv.begin())>;
+		requires std::bidirectional_iterator<decltype(cv.rbegin())>;
 	};
+
+	//
+	// writable_vec_like: vec_like types that also support mutation
+	// via set() and non-const as_derived()
+	//
+
+	template <typename V>
+	concept writable_vec_like = (!std::is_const_v<std::remove_reference_t<V>>) &&
+		vec_like<V> && has_set<V> && vec_writable_v<V> &&
+		requires (std::remove_cvref_t<V> v, int i_int, std::size_t i_size)
+		{
+			{ v.as_derived() } -> std::same_as<vec_derived_t<V>&>;
+			{ *v.begin() } -> std::same_as<vec_scalar_t<V>&>;
+			{ *v.rbegin() } -> std::same_as<vec_scalar_t<V>&>;
+			requires std::bidirectional_iterator<decltype(v.begin())>;
+			requires std::bidirectional_iterator<decltype(v.rbegin())>;
+
+			// Verifies your non-const operator[] signature for both index types
+			{ v[i_int] }  -> std::same_as<vec_scalar_t<V>&>;
+			{ v[i_size] } -> std::same_as<vec_scalar_t<V>&>;
+		};
+
+	/*
+	template <typename V>
+	concept vec_like = requires (const std::remove_cvref_t<V> cv, int i_int, std::size_t i_size)
+	{
+		// Clean lookups using your smart alias
+		typename vec_scalar_t<V>; 
+		typename vec_derived_t<V>;
+    
+		requires vec_dimension<vec_size_v<V>>;
+		requires dimensional_scalar<vec_scalar_t<V>>;
+    
+		// Accessing static or member methods requires the underlying value type
+		{ std::remove_cvref_t<V>::size() } -> std::convertible_to<std::size_t>;
+
+		// Verifies your const operator[] signature for both index types
+		// allow types that return by value or by reference
+		{ cv[i_int] } -> std::convertible_to<vec_scalar_t<V>>;
+		{ cv[i_size] } -> std::convertible_to<vec_scalar_t<V>>;
+	};
+	
+	 
+	 
+	 
+	template <typename V>
+	concept writable_vec_like = 
+		vec_like<V> && 
+		(!std::is_const_v<std::remove_reference_t<V>>) && 
+		vec_writable_v<V> && // Added compile-time trait constraint here
+		requires (std::remove_cvref_t<V> v, int i_int, std::size_t i_size)
+	{
+		// Verifies your non-const operator[] signature for both index types
+		{ v[i_int] }  -> std::same_as<vec_scalar_t<V>&>;
+		{ v[i_size] } -> std::same_as<vec_scalar_t<V>&>;
+	};
+	*/
+
+
+
 
 	//
 	// random-access iterators for swizzle_vec so they can participate in range-for loop amongst other things.
@@ -2416,9 +2562,13 @@ protected:
 		constexpr static std::ptrdiff_t begin_index = 0;
 		constexpr static std::ptrdiff_t end_index = Count;
 
+	protected:
+
 		// the data
 		const swizzle_vec<T, Size, Count, Is ...> *mapper_ptr;
 		std::ptrdiff_t mapper_index;
+
+	public:
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
@@ -2432,7 +2582,7 @@ protected:
 			}
 		}
 
-		constexpr swizzle_vec_const_iterator() noexcept = default;
+		constexpr swizzle_vec_const_iterator() noexcept = default;			// only use is for declval
 		constexpr swizzle_vec_const_iterator(const swizzle_vec_const_iterator &) noexcept = default;
 		constexpr swizzle_vec_const_iterator(swizzle_vec_const_iterator &&) noexcept = default;
 		constexpr swizzle_vec_const_iterator &operator =(const swizzle_vec_const_iterator &) & noexcept = default;
@@ -2624,7 +2774,7 @@ protected:
 		{
 		}
 
-		constexpr swizzle_vec_iterator() noexcept = default;
+		constexpr swizzle_vec_iterator() noexcept = default;			// only use is for declval
 		constexpr swizzle_vec_iterator(const swizzle_vec_iterator &) noexcept = default;
 		constexpr swizzle_vec_iterator(swizzle_vec_iterator &&) noexcept = default;
 		constexpr swizzle_vec_iterator &operator =(const swizzle_vec_iterator &) & noexcept = default;
@@ -2718,21 +2868,28 @@ protected:
 	struct swizzle_vec<T, Size, Count, Is...>
 		: vec_interface<writable_swizzle<Size, Count, Is...>, T, Count, swizzle_vec<T, Size, Count, Is...>>
 	{
-		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue
+		// we have partial specialization, so can't use template parameter for Writable if this swizzle can be an lvalue.
 		static constexpr bool Writable = writable_swizzle<Size, Count, Is...>;
 
 		//
-		// the underlying ordered storage sequence for this logical vector - possibly helpful for indirection.
-		// currently unused because operator[] does this logically for us.
+		// the underlying ordered storage sequence for this logical vector - essential for indirection.
 		//
 
-		// as a parameter pack
+		// as a parameter pack, e.g., <2, 2, 3, 1> is a swizzle for a vec<T, 4> v, i.e., v.zzwy. this is what the offsets array
+		// is created from. the offsets array and sequence_pack are two differnt ways to map the logical order of the swizzle to
+		// the physical order of the underlying storage. sequence_pack is just the template parameters pack Is... as a named type.
 		using sequence_pack = std::index_sequence<Is...>;
 
-		// as an array
+		// this is the same data that is in sequence_pack, but as an array. both sequence_pack and offsets are different methods
+		// for using indirection into the shared data storage used by all the swizzles in a vec, which is also shared with the
+		// vec's storage through the union and the common initial sequence rule. it is used by operator[] to map its logical
+		// order to the physical. this relies on sequence_pack for initialization.
 		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
-		// common initial sequence data - the storage is Size in length, not Count which is number of indexes
+		// common initial sequence data. the storage is Size in length, not Count, which is number of indices. for example, a
+		// vec<T, 4> named v has Size == 4, but a swizzle_vec like v.zwy has Count == 3. all the storage must be the same for
+		// a vec<T, N> and its swizzle_vecs, even if it isn't used for a particular swizzle_vec, since the storage data is
+		// shared with the vec and all the other swizzle_vecs in the union.
 		dimensional_storage_t<T, Size> base;
 
 		// using directives related to storage
@@ -2778,7 +2935,7 @@ protected:
 			return static_cast<U>(base.at(offsets.at(0)));
 		}
 
-		// logically contiguous - used by operator [] for read/write access to data
+		// logically contiguous. data accessed through offsets indirection.
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr T &operator [](const U &index) requires Writable
@@ -2786,7 +2943,7 @@ protected:
 			return base.at(offsets.at(static_cast<std::size_t>(index)));
 		}
 
-		// logically contiguous - used by operator [] for read access to data
+		// logically contiguous. data accessed through offsets indirection.
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const
@@ -2818,16 +2975,24 @@ protected:
 		requires Writable && (std::convertible_to<Args, T> && ...) && (sizeof...(Args) == Count)
 		constexpr void set(Args ...args) noexcept
 		{
-			// these Is are likely not sequential as they are in indexable order,
+			// these Is.. are likely not sequential since they are in logical order,
 			// and we are accessing the internal storage directly. we are not using
-			// the indirection built into swizzle_vec::operator []() for this function.
+			// the offsets array indirection that is built into operator []() for
+			// this function, nor are we using sequence_pack{}. we are using the
+			// Is... directly as indices into the storage since this is a member
+			// function of swizzle_vec, and it has easy access to the Is... pack.
 			((base.at(Is) = static_cast<T>(args)), ...);
 		}
 
+		// this set() uses the other set() to do the work. it is for setting our values
+		// from another vec_interface, which could be a swizzle_vec or a vec. it allows
+		// for self-assignment without aliasing issues.
 		template <bool W, dimensional_scalar U, typename D>
 		requires Writable && std::convertible_to<U, T>
 		constexpr void set(const vec_interface<W, U, Count, D> &other) & noexcept
 		{
+			// the Js... parameter pack is just <0, 1, 2, ..., Count - 1> as indices into
+			// the other's logical storage. it is unrelated to the Is... parameter pack.
 			[this, &other] <std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
 				this->set(other[Js]...);
@@ -3098,17 +3263,6 @@ protected:
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
 
-		//
-		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because operator[] does this logically for us.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Count>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
-
 		union
 		{
 			vec_storage<T, Size>				base;
@@ -3219,9 +3373,6 @@ protected:
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
-
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
@@ -3265,17 +3416,6 @@ protected:
 
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
-
-		//
-		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because operator[] does this logically for us.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Count>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		union
 		{
@@ -3395,9 +3535,6 @@ protected:
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
-
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
@@ -3441,17 +3578,6 @@ protected:
 
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
-
-		//
-		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because operator[] does this logically for us.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Count>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		union
 		{
@@ -3663,9 +3789,6 @@ protected:
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
-
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
@@ -3709,17 +3832,6 @@ protected:
 
 		// this can be used as an lvalue
 		static constexpr bool Writable = true;
-
-		//
-		// the underlying ordered storage sequence for this physical vector - indirection is same as physical contiguous order.
-		// currently unused because operator[] does this logically for us.
-		//
-
-		// as a parameter pack
-		using sequence_pack = std::make_index_sequence<Count>;
-
-		// as an array
-		static constexpr std::array<std::size_t, Count> offsets = make_sequence_array(sequence_pack{});
 
 		union
 		{
@@ -4154,9 +4266,6 @@ protected:
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
 
-		// get an instance of the index sequence that converts the physically contiguous to the logically contiguous
-		[[nodiscard]] static constexpr auto sequence() noexcept									{ return sequence_pack{}; }
-
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
 		// support for range-for loop
@@ -4235,10 +4344,12 @@ protected:
 
 		// unary
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename UnOp>
-		constexpr auto apply_make(const vec_interface<W, T, C, D> &arg,
-								  UnOp &op) noexcept
+		template <vec_like V, typename UnOp>
+		constexpr auto apply_make(const V &arg,
+								  const UnOp &op) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V>;
+
 			if constexpr (C == 1)
 			{
 				return op(arg[0]);
@@ -4247,19 +4358,21 @@ protected:
 			{
 				return [&op, &arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<unop_return_t<UnOp, T>, C>{ op(arg[Is])... };
+					return vec<unop_return_t<UnOp, vec_scalar_t<V>>, C>{ op(arg[Is])... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
 		// binary
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
-		constexpr auto apply_unitype_make(const vec_interface<W1, T1, C, D1> &lhs,
-										  const vec_interface<W2, T2, C, D2> &rhs,
-										  BinOp &op) noexcept
+		template <vec_like V1, vec_like V2, typename BinOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>)
+		constexpr auto apply_unitype_make(const V1 &lhs,
+										  const V2 &rhs,
+										  const BinOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T1, T2>;
+			using ArgT = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>>;
+			constexpr std::size_t C = vec_size_v<V1>;
 
 			if constexpr (C == 1)
 			{
@@ -4274,12 +4387,13 @@ protected:
 			}
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		constexpr auto apply_unitype_make(const vec_interface<W, T, C, D> &lhs,
+		template <vec_like V, dimensional_scalar U, typename BinOp>
+		constexpr auto apply_unitype_make(const V &lhs,
 										  U rhs,
-										  BinOp &op) noexcept
+										  const BinOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T, U>;
+			using ArgT = std::common_type_t<vec_scalar_t<V>, U>;
+			constexpr std::size_t C = vec_size_v<V>;
 
 			if constexpr (C == 1)
 			{
@@ -4294,12 +4408,13 @@ protected:
 			}
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
+		template <vec_like V, dimensional_scalar U, typename BinOp>
 		constexpr auto apply_unitype_make(U lhs,
-										  const vec_interface<W, T, C, D> &rhs,
-										  BinOp &op) noexcept
+										  const V &rhs,
+										  const BinOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T, U>;
+			using ArgT = std::common_type_t<vec_scalar_t<V>, U>;
+			constexpr std::size_t C = vec_size_v<V>;
 
 			if constexpr (C == 1)
 			{
@@ -4314,11 +4429,14 @@ protected:
 			}
 		}
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
-		constexpr auto apply_multitype_make(const vec_interface<W1, T1, C, D1> &lhs,
-											const vec_interface<W2, T2, C, D2> &rhs,
-											BinOp &op) noexcept
+		template <vec_like V1, vec_like V2, typename BinOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>)
+		constexpr auto apply_multitype_make(const V1 &lhs,
+											const V2 &rhs,
+											const BinOp &op) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V1>;
+
 			if constexpr (C == 1)
 			{
 				return op(lhs[0], rhs[0]);
@@ -4327,16 +4445,18 @@ protected:
 			{
 				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<binop_return_t<BinOp, T1, T2>, C>{ op(lhs[Is], rhs[Is])... };
+					return vec<binop_return_t<BinOp, vec_scalar_t<V1>, vec_scalar_t<V2>>, C>{ op(lhs[Is], rhs[Is])... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		constexpr auto apply_multitype_make(const vec_interface<W, T, C, D> &lhs,
+		template <vec_like V, dimensional_scalar U, typename BinOp>
+		constexpr auto apply_multitype_make(const V &lhs,
 											U rhs,
-											BinOp &op) noexcept
+											const BinOp &op) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V>;
+
 			if constexpr (C == 1)
 			{
 				return op(lhs[0], rhs);
@@ -4345,16 +4465,18 @@ protected:
 			{
 				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<binop_return_t<BinOp, T, U>, C>{ op(lhs[Is], rhs)... };
+					return vec<binop_return_t<BinOp, vec_scalar_t<V>, U>, C>{ op(lhs[Is], rhs)... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
+		template <vec_like V, dimensional_scalar U, typename BinOp>
 		constexpr auto apply_multitype_make(U lhs,
-											const vec_interface<W, T, C, D> &rhs,
-											BinOp &op) noexcept
+											const V &rhs,
+											const BinOp &op) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V>;
+
 			if constexpr (C == 1)
 			{
 				return op(lhs, rhs[0]);
@@ -4363,55 +4485,60 @@ protected:
 			{
 				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<binop_return_t<BinOp, U, T>, C>{ op(lhs, rhs[Is])... };
+					return vec<binop_return_t<BinOp, U, vec_scalar_t<V>>, C>{ op(lhs, rhs[Is])... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
-		requires W1
-		constexpr void apply_unitype_modify(vec_interface<W1, T1, C, D1> &lhs,
-											const vec_interface<W2, T2, C, D2> &rhs,
-											BinOp &op) noexcept
+		template <writable_vec_like V1, vec_like V2, typename BinOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>)
+		constexpr void apply_unitype_modify(V1 &lhs,
+											const V2 &rhs,
+											const BinOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T1, T2>;
+			using ArgT = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>>;
+			constexpr std::size_t C = vec_size_v<V1>;
+
 			[&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				lhs.set( op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))... );
 			}(std::make_index_sequence<C>{});
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		requires W
-		constexpr void apply_unitype_modify(vec_interface<W, T, C, D> &lhs,
+		template <writable_vec_like V, dimensional_scalar U, typename BinOp>
+		constexpr void apply_unitype_modify(V &lhs,
 											U rhs,
-											BinOp &op) noexcept
+											const BinOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T, U>;
+			using ArgT = std::common_type_t<vec_scalar_t<V>, U>;
+			constexpr std::size_t C = vec_size_v<V>;
+
 			[&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				lhs.set( op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))... );
 			}(std::make_index_sequence<C>{});
 		}
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
-		requires W1
-		constexpr void apply_multitype_modify(vec_interface<W1, T1, C, D1> &lhs,
-											  const vec_interface<W2, T2, C, D2> &rhs,
-											  BinOp &op) noexcept
+		template <writable_vec_like V1, vec_like V2, typename BinOp>
+		constexpr void apply_multitype_modify(V1 &lhs,
+											  const V2 &rhs,
+											  const BinOp &op) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V1>;
+
 			[&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				lhs.set( op(lhs[Is], rhs[Is])... );
 			}(std::make_index_sequence<C>{});
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, typename BinOp>
-		requires W
-		constexpr void apply_multitype_modify(vec_interface<W, T, C, D> &lhs,
+		template <writable_vec_like V, dimensional_scalar U, typename BinOp>
+		constexpr void apply_multitype_modify(V &lhs,
 											  U rhs,
-											  BinOp &op) noexcept
+											  const BinOp &op) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V>;
+
 			[&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				lhs.set( op(lhs[Is], rhs)... );
@@ -4420,14 +4547,14 @@ protected:
 
 		// ternary
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dimensional_scalar T2, typename D2, bool W3, dimensional_scalar T3, typename D3, typename TernOp>
-		constexpr auto apply_unitype_make(const vec_interface<W1, T1, C, D1> &x,
-										  const vec_interface<W2, T2, C, D2> &y,
-										  const vec_interface<W3, T3, C, D3> &z,
-										  TernOp &op) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3, typename TernOp>
+		constexpr auto apply_unitype_make(const V1 &x,
+										  const V2 &y,
+										  const V3 &z,
+										  const TernOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T1, T2, T3>;
+			using ArgT = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>, vec_scalar_t<V3>>;
+			constexpr std::size_t C = vec_size_v<V1>;
 
 			if constexpr (C == 1)
 			{
@@ -4437,18 +4564,20 @@ protected:
 			{
 				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z[Is]))... };
+					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
+					{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z[Is]))... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, dimensional_scalar U, typename TernOp>
-		constexpr auto apply_unitype_make(const vec_interface<W1, T1, C, D1> &x,
-										  const vec_interface<W2, T2, C, D2> &y,
+		template <vec_like V1, vec_like V2, dimensional_scalar U, typename TernOp>
+		constexpr auto apply_unitype_make(const V1 &x,
+										  const V2 &y,
 										  U z,
-										  TernOp &op) noexcept
+										  const TernOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T1, T2, U>;
+			using ArgT = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>, U>;
+			constexpr std::size_t C = vec_size_v<V1>;
 
 			if constexpr (C == 1)
 			{
@@ -4458,18 +4587,20 @@ protected:
 			{
 				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))... };
+					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
+					{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, dimensional_scalar V, typename TernOp>
-		constexpr auto apply_unitype_make(const vec_interface<W, T, C, D> &x,
+		template <vec_like V, dimensional_scalar U, dimensional_scalar T, typename TernOp>
+		constexpr auto apply_unitype_make(const V &x,
 										  U y,
-										  V z,
-										  TernOp &op) noexcept
+										  T z,
+										  const TernOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T, U, V>;
+			using ArgT = std::common_type_t<vec_scalar_t<V>, U, T>;
+			constexpr std::size_t C = vec_size_v<V>;
 
 			if constexpr (C == 1)
 			{
@@ -4479,18 +4610,20 @@ protected:
 			{
 				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y), static_cast<ArgT>(z))... };
+					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
+					{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y), static_cast<ArgT>(z))... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, dimensional_scalar U, dimensional_scalar V, typename TernOp>
+		template <vec_like V, dimensional_scalar U, dimensional_scalar T, typename TernOp>
 		constexpr auto apply_unitype_make(U x,
-										  V y,
-										  const vec_interface<W, T, C, D> &z,
-										  TernOp &op) noexcept
+										  T y,
+										  const V &z,
+										  const TernOp &op) noexcept
 		{
-			using ArgT = std::common_type_t<T, U, V>;
+			using ArgT = std::common_type_t<T, U, vec_scalar_t<V>>;
+			constexpr std::size_t C = vec_size_v<V>;
 
 			if constexpr (C == 1)
 			{
@@ -4500,20 +4633,20 @@ protected:
 			{
 				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>{ op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[Is]))... };
+					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
+					{ op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[Is]))... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
 
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1,
-			bool W2, dimensional_scalar T2, typename D2,
-			bool W3, dimensional_scalar T3, typename D3,
-			typename TernOp>
-		constexpr auto apply_multitype_make(const vec_interface<W1, T1, C, D1> &x,
-											const vec_interface<W2, T2, C, D2> &y,
-											const vec_interface<W3, T3, C, D3> &z,
-											TernOp &op) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3, typename TernOp>
+		constexpr auto apply_multitype_make(const V1 &x,
+											const V2 &y,
+											const V3 &z,
+											const TernOp &op) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V1>;
+
 			if constexpr (C == 1)
 			{
 				return op(x[0], y[0], z[0]);
@@ -4522,7 +4655,8 @@ protected:
 			{
 				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 				{
-					return vec<ternop_return_t<TernOp, T1, T2, T3>, C>{ op(x[Is], y[Is], z[Is])... };
+					return vec<ternop_return_t<TernOp, vec_scalar_t<V1>, vec_scalar_t<V2>, vec_scalar_t<V3>>, C>
+					{ op(x[Is], y[Is], z[Is])... };
 				}(std::make_index_sequence<C>{});
 			}
 		}
@@ -6511,9 +6645,11 @@ protected:
 		[[nodiscard]] constexpr vec<T, 3> cross(const vec_interface<W1, T, 3, D1> &a,
 												const vec_interface<W2, T, 3, D2> &b) noexcept
 		{
-			return vec{(a[1] * b[2]) - (b[1] * a[2]),
-								(a[2] * b[0]) - (b[2] * a[0]),
-								(a[0] * b[1]) - (b[0] * a[1])};
+			return vec {
+				(a[1] * b[2]) - (b[1] * a[2]),
+				(a[2] * b[0]) - (b[2] * a[0]),
+				(a[0] * b[1]) - (b[0] * a[1])
+			};
 		}
 
 		template <bool W, floating_point_scalar T, std::size_t C, typename D>
@@ -7017,7 +7153,7 @@ protected:
 		[[nodiscard]] constexpr mat<T, 2, 2> inverse(const mat<T, 2, 2> &arg) noexcept
 		{
 			auto det = determinant(arg);
-			if (det == 0.0)
+			if (abs(det) <= std::numeric_limits<T>::epsilon())
 			{
 				return mat<T, 2, 2>{};				// return a zero matrix if singular
 			}
@@ -7038,7 +7174,7 @@ protected:
 		[[nodiscard]] constexpr mat<T, 3, 3> inverse(const mat<T, 3, 3> &arg) noexcept
 		{
 			auto det = determinant(arg);
-			if (det == 0.0)
+			if (abs(det) <= std::numeric_limits<T>::epsilon())
 			{
 				return mat<T, 3, 3>{};				// return a zero matrix if singular
 			}
@@ -7096,7 +7232,7 @@ protected:
 				+ m[0][2] * (m[1][0] * A1323 - m[1][1] * A0323 + m[1][3] * A0123)
 				- m[0][3] * (m[1][0] * A1223 - m[1][1] * A0223 + m[1][2] * A0123);
 
-			if (det == 0.0)
+			if (abs(det) <= std::numeric_limits<T>::epsilon())
 			{
 				return mat<T, 4, 4>{};				// return a zero matrix if singular
 			}

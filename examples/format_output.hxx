@@ -51,80 +51,41 @@
 // in order to prefix the hexadecimal floating-point output with a "0x" or "0X".
 //
 
-
-template<typename T, std::size_t N, typename CharT>
-struct std::formatter<std::array<T, N>, CharT> : std::formatter<T, CharT>
-{
-	template <typename FormatContext>
-	auto format(const std::array<T, N> &arr, FormatContext &ctx) const
-	{
-		if constexpr (N == 0)
-		{
-			return std::format_to(ctx.out(), "[]");
-		}
-		else
-		{
-			std::format_to(ctx.out(), "[");
-
-			std::formatter<T, CharT>::format(arr[0], ctx);
-			if constexpr (N > 1)
-			{
-				[&] <std::size_t ...Is>(std::index_sequence<Is...>)
-				{
-					((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(arr[Is], ctx)), ...);
-				}(dsga::make_index_range<1, N>{});
-			}
-
-			std::format_to(ctx.out(), "]");
-
-			return ctx.out();
-		}
-	}
-};
-
-template<typename T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::vec_storage<T, Size>, CharT> : std::formatter<T, CharT>
-{
-	template <typename FormatContext>
-	auto format(const dsga::vec_storage<T, Size> &sw, FormatContext &ctx) const
-	{
-		std::format_to(ctx.out(), "[");
-
-		std::formatter<T, CharT>::format(sw[0], ctx);
-		if constexpr (Size > 1)
-		{
-			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
-			{
-				((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(sw[Is], ctx)), ...);
-			}(dsga::make_index_range<1, Size>{});
-		}
-
-		std::format_to(ctx.out(), "]");
-
-		return ctx.out();
-	}
-};
-
 template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived, typename CharT>
-struct std::formatter<dsga::vec_interface<Writable, T, Count, Derived>, CharT> : std::formatter<T, CharT>
+struct std::formatter<dsga::vec_interface<Writable, T, Count, Derived>, CharT>
 {
+	std::formatter<T, CharT> element_formatter;
+
+	// now required after retro-active update to the c++20 standard
+	constexpr auto parse(std::format_parse_context& ctx)
+	{
+		return element_formatter.parse(ctx);
+	}
+
+	// make sure to keep the context iterator updated
 	template <typename FormatContext>
 	auto format(const dsga::vec_interface<Writable, T, Count, Derived> &v, FormatContext &ctx) const
 	{
-		std::format_to(ctx.out(), "[");
+		// open bracket
+		auto iter = std::format_to(ctx.out(), "[");
 
-		std::formatter<T, CharT>::format(v[0], ctx);
+		// we have at least one
+		ctx.advance_to(iter);
+		iter = element_formatter.format(v[0], ctx);
+
 		if constexpr (Count > 1)
 		{
+			// output the comma and the next element for each of the remaining elements
 			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				((std::format_to(ctx.out(), ", "), std::formatter<T, CharT>::format(v[Is], ctx)), ...);
+				((ctx.advance_to(iter), iter = std::format_to(ctx.out(), ", "),
+				  ctx.advance_to(iter), iter = element_formatter.format(v[Is], ctx)), ...);
 			}(dsga::make_index_range<1, Count>{});
 		}
 
-		std::format_to(ctx.out(), "]");
-
-		return ctx.out();
+		// close bracket
+		ctx.advance_to(iter);
+		return std::format_to(ctx.out(), "]");
 	}
 };
 
@@ -141,25 +102,37 @@ struct std::formatter<dsga::vec<T, Size>, CharT>
 };
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R, typename CharT>
-struct std::formatter<dsga::mat<T, C, R>, CharT> : std::formatter<dsga::vec<T, R>, CharT>
+struct std::formatter<dsga::mat<T, C, R>, CharT>
 {
+	std::formatter<dsga::vec<T, R>, CharT> element_formatter;
+
+	// now required after retro-active update to the c++20 standard
+	constexpr auto parse(std::format_parse_context& ctx)
+	{
+		return element_formatter.parse(ctx);
+	}
+
+	// make sure to keep the context iterator updated
 	template <typename FormatContext>
 	auto format(const dsga::mat<T, C, R> &m, FormatContext &ctx) const
 	{
-		std::format_to(ctx.out(), "[");
+		// open bracket
+		auto iter = std::format_to(ctx.out(), "[");
 
-		std::formatter<dsga::vec<T, R>, CharT>::format(m[0], ctx);
-		if constexpr (C > 1)
+		// we have at least one (actually at least 2)
+		ctx.advance_to(iter);
+		iter = element_formatter.format(m[0], ctx);
+
+		// output the comma and the next element for each of the remaining elements
+		[&] <std::size_t ...Is>(std::index_sequence<Is...>)
 		{
-			[&] <std::size_t ...Is>(std::index_sequence<Is...>)
-			{
-				((std::format_to(ctx.out(), ", "), std::formatter<dsga::vec<T, R>, CharT>::format(m[Is], ctx)), ...);
-			}(dsga::make_index_range<1, C>{});
-		}
+			((ctx.advance_to(iter), iter = std::format_to(ctx.out(), ", "),
+			  ctx.advance_to(iter), iter = element_formatter.format(m[Is], ctx)), ...);
+		}(dsga::make_index_range<1, C>{});
 
-		std::format_to(ctx.out(), "]");
-
-		return ctx.out();
+		// close bracket
+		ctx.advance_to(iter);
+		return std::format_to(ctx.out(), "]");
 	}
 };
 

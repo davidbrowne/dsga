@@ -137,6 +137,9 @@
     <ClCompile Include="..\examples\line_closest_points.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\tests\negative_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dsga.natvis" />

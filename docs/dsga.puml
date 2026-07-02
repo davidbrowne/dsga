@@ -1,27 +1,44 @@
 @startuml
 	'skin rose
 	title Relationships - Class Diagram
-	annotation "CRTP duck type"
+	class "vec_like" <<concept>>
 	{
-		+ {abstract} set()
-		+ {abstract} operator[]()
-		+ {abstract} sequence()
-		+ {abstract} iterator access()
+		+ vec_scalar_t<V>
+		+ vec_derived_t<V>
+		+ vec_writable_v<V>
+		+ {static} size()
+		+ operator[](int) : const
+		+ operator[](size_t) : const
 	}
-	note left of "CRTP duck type"
-		Conceptual interface, not real :
-		Could be made into a c++ concept
+	class "writable_vec_like" <<concept>>
+	{
+		+ !is_const_v<remove_reference_t<V>>
+		+ set()
+		+ as_derived()
+		+ operator[](int)
+		+ operator[](size_t)
+		+ begin() / rbegin()
+	}
+	note left of "vec_like"
+		read-only vec-shaped types;
+		checked via const std::remove_cvref_t<V>;
+		operator[] verified for both int and size_t
 	end note
+	note left of "writable_vec_like"
+		vec_like && has_set<V> && vec_writable_v<V>
+		&& !is_const_v<remove_reference_t<V>>;
+		mutable as_derived(), operator[], begin()/rbegin();
+		const guard leads the conjunction (cheapest check first)
+	end note
+	"vec_like" <|-- "writable_vec_like" : refines
 	abstract vec_interface <Writable, T, Count, Derived>
 	{
 		+ CRTP set()
 		+ CRTP operator[]()
-		+ CRTP sequence()
 		+ CRTP iterator access()
 		+ length()
 		+ size()
 		+ as_derived()
-		+ as_base()
 		+ apply()
 		+ query()
 		+ shift()
@@ -43,11 +60,9 @@
 	struct vec<T, Size>
 	{
 		+ union
-		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
 		+ operator=()
-		+ sequence()
 		+ iterator access()
 		+ swap()
 	}
@@ -59,10 +74,8 @@
 	struct vec_storage<T, Size>
 	{
 		+ store : std::array<T, Size>
-		+ {static} offsets : std::array<T, Size>
 		+ set()
 		+ operator[]()
-		+ sequence()
 		+ iterator access()
 		+ length()
 		+ size()
@@ -94,8 +107,10 @@
 	vec_interface <|-- vec: CRTP inherits
 	vec_interface <|-- swizzle_vec : CRTP inherits
 	swizzle_vec_const_iterator <|-- swizzle_vec_iterator : const_cast<>
-	"CRTP duck type" ^.. vec : duck implements
-	"CRTP duck type" ^.. swizzle_vec : duck implements
+	"vec_like" ^.. vec : satisfies
+	"vec_like" ^.. swizzle_vec : satisfies
+	"writable_vec_like" ^.. vec : satisfies
+	"writable_vec_like" ^.. swizzle_vec : satisfies
 	vec::anonymous_union::base "1" *-- "1" vec_storage : base
 	vec::anonymous_union::swizzles "1" *-- "many" swizzle_vec : swizzles
 	vec::union "1" *-- "1" vec::anonymous_union
@@ -106,7 +121,7 @@
 	end note
 	swizzle_vec_const_iterator::mapper_ptr "1" *-- "many" swizzle_vec : mapper_ptr
 	swizzle_vec_iterator::mapper_ptr "1" *-- "many" swizzle_vec : mapper_ptr
-	"CRTP duck type" <. vec_interface : Derived CRTP
+	"vec_like" <. vec_interface : constrains Derived (CRTP)
 	mat::columns "1" *-- "Cols" vec : columns
 	vec -[hidden]left- swizzle_vec
 	vec_storage .[hidden]right. mat

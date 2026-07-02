@@ -6,6 +6,8 @@
 
 #include "dsga.hxx"
 #include <iostream>
+#include <iomanip>
+#include <limits>
 
 //
 // iostream interface
@@ -15,6 +17,11 @@ template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename
 inline std::ostream &operator<<(std::ostream &o, const dsga::vec_interface<Writable, T, Count, Derived> &v)
 {
 	const Derived &derived = v.as_derived();
+
+	// cache the state of the stream before we modify it
+	const auto cached_flags = o.flags();
+	const auto cached_precision = o.precision();
+
 	if constexpr (std::same_as<bool, T>)
 	{
 		o << std::boolalpha;
@@ -27,61 +34,13 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::vec_interface<Writa
 	o << "[" << derived[0];
 	for (int i = 1; i < derived.length(); ++i)
 		o << ", " << derived[i];
-	return o << "]";
-}
+	o << "]";
 
-template <dsga::dimensional_scalar T, std::size_t Size>
-inline std::ostream &operator<<(std::ostream &o, const dsga::vec<T, Size> &v)
-{
-	if constexpr (std::same_as<bool, T>)
-	{
-		o << std::boolalpha;
-	}
-	else if constexpr (dsga::floating_point_scalar<T>)
-	{
-		o << std::setprecision(std::numeric_limits<double>::max_digits10);
-	}
+	// restore the state of the stream back to what it originally was
+	o.flags(cached_flags);
+	o.precision(cached_precision);
 
-	o << "[" << v[0];
-	for (int i = 1; i < v.length(); ++i)
-		o << ", " << v[i];
-	return o << "]";
-}
-
-template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-inline std::ostream &operator<<(std::ostream &o, const dsga::swizzle_vec<T, Size, Count, Is...> &v)
-{
-	if constexpr (std::same_as<bool, T>)
-	{
-		o << std::boolalpha;
-	}
-	else if constexpr (dsga::floating_point_scalar<T>)
-	{
-		o << std::setprecision(std::numeric_limits<double>::max_digits10);
-	}
-
-	o << "[" << v[0];
-	for (int i = 1; i < v.length(); ++i)
-		o << ", " << v[i];
-	return o << "]";
-}
-
-template <dsga::dimensional_scalar T, std::size_t Size>
-inline std::ostream &operator<<(std::ostream &o, const dsga::vec_storage<T, Size> &v)
-{
-	if constexpr (std::same_as<bool, T>)
-	{
-		o << std::boolalpha;
-	}
-	else if constexpr (dsga::floating_point_scalar<T>)
-	{
-		o << std::setprecision(std::numeric_limits<double>::max_digits10);
-	}
-
-	o << "[" << v[0];
-	for (int i = 1; i < v.length(); ++i)
-		o << ", " << v[i];
-	return o << "]";
+	return o;
 }
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
@@ -90,5 +49,7 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::mat<T, C, R> &m)
 	o << "[" << m[0];
 	for (int i = 1; i < m.length(); ++i)
 		o << ", " << m[i];
-	return o << "]";
+	o << "]";
+
+	return o;
 }
