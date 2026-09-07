@@ -1,5 +1,8 @@
 # Change Log
 
+### Next Version
+* Upgraded to `doctest v2.5.3`.
+
 ### v3.3.2
 * Upgraded to `cxcm v1.3.2`.
 * Upgraded to `nanobench v4.6.0`.
