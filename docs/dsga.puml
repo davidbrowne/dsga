@@ -9,6 +9,9 @@
 		+ {static} size()
 		+ operator[](int) : const
 		+ operator[](size_t) : const
+		+ at(int) : const
+		+ at(size_t) : const
+		+ begin() / rbegin() : const
 	}
 	class "writable_vec_like" <<concept>>
 	{
@@ -17,25 +20,17 @@
 		+ as_derived()
 		+ operator[](int)
 		+ operator[](size_t)
+		+ at(int)
+		+ at(size_t)
 		+ begin() / rbegin()
 	}
-	note left of "vec_like"
-		read-only vec-shaped types;
-		checked via const std::remove_cvref_t<V>;
-		operator[] verified for both int and size_t
-	end note
-	note left of "writable_vec_like"
-		vec_like && has_set<V> && vec_writable_v<V>
-		&& !is_const_v<remove_reference_t<V>>;
-		mutable as_derived(), operator[], begin()/rbegin();
-		const guard leads the conjunction (cheapest check first)
-	end note
 	"vec_like" <|-- "writable_vec_like" : refines
 	abstract vec_interface <Writable, T, Count, Derived>
 	{
-		+ CRTP set()
-		+ CRTP operator[]()
-		+ CRTP iterator access()
+		+ set()
+		+ operator[]()
+		+ at()
+		+ iterator access()
 		+ length()
 		+ size()
 		+ as_derived()
@@ -62,6 +57,7 @@
 		+ union
 		+ set()
 		+ operator[]()
+		+ at()
 		+ operator=()
 		+ iterator access()
 		+ swap()
@@ -76,6 +72,7 @@
 		+ store : std::array<T, Size>
 		+ set()
 		+ operator[]()
+		+ at()
 		+ iterator access()
 		+ length()
 		+ size()
@@ -87,6 +84,7 @@
 		+ {static} offsets : std::array<T, Count>
 		+ set()
 		+ operator[]()
+		+ at()
 		+ operator=()
 		+ sequence()
 		+ iterator access()
@@ -95,7 +93,11 @@
 	{
 		+ columns : std::array<vec<T, Rows>, Cols>
 		+ row()
+		+ column()
+		+ diagonal()
+		+ trace()
 		+ operator[]()
+		+ at()
 		+ operator=()
 		+ iterator access()
 		+ length()
@@ -104,9 +106,9 @@
 		+ column_size()
 		+ swap()
 	}
-	vec_interface <|-- vec: CRTP inherits
-	vec_interface <|-- swizzle_vec : CRTP inherits
-	swizzle_vec_const_iterator <|-- swizzle_vec_iterator : const_cast<>
+	vec_interface <|-- vec: inherits
+	vec_interface <|-- swizzle_vec : inherits
+	swizzle_vec_const_iterator <|-- swizzle_vec_iterator
 	"vec_like" ^.. vec : satisfies
 	"vec_like" ^.. swizzle_vec : satisfies
 	"writable_vec_like" ^.. vec : satisfies
@@ -119,9 +121,10 @@
 	  all members have a common initial
 	  sequence with each other
 	end note
-	swizzle_vec_const_iterator::mapper_ptr "1" *-- "many" swizzle_vec : mapper_ptr
-	swizzle_vec_iterator::mapper_ptr "1" *-- "many" swizzle_vec : mapper_ptr
-	"vec_like" <. vec_interface : constrains Derived (CRTP)
+	swizzle_vec_const_iterator "many" --> "1" swizzle_vec : mapper_ptr
+	swizzle_vec_iterator "many" --> "1" swizzle_vec : mapper_ptr
+	"vec_like" <. vec_interface : constrains Derived (CRTP, unconditional)
+	"writable_vec_like" <. vec_interface : constrains Derived (CRTP, when Writable=true)
 	mat::columns "1" *-- "Cols" vec : columns
 	vec -[hidden]left- swizzle_vec
 	vec_storage .[hidden]right. mat

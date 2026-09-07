@@ -37,10 +37,11 @@ constexpr dsga::vec<T, 2> get_perpendicular2(const dsga::vec<T, 2> &some_vec) no
 // the return value c is the center point of a circle inscribed in a triangle represented by the vertices p1, p2, and p3.
 // a line segment from c to any of the vertices bisects the angles at the vertices.
 // From Section 17, #9 in the paper
-template <bool W1, dsga::floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::vec<T, C> triangle_incenter(const dsga::vec_interface<W1, T, C, D1> &p1,
-											const dsga::vec_interface<W2, T, C, D2> &p2,
-											const dsga::vec_interface<W3, T, C, D3> &p3) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>>
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, dsga::vec_size_v<V1>> triangle_incenter(const V1 &p1,
+																					const V2 &p2,
+																					const V3 &p3) noexcept
 {
 	auto mag1 = dsga::distance(p2, p3);
 	auto mag2 = dsga::distance(p3, p1);
@@ -52,10 +53,11 @@ constexpr dsga::vec<T, C> triangle_incenter(const dsga::vec_interface<W1, T, C, 
 // the return value c is the center point of the biggest sphere inscribed in a tetrahedron represented by the vertices p1,
 // p2, p3, and the implicit origin. c is equidistant from the four planes of the triangle faces of the tetrahedron.
 // From Section 17, #10 in the paper
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::vec<T, 3u> tetrahedron_incenter(const dsga::vec_interface<W1, T, 3u, D1> &p1,
-												const dsga::vec_interface<W2, T, 3u, D2> &p2,
-												const dsga::vec_interface<W3, T, 3u, D3> &p3)
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> tetrahedron_incenter(const V1 &p1,
+																	const V2 &p2,
+																	const V3 &p3)
 {
 	auto mag1 = dsga::length(dsga::cross(p2, p3));
 	auto mag2 = dsga::length(dsga::cross(p3, p1));
@@ -67,11 +69,14 @@ constexpr dsga::vec<T, 3u> tetrahedron_incenter(const dsga::vec_interface<W1, T,
 
 // find center of circle that goes through the three points
 // From #8 in the paper
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::vec<T, 3> three_point_circle_center(const dsga::vec_interface<W1, T, 3u, D1> &p1,
-													const dsga::vec_interface<W2, T, 3u, D2> &p2,
-													const dsga::vec_interface<W3, T, 3u, D3> &p3) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> three_point_circle_center(const V1 &p1,
+																		 const V2 &p2,
+																		 const V3 &p3) noexcept
 {
+	using T = dsga::vec_scalar_t<V1>;
+
 	auto v = p2 - p1;
 	auto u = dsga::vec<T, 3u>(p2);
 	auto w = p3 - p2;
@@ -83,11 +88,14 @@ constexpr dsga::vec<T, 3> three_point_circle_center(const dsga::vec_interface<W1
 
 // find radius of circle that goes through the three points
 // From #8 in the paper
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr T three_point_circle_radius(const dsga::vec_interface<W1, T, 3u, D1> &p1,
-									  const dsga::vec_interface<W2, T, 3u, D2> &p2,
-									  const dsga::vec_interface<W3, T, 3u, D3> &p3) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec_scalar_t<V1> three_point_circle_radius(const V1 &p1,
+														   const V2 &p2,
+														   const V3 &p3) noexcept
 {
+	using T = dsga::vec_scalar_t<V1>;
+
 	auto v = p2 - p1;
 	[[maybe_unused]] auto u = dsga::vec<T, 3u>(p2);
 	auto w = p3 - p2;
@@ -98,11 +106,12 @@ constexpr T three_point_circle_radius(const dsga::vec_interface<W1, T, 3u, D1> &
 }
 
 // helper function for projecting a point onto a line, paying attention to attenuating roundoff
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, typename L>
-constexpr dsga::vec<T, 3> project_to_line_helper(const L projection,
-												 const dsga::vec_interface<W1, T, 3u, D1> &point,
-												 const dsga::vec_interface<W2, T, 3u, D2> &p1,
-												 const dsga::vec_interface<W3, T, 3u, D3> &p2) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3, typename L>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> project_to_line_helper(const L projection,
+																	  const V1 &point,
+																	  const V2 &p1,
+																	  const V3 &p2) noexcept
 {
 	// line is zero length, so just return one of the endpoints
 	if (p1 == p2)
@@ -124,11 +133,14 @@ constexpr dsga::vec<T, 3> project_to_line_helper(const L projection,
 }
 
 // gives closest projection point from point to a line made from line segment p1 <=> p2, paying attention to attenuating roundoff.
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::vec<T, 3> project_to_line1(const dsga::vec_interface<W1, T, 3u, D1> &point,
-										   const dsga::vec_interface<W2, T, 3u, D2> &p1,
-										   const dsga::vec_interface<W3, T, 3u, D3> &p2) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> project_to_line1(const V1 &point,
+																const V2 &p1,
+																const V3 &p2) noexcept
 {
+	using T = dsga::vec_scalar_t<V1>;
+
 	constexpr auto projection = [](const auto &hyp, const auto &start, const auto &end) noexcept -> dsga::vec<T, 3>
 	{
 		auto v = end - start;
@@ -141,11 +153,14 @@ constexpr dsga::vec<T, 3> project_to_line1(const dsga::vec_interface<W1, T, 3u, 
 
 // alternate implementation of project_to_line()
 // From Section 9, #4 and #6 in the paper, paying attention to attenuating roundoff.
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr dsga::vec<T, 3> project_to_line2(const dsga::vec_interface<W1, T, 3u, D1> &point,
-										   const dsga::vec_interface<W2, T, 3u, D2> &p1,
-										   const dsga::vec_interface<W3, T, 3u, D3> &p2) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> project_to_line2(const V1 &point,
+																const V2 &p1,
+																const V3 &p2) noexcept
 {
+	using T = dsga::vec_scalar_t<V1>;
+
 	//Section 9, #4 in the paper
 	constexpr auto projection = [](const auto &hyp, const auto &start, const auto &end) noexcept -> dsga::vec<T, 3>
 	{
@@ -158,10 +173,11 @@ constexpr dsga::vec<T, 3> project_to_line2(const dsga::vec_interface<W1, T, 3u, 
 
 // gives minimum distance from point to a line made from line segment p1 <=> p2
 // hopefully attenuating roundoff, similar to project_to_line_helper()
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3>
-constexpr T distance_to_line(const dsga::vec_interface<W1, T, 3u, D1> &point,
-							 const dsga::vec_interface<W2, T, 3u, D2> &p1,
-							 const dsga::vec_interface<W3, T, 3u, D3> &p2) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec_scalar_t<V1> distance_to_line(const V1 &point,
+												  const V2 &p1,
+												  const V3 &p2) noexcept
 {
 	auto hyp1 = point - p1;
 	auto hyp2 = point - p2;
@@ -185,12 +201,13 @@ constexpr T distance_to_line(const dsga::vec_interface<W1, T, 3u, D1> &point,
 
 // helper function for projecting a point to a plane. See Section 9, #3 in the paper,
 // for attenuating roundoff in 'z' for the second formula, which is mostly for project_to_plane2()
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4, typename L>
-constexpr dsga::vec<T, 3> project_to_plane_helper(const L plane_projection,
-												  const dsga::vec_interface<W1, T, 3u, D1> &point,
-												  const dsga::vec_interface<W2, T, 3u, D2> &p1,
-												  const dsga::vec_interface<W3, T, 3u, D3> &p2,
-												  const dsga::vec_interface<W4, T, 3u, D4> &p3) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3, dsga::vec_like V4, typename L>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> project_to_plane_helper(const L plane_projection,
+																	   const V1 &point,
+																	   const V2 &p1,
+																	   const V3 &p2,
+																	   const V4 &p3) noexcept
 {
 	auto dist1 = dsga::dot(p1, p1);
 	auto dist2 = dsga::dot(p2, p2);
@@ -243,11 +260,12 @@ constexpr auto triangle_cross(const auto &u, const auto &v, const auto &w) noexc
 }
 
 // project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points, attenuating roundoff (?).
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-constexpr dsga::vec<T, 3> project_to_plane1(const dsga::vec_interface<W1, T, 3u, D1> &point,
-											const dsga::vec_interface<W2, T, 3u, D2> &p1,
-											const dsga::vec_interface<W3, T, 3u, D3> &p2,
-											const dsga::vec_interface<W4, T, 3u, D4> &p3) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3, dsga::vec_like V4>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> project_to_plane1(const V1 &point,
+																 const V2 &p1,
+																 const V3 &p2,
+																 const V4 &p3) noexcept
 {
 	constexpr auto plane_projection = [](const auto &pt, const auto &pt1, const auto &pt2, const auto &pt3) noexcept
 	{
@@ -262,11 +280,12 @@ constexpr dsga::vec<T, 3> project_to_plane1(const dsga::vec_interface<W1, T, 3u,
 
 // project a point in 3D space to the closest point on a plane, where plane defined by 3 CCW points
 // From Section 9, #3 in the paper, attenuating roundoff, except we are using cross products instead of cross matrices
-template <bool W1, dsga::floating_point_scalar T, typename D1, bool W2, typename D2, bool W3, typename D3, bool W4, typename D4>
-constexpr dsga::vec<T, 3> project_to_plane2(const dsga::vec_interface<W1, T, 3u, D1> &point,
-											const dsga::vec_interface<W2, T, 3u, D2> &p1,
-											const dsga::vec_interface<W3, T, 3u, D3> &p2,
-											const dsga::vec_interface<W4, T, 3u, D4> &p3) noexcept
+template <dsga::vec_like V1, dsga::vec_like V2, dsga::vec_like V3, dsga::vec_like V4>
+requires dsga::floating_point_scalar<dsga::vec_scalar_t<V1>> && (dsga::vec_size_v<V1> == 3)
+constexpr dsga::vec<dsga::vec_scalar_t<V1>, 3> project_to_plane2(const V1 &point,
+																 const V2 &p1,
+																 const V3 &p2,
+																 const V4 &p3) noexcept
 {
 	constexpr auto plane_projection = [](const auto &pt, const auto &pt1, const auto &pt2, const auto &pt3) noexcept
 	{

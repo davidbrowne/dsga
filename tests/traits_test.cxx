@@ -176,12 +176,13 @@ TEST_SUITE("type traits tests")
 
 		CHECK_UNARY(std::is_standard_layout_v<const_iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<const_iter_t>);
-		CHECK_UNARY(std::is_trivially_constructible_v<const_iter_t>);
-		CHECK_UNARY(std::is_trivially_default_constructible_v<const_iter_t>);
+		CHECK_UNARY(std::default_initializable<const_iter_t>);
+		CHECK_UNARY_FALSE(std::is_trivially_constructible_v<const_iter_t>);				// had to for adding proper default constructor values
+		CHECK_UNARY_FALSE(std::is_trivially_default_constructible_v<const_iter_t>);		// had to for adding proper default constructor values
 		CHECK_UNARY(std::is_trivially_copy_constructible_v<const_iter_t>);
 		CHECK_UNARY(std::is_trivially_move_constructible_v<const_iter_t>);
 		CHECK_UNARY(std::is_trivially_copyable_v<const_iter_t>);
-		CHECK_UNARY(std::is_trivial_v<const_iter_t>);
+		CHECK_UNARY_FALSE(std::is_trivial_v<const_iter_t>);								// had to for adding proper default constructor values
 		CHECK_UNARY(std::is_copy_assignable_v<const_iter_t>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<const_iter_t>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<const_iter_t>);
@@ -207,12 +208,13 @@ TEST_SUITE("type traits tests")
 
 		CHECK_UNARY(std::is_standard_layout_v<iter_t>);
 		CHECK_UNARY(std::is_default_constructible_v<iter_t>);
-		CHECK_UNARY(std::is_trivially_constructible_v<iter_t>);
-		CHECK_UNARY(std::is_trivially_default_constructible_v<iter_t>);
+		CHECK_UNARY(std::default_initializable<iter_t>);
+		CHECK_UNARY_FALSE(std::is_trivially_constructible_v<iter_t>);			// had to due to changes in swizzle_vec_const_iterator
+		CHECK_UNARY_FALSE(std::is_trivially_default_constructible_v<iter_t>);	// had to due to changes in swizzle_vec_const_iterator
 		CHECK_UNARY(std::is_trivially_copy_constructible_v<iter_t>);
 		CHECK_UNARY(std::is_trivially_move_constructible_v<iter_t>);
 		CHECK_UNARY(std::is_trivially_copyable_v<iter_t>);
-		CHECK_UNARY(std::is_trivial_v<iter_t>);
+		CHECK_UNARY_FALSE(std::is_trivial_v<iter_t>);							// had to due to changes in swizzle_vec_const_iterator
 		CHECK_UNARY(std::is_copy_assignable_v<iter_t>);
 		CHECK_UNARY(std::is_trivially_copy_assignable_v<iter_t>);
 		CHECK_UNARY(std::is_trivially_move_assignable_v<iter_t>);

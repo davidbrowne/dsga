@@ -1,5 +1,27 @@
 # Change Log
 
+### v3.3.2
+* Upgraded to `cxcm v1.3.2`.
+* Upgraded to `nanobench v4.6.0`.
+* Made `dsga::swizzle_vec` iterators' data members **private**. There is now a user defined default constructor for initializing the data members, requred by `std::random_access_iterator`. This made the iterator classes to no longer be `std::is_trivially_default_constructible_v<>`.
+* Updated **PlantUML** diagram and its corresponding **svg** file.
+* Added `DSGA_ASSERT` macro that can throw an out of bounds exception. Currently only used for bounds checking. It can be turned off by defining your own `DSGA_ASSERT(cond, msg)` or defining `DSGA_DISABLE_ASSERT` before including `dsga.hxx` or any other headers that include it.
+* Added `at()` member function to the vector classes, with bounds checking from `std::array`, and accompanying changes to `operator[]`, with bounds checking using `DSGA_ASSERT`. Added `at()` member function to the matrix class `mat`, with bounds checking from `std::array`.
+* Updated `vec_like` and `writable_vec_like` concepts to require `at()` member function.
+* Massive refactoring of README.md.
+* Created initial version of GETTING_STARTED.md.
+* Added `vec_named_swizzle` and `vec_named_swizzle_v` traits.
+* Added concept `same_vec_shape` for checking if two or more vector types all have the same shape (i.e., size and scalar type).
+* Added `vec_or_scalar` and `vec_or_scalar_t` traits for operator and function machinery. Updated machinery to use these traits.
+* Deployed `vec_like` and `writable_vec_like` concepts to most all vector operators and all functions that take vector parameters, replacing `vec_interface`.
+* Deployed `vec_like` to replace `vec_interface` in all the example and extended library headers.
+* Added `#pragma once` to all headers other than `dsga.hxx`.
+* Added `row()`/`column()`/`diagonal()`/`trace()` member functions to `dsga::mat`.
+* Removed example files `invoke.hxx` and `valarray_convert.hxx`.
+* Turned some variadic right folds into left folds.
+* Improved some `noexcept` specifications.
+* Minor general refactoring.
+
 ### v3.3.1
 * More explanatory inline comments for `dsga::swizzle_vec`.
 * Removed `sequence_pack` type and `sequence()` function from `dsga::vec_storage` and `dsga::vec<T,S>`. The only `sequence_pack` type and `sequence()` function needed are for the offset array in `dsga::swizzle_vec`.
@@ -15,7 +37,7 @@
 * Created new test file that uses static_assert to test the new concepts and their usage in the dsga library.
 * Updated CMake support to use `CTest` for testing with doctest.
 * Refatored README.md, PLATFORMS.md.
-* Updated Puml svg diagram and it's svg file.
+* Updated Puml svg diagram and its svg file.
 
 ### v3.3.0
 * Removed `Writable` from classes/structs and member functions where it is always true.

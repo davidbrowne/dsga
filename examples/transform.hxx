@@ -150,18 +150,24 @@ namespace dsga
 	}
 
 	//
-	template <bool W, floating_point_scalar T, typename D>
-	[[nodiscard]] constexpr mat<T, 3, 3> translation_matrix(const vec_interface<W, T, 2, D> &translation) noexcept
+	template <vec_like V>
+	requires (vec_size_v<V> == 2) && floating_point_scalar<vec_scalar_t<V>>
+	[[nodiscard]] constexpr mat<vec_scalar_t<V>, 3, 3> translation_matrix(const V &translation) noexcept
 	{
+		using T = vec_scalar_t<V>;
+
 		auto trans_mat = identity_matrix<T, 3>();			// create an identity matrix
 		trans_mat[2].xy = translation;						// set the translation part
 		return trans_mat;
 	}
 
 	//
-	template <bool W, floating_point_scalar T, typename D>
-	[[nodiscard]] constexpr mat<T, 4, 4> translation_matrix(const vec_interface<W, T, 3, D> &translation) noexcept
+	template <vec_like V>
+	requires (vec_size_v<V> == 3) && floating_point_scalar<vec_scalar_t<V>>
+	[[nodiscard]] constexpr mat<vec_scalar_t<V>, 4, 4> translation_matrix(const V &translation) noexcept
 	{
+		using T = vec_scalar_t<V>;
+
 		auto trans_mat = identity_matrix<T, 4>();			// create an identity matrix
 		trans_mat[3].xyz = translation;						// set the translation part
 		return trans_mat;
@@ -229,11 +235,14 @@ namespace dsga
 	// make a 3D matrix for rotating about the k axis for a given theta.
 	// k must be a 3D unit vector, i.e., length(k) == 1.0.
 	// the tranlation part of the matrix is [0, 0, 0]
-	template <bool W1, floating_point_scalar T, typename D1, bool W2, typename D2>
-	[[nodiscard]] constexpr mat<T, 4, 4> rot_any_axis(T theta,
-															   const vec_interface<W1, T, 3, D1> &axis,
-															   const vec_interface<W2, T, 3, D2> &origin) noexcept
+	template <vec_like V1, vec_like V2>
+	requires same_vec_shape<V1, V2> && (vec_size_v<V1> == 3) && floating_point_scalar<vec_scalar_t<V1>>
+	[[nodiscard]] constexpr mat<vec_scalar_t<V1>, 4, 4> rot_any_axis(vec_scalar_t<V1> theta,
+																	 const V1 &axis,
+																	 const V2 &origin) noexcept
 	{
+		using T = vec_scalar_t<V1>;
+
 		auto c_t = cos(theta);
 		auto s_t = sin(theta);
 		auto v_t = T(1.0) - c_t;
@@ -243,23 +252,24 @@ namespace dsga
 
 		// calculate the rotation matrix components
 		auto rot_mat = identity_matrix<T, 4>();
-		rot_mat[0].xyz = vec(k_x * k_x * v_t +		  c_t,
-									  k_x * k_y * v_t + k_z * s_t,
-									  k_x * k_z * v_t - k_y * s_t);
+		rot_mat[0].xyz = vec(k_x * k_x * v_t +		 c_t,
+							 k_x * k_y * v_t + k_z * s_t,
+							 k_x * k_z * v_t - k_y * s_t);
 		rot_mat[1].xyz = vec(k_x * k_y * v_t - k_z * s_t,
-									  k_y * k_y * v_t +		  c_t,
-									  k_y * k_z * v_t + k_x * s_t);
+							 k_y * k_y * v_t +		 c_t,
+							 k_y * k_z * v_t + k_x * s_t);
 		rot_mat[2].xyz = vec(k_x * k_z * v_t + k_y * s_t,
-									  k_y * k_z * v_t - k_x * s_t,
-									  k_z * k_z * v_t +		  c_t);
+							 k_y * k_z * v_t - k_x * s_t,
+							 k_z * k_z * v_t +		 c_t);
 		rot_mat[3].xyz = origin;
 
 		return rot_mat;
 	}
 
-	// prettify a transformation matrix to take care of the rotation part to recover from any drift away from an orthonormal matrix
+	// prettify a transformation matrix to take care of the rotation part to recover from any drift away from an orthonormal matrix.
+	// this produces a right-handed rotation.
 	template <floating_point_scalar T>
-	[[nodiscard]] constexpr mat<T, 4, 4> renormalize_transformation_matrix(const mat<T, 4, 4> &mat, T tol) noexcept
+	[[nodiscard]] constexpr mat<T, 4, 4> renormalize_transformation_matrix(const mat<T, 4, 4> &arg, T tol) noexcept
 	{
 		auto snap_to_zero = [tol](T x) noexcept { return abs(x) <= tol ? T(0) : x; };
 		auto fix_for_zeros = [&snap_to_zero](const vec<T, 3> &v) noexcept { return v.apply(snap_to_zero); };
@@ -268,17 +278,17 @@ namespace dsga
 		auto fixed_mat = identity_matrix<T, 4>();
 
 		// clean up the first 2 columns of the rotation matrix - round to zero for tiny values -- make it a unit vector
-		fixed_mat[0].xyz = normalize(fix_for_zeros(mat[0].xyz));
-		fixed_mat[1].xyz = normalize(fix_for_zeros(mat[1].xyz));
+		fixed_mat[0].xyz = normalize(fix_for_zeros(arg[0].xyz));
+		fixed_mat[1].xyz = normalize(fix_for_zeros(arg[1].xyz));
 
 		// create the third column of rotation matrix - will be orthonormal to first 2 axes
-		fixed_mat[2].xyz = cross(fixed_mat[0].xyz, fixed_mat[1].xyz);
+		fixed_mat[2].xyz = normalize(cross(fixed_mat[0].xyz, fixed_mat[1].xyz));
 
 		// guarantee all the columns orthonormal
 		fixed_mat[0].xyz = cross(fixed_mat[1].xyz, fixed_mat[2].xyz);
 
-		// leave translation values alone, or should we fix_for_zeros(mat[3].xyz) here too?
-		fixed_mat[3].xyz = mat[3].xyz;
+		// use tolerance updating on the translation part of the matrix
+		fixed_mat[3].xyz = fix_for_zeros(arg[3].xyz);
 
 		return fixed_mat;
 	}

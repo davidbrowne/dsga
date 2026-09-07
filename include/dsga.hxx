@@ -9,13 +9,27 @@
 #if !defined(DSGA_DSGA_HXX)
 #define DSGA_DSGA_HXX
 
+
+#include <stdexcept>
+
+// assertion macro, can be disabled by defining DSGA_DISABLE_ASSERT before including this header,
+// or by defining DSGA_ASSERT to something else before including this header.
+#ifndef DSGA_DISABLE_ASSERT
+
+#ifndef DSGA_ASSERT
+#define DSGA_ASSERT(cond, msg) \
+		do { if (!(cond)) [[unlikely]] throw std::out_of_range(msg); } while (0)
+#endif
+
+#endif
+
+
 #include <utility>
 #include <limits>
 #include <type_traits>				// requirements
 #include <concepts>					// requirements
 #include <cmath>
 #include <bit>						// bit_cast
-#include <stdexcept>
 
 #include <array>					// underlying storage
 #include <tuple>					// tuple interface for structured bindings, variadic constructors
@@ -37,7 +51,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 3;
 	constexpr inline int DSGA_MINOR_VERSION = 3;
-	constexpr inline int DSGA_PATCH_VERSION = 1;
+	constexpr inline int DSGA_PATCH_VERSION = 2;
 
 	namespace detail
 	{
@@ -54,7 +68,7 @@ namespace dsga
 
 			constexpr int CXCM_MAJOR_VERSION = 1;
 			constexpr int CXCM_MINOR_VERSION = 3;
-			constexpr int CXCM_PATCH_VERSION = 0;
+			constexpr int CXCM_PATCH_VERSION = 2;
 
 			namespace dd_real
 			{
@@ -449,23 +463,23 @@ namespace dsga
 			template<>
 			constexpr bool is_negative_zero(float val) noexcept
 			{
-				return (0x80000000 == std::bit_cast<unsigned int>(val));
+				return (0x80000000u == std::bit_cast<unsigned int>(val));
 			}
 
 			template<>
 			constexpr bool is_negative_zero(double val) noexcept
 			{
-				return (0x8000000000000000 == std::bit_cast<unsigned long long>(val));
+				return (0x8000000000000000ull == std::bit_cast<unsigned long long>(val));
 			}
 
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr inline T negative_zero = T(-0);
 
 			template <>
-			constexpr inline float negative_zero<float> = std::bit_cast<float>(0x80000000);
+			constexpr inline float negative_zero<float> = std::bit_cast<float>(0x80000000u);
 
 			template <>
-			constexpr inline double negative_zero<double> = std::bit_cast<double>(0x8000000000000000);
+			constexpr inline double negative_zero<double> = std::bit_cast<double>(0x8000000000000000ull);
 
 			// don't worry about esoteric input.
 			// much faster than strict or standard when non constant evaluated,
@@ -546,7 +560,7 @@ namespace dsga
 
 					// negative non-integral value
 					if (truncated_value > value)
-						return (truncated_value - T(1.0f));
+						return (truncated_value - T(1));
 
 					// positive or integral value
 					return truncated_value;
@@ -568,7 +582,7 @@ namespace dsga
 
 					// positive non-integral value
 					if (truncated_value < value)
-						return (truncated_value + T(1.0f));
+						return (truncated_value + T(1));
 
 					// negative or integral value
 					return truncated_value;
@@ -587,10 +601,10 @@ namespace dsga
 
 					// positive value, taking care of halfway case.
 					if (value > T(0))
-						return trunc(value + T(0.5f));
+						return trunc(value + T(0.5));
 
 					// negative or zero value, taking care of halfway case.
-					return trunc(value - T(0.5f));
+					return trunc(value - T(0.5));
 				}
 
 				//
@@ -638,10 +652,10 @@ namespace dsga
 
 					// positive value, taking care of halfway case.
 					if (value > T(0))
-						return trunc(value + T(0.5f));
+						return trunc(value + T(0.5));
 
 					// negative or zero value, taking care of halfway case.
-					return trunc(value - T(0.5f));
+					return trunc(value - T(0.5));
 				}
 
 				//
@@ -1037,15 +1051,17 @@ namespace dsga
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr bool signbit(T value) noexcept
 			{
+				static_assert(std::numeric_limits<T>::is_iec559, "IEC 559 required");
+
 				if constexpr (sizeof(T) == 4)
 				{
 					unsigned int bits = std::bit_cast<unsigned int>(value);
-					return (bits & 0x80000000) != 0;
+					return (bits & 0x80000000u) != 0;
 				}
 				else if constexpr (sizeof(T) == 8)
 				{
 					unsigned long long bits = std::bit_cast<unsigned long long>(value);
-					return (bits & 0x8000000000000000) != 0;
+					return (bits & 0x8000000000000000ull) != 0;
 				}
 			}
 
@@ -1059,20 +1075,22 @@ namespace dsga
 			// copysign()
 			//
 
-			// +0 or -0 for sign is considered as *not* negative
+			// +0 or -0 for sign makes a difference
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr T copysign(T value, T sgn) noexcept
 			{
-				// +0 or -0 for sign is considered as *not* negative
+				static_assert(std::numeric_limits<T>::is_iec559, "IEC 559 required");
+
+				// +0 or -0 for sign makes a difference
 				bool is_neg = signbit(sgn);
 
 				if constexpr (sizeof(T) == 4)
 				{
 					unsigned int bits = std::bit_cast<unsigned int>(value);
 					if (is_neg)
-						bits |= 0x80000000;
+						bits |= 0x80000000u;
 					else
-						bits &= 0x7FFFFFFF;
+						bits &= 0x7FFFFFFFu;
 
 					return std::bit_cast<T>(bits);
 				}
@@ -1080,9 +1098,9 @@ namespace dsga
 				{
 					unsigned long long bits = std::bit_cast<unsigned long long>(value);
 					if (is_neg)
-						bits |= 0x8000000000000000;
+						bits |= 0x8000000000000000ull;
 					else
-						bits &= 0x7FFFFFFFFFFFFFFF;
+						bits &= 0x7FFFFFFFFFFFFFFFull;
 
 					return std::bit_cast<T>(bits);
 				}
@@ -1115,7 +1133,7 @@ namespace dsga
 								unsigned int bits = std::bit_cast<unsigned int>(value);
 
 								// set the is_quiet bit
-								bits |= 0x00400000;
+								bits |= 0x00400000u;
 
 								return std::bit_cast<T>(bits);
 							}
@@ -1124,7 +1142,7 @@ namespace dsga
 								unsigned long long bits = std::bit_cast<unsigned long long>(value);
 
 								// set the is_quiet bit
-								bits |= 0x0008000000000000;
+								bits |= 0x0008000000000000ull;
 
 								return std::bit_cast<T>(bits);
 							}
@@ -1249,11 +1267,11 @@ namespace dsga
 
 						// halfway rounding can bump into max long long value for truncation
 						// (for extended precision), so be more gentle at the end points.
-						// this works because the largest_fractional_value remainder is T(0.5f).
+						// this works because the largest_fractional_value remainder is T(0.5).
 						if (value == limits::largest_fractional_value<T>)
-							return value + T(0.5f);
+							return value + T(0.5);
 						else if (value == -limits::largest_fractional_value<T>)			// we technically don't have to do this for negative case (one more number in negative range)
-							return value - T(0.5f);
+							return value - T(0.5);
 
 						return relaxed::round(value);
 					}
@@ -1321,11 +1339,11 @@ namespace dsga
 
 						// halfway rounding can bump into max long long value for truncation
 						// (for extended precision), so be more gentle at the end points.
-						// this works because the largest_fractional_value remainder is T(0.5f).
+						// this works because the largest_fractional_value remainder is T(0.5).
 						if (value == limits::largest_fractional_value<T>)
-							return value + T(0.5f);
+							return value + T(0.5);
 						else if (value == -limits::largest_fractional_value<T>)			// we technically don't have to do this for negative case (one more number in negative range)
-							return value - T(0.5f);
+							return value - T(0.5);
 
 						return relaxed::round_even(value);
 					}
@@ -1798,7 +1816,7 @@ namespace dsga
 	template <std::size_t N>
 	concept vec_dimension = ((N >= 1) && (N <= 4));
 
-	// for matrices, want the size of both columns and rowsto be between 2 and 4, inclusive
+	// for matrices, want the size of both columns and rows to be between 2 and 4, inclusive
 	template <std::size_t N>
 	concept mat_dimension = ((N >= 2) && (N <= 4));
 
@@ -2022,13 +2040,34 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr T &operator [](const U &index)
 		{
-			return store.at(static_cast<std::size_t>(index));
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return store[i];
 		}
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const
 		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return store[i];
+		}
+
+		// logical and physically contiguous access to data
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &at(const U &index)
+		{
+			// store.at() call will throw std::out_of_range if index is out of bounds
+			return store.at(static_cast<std::size_t>(index));
+		}
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &at(const U &index) const
+		{
+			// store.at() call will throw std::out_of_range if index is out of bounds
 			return store.at(static_cast<std::size_t>(index));
 		}
 
@@ -2038,7 +2077,7 @@ namespace dsga
 		{
 			[this, &args...]<std::size_t ...Js>(std::index_sequence<Js ...>) noexcept
 			{
-				((store.at(Js) = static_cast<T>(args)),...);
+				((store[Js] = static_cast<T>(args)),...);
 			}(std::make_index_sequence<Count>{});
 		}
 
@@ -2152,6 +2191,14 @@ namespace dsga
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept			{ return this->as_derived()[index]; }
 
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &at(const U &index) noexcept requires Writable	{ return this->as_derived().at(index); }
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &at(const U &index) const noexcept			{ return this->as_derived().at(index); }
+
 		// number of accessible T elements - required by spec
 		[[nodiscard]] static constexpr int length() noexcept						{ return Count; }
 
@@ -2184,20 +2231,20 @@ namespace dsga
 		// sequenced (since C++17), e.g., MSVC and gcc appear to sequence the evaluation of expression arguments going from
 		// right-to-left, while clang appears to go from left-to-right. https://godbolt.org/z/G6sbYd5rs
 		template <typename UnOp>
-		requires (std::same_as<T, std::invoke_result_t<UnOp, T>> || std::same_as<T, std::invoke_result_t<UnOp, const T &>>)
-		[[nodiscard]] constexpr vec<T, Count> apply(UnOp op) const noexcept
+		requires std::same_as<T, std::invoke_result_t<UnOp &, const T &>>
+		[[nodiscard]] constexpr vec<T, Count> apply(UnOp op) const noexcept(std::is_nothrow_invocable_v<UnOp &, const T &>)
 		{
 			return [this, &op]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return vec<T, Count>{ op((*this)[Is])... };		// braced init list is evaluated in element order
+				return vec<T, Count>{ op((*this)[Is])... };			// braced init list is evaluated in element order
 			}(std::make_index_sequence<Count>{});
 		}
 
 		// not in std::valarray, but potentially useful
 		// apply a predicate function to each element, and return a vec<bool, Count>
 		template <typename UnOp>
-		requires (std::same_as<bool, std::invoke_result_t<UnOp, T>> || std::same_as<bool, std::invoke_result_t<UnOp, const T &>>)
-		[[nodiscard]] constexpr vec<bool, Count> query(UnOp op) const noexcept
+		requires std::same_as<bool, std::invoke_result_t<UnOp &, const T &>>
+		[[nodiscard]] constexpr vec<bool, Count> query(UnOp op) const noexcept(std::is_nothrow_invocable_v<UnOp &, const T &>)
 		{
 			return [this, &op]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -2208,19 +2255,23 @@ namespace dsga
 		// positive count is left shift, negative count is right shift
 		[[nodiscard]] constexpr vec<T, Count> shift(int by) const noexcept
 		{
-			constexpr auto max_val = static_cast<int>(Count);
+			constexpr auto quick_clamp = [](int val, int low, int high) noexcept
+			{
+				return (val < low) ? low : ((val > high) ? high : val);
+			};
+			constexpr int max_val = static_cast<int>(Count);
+			by = quick_clamp(by, -max_val, max_val);				// avoids UB if trying to negate "by" when it is INT_MIN 
 			auto copy = vec<T, Count>(*this);
+
 			if (by > 0)
 			{
-				int count = by > max_val ? max_val : by;
-				auto shifted_end = std::shift_left(copy.begin(), copy.end(), count);
-				std::ranges::fill_n(shifted_end, count, T(0));
+				auto shifted_end = std::shift_left(copy.begin(), copy.end(), by);
+				std::ranges::fill_n(shifted_end, by, T(0));
 			}
 			else if (by < 0)
 			{
-				int count = -by > max_val ? max_val : -by;
-				std::shift_right(copy.begin(), copy.end(), count);
-				std::ranges::fill_n(copy.begin(), count, T(0));
+				std::shift_right(copy.begin(), copy.end(), -by);
+				std::ranges::fill_n(copy.begin(), -by, T(0));
 			}
 
 			return copy;
@@ -2278,7 +2329,7 @@ namespace dsga
 		{
 			return [this]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return ((*this)[Is] + ...);
+				return (... + (*this)[Is]);
 			}(std::make_index_sequence<Count>{});
 		}
 
@@ -2325,7 +2376,10 @@ protected:
 	struct swizzle_vec;
 
 	//
-	// type traits to get the scalar type and size of a vec or swizzle_vec
+	// type traits used to get information about a vec_like or writable_vec_like type.
+	// these include checks for the scalar type, the number of elements (size), the
+	// derived type, whether it is writeable, whether it has a set() function or not,
+	// and whether it has named swizzle data members.
 	//
 
 	// get the scalar type of a vec or swizzle_vec or vec_interface
@@ -2409,13 +2463,10 @@ protected:
 	// get whether V is allowed to be an l-value in a vec or swizzle_vec or vec_interface
 
 	template <typename V>
-	struct vec_writable;
+	struct vec_writable : std::false_type {};
 
 	template <dimensional_scalar T, std::size_t S>
-	struct vec_writable<vec<T, S>>
-	{
-		static constexpr bool value = true;
-	};
+	struct vec_writable<vec<T, S>> : std::true_type {};
 
 	template <dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
 	struct vec_writable<swizzle_vec<T, Size, Count, Is...>>
@@ -2432,20 +2483,26 @@ protected:
 	template <typename V>
 	inline constexpr bool vec_writable_v = vec_writable<std::remove_cvref_t<V>>::value;
 
+	// get whether V has swizzle data members
 
+	template <typename V>
+	struct vec_named_swizzle : std::false_type {};
 
+	template <dimensional_scalar T, std::size_t S>
+	struct vec_named_swizzle<vec<T, S>> : std::true_type {};
 
+	template <typename V>
+	inline constexpr bool vec_named_swizzle_v = vec_named_swizzle<std::remove_cvref_t<V>>::value;
 
 	//
-	// has_set: checks that V has a set() member callable with exactly
-	// vec_size_v<V> arguments of type vec_scalar_t<V>
+	// has_set: checks that V has a set() member callable with exactly vec_size_v<V> arguments of type vec_scalar_t<V>
 	//
 
 	template <typename V, typename Seq>
-	struct has_set_trait : std::false_type {};
+	struct has_set : std::false_type {};
 
 	template <typename V, std::size_t... Is>
-	struct has_set_trait<V, std::index_sequence<Is...>>
+	struct has_set<V, std::index_sequence<Is...>>
 	{
 		static constexpr bool value = requires(V v, decltype((void(Is), vec_scalar_t<V>{}))... args)
 		{
@@ -2454,7 +2511,7 @@ protected:
 	};
 
 	template <typename V>
-	concept has_set = has_set_trait<V, std::make_index_sequence<vec_size_v<V>>>::value;
+	concept has_set_v = has_set<V, std::make_index_sequence<vec_size_v<V>>>::value;
 
 	//
 	// vec_like: read-only, vec-shaped types (vec, swizzle_vec, etc.)
@@ -2467,18 +2524,20 @@ protected:
 		typename vec_derived_t<V>;
 		requires vec_dimension<vec_size_v<V>>;
 		requires dimensional_scalar<vec_scalar_t<V>>;
-		{ vec_writable_v<V> } -> std::convertible_to<bool>;
-		{ std::remove_cvref_t<V>::size() } -> std::convertible_to<std::size_t>;
+		{ vec_writable_v<V> }				-> std::convertible_to<bool>;
+		{ std::remove_cvref_t<V>::size() }	-> std::convertible_to<std::size_t>;
 
-		// operator[] for both index types
-		{ cv[i_int] } -> std::convertible_to<vec_scalar_t<V>>;
-		{ cv[i_size] } -> std::convertible_to<vec_scalar_t<V>>;
+		// operator[] and at() for both index types
+		{ cv[i_int] }		-> std::convertible_to<vec_scalar_t<V>>;
+		{ cv[i_size] }		-> std::convertible_to<vec_scalar_t<V>>;
+		{ cv.at(i_int) }	-> std::convertible_to<vec_scalar_t<V>>;
+		{ cv.at(i_size) }	-> std::convertible_to<vec_scalar_t<V>>;
 
 		// const iteration
-		{ *cv.begin() } -> std::convertible_to<vec_scalar_t<V>>;
-		{ *cv.rbegin() } -> std::convertible_to<vec_scalar_t<V>>;
-		requires std::bidirectional_iterator<decltype(cv.begin())>;
-		requires std::bidirectional_iterator<decltype(cv.rbegin())>;
+		{ *cv.begin() }		-> std::convertible_to<vec_scalar_t<V>>;
+		{ *cv.rbegin() }	-> std::convertible_to<vec_scalar_t<V>>;
+		requires std::random_access_iterator<decltype(cv.begin())>;
+		requires std::random_access_iterator<decltype(cv.rbegin())>;
 	};
 
 	//
@@ -2487,59 +2546,29 @@ protected:
 	//
 
 	template <typename V>
-	concept writable_vec_like = (!std::is_const_v<std::remove_reference_t<V>>) &&
-		vec_like<V> && has_set<V> && vec_writable_v<V> &&
-		requires (std::remove_cvref_t<V> v, int i_int, std::size_t i_size)
-		{
-			{ v.as_derived() } -> std::same_as<vec_derived_t<V>&>;
-			{ *v.begin() } -> std::same_as<vec_scalar_t<V>&>;
-			{ *v.rbegin() } -> std::same_as<vec_scalar_t<V>&>;
-			requires std::bidirectional_iterator<decltype(v.begin())>;
-			requires std::bidirectional_iterator<decltype(v.rbegin())>;
-
-			// Verifies your non-const operator[] signature for both index types
-			{ v[i_int] }  -> std::same_as<vec_scalar_t<V>&>;
-			{ v[i_size] } -> std::same_as<vec_scalar_t<V>&>;
-		};
-
-	/*
-	template <typename V>
-	concept vec_like = requires (const std::remove_cvref_t<V> cv, int i_int, std::size_t i_size)
+	concept writable_vec_like = (!std::is_const_v<std::remove_reference_t<V>>) && vec_like<V> && has_set_v<V> && vec_writable_v<V> &&
+	requires (std::remove_cvref_t<V> v, int i_int, std::size_t i_size)
 	{
-		// Clean lookups using your smart alias
-		typename vec_scalar_t<V>; 
-		typename vec_derived_t<V>;
-    
-		requires vec_dimension<vec_size_v<V>>;
-		requires dimensional_scalar<vec_scalar_t<V>>;
-    
-		// Accessing static or member methods requires the underlying value type
-		{ std::remove_cvref_t<V>::size() } -> std::convertible_to<std::size_t>;
+		{ v.as_derived() }	-> std::same_as<vec_derived_t<V>&>;
 
-		// Verifies your const operator[] signature for both index types
-		// allow types that return by value or by reference
-		{ cv[i_int] } -> std::convertible_to<vec_scalar_t<V>>;
-		{ cv[i_size] } -> std::convertible_to<vec_scalar_t<V>>;
+		// verifies non-const operator[] signature and at() signature for both index types
+		{ v[i_int] }		-> std::same_as<vec_scalar_t<V>&>;
+		{ v[i_size] }		-> std::same_as<vec_scalar_t<V>&>;
+		{ v.at(i_int) }		-> std::same_as<vec_scalar_t<V>&>;
+		{ v.at(i_size) }	-> std::same_as<vec_scalar_t<V>&>;
+
+		{ *v.begin() }		-> std::same_as<vec_scalar_t<V>&>;
+		{ *v.rbegin() }		-> std::same_as<vec_scalar_t<V>&>;
+		requires std::random_access_iterator<decltype(v.begin())>;
+		requires std::random_access_iterator<decltype(v.rbegin())>;
 	};
-	
-	 
-	 
-	 
-	template <typename V>
-	concept writable_vec_like = 
-		vec_like<V> && 
-		(!std::is_const_v<std::remove_reference_t<V>>) && 
-		vec_writable_v<V> && // Added compile-time trait constraint here
-		requires (std::remove_cvref_t<V> v, int i_int, std::size_t i_size)
-	{
-		// Verifies your non-const operator[] signature for both index types
-		{ v[i_int] }  -> std::same_as<vec_scalar_t<V>&>;
-		{ v[i_size] } -> std::same_as<vec_scalar_t<V>&>;
-	};
-	*/
 
-
-
+	// checks if all the vec_like types have the same scalar type and size. This could be used in conjunction with
+	// a type concept that makes sure all the types match a type constraint, like floating_point_scalar<scalar_t<V1>>.
+	// we only need to check the first type for this, since all the types are the same if they pass this concept.
+	template <typename V1, typename... Vs>
+	concept same_vec_shape = vec_like<V1> && (vec_like<Vs> && ...) &&
+							 ((std::same_as<vec_scalar_t<V1>, vec_scalar_t<Vs>> && (vec_size_v<V1> == vec_size_v<Vs>)) && ...);
 
 	//
 	// random-access iterators for swizzle_vec so they can participate in range-for loop amongst other things.
@@ -2562,7 +2591,7 @@ protected:
 		constexpr static std::ptrdiff_t begin_index = 0;
 		constexpr static std::ptrdiff_t end_index = Count;
 
-	protected:
+	private:
 
 		// the data
 		const swizzle_vec<T, Size, Count, Is ...> *mapper_ptr;
@@ -2582,7 +2611,13 @@ protected:
 			}
 		}
 
-		constexpr swizzle_vec_const_iterator() noexcept = default;			// only use is for declval
+		// default constructor for singular value, which is required by std::random_access_iterator.
+		// it also removes the triviality of the struct/class.
+		constexpr swizzle_vec_const_iterator() noexcept
+			: mapper_ptr(nullptr), mapper_index(0)
+		{
+		}
+
 		constexpr swizzle_vec_const_iterator(const swizzle_vec_const_iterator &) noexcept = default;
 		constexpr swizzle_vec_const_iterator(swizzle_vec_const_iterator &&) noexcept = default;
 		constexpr swizzle_vec_const_iterator &operator =(const swizzle_vec_const_iterator &) & noexcept = default;
@@ -2715,7 +2750,7 @@ protected:
 			[[ likely ]] return mapper_index <=> iter.mapper_index;
 		}
 
-		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
+		[[nodiscard]] constexpr reference operator [](const int offset) const
 		{
 			if (mapper_ptr == nullptr)
 			{
@@ -2729,21 +2764,21 @@ protected:
 			[[ likely ]] return (*mapper_ptr)[mapper_index + offset];
 		}
 
-		[[nodiscard]] constexpr swizzle_vec_const_iterator operator +(const int offset) const noexcept
+		[[nodiscard]] constexpr swizzle_vec_const_iterator operator +(const int offset) const
 		{
 			swizzle_vec_const_iterator temp = *this;
 			temp += offset;
 			return temp;
 		}
 
-		[[nodiscard]] constexpr swizzle_vec_const_iterator operator -(const int offset) const noexcept
+		[[nodiscard]] constexpr swizzle_vec_const_iterator operator -(const int offset) const
 		{
 			swizzle_vec_const_iterator temp = *this;
 			temp -= offset;
 			return temp;
 		}
 
-		[[nodiscard]] friend constexpr swizzle_vec_const_iterator operator +(const int offset, swizzle_vec_const_iterator iter) noexcept
+		[[nodiscard]] friend constexpr swizzle_vec_const_iterator operator +(const int offset, swizzle_vec_const_iterator iter)
 		{
 			iter += offset;
 			return iter;
@@ -2769,67 +2804,72 @@ protected:
 
 		// index == 0 is begin iterator
 		// index == Count is end iterator -- clamp index in [0, Count] range
-		constexpr swizzle_vec_iterator(swizzle_vec<T, Size, Count, Is ...> &mapper, int index) noexcept
+		constexpr swizzle_vec_iterator(swizzle_vec<T, Size, Count, Is ...> &mapper, int index)
 			: base_iter(mapper, index)
 		{
 		}
 
-		constexpr swizzle_vec_iterator() noexcept = default;			// only use is for declval
+		// default constructor for singular value, which is required by std::random_access_iterator
+		constexpr swizzle_vec_iterator() noexcept
+			: swizzle_vec_const_iterator<T, Size, Count, Is...>()
+		{
+		}
+
 		constexpr swizzle_vec_iterator(const swizzle_vec_iterator &) noexcept = default;
 		constexpr swizzle_vec_iterator(swizzle_vec_iterator &&) noexcept = default;
 		constexpr swizzle_vec_iterator &operator =(const swizzle_vec_iterator &) & noexcept = default;
 		constexpr swizzle_vec_iterator &operator =(swizzle_vec_iterator &&) & noexcept = default;
 		constexpr ~swizzle_vec_iterator() = default;
 
-		[[nodiscard]] constexpr reference operator *() const noexcept
+		[[nodiscard]] constexpr reference operator *() const
 		{
 			return const_cast<reference>(base_iter::operator*());
 		}
 
-		[[nodiscard]] constexpr pointer operator ->() const noexcept
+		[[nodiscard]] constexpr pointer operator ->() const
 		{
 			return const_cast<pointer>(base_iter::operator->());
 		}
 
-		constexpr swizzle_vec_iterator &operator ++() noexcept
+		constexpr swizzle_vec_iterator &operator ++()
 		{
 			base_iter::operator++();
 			return *this;
 		}
 
-		constexpr swizzle_vec_iterator operator ++(int) noexcept
+		constexpr swizzle_vec_iterator operator ++(int)
 		{
 			swizzle_vec_iterator temp = *this;
 			base_iter::operator++();
 			return temp;
 		}
 
-		constexpr swizzle_vec_iterator &operator --() noexcept
+		constexpr swizzle_vec_iterator &operator --()
 		{
 			base_iter::operator--();
 			return *this;
 		}
 
-		constexpr swizzle_vec_iterator operator --(int) noexcept
+		constexpr swizzle_vec_iterator operator --(int)
 		{
 			swizzle_vec_iterator temp = *this;
 			base_iter::operator--();
 			return temp;
 		}
 
-		constexpr swizzle_vec_iterator &operator +=(const int offset) noexcept
+		constexpr swizzle_vec_iterator &operator +=(const int offset)
 		{
 			base_iter::operator+=(offset);
 			return *this;
 		}
 
-		constexpr swizzle_vec_iterator &operator -=(const int offset) noexcept
+		constexpr swizzle_vec_iterator &operator -=(const int offset)
 		{
 			base_iter::operator-=(offset);
 			return *this;
 		}
 
-		[[nodiscard]] constexpr swizzle_vec_iterator operator +(const int offset) const noexcept
+		[[nodiscard]] constexpr swizzle_vec_iterator operator +(const int offset) const
 		{
 			swizzle_vec_iterator temp = *this;
 			temp += offset;
@@ -2844,14 +2884,14 @@ protected:
 
 		using base_iter::operator-;
 
-		[[nodiscard]] constexpr swizzle_vec_iterator operator -(const int offset) const noexcept
+		[[nodiscard]] constexpr swizzle_vec_iterator operator -(const int offset) const
 		{
 			swizzle_vec_iterator temp = *this;
 			temp -= offset;
 			return temp;
 		}
 
-		[[nodiscard]] constexpr reference operator [](const int offset) const noexcept
+		[[nodiscard]] constexpr reference operator [](const int offset) const
 		{
 			return const_cast<reference>(base_iter::operator[](offset));
 		}
@@ -2925,14 +2965,14 @@ protected:
 		// this is extremely important and is only for swizzle_vec of [Count == 1]
 		explicit(false) constexpr operator T() const noexcept requires (Count == 1)
 		{
-			return base.at(offsets.at(0));
+			return base[offsets[0]];
 		}
 
 		template <typename U>
 		requires std::convertible_to<T, U> && (Count == 1)
 		explicit constexpr operator U() const noexcept
 		{
-			return static_cast<U>(base.at(offsets.at(0)));
+			return static_cast<U>(base[offsets[0]]);
 		}
 
 		// logically contiguous. data accessed through offsets indirection.
@@ -2940,13 +2980,31 @@ protected:
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr T &operator [](const U &index) requires Writable
 		{
-			return base.at(offsets.at(static_cast<std::size_t>(index)));
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[offsets[i]];
 		}
 
 		// logically contiguous. data accessed through offsets indirection.
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
 		[[nodiscard]] constexpr const T &operator [](const U &index) const
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[offsets[i]];
+		}
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &at(const U &index) noexcept requires Writable
+		{
+			return base.at(offsets.at(static_cast<std::size_t>(index)));
+		}
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &at(const U &index) const noexcept
 		{
 			return base.at(offsets.at(static_cast<std::size_t>(index)));
 		}
@@ -3106,7 +3164,7 @@ protected:
 		struct component_match<Count, Args...>
 		{
 			// total number components in Args...
-			static constexpr std::size_t total_count = (component_count<Args>::value + ... + 0);
+			static constexpr std::size_t total_count = (0 + ... + component_count<Args>::value);
 			using tuple_pack = std::tuple<Args...>;
 
 			// get the last Arg type in the pack
@@ -3265,7 +3323,7 @@ protected:
 
 		union
 		{
-			vec_storage<T, Size>				base;
+			vec_storage<T, Size>					base;
 
 			dex::dexvec1<T, Size, 0>				x;				// Writable
 
@@ -3363,15 +3421,35 @@ protected:
 			return static_cast<U>(base[0]);
 		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index)
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+		[[nodiscard]] constexpr const T &operator [](const U &index) const
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &at(const U &index)											{ return base.at(index); }
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &at(const U &index) const								{ return base.at(index); }
 
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
@@ -3419,7 +3497,7 @@ protected:
 
 		union
 		{
-			vec_storage<T, Size>				base;
+			vec_storage<T, Size>					base;
 
 			dex::dexvec1<T, Size, 0>				x;				// Writable
 			dex::dexvec1<T, Size, 1>				y;				// Writable
@@ -3525,15 +3603,35 @@ protected:
 			return *this;
 		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index)
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+		[[nodiscard]] constexpr const T &operator [](const U &index) const
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &at(const U &index)											{ return base.at(index); }
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &at(const U &index) const								{ return base.at(index); }
 
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
@@ -3581,7 +3679,7 @@ protected:
 
 		union
 		{
-			vec_storage<T, Size>				base;
+			vec_storage<T, Size>					base;
 
 			dex::dexvec1<T, Size, 0>				x;				// Writable
 			dex::dexvec1<T, Size, 1>				y;				// Writable
@@ -3779,15 +3877,35 @@ protected:
 			return *this;
 		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index)
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+		[[nodiscard]] constexpr const T &operator [](const U &index) const
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &at(const U &index)											{ return base.at(index); }
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &at(const U &index) const								{ return base.at(index); }
 
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
@@ -4256,15 +4374,35 @@ protected:
 			return *this;
 		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr T &operator [](const U &index) noexcept							{ return base[index]; }
+		[[nodiscard]] constexpr T &operator [](const U &index)
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
 
-		// logically and physically contiguous - used by operator [] for access to data
+		// logically and physically contiguous
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const T &operator [](const U &index) const noexcept				{ return base[index]; }
+		[[nodiscard]] constexpr const T &operator [](const U &index) const
+		{
+			std::size_t i = static_cast<std::size_t>(index);
+			DSGA_ASSERT((i < Count), "index is out of bounds");
+			return base[i];
+		}
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr T &at(const U &index)											{ return base.at(index); }
+
+		// logically and physically contiguous - rely on vec_storage<T, Size>::at() to check for out of bounds access.
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const T &at(const U &index) const								{ return base.at(index); }
 
 		constexpr void swap(vec &bv) noexcept													{ base.swap(bv.base); }
 
@@ -4321,6 +4459,26 @@ protected:
 
 	namespace machinery
 	{
+		// we want to treat a vector of length 1 as a scalar, but processing machinery works on vectors, so this
+		// is a type trait so we can have the same templated type to work on without special-casing for a vector
+		// of length 1. This is useful for functions that want to return a vector or scalar depending on the size
+		// of the vector.
+
+		template <typename T, std::size_t C>
+		struct vec_or_scalar
+		{
+			using type = vec<T, C>;
+		};
+
+		template <typename T>
+		struct vec_or_scalar<T, 1>
+		{
+			using type = T;
+		};
+
+		template <typename T, std::size_t C>
+		using vec_or_scalar_t = typename vec_or_scalar<T, C>::type;
+
 		// return types from executing callables (lambdas) on arguments of various types
 
 		template <typename UnOp, dimensional_scalar T>
@@ -4332,9 +4490,10 @@ protected:
 		template <typename TernOp, dimensional_scalar T, dimensional_scalar U, dimensional_scalar V>
 		using ternop_return_t = std::invoke_result_t<TernOp, T, U, V>;
 
-		// this machinery relies on vec_interface::operator[] to be logically contiguous operation on a derived vector type,
-		// regardless of whether it is physically contiguous. apply the operation on components of vec_interface arguments,
-		// either returning a new vector (or scalar) or modifying an existing vector.
+		// this machinery relies on vec_like or writable_vec_like operator[] to be a logically contiguous operation
+		// on a vector type, regardless of whether it is physically contiguous. apply the operation on components of
+		// vec_like or writable_vec_like type arguments, either returning a new vector (or scalar) or modifying an
+		// existing vector.
 		//
 		// apply_make() - one argument, one type -- return a new vector or scalar
 		// apply_unitype_make() - all arguments are cast to their common type -- return a new vector or scalar
@@ -4349,18 +4508,12 @@ protected:
 								  const UnOp &op) noexcept
 		{
 			constexpr std::size_t C = vec_size_v<V>;
+			using out_scalar_t = unop_return_t<UnOp, vec_scalar_t<V>>;
 
-			if constexpr (C == 1)
+			return [&op, &arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(arg[0]);
-			}
-			else
-			{
-				return [&op, &arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<unop_return_t<UnOp, vec_scalar_t<V>>, C>{ op(arg[Is])... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(arg[Is])... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		// binary
@@ -4372,19 +4525,13 @@ protected:
 										  const BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>>;
+			using out_scalar_t = binop_return_t<BinOp, ArgT, ArgT>;
 			constexpr std::size_t C = vec_size_v<V1>;
 
-			if constexpr (C == 1)
+			return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(static_cast<ArgT>(lhs[0]), static_cast<ArgT>(rhs[0]));
-			}
-			else
-			{
-				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<binop_return_t<BinOp, ArgT, ArgT>, C>{ op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs[Is]))... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V, dimensional_scalar U, typename BinOp>
@@ -4393,19 +4540,13 @@ protected:
 										  const BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<vec_scalar_t<V>, U>;
+			using out_scalar_t = binop_return_t<BinOp, ArgT, ArgT>;
 			constexpr std::size_t C = vec_size_v<V>;
 
-			if constexpr (C == 1)
+			return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(static_cast<ArgT>(lhs[0]), static_cast<ArgT>(rhs));
-			}
-			else
-			{
-				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<binop_return_t<BinOp, ArgT, ArgT>, C>{ op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(static_cast<ArgT>(lhs[Is]), static_cast<ArgT>(rhs))... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V, dimensional_scalar U, typename BinOp>
@@ -4414,19 +4555,13 @@ protected:
 										  const BinOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<vec_scalar_t<V>, U>;
+			using out_scalar_t = binop_return_t<BinOp, ArgT, ArgT>;
 			constexpr std::size_t C = vec_size_v<V>;
 
-			if constexpr (C == 1)
+			return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(static_cast<ArgT>(lhs), static_cast<ArgT>(rhs[0]));
-			}
-			else
-			{
-				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<binop_return_t<BinOp, ArgT, ArgT>, C>{ op(static_cast<ArgT>(lhs), static_cast<ArgT>(rhs[Is]))... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(static_cast<ArgT>(lhs), static_cast<ArgT>(rhs[Is]))... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V1, vec_like V2, typename BinOp>
@@ -4436,18 +4571,12 @@ protected:
 											const BinOp &op) noexcept
 		{
 			constexpr std::size_t C = vec_size_v<V1>;
+			using out_scalar_t = binop_return_t<BinOp, vec_scalar_t<V1>, vec_scalar_t<V2>>;
 
-			if constexpr (C == 1)
+			return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(lhs[0], rhs[0]);
-			}
-			else
-			{
-				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<binop_return_t<BinOp, vec_scalar_t<V1>, vec_scalar_t<V2>>, C>{ op(lhs[Is], rhs[Is])... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(lhs[Is], rhs[Is])... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V, dimensional_scalar U, typename BinOp>
@@ -4456,18 +4585,12 @@ protected:
 											const BinOp &op) noexcept
 		{
 			constexpr std::size_t C = vec_size_v<V>;
+			using out_scalar_t = binop_return_t<BinOp, vec_scalar_t<V>, U>;
 
-			if constexpr (C == 1)
+			return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(lhs[0], rhs);
-			}
-			else
-			{
-				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<binop_return_t<BinOp, vec_scalar_t<V>, U>, C>{ op(lhs[Is], rhs)... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(lhs[Is], rhs)... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V, dimensional_scalar U, typename BinOp>
@@ -4476,18 +4599,12 @@ protected:
 											const BinOp &op) noexcept
 		{
 			constexpr std::size_t C = vec_size_v<V>;
+			using out_scalar_t = binop_return_t<BinOp, U, vec_scalar_t<V>>;
 
-			if constexpr (C == 1)
+			return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(lhs, rhs[0]);
-			}
-			else
-			{
-				return [&op, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<binop_return_t<BinOp, U, vec_scalar_t<V>>, C>{ op(lhs, rhs[Is])... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(lhs, rhs[Is])... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <writable_vec_like V1, vec_like V2, typename BinOp>
@@ -4520,6 +4637,7 @@ protected:
 		}
 
 		template <writable_vec_like V1, vec_like V2, typename BinOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>)
 		constexpr void apply_multitype_modify(V1 &lhs,
 											  const V2 &rhs,
 											  const BinOp &op) noexcept
@@ -4548,49 +4666,38 @@ protected:
 		// ternary
 
 		template <vec_like V1, vec_like V2, vec_like V3, typename TernOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>) && (vec_size_v<V1> == vec_size_v<V3>)
 		constexpr auto apply_unitype_make(const V1 &x,
 										  const V2 &y,
 										  const V3 &z,
 										  const TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>, vec_scalar_t<V3>>;
+			using out_scalar_t = ternop_return_t<TernOp, ArgT, ArgT, ArgT>;
 			constexpr std::size_t C = vec_size_v<V1>;
 
-			if constexpr (C == 1)
+			return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(static_cast<ArgT>(x[0]), static_cast<ArgT>(y[0]), static_cast<ArgT>(z[0]));
-			}
-			else
-			{
-				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
-					{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z[Is]))... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>
+				{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z[Is]))... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V1, vec_like V2, dimensional_scalar U, typename TernOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>)
 		constexpr auto apply_unitype_make(const V1 &x,
 										  const V2 &y,
 										  U z,
 										  const TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>, U>;
+			using out_scalar_t = ternop_return_t<TernOp, ArgT, ArgT, ArgT>;
 			constexpr std::size_t C = vec_size_v<V1>;
 
-			if constexpr (C == 1)
+			return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(static_cast<ArgT>(x[0]), static_cast<ArgT>(y[0]), static_cast<ArgT>(z));
-			}
-			else
-			{
-				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
-					{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y[Is]), static_cast<ArgT>(z))... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V, dimensional_scalar U, dimensional_scalar T, typename TernOp>
@@ -4600,20 +4707,13 @@ protected:
 										  const TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<vec_scalar_t<V>, U, T>;
+			using out_scalar_t = ternop_return_t<TernOp, ArgT, ArgT, ArgT>;
 			constexpr std::size_t C = vec_size_v<V>;
 
-			if constexpr (C == 1)
+			return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(static_cast<ArgT>(x[0]), static_cast<ArgT>(y), static_cast<ArgT>(z));
-			}
-			else
-			{
-				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
-					{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y), static_cast<ArgT>(z))... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(static_cast<ArgT>(x[Is]), static_cast<ArgT>(y), static_cast<ArgT>(z))... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V, dimensional_scalar U, dimensional_scalar T, typename TernOp>
@@ -4623,44 +4723,72 @@ protected:
 										  const TernOp &op) noexcept
 		{
 			using ArgT = std::common_type_t<T, U, vec_scalar_t<V>>;
+			using out_scalar_t = ternop_return_t<TernOp, ArgT, ArgT, ArgT>;
 			constexpr std::size_t C = vec_size_v<V>;
 
-			if constexpr (C == 1)
+			return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[0]));
-			}
-			else
-			{
-				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<ternop_return_t<TernOp, ArgT, ArgT, ArgT>, C>
-					{ op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[Is]))... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(static_cast<ArgT>(x), static_cast<ArgT>(y), static_cast<ArgT>(z[Is]))... };
+			}(std::make_index_sequence<C>{});
 		}
 
 		template <vec_like V1, vec_like V2, vec_like V3, typename TernOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>) && (vec_size_v<V1> == vec_size_v<V3>)
 		constexpr auto apply_multitype_make(const V1 &x,
 											const V2 &y,
 											const V3 &z,
 											const TernOp &op) noexcept
 		{
 			constexpr std::size_t C = vec_size_v<V1>;
+			using out_scalar_t = ternop_return_t<TernOp, vec_scalar_t<V1>, vec_scalar_t<V2>, vec_scalar_t<V3>>;
 
-			if constexpr (C == 1)
+			return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return op(x[0], y[0], z[0]);
-			}
-			else
-			{
-				return [&op, &x, &y, &z]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-				{
-					return vec<ternop_return_t<TernOp, vec_scalar_t<V1>, vec_scalar_t<V2>, vec_scalar_t<V3>>, C>
-					{ op(x[Is], y[Is], z[Is])... };
-				}(std::make_index_sequence<C>{});
-			}
+				return vec_or_scalar_t<out_scalar_t, C>{ op(x[Is], y[Is], z[Is])... };
+			}(std::make_index_sequence<C>{});
 		}
 
+		// dispatches a binary vec-vec operator call across the three broadcast shapes permitted by
+		// ((vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)), where
+		// V1 and V2 are either same-length, or V1 treated like a scalar, or V2 treated like a scalar.
+		// for unitype case, the operator is applied to the common type of the two vector's scalar types.
+		// for multitype case, the operator is applied to the two vector's actual scalar types.
+
+		// for unitype case
+		template <vec_like V1, vec_like V2, typename BinOp>
+		requires (implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>> ||
+				  implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>>) &&
+				  ((vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1))
+		constexpr auto apply_broadcast_unitype_make(const V1 &lhs, const V2 &rhs, const BinOp &op) noexcept
+		{
+			constexpr std::size_t C1 = vec_size_v<V1>;
+			constexpr std::size_t C2 = vec_size_v<V2>;
+
+			if constexpr (C1 == C2)
+				return apply_unitype_make(lhs, rhs, op);
+			else if constexpr (C1 == 1)
+				return apply_unitype_make(lhs[0], rhs, op);
+			else
+				return apply_unitype_make(lhs, rhs[0], op);
+		}
+
+		// for multitype case
+		template <vec_like V1, vec_like V2, typename BinOp>
+		requires (implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>> ||
+				  implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>>) &&
+				  ((vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1))
+		constexpr auto apply_broadcast_multitype_make(const V1 &lhs, const V2 &rhs, const BinOp &op) noexcept
+		{
+			constexpr std::size_t C1 = vec_size_v<V1>;
+			constexpr std::size_t C2 = vec_size_v<V2>;
+
+			if constexpr (C1 == C2)
+				return apply_multitype_make(lhs, rhs, op);
+			else if constexpr (C1 == 1)
+				return apply_multitype_make(lhs[0], rhs, op);
+			else if constexpr (C2 == 1)
+				return apply_multitype_make(lhs, rhs[0], op);
+		}
 	}	// namespace machinery
 
 	//
@@ -4691,617 +4819,652 @@ protected:
 		constexpr inline auto and_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs & rhs; };
 		constexpr inline auto or_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs | rhs; };
 		constexpr inline auto xor_op =		[](numeric_integral_scalar auto lhs, numeric_integral_scalar auto rhs) noexcept	{ return lhs ^ rhs; };
+		constexpr inline auto no_op =		[](non_bool_scalar auto arg) noexcept											{ return arg; };
 		constexpr inline auto neg_op =		[](non_bool_scalar auto arg) noexcept											{ return -arg; };
 
 	}	// namespace lambda_ops
 
 	// binary operators +=, +
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
-	constexpr D1 &operator +=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator +=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::plus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-	constexpr D1 &operator +=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator +=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::plus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires W && implicitly_convertible_to<U, T>
-	constexpr D &operator +=(vec_interface<W, T, C, D> &lhs,
-							 U rhs) noexcept
+	template <writable_vec_like L, non_bool_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<L>>
+	constexpr vec_derived_t<L> &operator +=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::plus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-	[[nodiscard]] constexpr auto operator +(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			  non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> &&
+			  (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)
+	[[nodiscard]] constexpr auto operator +(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::plus_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::plus_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::plus_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::plus_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator +(const vec_interface<W, T, C, D> &lhs,
-											U rhs) noexcept
+	template <vec_like V, non_bool_scalar R>
+	requires non_bool_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>)
+	[[nodiscard]] constexpr auto operator +(const V &lhs,
+											R rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::plus_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator +(U lhs,
-											const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, non_bool_scalar L>
+	requires non_bool_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>)
+	[[nodiscard]] constexpr auto operator +(L lhs,
+											const V &rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::plus_op);
 	}
 
 	// binary operators -=, -
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
-	constexpr D1 &operator -=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator -=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::minus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-	constexpr D1 &operator -=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator -=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::minus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires W && implicitly_convertible_to<U, T>
-	constexpr D &operator -=(vec_interface<W, T, C, D> &lhs,
-							 U rhs) noexcept
+	template <writable_vec_like L, non_bool_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<L>>
+	constexpr vec_derived_t<L> &operator -=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::minus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-	[[nodiscard]] constexpr auto operator -(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			  non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> &&
+			  (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)
+	[[nodiscard]] constexpr auto operator -(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::minus_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::minus_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::minus_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::minus_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator -(const vec_interface<W, T, C, D> &lhs,
-											U rhs) noexcept
-	{
+	template <vec_like V, non_bool_scalar R>
+	requires non_bool_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>)
+	[[nodiscard]] constexpr auto operator -(const V &lhs,
+											R rhs) noexcept
+			  {
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::minus_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator -(U lhs,
-											const vec_interface<W, T, C, D> &rhs) noexcept
-	{
+	template <vec_like V, non_bool_scalar L>
+	requires non_bool_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>)
+	[[nodiscard]] constexpr auto operator -(L lhs,
+											const V &rhs) noexcept
+			 {
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::minus_op);
 	}
 
 	// binary operators *=, *
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
-	constexpr D1 &operator *=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator *=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::times_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-	constexpr D1 &operator *=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator *=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::times_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires W && implicitly_convertible_to<U, T>
-	constexpr D &operator *=(vec_interface<W, T, C, D> &lhs,
-							 U rhs) noexcept
+	template <writable_vec_like L, non_bool_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<L>>
+	constexpr vec_derived_t<L> &operator *=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::times_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-	[[nodiscard]] constexpr auto operator *(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			  non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> &&
+			  (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)
+	[[nodiscard]] constexpr auto operator *(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::times_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::times_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::times_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::times_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator *(const vec_interface<W, T, C, D> &lhs,
-											U rhs) noexcept
+	template <vec_like V, non_bool_scalar R>
+	requires non_bool_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>)
+	[[nodiscard]] constexpr auto operator *(const V &lhs,
+											R rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::times_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator *(U lhs,
-											const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, non_bool_scalar L>
+	requires non_bool_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>)
+	[[nodiscard]] constexpr auto operator *(L lhs,
+											const V &rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::times_op);
 	}
 
 	// binary operators /=, /
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
-	constexpr D1 &operator /=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator /=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::div_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-	constexpr D1 &operator /=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 non_bool_scalar<vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator /=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::div_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires W && implicitly_convertible_to<U, T>
-	constexpr D &operator /=(vec_interface<W, T, C, D> &lhs,
-							 U rhs) noexcept
+	template <writable_vec_like L, non_bool_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && non_bool_scalar<vec_scalar_t<L>>
+	constexpr vec_derived_t<L> &operator /=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::div_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, non_bool_scalar T1, std::size_t C1, typename D1, bool W2, non_bool_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-	[[nodiscard]] constexpr auto operator /(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			  non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> &&
+			  (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)
+	[[nodiscard]] constexpr auto operator /(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::div_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::div_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::div_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::div_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator /(const vec_interface<W, T, C, D> &lhs,
-											U rhs) noexcept
+	template <vec_like V, non_bool_scalar R>
+	 requires non_bool_scalar<vec_scalar_t<V>> && 
+			  (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>)
+	[[nodiscard]] constexpr auto operator /(const V &lhs,
+											R rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::div_op);
 	}
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D, non_bool_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator /(U lhs,
-											const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, non_bool_scalar L>
+	requires non_bool_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>)
+	[[nodiscard]] constexpr auto operator /(L lhs,
+											const V &rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::div_op);
 	}
 
 	// binary operators %=, % -- uses c++ modulus operator rules
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
-	constexpr D1 &operator %=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs)
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator %=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::modulus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-	constexpr D1 &operator %=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs)
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator %=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::modulus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T>
-	constexpr D &operator %=(vec_interface<W, T, C, D> &lhs,
-							 U rhs)
+	template <writable_vec_like L, numeric_integral_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<L>>
+	constexpr vec_derived_t<L> &operator %=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::modulus_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-	[[nodiscard]] constexpr auto operator %(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs)
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			  numeric_integral_scalar<vec_scalar_t<V1>> && numeric_integral_scalar<vec_scalar_t<V2>> &&
+			  (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)
+	[[nodiscard]] constexpr auto operator %(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::modulus_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::modulus_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::modulus_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::modulus_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator %(const vec_interface<W, T, C, D> &lhs,
-											U rhs)
+	template <vec_like V, numeric_integral_scalar R>
+	requires numeric_integral_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>)
+	[[nodiscard]] constexpr auto operator %(const V &lhs,
+											R rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::modulus_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator %(U lhs,
-											const vec_interface<W, T, C, D> &rhs)
+	template <vec_like V, numeric_integral_scalar L>
+	requires numeric_integral_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>)
+	[[nodiscard]] constexpr auto operator %(L lhs,
+											const V &rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::modulus_op);
 	}
 
 	// unary operator ~
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
-	[[nodiscard]] constexpr auto operator ~(const vec_interface<W, T, C, D> &arg) noexcept
+	template <vec_like V>
+	requires numeric_integral_scalar<vec_scalar_t<V>>
+	[[nodiscard]] constexpr auto operator ~(const V &arg) noexcept
 	{
 		return machinery::apply_make(arg, lambda_ops::bit_not_op);
 	}
 
 	// binary operators <<=, <<
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
-	constexpr D1 &operator <<=(vec_interface<W1, T1, C, D1> &lhs,
-							   const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator <<=(L &lhs,
+											 const R &rhs) noexcept
 	{
 		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::lshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-	constexpr D1 &operator <<=(vec_interface<W1, T1, C, D1> &lhs,
-							   const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator <<=(L &lhs,
+											 const R &rhs) noexcept
 	{
 		machinery::apply_multitype_modify(lhs, rhs[0], lambda_ops::lshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T>
-	constexpr D &operator <<=(vec_interface<W, T, C, D> &lhs,
-							  U rhs) noexcept
+	template <writable_vec_like L, numeric_integral_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<L>>
+	constexpr vec_derived_t<L> &operator <<=(L &lhs,
+											 R rhs) noexcept
 	{
 		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::lshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-	[[nodiscard]] constexpr auto operator <<(const vec_interface<W1, T1, C1, D1> &lhs,
-											 const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			  numeric_integral_scalar<vec_scalar_t<V1>> && numeric_integral_scalar<vec_scalar_t<V2>> &&
+			  (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)
+	[[nodiscard]] constexpr auto operator <<(const V1 &lhs,
+											 const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_multitype_make(lhs, rhs, lambda_ops::lshift_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_multitype_make(lhs[0], rhs, lambda_ops::lshift_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_multitype_make(lhs, rhs[0], lambda_ops::lshift_op);
+		return machinery::apply_broadcast_multitype_make(lhs, rhs, lambda_ops::lshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator <<(const vec_interface<W, T, C, D> &lhs,
-											 U rhs) noexcept
+	template <vec_like V, numeric_integral_scalar R>
+	requires numeric_integral_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>)
+	[[nodiscard]] constexpr auto operator <<(const V &lhs,
+											 R rhs) noexcept
 	{
 		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::lshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator <<(U lhs,
-											 const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, numeric_integral_scalar L>
+	requires numeric_integral_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>)
+	 [[nodiscard]] constexpr auto operator <<(L lhs,
+											  const V &rhs) noexcept
 	{
 		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::lshift_op);
 	}
 
 	// binary operators >>=, >>
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1>
-	constexpr D1 &operator >>=(vec_interface<W1, T1, C, D1> &lhs,
-							   const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator >>=(L &lhs,
+											 const R &rhs) noexcept
 	{
 		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::rshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1)
-	constexpr D1 &operator >>=(vec_interface<W1, T1, C, D1> &lhs,
-							   const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator >>=(L &lhs,
+											 const R &rhs) noexcept
 	{
 		machinery::apply_multitype_modify(lhs, rhs[0], lambda_ops::rshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T>
-	constexpr D &operator >>=(vec_interface<W, T, C, D> &lhs,
-							  U rhs) noexcept
+	template <writable_vec_like L, numeric_integral_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<L>>
+	constexpr vec_derived_t<L> &operator >>=(L &lhs,
+											 R rhs) noexcept
 	{
 		machinery::apply_multitype_modify(lhs, rhs, lambda_ops::rshift_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1)
-	[[nodiscard]] constexpr auto operator >>(const vec_interface<W1, T1, C1, D1> &lhs,
-											 const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			 numeric_integral_scalar<vec_scalar_t<V1>> && numeric_integral_scalar<vec_scalar_t<V2>> &&
+			 (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1)
+	[[nodiscard]] constexpr auto operator >>(const V1 &lhs,
+											 const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_multitype_make(lhs, rhs, lambda_ops::rshift_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_multitype_make(lhs[0], rhs, lambda_ops::rshift_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_multitype_make(lhs, rhs[0], lambda_ops::rshift_op);
+		return machinery::apply_broadcast_multitype_make(lhs, rhs, lambda_ops::rshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator >>(const vec_interface<W, T, C, D> &lhs,
-											 U rhs) noexcept
+	template <vec_like V, numeric_integral_scalar R>
+	requires numeric_integral_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>)
+	[[nodiscard]] constexpr auto operator >>(const V &lhs,
+											 R rhs) noexcept
 	{
 		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::rshift_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>
-	[[nodiscard]] constexpr auto operator >>(U lhs,
-											 const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, numeric_integral_scalar L>
+	requires numeric_integral_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>)
+	[[nodiscard]] constexpr auto operator >>(L lhs,
+											 const V &rhs) noexcept
 	{
 		return machinery::apply_multitype_make(lhs, rhs, lambda_ops::rshift_op);
 	}
 
 	// binary operators &=, &
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
-	constexpr D1 &operator &=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, vec_scalar_t<R>>
+	 constexpr vec_derived_t<L> &operator &=(L &lhs,
+											 const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::and_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
-	constexpr D1 &operator &=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, vec_scalar_t<R>>
+	 constexpr vec_derived_t<L> &operator &=(L &lhs,
+											 const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::and_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
-	constexpr D &operator &=(vec_interface<W, T, C, D> &lhs,
-							 U rhs) noexcept
+	template <writable_vec_like L, numeric_integral_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<L>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, R>
+	constexpr vec_derived_t<L> &operator &=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::and_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
-	[[nodiscard]] constexpr auto operator &(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			 numeric_integral_scalar<vec_scalar_t<V1>> && numeric_integral_scalar<vec_scalar_t<V2>> &&
+			 (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1) &&
+			 detail::same_sizeof<vec_scalar_t<V1>, vec_scalar_t<V2>>
+	[[nodiscard]] constexpr auto operator &(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::and_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::and_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::and_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::and_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-	[[nodiscard]] constexpr auto operator &(const vec_interface<W, T, C, D> &lhs,
-											U rhs) noexcept
+	template <vec_like V, numeric_integral_scalar R>
+	requires numeric_integral_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>) &&
+			 detail::same_sizeof<vec_scalar_t<V>, R>
+	[[nodiscard]] constexpr auto operator &(const V &lhs,
+											R rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::and_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-	[[nodiscard]] constexpr auto operator &(U lhs,
-											const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, numeric_integral_scalar L>
+	requires numeric_integral_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>) &&
+			 detail::same_sizeof<vec_scalar_t<V>, L>
+	 [[nodiscard]] constexpr auto operator &(L lhs,
+											 const V &rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::and_op);
 	}
 
 	// binary operators |=, |
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
-	constexpr D1 &operator |=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator |=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::or_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
-	constexpr D1 &operator |=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, vec_scalar_t<R>>
+	 constexpr vec_derived_t<L> &operator |=(L &lhs,
+											 const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::or_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
-	constexpr D &operator |=(vec_interface<W, T, C, D> &lhs,
-							 U rhs) noexcept
+	template <writable_vec_like L, numeric_integral_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<L>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, R>
+	constexpr vec_derived_t<L> &operator |=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::or_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
-	[[nodiscard]] constexpr auto operator |(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			 numeric_integral_scalar<vec_scalar_t<V1>> && numeric_integral_scalar<vec_scalar_t<V2>> &&
+			 (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1) &&
+			 detail::same_sizeof<vec_scalar_t<V1>, vec_scalar_t<V2>>
+	[[nodiscard]] constexpr auto operator |(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::or_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::or_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::or_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::or_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-	[[nodiscard]] constexpr auto operator |(const vec_interface<W, T, C, D> &lhs,
-											U rhs) noexcept
+	template <vec_like V, numeric_integral_scalar R>
+	requires numeric_integral_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>) &&
+			 detail::same_sizeof<vec_scalar_t<V>, R>
+	[[nodiscard]] constexpr auto operator |(const V &lhs,
+											R rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::or_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-	[[nodiscard]] constexpr auto operator |(U lhs,
-											const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, numeric_integral_scalar L>
+	requires numeric_integral_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>) &&
+			 detail::same_sizeof<vec_scalar_t<V>, L>
+	[[nodiscard]] constexpr auto operator |(L lhs,
+											const V &rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::or_op);
 	}
 
 	// binary operators ^=, ^
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && detail::same_sizeof<T1, T2>
-	constexpr D1 &operator ^=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, C, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> == vec_size_v<R>) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator ^=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::xor_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C, typename D1, bool W2, numeric_integral_scalar T2, typename D2>
-	requires W1 && implicitly_convertible_to<T2, T1> && (C > 1) && detail::same_sizeof<T1, T2>
-	constexpr D1 &operator ^=(vec_interface<W1, T1, C, D1> &lhs,
-							  const vec_interface<W2, T2, 1, D2> &rhs) noexcept
+	template <writable_vec_like L, vec_like R>
+	requires implicitly_convertible_to<vec_scalar_t<R>, vec_scalar_t<L>> && (vec_size_v<L> > 1) && (vec_size_v<R> == 1) &&
+			 numeric_integral_scalar<vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<R>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, vec_scalar_t<R>>
+	constexpr vec_derived_t<L> &operator ^=(L &lhs,
+											const R &rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs[0], lambda_ops::xor_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires W && implicitly_convertible_to<U, T> && detail::same_sizeof<T, U>
-	constexpr D &operator ^=(vec_interface<W, T, C, D> &lhs,
-							 U rhs) noexcept
+	template <writable_vec_like L, numeric_integral_scalar R>
+	requires implicitly_convertible_to<R, vec_scalar_t<L>> && numeric_integral_scalar<vec_scalar_t<L>> &&
+			 detail::same_sizeof<vec_scalar_t<L>, R>
+	constexpr vec_derived_t<L> &operator ^=(L &lhs,
+											R rhs) noexcept
 	{
 		machinery::apply_unitype_modify(lhs, rhs, lambda_ops::xor_op);
 		return lhs.as_derived();
 	}
 
-	template <bool W1, numeric_integral_scalar T1, std::size_t C1, typename D1, bool W2, numeric_integral_scalar T2, std::size_t C2, typename D2>
-	requires (implicitly_convertible_to<T2, T1> || implicitly_convertible_to<T1, T2>) && (C1 == C2 || C1 == 1 || C2 == 1) && detail::same_sizeof<T1, T2>
-	[[nodiscard]] constexpr auto operator ^(const vec_interface<W1, T1, C1, D1> &lhs,
-											const vec_interface<W2, T2, C2, D2> &rhs) noexcept
+	template <vec_like V1, vec_like V2>
+	requires (implicitly_convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>> ||
+			  implicitly_convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>>) &&
+			 numeric_integral_scalar<vec_scalar_t<V1>> && numeric_integral_scalar<vec_scalar_t<V2>> &&
+			 (vec_size_v<V1> == vec_size_v<V2> || vec_size_v<V1> == 1 || vec_size_v<V2> == 1) &&
+			 detail::same_sizeof<vec_scalar_t<V1>, vec_scalar_t<V2>>
+	[[nodiscard]] constexpr auto operator ^(const V1 &lhs,
+											const V2 &rhs) noexcept
 	{
-		if constexpr (C1 == C2)
-			return machinery::apply_unitype_make(lhs, rhs, lambda_ops::xor_op);
-		else if constexpr (C1 == 1)
-			return machinery::apply_unitype_make(lhs[0], rhs, lambda_ops::xor_op);
-		else if constexpr (C2 == 1)
-			return machinery::apply_unitype_make(lhs, rhs[0], lambda_ops::xor_op);
+		return machinery::apply_broadcast_unitype_make(lhs, rhs, lambda_ops::xor_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-	[[nodiscard]] constexpr auto operator ^(const vec_interface<W, T, C, D> &lhs,
-											U rhs) noexcept
+	template <vec_like V, numeric_integral_scalar R>
+	requires numeric_integral_scalar<vec_scalar_t<V>> && 
+			 (implicitly_convertible_to<R, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, R>) &&
+			 detail::same_sizeof<vec_scalar_t<V>, R>
+	[[nodiscard]] constexpr auto operator ^(const V &lhs,
+											R rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::xor_op);
 	}
 
-	template <bool W, numeric_integral_scalar T, std::size_t C, typename D, numeric_integral_scalar U>
-	requires (implicitly_convertible_to<U, T> || implicitly_convertible_to<T, U>) && detail::same_sizeof<T, U>
-	[[nodiscard]] constexpr auto operator ^(U lhs,
-											const vec_interface<W, T, C, D> &rhs) noexcept
+	template <vec_like V, numeric_integral_scalar L>
+	requires numeric_integral_scalar<vec_scalar_t<V>> &&
+			 (implicitly_convertible_to<L, vec_scalar_t<V>> || implicitly_convertible_to<vec_scalar_t<V>, L>) &&
+			 detail::same_sizeof<vec_scalar_t<V>, L>
+	[[nodiscard]] constexpr auto operator ^(L lhs,
+											const V &rhs) noexcept
 	{
 		return machinery::apply_unitype_make(lhs, rhs, lambda_ops::xor_op);
 	}
 
 	// unary operator +
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D>
-	[[nodiscard]] constexpr auto operator +(const vec_interface<W, T, C, D> &arg) noexcept
+	template <vec_like V>
+	requires non_bool_scalar<vec_scalar_t<V>>
+	[[nodiscard]] constexpr auto operator +(const V &arg) noexcept
 	{
-		if constexpr (C == 1)
-		{
-			return arg[0];
-		}
-		else
-		{
-			return vec<T, C>{arg};					// no-op copy
-		}
+		return machinery::apply_make(arg, lambda_ops::no_op);
 	}
 
 	// unary operator -
 
-	template <bool W, non_bool_scalar T, std::size_t C, typename D>
-	[[nodiscard]] constexpr auto operator -(const vec_interface<W, T, C, D> &arg) noexcept
+	template <vec_like V>
+	requires non_bool_scalar<vec_scalar_t<V>>
+	[[nodiscard]] constexpr auto operator -(const V &arg) noexcept
 	{
 		return machinery::apply_make(arg, lambda_ops::neg_op);
 	}
@@ -5309,42 +5472,42 @@ protected:
 	// unary operators ++
 
 	// pre-increment
-	template <bool W, non_bool_scalar T, std::size_t C, typename D>
-	requires W
-	constexpr D &operator ++(vec_interface<W, T, C, D> &arg) noexcept
+	template <writable_vec_like V>
+	requires non_bool_scalar<vec_scalar_t<V>>
+	constexpr vec_derived_t<V> &operator ++(V &arg) noexcept
 	{
-		arg += T(1);
+		arg += vec_scalar_t<V>(1);
 		return arg.as_derived();
 	}
 
 	// post-increment
-	template <bool W, non_bool_scalar T, std::size_t C, typename D>
-	requires W
-	constexpr vec<T, C> operator ++(vec_interface<W, T, C, D> &arg, int) noexcept
+	template <writable_vec_like V>
+	requires non_bool_scalar<vec_scalar_t<V>>
+	constexpr auto operator ++(V &arg, int) noexcept
 	{
-		vec<T, C> value(arg);
-		arg += T(1);
+		vec<vec_scalar_t<V>, vec_size_v<V>> value(arg);
+		arg += vec_scalar_t<V>(1);
 		return value;
 	}
 
 	// unary operators --
 
 	// pre-decrement
-	template <bool W, non_bool_scalar T, std::size_t C, typename D>
-	requires W
-	constexpr D &operator --(vec_interface<W, T, C, D> &arg) noexcept
+	template <writable_vec_like V>
+	requires non_bool_scalar<vec_scalar_t<V>>
+	constexpr vec_derived_t<V> &operator --(V &arg) noexcept
 	{
-		arg -= T(1);
+		arg -= vec_scalar_t<V>(1);
 		return arg.as_derived();
 	}
 
 	// post-decrement
-	template <bool W, non_bool_scalar T, std::size_t C, typename D>
-	requires W
-	constexpr vec<T, C> operator --(vec_interface<W, T, C, D> &arg, int) noexcept
+	template <writable_vec_like V>
+	requires non_bool_scalar<vec_scalar_t<V>>
+	constexpr auto operator --(V &arg, int) noexcept
 	{
-		vec<T, C> value(arg);
-		arg -= T(1);
+		vec<vec_scalar_t<V>, vec_size_v<V>> value(arg);
+		arg -= vec_scalar_t<V>(1);
 		return value;
 	}
 
@@ -5375,23 +5538,23 @@ protected:
 
 	//
 
-	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires W && (N >= 0) && (N < C)
-	[[nodiscard]] constexpr T & get(vec_interface<W, T, C, D> & arg) noexcept
+	template <int N, writable_vec_like V>
+	requires (N >= 0) && (N < vec_size_v<V>)
+	[[nodiscard]] constexpr vec_scalar_t<V> & get(V & arg) noexcept
 	{
 		return arg[N];
 	}
 
-	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr const T & get(const vec_interface<W, T, C, D> & arg) noexcept
+	template <int N, vec_like V>
+	requires (N >= 0) && (N < vec_size_v<V>)
+	[[nodiscard]] constexpr const vec_scalar_t<V> & get(const V & arg) noexcept
 	{
 		return arg[N];
 	}
 
-	template <int N, bool W, dimensional_scalar T, std::size_t C, typename D>
-	requires (N >= 0) && (N < C)
-	[[nodiscard]] constexpr auto && get(vec_interface<W, T, C, D> && arg) noexcept
+	template <int N, writable_vec_like V>
+	requires (N >= 0) && (N < vec_size_v<V>)
+	[[nodiscard]] constexpr auto && get(V && arg) noexcept
 	{
 		return std::move(arg[N]);
 	}
@@ -5429,9 +5592,10 @@ protected:
 
 		}	// namespace lambda_ops
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto lessThan(const vec_interface<W1, T, C, D1> &x,
-											  const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto lessThan(const V1 &x,
+											  const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::less_op);
 		}
@@ -5443,9 +5607,10 @@ protected:
 			return lambda_ops::less_op(x, y);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto lessThanEqual(const vec_interface<W1, T, C, D1> &x,
-												   const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto lessThanEqual(const V1 &x,
+												   const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::less_equal_op);
 		}
@@ -5457,9 +5622,10 @@ protected:
 			return lambda_ops::less_equal_op(x, y);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto greaterThan(const vec_interface<W1, T, C, D1> &x,
-												 const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto greaterThan(const V1 &x,
+												 const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::greater_op);
 		}
@@ -5471,9 +5637,10 @@ protected:
 			return lambda_ops::greater_op(x, y);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto greaterThanEqual(const vec_interface<W1, T, C, D1> &x,
-													  const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto greaterThanEqual(const V1 &x,
+													  const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::greater_equal_op);
 		}
@@ -5485,9 +5652,10 @@ protected:
 			return lambda_ops::greater_equal_op(x, y);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto equal(const vec_interface<W1, T, C, D1> &x,
-										   const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto equal(const V1 &x,
+										   const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::equal_op);
 		}
@@ -5499,9 +5667,10 @@ protected:
 			return lambda_ops::equal_op(x, y);
 		}
 
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto equal(const vec_interface<W1, bool, C, D1> &x,
-										   const vec_interface<W2, bool, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto equal(const V1 &x,
+										   const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::bool_equal_op);
 		}
@@ -5512,9 +5681,10 @@ protected:
 			return lambda_ops::bool_equal_op(x, y);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto notEqual(const vec_interface<W1, T, C, D1> &x,
-											  const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto notEqual(const V1 &x,
+											  const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::not_equal_op);
 		}
@@ -5526,9 +5696,10 @@ protected:
 			return lambda_ops::not_equal_op(x, y);
 		}
 
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto notEqual(const vec_interface<W1, bool, C, D1> &x,
-											  const vec_interface<W2, bool, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto notEqual(const V1 &x,
+											  const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::bool_not_equal_op);
 		}
@@ -5539,9 +5710,11 @@ protected:
 			return lambda_ops::bool_not_equal_op(x, y);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool any(const vec_interface<W, bool, C, D> &x) noexcept
+		template <vec_like V>
+		requires bool_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr bool any(const V &x) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V>;
 			return [&x]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return (x[Is] || ...);
@@ -5553,9 +5726,11 @@ protected:
 			return x;
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool all(const vec_interface<W, bool, C, D> &x) noexcept
+		template <vec_like V>
+		requires bool_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr bool all(const V &x) noexcept
 		{
+			constexpr std::size_t C = vec_size_v<V>;
 			return [&x]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return (x[Is] && ...);
@@ -5568,8 +5743,9 @@ protected:
 		}
 
 		// not in GLSL
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr bool none(const vec_interface<W, bool, C, D> &x) noexcept
+		template <vec_like V>
+		requires bool_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr bool none(const V &x) noexcept
 		{
 			return !any(x);
 		}
@@ -5580,8 +5756,9 @@ protected:
 		}
 
 		// c++ does not allow a function named not() as in GLSL, so this is our alternate name
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto compNot(const vec_interface<W, bool, C, D> &x) noexcept
+		template <vec_like V>
+		requires bool_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto compNot(const V &x) noexcept
 		{
 			return machinery::apply_make(x, lambda_ops::comp_not_op);
 		}
@@ -5593,9 +5770,10 @@ protected:
 		}
 
 		// not in GLSL
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto compAnd(const vec_interface<W1, bool, C, D1> &x,
-											 const vec_interface<W2, bool, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires bool_scalar<vec_scalar_t<V1>> && bool_scalar<vec_scalar_t<V2>> && (vec_size_v<V1> == vec_size_v<V2>)
+		[[nodiscard]] constexpr auto compAnd(const V1 &x,
+											 const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::comp_and_op);
 		}
@@ -5607,9 +5785,10 @@ protected:
 		}
 
 		// not in GLSL
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto compOr(const vec_interface<W1, bool, C, D1> &x,
-											const vec_interface<W2, bool, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto compOr(const V1 &x,
+											const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::comp_or_op);
 		}
@@ -5621,9 +5800,10 @@ protected:
 		}
 
 		// not in GLSL
-		template <bool W1, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto compXor(const vec_interface<W1, bool, C, D1> &x,
-											 const vec_interface<W2, bool, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto compXor(const V1 &x,
+											 const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::comp_xor_op);
 		}
@@ -5663,10 +5843,11 @@ protected:
 		template <floating_point_scalar T>
 		inline constexpr T radians_per_degree_v = std::numbers::pi_v<T> / T(180);
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto radians(const vec_interface<W, T, C, D> &deg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto radians(const V &deg) noexcept
 		{
-			return deg * radians_per_degree_v<T>;
+			return deg * radians_per_degree_v<vec_scalar_t<V>>;
 		}
 
 		template <floating_point_scalar T>
@@ -5675,10 +5856,11 @@ protected:
 			return deg * radians_per_degree_v<T>;
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto degrees(const vec_interface<W, T, C, D> &rad) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto degrees(const V &rad) noexcept
 		{
-			return rad * degrees_per_radian_v<T>;
+			return rad * degrees_per_radian_v<vec_scalar_t<V>>;
 		}
 
 		template <floating_point_scalar T>
@@ -5687,8 +5869,9 @@ protected:
 			return rad * degrees_per_radian_v<T>;
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto sin(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto sin(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::sin_op);
 		}
@@ -5699,8 +5882,9 @@ protected:
 			return lambda_ops::sin_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto cos(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto cos(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::cos_op);
 		}
@@ -5711,8 +5895,9 @@ protected:
 			return lambda_ops::cos_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto tan(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto tan(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::tan_op);
 		}
@@ -5723,8 +5908,9 @@ protected:
 			return lambda_ops::tan_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto asin(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto asin(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::asin_op);
 		}
@@ -5735,8 +5921,9 @@ protected:
 			return lambda_ops::asin_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto acos(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto acos(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::acos_op);
 		}
@@ -5747,8 +5934,9 @@ protected:
 			return lambda_ops::acos_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto atan(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto atan(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::atan_op);
 		}
@@ -5759,10 +5947,10 @@ protected:
 			return lambda_ops::atan_op(arg);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1,
-		bool W2, typename D2>
-		[[nodiscard]] inline auto atan(const vec_interface<W1, T, C, D1> &y,
-									   const vec_interface<W2, T, C, D2> &x) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] inline auto atan(const V1 &y,
+									   const V2 &x) noexcept
 		{
 			return machinery::apply_unitype_make(y, x, lambda_ops::atan2_op);
 		}
@@ -5774,8 +5962,9 @@ protected:
 			return lambda_ops::atan2_op(y, x);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto sinh(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto sinh(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::sinh_op);
 		}
@@ -5786,8 +5975,9 @@ protected:
 			return lambda_ops::sinh_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto cosh(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto cosh(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::cosh_op);
 		}
@@ -5798,8 +5988,9 @@ protected:
 			return lambda_ops::cosh_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto tanh(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto tanh(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::tanh_op);
 		}
@@ -5810,8 +6001,9 @@ protected:
 			return lambda_ops::tanh_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto asinh(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto asinh(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::asinh_op);
 		}
@@ -5822,8 +6014,9 @@ protected:
 			return lambda_ops::asinh_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto acosh(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto acosh(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::acosh_op);
 		}
@@ -5834,8 +6027,9 @@ protected:
 			return lambda_ops::acosh_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto atanh(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto atanh(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::atanh_op);
 		}
@@ -5864,10 +6058,14 @@ protected:
 
 		}	// namespace lambda_ops
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] inline auto pow(const vec_interface<W1, T, C, D1> &base,
-									  const vec_interface<W2, T, C, D2> &exp)
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] inline auto pow(const V1 &base,
+									  const V2 &exp)
 		{
+			using T = vec_scalar_t<V1>;
+			constexpr std::size_t C = vec_size_v<V1>;
+
 			if (any(lessThan(base, vec<T, C>(0))))
 			{
 				[[ unlikely ]] throw std::invalid_argument("(base < 0) is UB");
@@ -5896,8 +6094,9 @@ protected:
 			[[ likely ]] return lambda_ops::pow_op(base, exp);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto exp(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto exp(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::exp_op);
 		}
@@ -5908,8 +6107,9 @@ protected:
 			return lambda_ops::exp_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto log(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto log(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::log_op);
 		}
@@ -5920,8 +6120,9 @@ protected:
 			return lambda_ops::log_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto exp2(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto exp2(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::exp2_op);
 		}
@@ -5932,8 +6133,9 @@ protected:
 			return lambda_ops::exp2_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] inline auto log2(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] inline auto log2(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::log2_op);
 		}
@@ -5944,8 +6146,9 @@ protected:
 			return lambda_ops::log2_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto sqrt(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto sqrt(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::sqrt_op);
 		}
@@ -5958,8 +6161,9 @@ protected:
 
 		// not in GLSL
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto fast_inversesqrt(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto fast_inversesqrt(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::fast_rsqrt_op);
 		}
@@ -5972,8 +6176,9 @@ protected:
 
 		// double specializations
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto inversesqrt(const vec_interface<W, double, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<double, vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto inversesqrt(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::rsqrt_op);
 		}
@@ -5985,8 +6190,9 @@ protected:
 
 		// float specializations - cxcm::rsqrt(float) is 100% match with cxcm::fast_rsqrt(float)
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto inversesqrt(const vec_interface<W, float, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<float, vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto inversesqrt(const V &arg) noexcept
 		{
 			return fast_inversesqrt(arg);
 		}
@@ -6016,11 +6222,14 @@ protected:
 			constexpr inline auto max_op =			[]<non_bool_scalar T>(T x, T y) noexcept			{ return std::max(x ,y); };
 			constexpr inline auto mod_op =			[]<floating_point_scalar T>(T x, T y) noexcept
 			{
-				[[ unlikely ]] if (y == 0)
+				if (detail::cxcm::abs(y) <= std::numeric_limits<T>::epsilon())
 				{
-					return std::numeric_limits<T>::quiet_NaN();
+					[[ unlikely]] return std::numeric_limits<T>::quiet_NaN();
 				}
-				return x - y * detail::cxcm::floor(x / y);
+				else
+				{
+					return x - y * detail::cxcm::floor(x / y);
+				}
 			 };
 
 			constexpr inline auto clamp_op =		[]<non_bool_scalar T>(T x, T min_val, T max_val) noexcept
@@ -6089,9 +6298,9 @@ protected:
 
 		}	// namespace lambda_ops
 
-		template <bool W, non_bool_scalar T, std::size_t C, typename D>
-		requires (!unsigned_scalar<T>)
-		[[nodiscard]] constexpr auto abs(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires non_bool_scalar<vec_scalar_t<V>> && (!unsigned_scalar<vec_scalar_t<V>>)
+		[[nodiscard]] constexpr auto abs(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::abs_op);
 		}
@@ -6103,9 +6312,9 @@ protected:
 			return lambda_ops::abs_op(arg);
 		}
 
-		template <bool W, non_bool_scalar T, std::size_t C, typename D>
-		requires (!unsigned_scalar<T>)
-		[[nodiscard]] constexpr auto sign(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires non_bool_scalar<vec_scalar_t<V>> && (!unsigned_scalar<vec_scalar_t<V>>)
+		[[nodiscard]] constexpr auto sign(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::sign_op);
 		}
@@ -6117,8 +6326,9 @@ protected:
 			return lambda_ops::sign_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto floor(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto floor(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::floor_op);
 		}
@@ -6129,8 +6339,9 @@ protected:
 			return lambda_ops::floor_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto trunc(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto trunc(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::trunc_op);
 		}
@@ -6141,8 +6352,9 @@ protected:
 			return lambda_ops::trunc_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto round(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto round(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::round_op);
 		}
@@ -6153,8 +6365,9 @@ protected:
 			return lambda_ops::round_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto roundEven(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto roundEven(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::round_even_op);
 		}
@@ -6165,8 +6378,9 @@ protected:
 			return lambda_ops::round_even_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto ceil(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto ceil(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::ceil_op);
 		}
@@ -6177,8 +6391,9 @@ protected:
 			return lambda_ops::ceil_op(arg);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto fract(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto fract(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::fract_op);
 		}
@@ -6189,16 +6404,18 @@ protected:
 			return lambda_ops::fract_op(arg);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto mod(const vec_interface<W1, T, C, D1> &x,
-										 const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto mod(const V1 &x,
+										 const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::mod_op);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto mod(const vec_interface<W, T, C, D> &x,
-										 T y) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto mod(const V &x,
+										 vec_scalar_t<V> y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::mod_op);
 		}
@@ -6210,13 +6427,13 @@ protected:
 			return lambda_ops::mod_op(x, y);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires W2
-		[[nodiscard]] constexpr auto modf(const vec_interface<W1, T, C, D1> &arg,
-										  vec_interface<W2, T, C, D2> &i) noexcept
+		template <vec_like V1, writable_vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto modf(const V1 &arg,
+										  V2 &i) noexcept
 		{
-			if constexpr (C == 1)
-				i.as_derived() = vec<T, 1>(trunc(arg));
+			if constexpr (vec_size_v<V1> == 1)
+				i.as_derived() = vec<vec_scalar_t<V1>, 1>(trunc(arg));
 			else
 				i.as_derived() = trunc(arg);
 
@@ -6231,16 +6448,18 @@ protected:
 			return lambda_ops::modf_op(arg, i);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto min(const vec_interface<W1, T, C, D1> &x,
-										 const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto min(const V1 &x,
+										 const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::min_op);
 		}
 
-		template <bool W, non_bool_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto min(const vec_interface<W, T, C, D> &x,
-										 T y) noexcept
+		template <vec_like V>
+		requires non_bool_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto min(const V &x,
+										 vec_scalar_t<V> y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::min_op);
 		}
@@ -6252,16 +6471,18 @@ protected:
 			return lambda_ops::min_op(x, y);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto max(const vec_interface<W1, T, C, D1> &x,
-										 const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto max(const V1 &x,
+										 const V2 &y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::max_op);
 		}
 
-		template <bool W, non_bool_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto max(const vec_interface<W, T, C, D> &x,
-										 T y) noexcept
+		template <vec_like V>
+		requires non_bool_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto max(const V &x,
+										 vec_scalar_t<V> y) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, lambda_ops::max_op);
 		}
@@ -6273,18 +6494,20 @@ protected:
 			return lambda_ops::max_op(x, y);
 		}
 
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-		[[nodiscard]] constexpr auto clamp(const vec_interface<W1, T, C, D1> &x,
-										   const vec_interface<W2, T, C, D2> &min_val,
-										   const vec_interface<W3, T, C, D3> &max_val)
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires same_vec_shape<V1, V2, V3> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto clamp(const V1 &x,
+										   const V2 &min_val,
+										   const V3 &max_val)
 		{
 			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
 
-		template <bool W, non_bool_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto clamp(const vec_interface<W, T, C, D> &x,
-										   T min_val,
-										   T max_val)
+		template <vec_like V>
+		requires non_bool_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto clamp(const V &x,
+										   vec_scalar_t<V> min_val,
+										   vec_scalar_t<V> max_val)
 		{
 			return machinery::apply_unitype_make(x, min_val, max_val, lambda_ops::clamp_op);
 		}
@@ -6297,18 +6520,20 @@ protected:
 			return lambda_ops::clamp_op(x, min_val, max_val);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-		[[nodiscard]] constexpr auto mix(const vec_interface<W1, T, C, D1> &x,
-										 const vec_interface<W2, T, C, D2> &y,
-										 const vec_interface<W3, T, C, D3> &a) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires same_vec_shape<V1, V2, V3> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto mix(const V1 &x,
+										 const V2 &y,
+										 const V3 &a) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, a, lambda_ops::mix1_op);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto mix(const vec_interface<W1, T, C, D1> &x,
-										 const vec_interface<W2, T, C, D2> &y,
-										 T a) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto mix(const V1 &x,
+										 const V2 &y,
+										 vec_scalar_t<V1> a) noexcept
 		{
 			return machinery::apply_unitype_make(x, y, a, lambda_ops::mix1_op);
 		}
@@ -6321,10 +6546,11 @@ protected:
 			return lambda_ops::mix1_op(x, y, a);
 		}
 
-		template <bool W1, dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, bool_scalar B, typename D3>
-		[[nodiscard]] constexpr auto mix(const vec_interface<W1, T, C, D1> &x,
-										 const vec_interface<W2, T, C, D2> &y,
-										 const vec_interface<W3, B, C, D3> &a) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires same_vec_shape<V1, V2> && dimensional_scalar<vec_scalar_t<V1>> && bool_scalar<vec_scalar_t<V3>> && (vec_size_v<V1> == vec_size_v<V3>)
+		[[nodiscard]] constexpr auto mix(const V1 &x,
+										 const V2 &y,
+										 const V3 &a) noexcept
 		{
 			return machinery::apply_multitype_make(x, y, a, lambda_ops::mix2_op);
 		}
@@ -6337,16 +6563,18 @@ protected:
 			return lambda_ops::mix2_op(x, y, a);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr auto step(const vec_interface<W1, T, C, D1> &edge,
-										  const vec_interface<W2, T, C, D2> &x) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto step(const V1 &edge,
+										  const V2 &x) noexcept
 		{
 			return machinery::apply_unitype_make(edge, x, lambda_ops::step_op);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto step(T edge,
-										  const vec_interface<W, T, C, D> &x) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto step(vec_scalar_t<V> edge,
+										  const V &x) noexcept
 		{
 			return machinery::apply_unitype_make(edge, x, lambda_ops::step_op);
 		}
@@ -6358,10 +6586,11 @@ protected:
 			return lambda_ops::step_op(edge, x);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-		[[nodiscard]] constexpr auto smoothstep(const vec_interface<W1, T, C, D1> &edge0,
-												const vec_interface<W2, T, C, D2> &edge1,
-												const vec_interface<W3, T, C, D3> &x)
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires same_vec_shape<V1, V2, V3> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr auto smoothstep(const V1 &edge0,
+												const V2 &edge1,
+												const V3 &x)
 		{
 			if (any(greaterThanEqual(edge0, edge1)))
 			{
@@ -6370,10 +6599,11 @@ protected:
 			[[ likely ]] return machinery::apply_unitype_make(edge0, edge1, x, lambda_ops::smoothstep_op);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto smoothstep(T edge0,
-												T edge1,
-												const vec_interface<W, T, C, D> &x)
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto smoothstep(vec_scalar_t<V> edge0,
+												vec_scalar_t<V> edge1,
+												const V &x)
 		{
 			if (edge0 >= edge1)
 			{
@@ -6438,13 +6668,14 @@ protected:
 		// guarantee the byte sizes of these primitives
 		//
 
-		static_assert(sizeof(float) == sizeof(int), "float and int must be same byte size");
-		static_assert(sizeof(float) == sizeof(unsigned int), "float and unsigned int must be same byte size");
-		static_assert(sizeof(double) == sizeof(long long), "double and long long must be same byte size");
-		static_assert(sizeof(double) == sizeof(unsigned long long), "double and unsigned long long must be same byte size");
+		static_assert(sizeof(float) == sizeof(int), "requires IEEE-754 32-bit float on this platform");
+		static_assert(sizeof(float) == sizeof(unsigned int), "requires IEEE-754 32-bit float on this platform");
+		static_assert(sizeof(double) == sizeof(long long), "requires IEEE-754 64-bit double on this platform");
+		static_assert(sizeof(double) == sizeof(unsigned long long), "requires IEEE-754 64-bit double on this platform");
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto floatBitsToInt(const vec_interface<W, float, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, float>
+		[[nodiscard]] constexpr auto floatBitsToInt(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::float_bits_to_int_op);
 		}
@@ -6454,8 +6685,9 @@ protected:
 			return lambda_ops::float_bits_to_int_op(arg);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto floatBitsToUint(const vec_interface<W, float, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, float>
+		[[nodiscard]] constexpr auto floatBitsToUint(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::float_bits_to_uint_op);
 		}
@@ -6465,8 +6697,9 @@ protected:
 			return lambda_ops::float_bits_to_uint_op(arg);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto doubleBitsToLongLong(const vec_interface<W, double, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, double>
+		[[nodiscard]] constexpr auto doubleBitsToLongLong(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::double_bits_to_long_long_op);
 		}
@@ -6476,8 +6709,9 @@ protected:
 			return lambda_ops::double_bits_to_long_long_op(arg);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto doubleBitsToUlongLong(const vec_interface<W, double, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, double>
+		[[nodiscard]] constexpr auto doubleBitsToUlongLong(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::double_bits_to_ulong_long_op);
 		}
@@ -6487,8 +6721,9 @@ protected:
 			return lambda_ops::double_bits_to_ulong_long_op(arg);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto intBitsToFloat(const vec_interface<W, int, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, int>
+		[[nodiscard]] constexpr auto intBitsToFloat(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::int_bits_to_float_op);
 		}
@@ -6498,8 +6733,9 @@ protected:
 			return lambda_ops::int_bits_to_float_op(arg);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto uintBitsToFloat(const vec_interface<W, unsigned int, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, unsigned int>
+		[[nodiscard]] constexpr auto uintBitsToFloat(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::uint_bits_to_float_op);
 		}
@@ -6509,8 +6745,9 @@ protected:
 			return lambda_ops::uint_bits_to_float_op(arg);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto longLongBitsToDouble(const vec_interface<W, long long, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, long long>
+		[[nodiscard]] constexpr auto longLongBitsToDouble(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::long_long_bits_to_double_op);
 		}
@@ -6520,8 +6757,9 @@ protected:
 			return lambda_ops::long_long_bits_to_double_op(arg);
 		}
 
-		template <bool W, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto ulongLongBitsToDouble(const vec_interface<W, unsigned long long, C, D> &arg) noexcept
+		template <vec_like V>
+		requires std::same_as<vec_scalar_t<V>, unsigned long long>
+		[[nodiscard]] constexpr auto ulongLongBitsToDouble(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::ulong_long_bits_to_double_op);
 		}
@@ -6531,10 +6769,11 @@ protected:
 			return lambda_ops::ulong_long_bits_to_double_op(arg);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-		[[nodiscard]] inline auto fma(const vec_interface<W1, T, C, D1> &a,
-									  const vec_interface<W2, T, C, D2> &b,
-									  const vec_interface<W3, T, C, D3> &c) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires same_vec_shape<V1, V2, V3> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] inline auto fma(const V1 &a,
+									  const V2 &b,
+									  const V3 &c) noexcept
 		{
 			return machinery::apply_unitype_make(a, b, c, lambda_ops::fma_op);
 		}
@@ -6547,15 +6786,15 @@ protected:
 			return lambda_ops::fma_op(a, b, c);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires W2
-		[[nodiscard]] inline auto frexp(const vec_interface<W1, T, C, D1> &x,
-										vec_interface<W2, int, C, D2> &exp) noexcept
+		template <vec_like V1, writable_vec_like V2>
+		requires floating_point_scalar<vec_scalar_t<V1>> && std::same_as<int, vec_scalar_t<V2>> && (vec_size_v<V1> == vec_size_v<V2>)
+		[[nodiscard]] inline auto frexp(const V1 &x,
+										V2 &exp) noexcept
 		{
 			return [&x, &exp]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return vec<T, C>{lambda_ops::frexp_op(x[Is], exp[Is])...};
-			}(std::make_index_sequence<C>{});
+				return vec<vec_scalar_t<V1>, vec_size_v<V1>>{lambda_ops::frexp_op(x[Is], exp[Is])...};
+			}(std::make_index_sequence<vec_size_v<V1>>{});
 		}
 
 		template <floating_point_scalar T>
@@ -6565,9 +6804,10 @@ protected:
 			return lambda_ops::frexp_op(x, exp);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] inline auto ldexp(const vec_interface<W1, T, C, D1> &x,
-										const vec_interface<W2, int, C, D2> &exp) noexcept
+		template <vec_like V1, vec_like V2>
+		requires floating_point_scalar<vec_scalar_t<V1>> && std::same_as<int, vec_scalar_t<V2>> && (vec_size_v<V1> == vec_size_v<V2>)
+		[[nodiscard]] inline auto ldexp(const V1 &x,
+										const V2 &exp) noexcept
 		{
 			return machinery::apply_multitype_make(x, exp, lambda_ops::ldexp_op);
 		}
@@ -6584,8 +6824,9 @@ protected:
 		//
 
 		// since dsga is designed for c++20, we can't use std::byteswap() from c++23
-		template <bool W, numeric_integral_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr auto byteswap(const vec_interface<W, T, C, D> &arg) noexcept
+		template <vec_like V>
+		requires numeric_integral_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto byteswap(const V &arg) noexcept
 		{
 			return machinery::apply_make(arg, lambda_ops::byteswap_op);
 		}
@@ -6617,49 +6858,55 @@ protected:
 		//
 
 		// not in GLSL -- dot() is just for floating point, innerProduct() does what dot() does, but it works on all non_bool_scalar types
-		template <bool W1, non_bool_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr T innerProduct(const vec_interface<W1, T, C, D1> &x,
-											   const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && non_bool_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr vec_scalar_t<V1> innerProduct(const V1 &x,
+															  const V2 &y) noexcept
 		{
 			return [&x, &y]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return ((x[Is] * y[Is]) + ...);
-			}(std::make_index_sequence<C>{});
+				return (... + (x[Is] * y[Is]));
+			}(std::make_index_sequence<vec_size_v<V1>>{});
 		}
 
 		//
 		// 8.5 - geometric
 		//
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr T dot(const vec_interface<W1, T, C, D1> &x,
-									  const vec_interface<W2, T, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr vec_scalar_t<V1> dot(const V1 &x,
+													 const V2 &y) noexcept
 		{
 			return [&x, &y]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				return ((x[Is] * y[Is]) + ...);
-			}(std::make_index_sequence<C>{});
+				return (... + (x[Is] * y[Is]));
+			}(std::make_index_sequence<vec_size_v<V1>>{});
 		}
 
-		template <bool W1, floating_point_scalar T, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr vec<T, 3> cross(const vec_interface<W1, T, 3, D1> &a,
-												const vec_interface<W2, T, 3, D2> &b) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>> && (vec_size_v<V1> == 3)
+		[[nodiscard]] constexpr vec<vec_scalar_t<V1>, 3> cross(const V1 &a,
+															   const V2 &b) noexcept
 		{
-			return vec {
+			return vec
+			{
 				(a[1] * b[2]) - (b[1] * a[2]),
 				(a[2] * b[0]) - (b[2] * a[0]),
 				(a[0] * b[1]) - (b[0] * a[1])
 			};
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		[[nodiscard]] constexpr T length(const vec_interface<W, T, C, D> &x) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr vec_scalar_t<V> length(const V &x) noexcept
 		{
 			return detail::cxcm::sqrt(dot(x, x));
 		}
 
-		template <bool W, floating_point_scalar T, typename D>
-		[[nodiscard]] constexpr T length(const vec_interface<W, T, 1, D> &x) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>> && (vec_size_v<V> == 1)
+		[[nodiscard]] constexpr vec_scalar_t<V> length(const V &x) noexcept
 		{
 			return detail::cxcm::abs(x[0]);
 		}
@@ -6670,9 +6917,10 @@ protected:
 			return detail::cxcm::abs(x);
 		}
 
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		[[nodiscard]] constexpr T distance(const vec_interface<W1, T, C, D1> &p0,
-										   const vec_interface<W2, T, C, D2> &p1) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr vec_scalar_t<V1> distance(const V1 &p0,
+														  const V2 &p1) noexcept
 		{
 			return length(p0 - p1);
 		}
@@ -6684,13 +6932,15 @@ protected:
 			return length(p0 - p1);
 		}
 
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		requires (C > 1)
-		[[nodiscard]] constexpr vec<T, C> normalize(const vec_interface<W, T, C, D> &x) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>> && (vec_size_v<V> > 1)
+		[[nodiscard]] constexpr vec<vec_scalar_t<V>, vec_size_v<V>> normalize(const V &x) noexcept
 		{
+			using T = vec_scalar_t<V>;
+
 			auto len = length(x);
-			if (T(0.0) == len)
-				return vec<T, C>(T(0));			// if we are here, then x is a zero vector, so return a zero vector
+			if (len <= std::numeric_limits<T>::epsilon())
+				return vec<T, vec_size_v<V>>{};		// if we are here, then x is a zero vector, so return a zero vector
 
 			[[likely]] return x / len;
 		}
@@ -6699,35 +6949,42 @@ protected:
 		// vec4 ftransform() omitted
 		//
 		
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, typename D3>
-		requires (C > 1)
-		[[nodiscard]] constexpr vec<T, C> faceforward(const vec_interface<W1, T, C, D1> &n,
-													  const vec_interface<W2, T, C, D2> &i,
-													  const vec_interface<W3, T, C, D3> &nref) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires same_vec_shape<V1, V2, V3> && floating_point_scalar<vec_scalar_t<V1>> && (vec_size_v<V1> > 1)
+		[[nodiscard]] constexpr vec<vec_scalar_t<V1>, vec_size_v<V1>> faceforward(const V1 &n,
+																				  const V2 &i,
+																				  const V3 &nref) noexcept
 		{
+			using T = vec_scalar_t<V1>;
+
 			return (dot(nref, i) < T(0)) ? +n : -n;
 		}
 
 		// n must be normalized in order to achieve desired results
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires (C > 1)
-		[[nodiscard]] constexpr vec<T, C> reflect(const vec_interface<W1, T, C, D1> &i,
-												  const vec_interface<W2, T, C, D2> &n) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>> && (vec_size_v<V1> > 1)
+		[[nodiscard]] constexpr vec<vec_scalar_t<V1>, vec_size_v<V1>> reflect(const V1 &i,
+																			  const V2 &n) noexcept
 		{
+			using T = vec_scalar_t<V1>;
+
 			return i - T(2) * dot(n, i) * n;
 		}
 
 		// i and n must be normalized in order to achieve desired results
-		template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-		requires (C > 1)
-		[[nodiscard]] constexpr vec<T, C> refract(const vec_interface<W1, T, C, D1> &i,
-												  const vec_interface<W2, T, C, D2> &n,
-												  T eta) noexcept
+		template <vec_like V1, vec_like V2>
+		requires same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>> && (vec_size_v<V1> > 1)
+		[[nodiscard]] constexpr vec<vec_scalar_t<V1>, vec_size_v<V1>> refract(const V1 &i,
+																			  const V2 &n,
+																			  vec_scalar_t<V1> eta) noexcept
 		{
+			using T = vec_scalar_t<V1>;
+			constexpr std::size_t C = vec_size_v<V1>;
+
 			T k = T(1) - eta * eta * (T(1) - dot(n, i) * dot(n, i));
 
 			if (k < T(0))
-				return vec<T, C>{T(0)};
+				return vec<T, C>{};
 
 			[[likely]] return eta * i - (eta * dot(n, i) + detail::cxcm::sqrt(k)) * n;
 		}
@@ -6746,10 +7003,12 @@ protected:
 		// Not in GLSL -- inspired by the Odin Programming Language.
 		//
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename Arg>
-		requires std::convertible_to<Arg, std::size_t>
-		inline T swizzle(const vec_interface<W, T, C, D> &v, const Arg &index)
+		template <vec_like V, typename Arg>
+		requires std::convertible_to<Arg, std::size_t> && dimensional_scalar<vec_scalar_t<V>>
+		inline vec_scalar_t<V> swizzle(const V &v, const Arg &index)
 		{
+			constexpr std::size_t C = vec_size_v<V>;
+
 			bool index_valid = (static_cast<std::size_t>(index) < C);
 
 			if (!index_valid)
@@ -6760,10 +7019,14 @@ protected:
 			[[ likely ]] return v[static_cast<std::size_t>(index)];
 		}
 
-		template <bool W, dimensional_scalar T, std::size_t C, typename D, typename ...Args>
-		requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 1) && (sizeof...(Args) <= 4)
-		inline vec<T, sizeof...(Args)> swizzle(const vec_interface<W, T, C, D> &v, const Args &...Is)
+		template <vec_like V, typename ...Args>
+		requires (std::convertible_to<Args, std::size_t> && ...) && (sizeof...(Args) > 1) && (sizeof...(Args) <= 4) &&
+				 dimensional_scalar<vec_scalar_t<V>>
+		inline vec<vec_scalar_t<V>, sizeof...(Args)> swizzle(const V &v, const Args &...Is)
 		{
+			using T = vec_scalar_t<V>;
+			constexpr std::size_t C = vec_size_v<V>;
+
 			bool indexes_valid = ((static_cast<std::size_t>(Is) < C) && ...);
 
 			if (!indexes_valid)
@@ -6783,12 +7046,16 @@ protected:
 	//
 
 	// implicitly_convertible_to does not work with bool, so need another function for that case if we want to support that (which we don't)
-	template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2>
-	requires std::convertible_to<T1, T2> || std::convertible_to<T2, T1>
-	constexpr bool operator ==(const vec_interface<W1, T1, C, D1> &first,
-							   const vec_interface<W2, T2, C, D2> &second) noexcept
+	template <vec_like V1, vec_like V2>
+	requires dimensional_scalar<vec_scalar_t<V1>> && dimensional_scalar<vec_scalar_t<V2>> &&
+			 (std::convertible_to<vec_scalar_t<V1>, vec_scalar_t<V2>> || std::convertible_to<vec_scalar_t<V2>, vec_scalar_t<V1>>) &&
+			 (vec_size_v<V1> == vec_size_v<V2>)
+	constexpr bool operator ==(const V1 &first,
+							   const V2 &second) noexcept
 	{
-		using commontype = std::common_type_t<T1, T2>;
+		using commontype = std::common_type_t<vec_scalar_t<V1>, vec_scalar_t<V2>>;
+		constexpr std::size_t C = vec_size_v<V1>;
+
 		return [&first, &second]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
 			return ((static_cast<commontype>(first[Is]) == static_cast<commontype>(second[Is])) && ...);
@@ -6796,47 +7063,44 @@ protected:
 	}
 
 	// when Count == 1, treat it like a scalar value for equality comparison
-	template <bool W, dimensional_scalar T1, typename D, dimensional_scalar T2>
-	requires std::convertible_to<T2, T1> || std::convertible_to<T1, T2>
-	constexpr bool operator ==(const vec_interface<W, T1, 1, D> &first,
-							   T2 second) noexcept
+	template <vec_like V, dimensional_scalar R>
+	requires (std::convertible_to<R, vec_scalar_t<V>> || std::convertible_to<vec_scalar_t<V>, R>) &&
+	dimensional_scalar<vec_scalar_t<V>> && (vec_size_v<V> == 1)
+	constexpr bool operator ==(const V &first,
+							   R second) noexcept
 	{
-		using commontype = std::common_type_t<T1, T2>;
+		using commontype = std::common_type_t<vec_scalar_t<V>, R>;
 		return (static_cast<commontype>(first[0]) == static_cast<commontype>(second));
 	}
 
 	namespace dm_detail
 	{
 		// create a column vector that is to be part of a diagonal matrix, where all elements
-		// are 0 except for the element at index, with the value being diagonal_vector[index].
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		requires mat_dimension<C>
-		[[nodiscard]] constexpr auto diagonal_column(const vec_interface<W, T, C, D> &diagonal_vector, std::size_t index) noexcept
-		{
-			vec<T, C> val;
-
-			[&val, &diagonal_vector, index]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				((val[Is] = (Is == index) ? diagonal_vector[index] : T(0)), ...);
-			}(std::make_index_sequence<C>{});
-
-			return val;
-		}
-
-		// create a column vector that is to be part of a diagonal matrix, where all elements
 		// are 0 except for the element at index, with the value being diagonal_number.
 		template <floating_point_scalar T, std::size_t C>
 		requires mat_dimension<C>
-		[[nodiscard]] constexpr auto diagonal_column(T diagonal_number, std::size_t index) noexcept
+		[[nodiscard]] constexpr auto diagonal_column(T diagonal_number, std::size_t index)
 		{
-			vec<T, C> val;
+			DSGA_ASSERT(index < C, "diagonal_column() index out of range");
 
-			[&val, diagonal_number, index]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+			return [diagonal_number, index]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
-				((val[Is] = (Is == index) ? diagonal_number : T(0)), ...);
+				return vec<T, C>{((Is == index) ? diagonal_number : T(0)) ...};
 			}(std::make_index_sequence<C>{});
+		}
 
-			return val;
+		// create a column vector that is to be part of a diagonal matrix, where all elements
+		// are 0 except for the element at index, with the value being diagonal_vector[index].
+		template <vec_like V>
+		requires mat_dimension<vec_size_v<V>> && floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr auto diagonal_column(const V &diagonal_vector, std::size_t index)
+		{
+			using T = vec_scalar_t<V>;
+			constexpr std::size_t C = vec_size_v<V>;
+
+			DSGA_ASSERT(index < C, "diagonal_column() index out of range");
+
+			return diagonal_column<T, C>(diagonal_vector[index], index);
 		}
 	}	// namespace dm_detail
 
@@ -6880,29 +7144,126 @@ protected:
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr vec<T, R> &operator [](const U &index)
+		[[nodiscard]] constexpr vec<T, R> &operator [](U index)
 		{
-			return columns.at(static_cast<std::size_t>(index));
+			std::size_t idx = static_cast<std::size_t>(index);
+			DSGA_ASSERT(idx < C, "index out of range");
+			return columns[idx];
 		}
 
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr const vec<T, R> &operator [](const U &index) const
+		[[nodiscard]] constexpr const vec<T, R> &operator [](U index) const
 		{
-			return columns.at(static_cast<std::size_t>(index));
+			std::size_t idx = static_cast<std::size_t>(index);
+			DSGA_ASSERT(idx < C, "index out of range");
+			return columns[idx];
+		}
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr vec<T, R> &at(U index)
+		{
+			std::size_t idx = static_cast<std::size_t>(index);
+//			DSGA_ASSERT(idx < C, "index out of range");
+			// use std::array::at() to get the column vector, which will throw if the index is out of range
+			return columns.at(idx);
+		}
+
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr const vec<T, R> &at(U index) const
+		{
+			std::size_t idx = static_cast<std::size_t>(index);
+//			DSGA_ASSERT(idx < C, "index out of range");
+			// use std::array::at() to get the column vector, which will throw if the index is out of range
+			return columns.at(idx);
 		}
 
 		// get a row of the matrix as a vector
 		template <typename U>
 		requires std::convertible_to<U, std::size_t>
-		[[nodiscard]] constexpr vec<T, C> row(const U &row_index) const
+		[[nodiscard]] constexpr vec<T, C> row(U row_index) const
+		{
+			std::size_t idx = static_cast<std::size_t>(row_index);
+			DSGA_ASSERT(idx < R, "row index out of range");
+
+			// for each column of the matrix, get a row component, and bundle
+			// these components up into a vector that represents the row
+			return[this, &idx]<std::size_t ...Is>(std::index_sequence<Is...>) -> vec<T, C>
+			{
+				return vec<T, C>{ columns[Is][idx]... };
+			}(std::make_index_sequence<C>{});
+		}
+
+		// set a row of the matrix
+		template <typename U, vec_like V>
+		requires std::convertible_to<U, std::size_t> && std::convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == C)
+		constexpr void row(U row_index, const V &v)
+		{
+			std::size_t idx = static_cast<std::size_t>(row_index);
+			DSGA_ASSERT(idx < R, "row index out of range");
+
+			// for each column of the matrix, get a row component, and bundle
+			// these components up into a vector that represents the row
+			[this, &idx, &v]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				((columns[Is][idx] = static_cast<T>(v[Is])),...);
+			}(std::make_index_sequence<C>{});
+		}
+
+		// get a row of the matrix as a vector
+		template <typename U>
+		requires std::convertible_to<U, std::size_t>
+		[[nodiscard]] constexpr vec<T, R> column(U column_index) const
+		{
+			std::size_t idx = static_cast<std::size_t>(column_index);
+			DSGA_ASSERT(idx < C, "column index out of range");
+
+			// columns are stored as vectors, so just return the column vector
+			return columns[idx];
+		}
+
+		// set a column of the matrix
+		template <typename U, vec_like V>
+		requires std::convertible_to<U, std::size_t> && std::convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == R)
+		constexpr void column(U column_index, const V &v)
+		{
+			std::size_t idx = static_cast<std::size_t>(column_index);
+			DSGA_ASSERT(idx < C, "column index out of range");
+
+			// columns are stored as vectors, so just copy the vector
+			columns[idx] = v;
+		}
+
+		// get the diagonal of the matrix as a vector
+		[[nodiscard]] constexpr vec<T, C> diagonal() const requires (C == R)
+		{
+			// get the diagonal elements and bundle them into a vector that represents the diagonal
+			return [this]<std::size_t ...Is>(std::index_sequence<Is...>)
+			{
+				return vec<T, C>{ columns[Is][Is]... };
+			}(std::make_index_sequence<C>{});
+		}
+
+		// set the diagonal of the matrix
+		template <typename U, vec_like V>
+		requires std::convertible_to<vec_scalar_t<V>, T> && (C == R) && (vec_size_v<V> == C)
+		constexpr void diagonal(const V &v)
 		{
 			// for each column of the matrix, get a row component, and bundle
 			// these components up into a vector that represents the row
-			return [this, &row_index]<std::size_t ...Is>(std::index_sequence<Is...>)
+			[this, &v]<std::size_t ...Is>(std::index_sequence<Is...>)
 			{
-				return vec<T, C>{ columns[Is][row_index]... };
+				((columns[Is][Is] = static_cast<T>(v[Is])),...);
 			}(std::make_index_sequence<C>{});
+		}
+
+		// get the trace of the matrix
+		[[nodiscard]] constexpr T trace() const
+		requires (C == R)
+		{
+			return diagonal().sum();
 		}
 
 		//
@@ -6923,7 +7284,8 @@ protected:
 
 		// variadic constructor of scalar and vector arguments
 		template <typename U, typename ... Args>
-		requires (detail::valid_matrix_component<U, T>::value) && (detail::valid_matrix_component<Args, T>::value && ...) && detail::met_component_count<ComponentCount, U, Args...>
+		requires (detail::valid_matrix_component<U, T>::value) && (detail::valid_matrix_component<Args, T>::value && ...) &&
+				 detail::met_component_count<ComponentCount, U, Args...>
 		explicit constexpr mat(const U &u, const Args & ...args) noexcept
 			: columns{}
 		{
@@ -6953,7 +7315,6 @@ protected:
 		template <floating_point_scalar U>
 		requires implicitly_convertible_to<U, T>
 		explicit(false) constexpr mat(const mat<U, C, R> &arg) noexcept
-			: columns{}
 		{
 			[this, &arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
@@ -7074,11 +7435,16 @@ protected:
 		}
 
 		// outerProduct() - matrix from a column vector times a row vector
-		template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, std::size_t C2, typename D2>
-		requires mat_dimension<C1> && mat_dimension<C2>
-		[[nodiscard]] constexpr mat<T, C2, C1> outerProduct(const vec_interface<W1, T, C1, D1> &lhs,
-															const vec_interface<W2, T, C2, D2> &rhs) noexcept
+		template <vec_like V1, vec_like V2>
+		requires mat_dimension<vec_size_v<V1>> && mat_dimension<vec_size_v<V2>> &&
+				 std::same_as<vec_scalar_t<V1>, vec_scalar_t<V2>> && floating_point_scalar<vec_scalar_t<V1>>
+		[[nodiscard]] constexpr mat<vec_scalar_t<V1>, vec_size_v<V2>, vec_size_v<V1>> outerProduct(const V1 &lhs,
+																								   const V2 &rhs) noexcept
 		{
+			using T = vec_scalar_t<V1>;
+			constexpr std::size_t C1 = vec_size_v<V1>;
+			constexpr std::size_t C2 = vec_size_v<V2>;
+
 			mat<T, C2, C1> val;
 
 			[&val, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -7273,9 +7639,12 @@ protected:
 		// returns a skew symmetric matrix that can be used for computing the cross product. vector and matrix are 3D.
 		//
 		// cross(u, v) == cross_matrix(u) * v == u * cross_matrix(v)
-		template <bool W, floating_point_scalar T, typename D>
-		[[nodiscard]] constexpr mat<T, 3, 3> cross_matrix(const vec_interface<W, T, 3, D> &vec) noexcept
+		template <vec_like V>
+		requires floating_point_scalar<vec_scalar_t<V>> && (vec_size_v<V> == 3)
+		[[nodiscard]] constexpr mat<vec_scalar_t<V>, 3, 3> cross_matrix(const V &vec) noexcept
 		{
+			using T = vec_scalar_t<V>;
+
 			return mat<T, 3, 3>{ T(0),	  vec[2], -vec[1],
 								-vec[2],  T(0),	   vec[0],
 								 vec[1], -vec[0],  T(0) };
@@ -7286,10 +7655,13 @@ protected:
 		// returns a symmetric diagonal matrix (square) using the vector parameter as the diagonal values,
 		// with all other elements being 0.
 		//
-		template <bool W, floating_point_scalar T, std::size_t C, typename D>
-		requires mat_dimension<C>
-		[[nodiscard]] constexpr mat<T, C, C> diagonal_matrix(const vec_interface<W, T, C, D> &vec) noexcept
+		template <vec_like V>
+		requires mat_dimension<vec_size_v<V>> && floating_point_scalar<vec_scalar_t<V>>
+		[[nodiscard]] constexpr mat<vec_scalar_t<V>, vec_size_v<V>, vec_size_v<V>> diagonal_matrix(const V &vec) noexcept
 		{
+			using T = vec_scalar_t<V>;
+			constexpr std::size_t C = vec_size_v<V>;
+
 			mat<T, C, C> val;
 
 			[&val, &vec] <std::size_t ...Is>(std::index_sequence<Is...>) noexcept
@@ -7531,20 +7903,22 @@ protected:
 
 	// matrix * (column) vector => (column) vector
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, typename D>
+	template <floating_point_scalar T, std::size_t C, std::size_t R, vec_like V>
+	requires (vec_size_v<V> == C) && std::same_as<vec_scalar_t<V>, T>
 	[[nodiscard]] constexpr vec<T, R> operator *(const mat<T, C, R> &lhs,
-												 const vec_interface<W, T, C, D> &rhs) noexcept
+												 const V &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
-			return ((lhs[Is] * rhs[Is]) + ...);
+			return (... + (lhs[Is] * rhs[Is]));
 		}(std::make_index_sequence<C>{});
 	}
 
 	// (row) vector * matrix => (row) vector
 
-	template <floating_point_scalar T, std::size_t C, std::size_t R, bool W, typename D>
-	[[nodiscard]] constexpr vec<T, R> operator *(const vec_interface<W, T, R, D> &lhs,
+	template <floating_point_scalar T, std::size_t C, std::size_t R, vec_like V>
+	requires (vec_size_v<V> == R) && std::same_as<vec_scalar_t<V>, T>
+	[[nodiscard]] constexpr vec<T, R> operator *(const V &lhs,
 												 const mat<T, C, R> &rhs) noexcept
 	{
 		return [&lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
@@ -7560,7 +7934,7 @@ protected:
 	[[nodiscard]] constexpr mat<T, C2, R1> operator *(const mat<T, C1, R1> &lhs,
 													  const mat<T, C2, R2> &rhs) noexcept
 	{
-		auto val = mat<T, C2, R1>{};
+		mat<T, C2, R1> val;
 
 		[&val, &lhs, &rhs]<std::size_t ...Is>(std::index_sequence <Is...>) noexcept
 		{
@@ -7683,10 +8057,14 @@ protected:
 
 	// converting from internal vector type to std::array
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	[[nodiscard]] constexpr std::array<T, C> to_array(const vec_interface<W, T, C, D> &arg) noexcept
+	template <vec_like V>
+	requires dimensional_storage<vec_scalar_t<V>, vec_size_v<V>>
+	[[nodiscard]] constexpr std::array<vec_scalar_t<V>, vec_size_v<V>> to_array(const V &arg) noexcept
 	{
-		return [&arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		using T = vec_scalar_t<V>;
+		constexpr std::size_t C = vec_size_v<V>;
+
+		return[&arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 		{
 			return std::array<T, C>{ arg[Is]... };
 		}(std::make_index_sequence<C>{});

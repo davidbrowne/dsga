@@ -1,3 +1,13 @@
+# Installation
+
+This is a **single header library**, where you just need the file [dsga.hxx](include/dsga.hxx). You can just copy dsga.hxx, or you can get it installed via CMake. Things are defined in the ```dsga``` namespace. The types provided by this library can be seen summarized in the [documentation](docs/DOCUMENTATION.md).
+
+Under the hood, we depend on the [cxcm](https://github.com/davidbrowne/cxcm) project for constexpr versions of some ```cmath``` functions. ```cxcm``` has been brought into ```dsga.hxx```, converted to a nested ```namespace detail::cxcm``` under ```namespace dsga```, so we don't need to also include the files from ```cxcm```.
+
+This may be a single header library, but if Visual Studio is being used, we recommend to also get the [dsga.natvis](VS2026/dsga.natvis) file for debugging and inspecting vectors and matrices in the IDE.
+
+This is a c++20 library, so that needs to be the minimum standard that you tell the compiler to use.
+
 # Documentation
 
 Go to [detailed API documentation](API.md)

@@ -1,3 +1,4 @@
+#pragma once
 
 //          Copyright David Browne 2020-2026.
 // Distributed under the Boost Software License, Version 1.0.
@@ -27,10 +28,11 @@ namespace dsga
 	namespace detail
 	{
 		// helper that evaluates a binary operation lambda
-		template <bool W1, dimensional_scalar T1, std::size_t C, typename D1, bool W2, dimensional_scalar T2, typename D2, typename BinOp>
+		template <vec_like V1, vec_like V2, typename BinOp>
+		requires (vec_size_v<V1> == vec_size_v<V2>) && dimensional_scalar<vec_scalar_t<V1>> &&dimensional_scalar<vec_scalar_t<V2>>
 		[[nodiscard]] constexpr auto binary_op(BinOp lambda,
-											   const vec_interface<W1, T1, C, D1> &lhs,
-											   const vec_interface<W2, T2, C, D2> &rhs) noexcept
+											   const V1 &lhs,
+											   const V2 &rhs) noexcept
 		{
 			return machinery::apply_multitype_make(lhs, rhs, lambda);
 		}
@@ -44,20 +46,28 @@ namespace dsga
 
 		constexpr inline auto signed_unsigned_compare_op = []<signed_scalar T1, unsigned_scalar T2>(T1 lhs, T2 rhs) noexcept
 		{
-			return (lhs < 0) ? -1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
+			return (lhs < 0) ? -1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 :
+									 ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
 		};
 
 		constexpr inline auto unsigned_signed_compare_op = []<unsigned_scalar T1, signed_scalar T2>(T1 lhs, T2 rhs) noexcept
 		{
-			return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 : ((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
+			return (rhs < 0) ? 1 : ((static_cast<unsigned long long>(lhs) < static_cast<unsigned long long>(rhs)) ? -1 :
+									((static_cast<unsigned long long>(lhs) > static_cast<unsigned long long>(rhs)) ? 1 : 0));
 		};
 
-		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
-		requires (signed_scalar<T3>)
-		[[nodiscard]] constexpr auto compare_impl(const vec_interface<W1, T1, C, D1> &x,
-												  const vec_interface<W2, T2, C, D2> &y,
-												  const vec_interface<W3, T3, C, D3> &weights) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> && signed_scalar<vec_scalar_t<V3>> &&
+				 (vec_size_v<V1> == vec_size_v<V2>) && (vec_size_v<V1> == vec_size_v<V3>)
+		[[nodiscard]] constexpr auto compare_impl(const V1 &x,
+												  const V2 &y,
+												  const V3 &weights) noexcept
 		{
+			constexpr auto C = vec_size_v<V1>;
+			using T1 = vec_scalar_t<V1>;
+			using T2 = vec_scalar_t<V2>;
+			using T3 = vec_scalar_t<V3>;
+
 			if constexpr (floating_point_scalar<T1> && floating_point_scalar<T2>)
 			{
 				return functions::innerProduct(weights, vec<T3, C>(functions::sign(x - y)));
@@ -81,25 +91,30 @@ namespace dsga
 			else
 			{
 				using commontype = std::common_type_t<T1, T2>;
-				return compare_impl(static_cast<dsga::vec<commontype, C>>(x.as_derived()), static_cast<dsga::vec<commontype, C>>(y.as_derived()), weights);
+				return compare_impl(static_cast<dsga::vec<commontype, C>>(x.as_derived()),
+									static_cast<dsga::vec<commontype, C>>(y.as_derived()),
+									weights);
 			}
 		}
 
 		// interface function for three-way comparison operator for vectors, using default weighting
-		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-		[[nodiscard]] constexpr auto compare(const vec_interface<W1, T1, C, D1> &x,
-											 const vec_interface<W2, T2, C, D2> &y) noexcept
+		template <vec_like V1, vec_like V2>
+		requires non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> && (vec_size_v<V1> == vec_size_v<V2>)
+		[[nodiscard]] constexpr auto compare(const V1 &x,
+											 const V2 &y) noexcept
 		{
+			constexpr auto C = vec_size_v<V1>;
 			constexpr auto weights = default_comparison_weights<C>();
 			return compare_impl(x, y, weights);
 		}
 
 		// interface function for three-way comparison operator for vectors, using user-defined weighting
-		template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
-		requires signed_scalar<T3>
-		[[nodiscard]] constexpr auto compare(const vec_interface<W1, T1, C, D1> &x,
-											 const vec_interface<W2, T2, C, D2> &y,
-											 const vec_interface<W3, T3, C, D3> &weights) noexcept
+		template <vec_like V1, vec_like V2, vec_like V3>
+		requires non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> && signed_scalar<vec_scalar_t<V3>> &&
+				 (vec_size_v<V1> == vec_size_v<V2>) && (vec_size_v<V1> == vec_size_v<V3>)
+		[[nodiscard]] constexpr auto compare(const V1 &x,
+											 const V2 &y,
+											 const V3 &weights) noexcept
 		{
 			return compare_impl(x, y, weights);
 		}
@@ -123,12 +138,17 @@ namespace dsga
 	// This comparison uses exact data, not fuzzy equality within a tolerance.
 	//
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2, bool W3, numeric_integral_scalar T3, typename D3>
-	requires signed_scalar<T3>
-	[[nodiscard]] constexpr auto weighted_compare(const vec_interface<W1, T1, C, D1> &first,
-												  const vec_interface<W2, T2, C, D2> &second,
-												  const vec_interface<W3, T3, C, D3> &weights) noexcept
+	template <vec_like V1, vec_like V2, vec_like V3>
+	requires non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> && signed_scalar<vec_scalar_t<V3>> &&
+			 (vec_size_v<V1> == vec_size_v<V2>) && (vec_size_v<V1> == vec_size_v<V3>)
+	[[nodiscard]] constexpr auto weighted_compare(const V1 &first,
+												  const V2 &second,
+												  const V3 &weights) noexcept
 	{
+		constexpr auto C = vec_size_v<V1>;
+		using T1 = vec_scalar_t<V1>;
+		using T2 = vec_scalar_t<V2>;
+
 		if constexpr (std::integral<T1> && std::integral<T2>)
 		{
 			if (auto comp = detail::compare(first, second, weights); comp < 0)
@@ -178,11 +198,14 @@ namespace dsga
 	// not in GLSL
 	//
 
-	template <bool W1, non_bool_scalar T1, std::size_t C, typename D1, bool W2, non_bool_scalar T2, typename D2>
-	constexpr bool operator <=>(const vec_interface<W1, T1, C, D1> &first,
-								const vec_interface<W2, T2, C, D2> &second) noexcept
+	template <vec_like V1, vec_like V2>
+	requires non_bool_scalar<vec_scalar_t<V1>> && non_bool_scalar<vec_scalar_t<V2>> && (vec_size_v<V1> == vec_size_v<V2>)
+	constexpr bool operator <=>(const V1 &first,
+								const V2 &second) noexcept
 	{
+		constexpr auto C = vec_size_v<V1>;
 		constexpr auto weights = default_comparison_weights<C>();
+
 		return weighted_compare(first, second, weights);
 	}
 
@@ -203,5 +226,4 @@ namespace dsga
 	{
 		return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), mat_vec_comp_op);
 	}
-
 }

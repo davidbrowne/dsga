@@ -192,13 +192,11 @@
     <ClInclude Include="..\examples\compare.hxx" />
     <ClInclude Include="..\examples\format_output.hxx" />
     <ClInclude Include="..\examples\hash.hxx" />
-    <ClInclude Include="..\examples\invoke.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
     <ClInclude Include="..\examples\stl.hxx" />
     <ClInclude Include="..\examples\tolerance.hxx" />
     <ClInclude Include="..\examples\transform.hxx" />
-    <ClInclude Include="..\examples\valarray_convert.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />
     <ClInclude Include="..\tests\dsga_doctest.hxx" />
   </ItemGroup>

@@ -51,13 +51,7 @@
     <ClInclude Include="..\examples\tolerance.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\examples\valarray_convert.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\examples\stl.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\examples\invoke.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\examples\transform.hxx">

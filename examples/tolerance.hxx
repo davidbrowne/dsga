@@ -7,10 +7,6 @@
 
 #include "dsga.hxx"
 
-// opening include guard
-#if !defined(DSGA_TOLERANCE_HXX)
-#define DSGA_TOLERANCE_HXX
-
 //
 // performing tolerance checks
 //
@@ -53,11 +49,14 @@ namespace dsga
 		return abs(x - y) <= static_cast<T>(abs(tolerance));
 	}
 
-	template <bool W, floating_point_scalar T, std::size_t C, typename D, floating_point_scalar U>
-	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr auto within_tolerance(const vec_interface<W, T, C, D> &x,
+	template <vec_like V, floating_point_scalar U>
+	requires implicitly_convertible_to<U, vec_scalar_t<V>> && floating_point_scalar<vec_scalar_t<V>> && floating_point_scalar<U>
+	[[nodiscard]] constexpr auto within_tolerance(const V &x,
 												  U tolerance) noexcept
 	{
+		using T = vec_scalar_t<V>;
+		constexpr std::size_t C = vec_size_v<V>;
+
 		if constexpr (C == 1)
 		{
 			return within_tolerance(x[0], tolerance);
@@ -68,12 +67,16 @@ namespace dsga
 		}
 	}
 
-	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, floating_point_scalar U>
-	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr auto within_tolerance(const vec_interface<W1, T, C, D1> &x,
-												  const vec_interface<W2, T, C, D2> &y,
+	template <vec_like V1, vec_like V2, floating_point_scalar U>
+	requires same_vec_shape<V1, V2> && implicitly_convertible_to<U, vec_scalar_t<V1>> &&
+			 floating_point_scalar<vec_scalar_t<V1>> && floating_point_scalar<U>
+	[[nodiscard]] constexpr auto within_tolerance(const V1 &x,
+												  const V2 &y,
 												  U tolerance) noexcept
 	{
+		using T = vec_scalar_t<V1>;
+		constexpr std::size_t C = vec_size_v<V1>;
+
 		if constexpr (C == 1)
 		{
 			return within_tolerance(x[0], y[0], tolerance);
@@ -84,11 +87,16 @@ namespace dsga
 		}
 	}
 
-	template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, floating_point_scalar U, std::size_t C2, typename D2>
-	requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr auto within_tolerance(const vec_interface<W1, T, C1, D1> &x,
-												  const vec_interface<W2, U, C2, D2> &tolerance) noexcept
+	template <vec_like V1, vec_like V2, floating_point_scalar U>
+	requires ((vec_size_v<V1> == vec_size_v<V2>) || (vec_size_v<V2> == 1)) && implicitly_convertible_to<U, vec_scalar_t<V1>> &&
+			 floating_point_scalar<vec_scalar_t<V1>> && floating_point_scalar<vec_scalar_t<V2>>
+	[[nodiscard]] constexpr auto within_tolerance(const V1 &x,
+												  const V2 &tolerance) noexcept
 	{
+		using T = vec_scalar_t<V1>;
+		constexpr std::size_t C1 = vec_size_v<V1>;
+		constexpr std::size_t C2 = vec_size_v<V2>;
+
 		if constexpr (C1 == C2)
 		{
 			if constexpr (C1 == 1 && C2 == 1)
@@ -106,12 +114,17 @@ namespace dsga
 		}
 	}
 
-	template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, std::size_t C2, typename D2, bool W3, typename D3>
-	requires ((C1 == C2) || (C2 == 1))
-	[[nodiscard]] constexpr auto within_tolerance(const vec_interface<W1, T, C1, D1> &x,
-												  const vec_interface<W2, T, C1, D2> &y,
-												  const vec_interface<W3, T, C2, D3> &tolerance) noexcept
+	template <vec_like V1, vec_like V2, vec_like V3>
+	requires (vec_size_v<V1> == vec_size_v<V2>) && ((vec_size_v<V1> == vec_size_v<V3>) || (vec_size_v<V3> == 1)) &&
+			 std::same_as<vec_scalar_t<V1>, vec_scalar_t<V2>> && std::same_as< vec_scalar_t<V1>, vec_scalar_t<V3>> &&
+			 floating_point_scalar<vec_scalar_t<V1>>
+	[[nodiscard]] constexpr auto within_tolerance(const V1 &x,
+												  const V2 &y,
+												  const V3 &tolerance) noexcept
 	{
+		constexpr std::size_t C1 = vec_size_v<V1>;
+		constexpr std::size_t C2 = vec_size_v<V3>;
+
 		if constexpr (C1 == C2)
 		{
 			if constexpr (C1 == 1 && C2 == 1)
@@ -156,10 +169,10 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <bool W, floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U, typename D>
-	requires implicitly_convertible_to<U, T>
+	template <vec_like V, floating_point_scalar T, std::size_t C, std::size_t R>
+	requires implicitly_convertible_to<vec_scalar_t<V>, T> && floating_point_scalar<vec_scalar_t<V>> &&	(C == vec_size_v<V>)
 	[[nodiscard]] constexpr vec<bool, C> within_tolerance(const mat<T, C, R> &arg,
-														  const vec_interface<W, U, C, D> &tolerance) noexcept
+														  const V &tolerance) noexcept
 	{
 		return [&arg, &tolerance] <std::size_t ...Is>(std::index_sequence<Is ...>) noexcept
 		{
@@ -167,11 +180,11 @@ namespace dsga
 		}(std::make_index_sequence<C>{});
 	}
 
-	template <bool W, floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U, typename D>
-	requires implicitly_convertible_to<U, T>
+	template <vec_like V, floating_point_scalar T, std::size_t C, std::size_t R>
+	requires implicitly_convertible_to<vec_scalar_t<V>, T> && floating_point_scalar<vec_scalar_t<V>> && (C == vec_size_v<V>)
 	[[nodiscard]] constexpr vec<bool, C> within_tolerance(const mat<T, C, R> &x,
 														  const mat<T, C, R> &y,
-														  const vec_interface<W, U, C, D> &tolerance) noexcept
+														  const V &tolerance) noexcept
 	{
 		return [&x, &y, &tolerance] <std::size_t ...Is>(std::index_sequence<Is ...>) noexcept
 		{
@@ -203,11 +216,12 @@ namespace dsga
 		return dot(diff, diff) <= static_cast<T>(tolerance * tolerance);
 	}
 
-	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, bool W3, floating_point_scalar U, typename D3>
-	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr bool within_distance(const vec_interface<W1, T, C, D1> &x,
-												 const vec_interface<W2, T, C, D2> &y,
-												 const vec_interface<W3, U, 1, D3> &tolerance) noexcept
+	template <vec_like V1, vec_like V2, vec_like V3>
+	requires same_vec_shape<V1, V2> && implicitly_convertible_to<vec_scalar_t<V3>, vec_scalar_t<V1>> && (vec_size_v<V3> == 1) &&
+			 floating_point_scalar<vec_scalar_t<V1>> && floating_point_scalar<vec_scalar_t<V3>>
+	[[nodiscard]] constexpr bool within_distance(const V1 &x,
+												 const V2 &y,
+												 const V3 &tolerance) noexcept
 	{
 		return within_distance(x, y, tolerance[0]);
 	}
@@ -226,12 +240,14 @@ namespace dsga
 		return within_tolerance(x, y, tolerance);
 	}
 
-	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, floating_point_scalar U>
-	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr bool within_box(const vec_interface<W1, T, C, D1> &x,
-											const vec_interface<W2, T, C, D2> &y,
+	template <vec_like V1, vec_like V2, floating_point_scalar U>
+	requires same_vec_shape<V1, V2> && implicitly_convertible_to<U, vec_scalar_t<V1>> && floating_point_scalar<vec_scalar_t<V1>>
+	[[nodiscard]] constexpr bool within_box(const V1 &x,
+											const V2 &y,
 											U tolerance) noexcept
 	{
+		constexpr std::size_t C = vec_size_v<V1>;
+
 		if constexpr (C == 1)
 		{
 			return within_box(x[0], y[0], tolerance);
@@ -242,12 +258,17 @@ namespace dsga
 		}
 	}
 
-	template <bool W1, floating_point_scalar T, std::size_t C1, typename D1, bool W2, typename D2, bool W3, floating_point_scalar U, std::size_t C2, typename D3>
-	requires ((C1 == C2) || (C2 == 1)) && implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr bool within_box(const vec_interface<W1, T, C1, D1> &x,
-											const vec_interface<W2, T, C1, D2> &y,
-											const vec_interface<W3, U, C2, D3> &tolerance) noexcept
+	template <vec_like V1, vec_like V2, vec_like V3>
+	requires same_vec_shape<V1, V2> && ((vec_size_v<V1> == vec_size_v<V3>) || (vec_size_v<V3> == 1)) &&
+			 implicitly_convertible_to<vec_scalar_t<V3>, vec_scalar_t<V1>> &&
+			 floating_point_scalar<vec_scalar_t<V1>> &&floating_point_scalar<vec_scalar_t<V3>>
+	[[nodiscard]] constexpr bool within_box(const V1 &x,
+											const V2 &y,
+											const V3 &tolerance) noexcept
 	{
+		constexpr std::size_t C1 = vec_size_v<V1>;
+		constexpr std::size_t C2 = vec_size_v<V3>;
+
 		if constexpr (C1 == C2)
 		{
 			if constexpr (C1 == 1 && C2 == 1)
@@ -277,16 +298,13 @@ namespace dsga
 		return all(within_tolerance(x, y, tolerance));
 	}
 
-	template <bool W, floating_point_scalar T, std::size_t C, std::size_t R, floating_point_scalar U, typename D>
-	requires implicitly_convertible_to<U, T>
+	template <vec_like V, floating_point_scalar T, std::size_t C, std::size_t R>
+	requires implicitly_convertible_to<vec_scalar_t<V>, T> && floating_point_scalar<vec_scalar_t<V>> && (C == vec_size_v<V>)
 	[[nodiscard]] constexpr bool within_box(const mat<T, C, R> &x,
 											const mat<T, C, R> &y,
-											const vec_interface<W, U, C, D> &tolerance) noexcept
+											const V &tolerance) noexcept
 	{
 		return all(within_tolerance(x, y, tolerance));
 	}
 
 }	// namespace dsga
-
-// closing include guard
-#endif

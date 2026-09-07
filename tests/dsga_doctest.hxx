@@ -1,3 +1,4 @@
+#pragma once
 
 //          Copyright David Browne 2020-2026.
 // Distributed under the Boost Software License, Version 1.0.
@@ -6,8 +7,6 @@
 
 // doctest stringification support for dsga types.
 // Include this file AFTER doctest.h in test files.
-
-#pragma once
 
 #include "dsga.hxx"
 #include <sstream>
