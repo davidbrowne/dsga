@@ -120,7 +120,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ### Status
 
-Current version: `v3.3.1`
+Current version: `v3.3.2`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v3.0.0](https://github.com/davidbrowne/dsga/releases)
@@ -128,9 +128,9 @@ Current version: `v3.3.1`
 
 ### Tested Compilers
 #### Regularly Tested
-* Microsoft Visual Studio 2026 v18.7
-* gcc v16.1
-* clang v22.1
+* Microsoft Visual Studio 2026 v18.10
+* gcc v16.2
+* clang v23.1
 
 #### Minimum Version
 * Microsoft Visual Studio 2022 v17.x
@@ -143,42 +143,9 @@ All tests are currently 100% PASSING on all the testing platforms and compilers.
 
 This project uses [doctest](https://github.com/onqtam/doctest) for testing. We occasionally use [nanobench](https://github.com/martinus/nanobench) for understanding implementation tradeoffs.
 
-### [Latest Major Changes](CHANGELOG.md)
-* v3.3.0
-    * Removed `Writable` from classes/structs and member functions where it is always true.
-    * Renamed concept `dimensional_size` to `vec_dimension`.
-    * Created new concept `mat_dimension` for matrix row and column sizes.
-    * Added new concepts `vec_scalar` and `vec_size` for vector element type and vector size.
-    * Added new concept `vec_like` for vector-like types, which includes both `vec` and `swizzle_vec`.
-* v3.2.0
-    * Upgraded to cxcm v1.3.0.
-    * Moved cxcm namespace from ```cxcm``` to ```detail::cxcm```.
-    * Added two new examples
-        * line_closest_points - finds the closest points between two lines in 3D space, and the distance between those points.
-        * shader_demo - a simple shader demo that uses dsga for vector and matrix math, and demonstrates how to use the library in a shader-like context.
-    * Removed ```as_base()``` from **vec_interface**, since it was not really necessary.
-    * Added protected destructor to **vec_interface** to prevent deletion through a base class pointer.
-* v3.1.0
-    * Minor version bump with some breaking changes to the API.
-    * Updated to doctest v2.5.2
-    * Renamed the 5 main classes, deprecating the old names.
-         * **basic_vector** -> **vec**
-         * **basic_matrix** -> **mat**
-         * **vector_base** -> **vec_interface**
-         * **indexed_vector** -> **swizzle_vec**
-         * **storage_vector** -> **vec_storage**
-    * Microsoft Visual Studio 2022 will no longer be directly supported or updated. Testing may possibly occur using the VS2022 toolset on VS2026.
-    * Removed deprecated function ```logicalNot()```, replaced by ```compNot()```.
-    * CMake support rewritten.
-         * Install target with ```cmake --install``` support.
-         * ```dsga::dsga``` imported ```INTERFACE``` target for ```target_link_libraries```.
-         * CMake config file for ```find_package``` support.
-         * CMake target for linking with other projects.
-         * Compiler flags for MSVC, gcc, and clang.
-* v3.0.0
-    * Major version bump with breaking changes to the API.
-    * Removed the ```data()``` interface for all vector types and matrix types, in order to remove/mitigate the possibilty of pointer overruns.
-    * Minor refactoring.
+### Latest Major Changes
+
+See [CHANGELOG.md](CHANGELOG.md) for the latest major changes.
 
 ### License
 [![BSL](https://img.shields.io/badge/license-BSL-blue)](https://choosealicense.com/licenses/bsl-1.0/)

@@ -9,7 +9,6 @@
 
 #if defined(__cpp_lib_format)
 
-#include <iostream>
 #include <format>
 
 //
@@ -52,9 +51,12 @@
 // in order to prefix the hexadecimal floating-point output with a "0x" or "0X".
 //
 
-template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived, typename CharT>
-struct std::formatter<dsga::vec_interface<Writable, T, Count, Derived>, CharT>
+template <dsga::vec_like V, typename CharT>
+struct std::formatter<V, CharT>
 {
+	using T = dsga::vec_scalar_t<V>;
+	constexpr  static std::size_t Count = dsga::vec_size_v<V>;
+
 	std::formatter<T, CharT> element_formatter;
 
 	// now required after retro-active update to the c++20 standard
@@ -65,7 +67,7 @@ struct std::formatter<dsga::vec_interface<Writable, T, Count, Derived>, CharT>
 
 	// make sure to keep the context iterator updated
 	template <typename FormatContext>
-	auto format(const dsga::vec_interface<Writable, T, Count, Derived> &v, FormatContext &ctx) const
+	auto format(const V &v, FormatContext &ctx) const
 	{
 		// open bracket
 		auto iter = std::format_to(ctx.out(), "[");
@@ -88,18 +90,6 @@ struct std::formatter<dsga::vec_interface<Writable, T, Count, Derived>, CharT>
 		ctx.advance_to(iter);
 		return std::format_to(ctx.out(), "]");
 	}
-};
-
-template <typename CharT, dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-struct std::formatter<dsga::swizzle_vec<T, Size, Count, Is...>, CharT>
-	: std::formatter<dsga::vec_interface<dsga::writable_swizzle<Size, Count, Is...>, T, Count, dsga::swizzle_vec<T, Size, Count, Is...>>, CharT>
-{
-};
-
-template <dsga::dimensional_scalar T, std::size_t Size, typename CharT>
-struct std::formatter<dsga::vec<T, Size>, CharT>
-	: std::formatter<dsga::vec_interface<true, T, Size, dsga::vec<T, Size>>, CharT>
-{
 };
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R, typename CharT>
@@ -156,84 +146,6 @@ auto from_format_hexfloat_chars(std::string_view sv, T &val)
 		leading_char = 1;
 
 	return std::from_chars(sv.data() + leading_char, sv.data() + sv.size(), val, std::chars_format::hex);
-}
-
-//
-// test functions
-//
-
-template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived>
-inline void test_format_vec_interface(const dsga::vec_interface<Writable, T, Count, Derived> &v)
-{
-	// std::format interface
-	std::cout << std::format("{}\n", v);
-
-	if constexpr (dsga::floating_point_scalar<T>)
-	{
-		std::cout << std::format("{:10.5}\n", v);
-		std::cout << std::format("{:a}\n", v);
-	}
-}
-
-template <typename T, std::size_t Size>
-inline void test_format_array(const std::array<T, Size> &arr)
-{
-	// std::format interface
-	std::cout << std::format("{}\n", arr);
-
-	if constexpr (std::is_floating_point_v<T>)
-	{
-		std::cout << std::format("{:10.5}\n", arr);
-		std::cout << std::format("{:a}\n", arr);
-	}
-}
-
-template <typename T, std::size_t Size>
-inline void test_format_vec_storage(const dsga::vec_storage<T, Size> &sw)
-{
-	// std::format interface
-	std::cout << std::format("{}\n", sw);
-
-	if constexpr (std::is_floating_point_v<T>)
-	{
-		std::cout << std::format("{:10.5}\n", sw);
-		std::cout << std::format("{:a}\n", sw);
-	}
-}
-
-template <dsga::dimensional_scalar T, std::size_t Size>
-inline void test_format_vector(const dsga::vec<T, Size> &v)
-{
-	// std::format interface
-	std::cout << std::format("{}\n", v);
-
-	if constexpr (dsga::floating_point_scalar<T>)
-	{
-		std::cout << std::format("{:10.5}\n", v);
-		std::cout << std::format("{:a}\n", v);
-	}
-}
-
-template <dsga::dimensional_scalar T, std::size_t Size, std::size_t Count, std::size_t ...Is>
-inline void test_format_swizzle_vec(const dsga::swizzle_vec<T, Size, Count, Is...> &v)
-{
-	// std::format interface
-	std::cout << std::format("{}\n", v);
-
-	if constexpr (dsga::floating_point_scalar<T>)
-	{
-		std::cout << std::format("{:10.5}\n", v);
-		std::cout << std::format("{:a}\n", v);
-	}
-}
-
-template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>
-inline void test_format_matrix(const dsga::mat<T, C, R> &m)
-{
-	// std::format interface
-	std::cout << std::format("{}\n", m);
-	std::cout << std::format("{:10.5}\n", m);
-	std::cout << std::format("{:A}\n", m);
 }
 
 #endif

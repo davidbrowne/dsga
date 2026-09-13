@@ -2339,16 +2339,6 @@ protected:
 
 	};	// struct vec_interface
 
-	// swap generalization for vec_interface types that don't have their own swap function
-	template <dimensional_scalar T, std::size_t S, typename D1, typename D2>
-	constexpr void swap(vec_interface<true, T, S, D1> &lhs, vec_interface<true, T, S, D2> &rhs) noexcept
-	{
-		[&lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-		{
-			((std::swap(lhs[Is], rhs[Is])), ...);
-		}(std::make_index_sequence<S>{});
-	}
-
 	// swizzle_vec will act as a swizzle of a vec, the result of "component group notation". vec relies
 	// on the anonymous union of swizzle_vec data members. both swizzle_vec and vec have their own storage
 	// (linked via anonymous union and common initial sequence).
@@ -2569,6 +2559,19 @@ protected:
 	template <typename V1, typename... Vs>
 	concept same_vec_shape = vec_like<V1> && (vec_like<Vs> && ...) &&
 							 ((std::same_as<vec_scalar_t<V1>, vec_scalar_t<Vs>> && (vec_size_v<V1> == vec_size_v<Vs>)) && ...);
+
+	// swap generalization for writable_vec_like types that don't have their own swap function
+	template <writable_vec_like V1, writable_vec_like V2>
+	requires same_vec_shape<V1, V2>
+	constexpr void swap(V1 &lhs, V2 &rhs) noexcept
+	{
+		constexpr std::size_t S = vec_size_v<V1>;
+
+		[&lhs, &rhs]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
+		{
+			((std::swap(lhs[Is], rhs[Is])), ...);
+		}(std::make_index_sequence<S>{});
+	}
 
 	//
 	// random-access iterators for swizzle_vec so they can participate in range-for loop amongst other things.
@@ -2940,9 +2943,9 @@ protected:
 		using const_reverse_iterator = std::reverse_iterator<swizzle_vec_const_iterator<T, Size, Count, Is...>>;
 
 		// copy assignment
-		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && implicitly_convertible_to<U, T>
-		constexpr swizzle_vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
+		template <vec_like V>
+		requires Writable && implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == Count)
+		constexpr swizzle_vec &operator =(const V &other) & noexcept
 		{
 			set(other);
 			return *this;
@@ -3045,9 +3048,9 @@ protected:
 		// this set() uses the other set() to do the work. it is for setting our values
 		// from another vec_interface, which could be a swizzle_vec or a vec. it allows
 		// for self-assignment without aliasing issues.
-		template <bool W, dimensional_scalar U, typename D>
-		requires Writable && std::convertible_to<U, T>
-		constexpr void set(const vec_interface<W, U, Count, D> &other) & noexcept
+		template <vec_like V>
+		requires Writable && std::convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == Count)
+		constexpr void set(const V &other) & noexcept
 		{
 			// the Js... parameter pack is just <0, 1, 2, ..., Count - 1> as indices into
 			// the other's logical storage. it is unrelated to the Is... parameter pack.
@@ -3112,22 +3115,10 @@ protected:
 			static constexpr std::size_t value = 1;
 		};
 
-		template <dimensional_scalar T, std::size_t C>
-		struct component_count<vec<T, C>>
+		template <vec_like V>
+		struct component_count<V>
 		{
-			static constexpr std::size_t value = C;
-		};
-
-		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-		struct component_count<swizzle_vec<T, S, C, Is...>>
-		{
-			static constexpr std::size_t value = C;
-		};
-
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		struct component_count<vec_interface<W, T, C, D>>
-		{
-			static constexpr std::size_t value = C;
+			static constexpr std::size_t value = vec_size_v<V>;
 		};
 
 		template <floating_point_scalar T, std::size_t C, std::size_t R>
@@ -3193,31 +3184,15 @@ protected:
 
 		// create a tuple from a vector
 
-		template <dimensional_scalar T, std::size_t S>
-		constexpr auto to_tuple(const vec<T, S> &arg) noexcept
+		template <vec_like V>
+		constexpr auto to_tuple(const V &arg) noexcept
 		{
+			constexpr  std::size_t S = vec_size_v<V>;
+
 			return [&arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
 			{
 				return std::tuple(arg[Is]...);
 			}(std::make_index_sequence<S>{});
-		}
-
-		template <dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-		constexpr auto to_tuple(const swizzle_vec<T, S, C, Is...> &arg) noexcept
-		{
-			return [&arg]<std::size_t ...Js>(std::index_sequence<Js...>) noexcept
-			{
-				return std::tuple(arg[Js]...);
-			}(std::make_index_sequence<C>{});
-		}
-
-		template <bool W, dimensional_scalar T, std::size_t C, typename D>
-		constexpr auto to_tuple(const vec_interface<W, T, C, D> &arg) noexcept
-		{
-			return [&arg]<std::size_t ...Is>(std::index_sequence<Is...>) noexcept
-			{
-				return std::tuple(arg[Is]...);
-			}(std::make_index_sequence<C>{});
 		}
 
 		// create a tuple from a matrix
@@ -3250,21 +3225,9 @@ protected:
 		{
 		};
 
-		template <dimensional_scalar U, std::size_t S, floating_point_scalar T>
-		requires std::convertible_to<U, T>
-		struct valid_matrix_component<vec<U, S>, T> : std::true_type
-		{
-		};
-
-		template <dimensional_scalar U, std::size_t S, std::size_t C, std::size_t ...Is, floating_point_scalar T>
-		requires std::convertible_to<U, T>
-		struct valid_matrix_component<swizzle_vec<U, S, C, Is...>, T> : std::true_type
-		{
-		};
-
-		template <bool W, dimensional_scalar U, std::size_t C, typename D, floating_point_scalar T>
-		requires std::convertible_to<U, T>
-		struct valid_matrix_component<vec_interface<W, U, C, D>, T> : std::true_type
+		template <vec_like V, floating_point_scalar T>
+		requires std::convertible_to<vec_scalar_t<V>, T>
+		struct valid_matrix_component<V, T> : std::true_type
 		{
 		};
 
@@ -3279,21 +3242,9 @@ protected:
 		{
 		};
 
-		template <dimensional_scalar U, std::size_t C, dimensional_scalar T>
-		requires std::convertible_to<U, T>
-		struct valid_vector_component<vec<U, C>, T> : std::true_type
-		{
-		};
-
-		template <dimensional_scalar U, std::size_t S, std::size_t C, std::size_t ...Is, dimensional_scalar T>
-		requires std::convertible_to<U, T>
-		struct valid_vector_component<swizzle_vec<U, S, C, Is...>, T> : std::true_type
-		{
-		};
-
-		template <bool W, dimensional_scalar U, std::size_t C, typename D, dimensional_scalar T>
-		requires std::convertible_to<U, T>
-		struct valid_vector_component<vec_interface<W, U, C, D>, T> : std::true_type
+		template <vec_like V, dimensional_scalar T>
+		requires std::convertible_to<vec_scalar_t<V>, T>
+		struct valid_vector_component<V, T> : std::true_type
 		{
 		};
 
@@ -3357,15 +3308,15 @@ protected:
 		// constructors
 		//
 
-		template <bool W, dimensional_scalar U, std::size_t C, typename D>
-		requires implicitly_convertible_to<U, T>
-		explicit(false) constexpr vec(const vec_interface<W, U, C, D> &other)
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> >= Count)
+		explicit(false) constexpr vec(const V &other)
 			: base{ static_cast<T>(other[0]) }
 		{
 		}
 
 		template <typename U>
-		requires std::convertible_to<U, T>
+		requires (!vec_like<U>) && std::convertible_to<U, T>
 		explicit(!implicitly_convertible_to<U, T>) constexpr vec(U value) noexcept
 			: base{ static_cast<T>(value) }
 		{
@@ -3388,9 +3339,9 @@ protected:
 		// implicit assignment operators
 		//
 
-		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
-		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == Count)
+		constexpr vec &operator =(const V &other) & noexcept
 		{
 			set(other[0]);
 			return *this;
@@ -3571,9 +3522,9 @@ protected:
 		{
 		}
 
-		template <bool W, dimensional_scalar U, std::size_t C, typename D>
-		requires implicitly_convertible_to<U, T> && (C >= Count)
-		explicit(false) constexpr vec(const vec_interface<W, U, C, D> &other) noexcept
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> >= Count)
+		explicit(false) constexpr vec(const V &other) noexcept
 			: base{ static_cast<T>(other[0]), static_cast<T>(other[1]) }
 		{
 		}
@@ -3595,9 +3546,9 @@ protected:
 		// assignment operator
 		//
 
-		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
-		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == Count)
+		constexpr vec &operator =(const V &other) & noexcept
 		{
 			set(other[0], other[1]);
 			return *this;
@@ -3845,9 +3796,9 @@ protected:
 		{
 		}
 
-		template <bool W, dimensional_scalar U, std::size_t C, typename D>
-		requires implicitly_convertible_to<U, T> && (C >= Count)
-		explicit(false) constexpr vec(const vec_interface<W, U, C, D> &other) noexcept
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> >= Count)
+		explicit(false) constexpr vec(const V &other) noexcept
 			: base{ static_cast<T>(other[0]), static_cast<T>(other[1]), static_cast<T>(other[2]) }
 		{
 		}
@@ -3869,9 +3820,9 @@ protected:
 		// assignment operators
 		//
 
-		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
-		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == Count)
+		constexpr vec &operator =(const V &other) & noexcept
 		{
 			set(other[0], other[1], other[2]);
 			return *this;
@@ -4342,9 +4293,9 @@ protected:
 		{
 		}
 
-		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
-		explicit(false) constexpr vec(const vec_interface<W, U, Count, D> &other) noexcept
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == Count)
+		explicit(false) constexpr vec(const V &other) noexcept
 			: base{ static_cast<T>(other[0]), static_cast<T>(other[1]), static_cast<T>(other[2]), static_cast<T>(other[3]) }
 		{
 		}
@@ -4366,9 +4317,9 @@ protected:
 		// assignment operators
 		//
 
-		template <bool W, dimensional_scalar U, typename D>
-		requires implicitly_convertible_to<U, T>
-		constexpr vec &operator =(const vec_interface<W, U, Count, D> &other) & noexcept
+		template <vec_like V>
+		requires implicitly_convertible_to<vec_scalar_t<V>, T> && (vec_size_v<V> == Count)
+		constexpr vec &operator =(const V &other) & noexcept
 		{
 			set(other[0], other[1], other[2], other[3]);
 			return *this;
@@ -4450,8 +4401,8 @@ protected:
 	template <dimensional_scalar T, dimensional_scalar ...U>
 	vec(T, U...) -> vec<T, 1 + sizeof...(U)>;
 
-	template <bool W, dimensional_scalar T, std::size_t C, typename D>
-	vec(const vec_interface<W, T, C, D> &) -> vec<T, C>;
+	template <vec_like V>
+	vec(const V &) -> vec<vec_scalar_t<V>, vec_size_v<V>>;
 
 	//
 	// machinery for vector operators and functions
@@ -8155,37 +8106,15 @@ struct std::tuple_element<I, dsga::vec_storage<T, S>>
 	using type = T;
 };
 
-template<dsga::dimensional_scalar T, std::size_t S>
-struct std::tuple_size<dsga::vec<T, S>> : std::integral_constant<std::size_t, S>
+template<dsga::vec_like V>
+struct std::tuple_size<V> : std::integral_constant<std::size_t, dsga::vec_size_v<V>>
 {
 };
 
-template <std::size_t I, dsga::dimensional_scalar T, std::size_t S>
-struct std::tuple_element<I, dsga::vec<T, S>>
+template <std::size_t I, dsga::vec_like V>
+struct std::tuple_element<I, V>
 {
-	using type = T;
-};
-
-template <dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct std::tuple_size<dsga::swizzle_vec<T, S, C, Is...>> : std::integral_constant<std::size_t, C>
-{
-};
-
-template <std::size_t I, dsga::dimensional_scalar T, std::size_t S, std::size_t C, std::size_t ...Is>
-struct std::tuple_element<I, dsga::swizzle_vec<T, S, C, Is...>>
-{
-	using type = T;
-};
-
-template <bool W, dsga::dimensional_scalar T, std::size_t C, typename D>
-struct std::tuple_size<dsga::vec_interface<W, T, C, D>> : std::integral_constant<std::size_t, C>
-{
-};
-
-template <std::size_t I, bool W, dsga::dimensional_scalar T, std::size_t C, typename D>
-struct std::tuple_element<I, dsga::vec_interface<W, T, C, D>>
-{
-	using type = T;
+	using type = dsga::vec_scalar_t<V>;
 };
 
 template <dsga::floating_point_scalar T, std::size_t C, std::size_t R>

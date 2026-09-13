@@ -2,6 +2,7 @@
 
 ### Next Version
 * Upgraded to `doctest v2.5.3`.
+* Removed most further uses of `vec_interface`. Substituted `vec_like` and `writable_vec_like` concepts where appropriate instead of defining three versions of the same function for `vec`, `swizzle_vec`, and `vec_interface`.
 
 ### v3.3.2
 * Upgraded to `cxcm v1.3.2`.

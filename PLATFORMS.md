@@ -14,7 +14,7 @@ CMake v3.24+
 
 ## Testing Platforms and Compilers
 * Native Windows 11
-    * Microsoft Visual Studio 2026 v18.9
+    * Microsoft Visual Studio 2026 v18.10
     * gcc v16.2
     * clang v23.1
 * Ubuntu 26.04 (WSL)
@@ -39,7 +39,7 @@ Currently, no testing has been done on other platforms or with other compilers, 
 
 | Compiler | Status |
 | --- | --- |
-| MSVC 2026 18.9 | PASSING |
+| MSVC 2026 18.10 | PASSING |
 | gcc 16.2 | PASSING |
 | clang 23.1 | PASSING |
 
@@ -68,19 +68,19 @@ Currently, no testing has been done on other platforms or with other compilers, 
 ### Fedora 44
 | Compiler | Status |
 | --- | --- |
-| gcc v16.2 | PASSING |
-| clang v21.1 | PASSING |
+| gcc 16.2 | PASSING |
+| clang 21.1 | PASSING |
 
 
 #### Note:
-* All Ubuntu and Fedoradistributions are running in WSL on Windows 11.
+* All Ubuntu and Fedora distributions are running in WSL on Windows 11.
 * The testing compilers that don't implement ```std::is_corresponding_member<>``` (**all clang compilers, gcc 11.4**) don't run the test case (with 16 assertions) that relies on that type trait (protected with a feature test macro).
 
 ## Latest Results
 
 ### Native Windows 11
 
-* **MSVC 2026 18.9**
+* **MSVC 2026 18.10**
 
 ```
 [doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
