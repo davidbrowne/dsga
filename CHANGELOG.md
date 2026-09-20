@@ -1,6 +1,12 @@
 # Change Log
 
-### Next Version
+### v3.4.0
+* Removal of `vec_interface` CRTP base class and cleanup of related functionality, e.g., removed some type traits, changed type trait tests, dealt with removal of `as_derived()`, etc. This is a breaking change, but it simplifies the library and makes it easier to maintain. The `valarray` type of functions in `vec_interface` have been copied to each of the vector classes.
+* Removed concept `vec_derived_t`.
+* Added more assertions to type trait tests.
+* Removed API.md and MOTIVATION.md.
+
+### No Version Commit
 * Upgraded to `doctest v2.5.3`.
 * Removed most further uses of `vec_interface`. Substituted `vec_like` and `writable_vec_like` concepts where appropriate instead of defining three versions of the same function for `vec`, `swizzle_vec`, and `vec_interface`.
 

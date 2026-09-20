@@ -1,12 +1,12 @@
 ## dsga : Data Structures for Geometric Algorithms
 
-**dsga** is a single header-only **C++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in C++20. It is intended to be used for [array programming](https://en.wikipedia.org/wiki/Array_programming) other than rendering. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic things. See [motivation](docs/MOTIVATION.md) for more details. This library does _not_ use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
+**dsga** is a single header-only **C++20 library** that implements the **vectors** and **matrices** from the OpenGL Shading Language 4.6 specification ([pdf](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf) | [html](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.html)). It is inspired by the spec, but does deviate in some small ways, mostly to make it work well in C++20. It is intended to be used for linear algebra and [array programming](https://en.wikipedia.org/wiki/Array_programming) other than for rendering. Our requirements in general are for things like 3D CAD/CAM applications and other geometric and algebraic needs. This library does _not_ use SIMD instructions or types under the hood, beyond whatever the compiler provides through optimization.
 
 ### Home
 [https://github.com/davidbrowne/dsga](https://github.com/davidbrowne/dsga)
 
 ### Current Version
-v3.3.1
+`v3.4.0`
 
 ### Usage
 
@@ -24,18 +24,20 @@ More in depth explanation can be found in the [details](docs/DETAILS.md).
 template <dsga::floating_point_scalar T>
 constexpr auto get_perpendicular(const dsga::vec<T, 2> &some_vec) noexcept
 {
-    auto cos90 = 0.0f;
-    auto sin90 = 1.0f;
+    constexpr T cos90 = T(0);
+    constexpr T sin90 = T(1);
+    constexpr auto rot90 = dsga::mat<T, 2, 2>(cos90, sin90, -sin90, cos90);
 
     // rotation matrix -- components in column major order
-    return dsga::mat<T, 2, 2>(cos90, sin90, -sin90, cos90) * some_vec;
+    return rot90 * some_vec;
 }
 
 // same as above, different implementation
 template <dsga::floating_point_scalar T>
 constexpr auto get_perpendicular(const dsga::vec<T, 2> &some_vec) noexcept
 {
-    return dsga::vec<T, 2>(-1, 1) * some_vec.yx;
+    constexpr auto adjust_vec = dsga::vec<T, 2>(-1, 1);
+    return adjust_vec * some_vec.yx;
 }
 ```
 
@@ -79,7 +81,7 @@ auto angle_between(const dsga::vec<T, C> &v1,
     auto numerator = dsga::length(a - b);
     auto denominator = dsga::length(a + b);
 
-    return T(2) * std::atan2(numerator, denominator);
+    return T(2) * dsga::atan(numerator, denominator);
 }
 ```
 
@@ -120,7 +122,7 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 ### Status
 
-Current version: `v3.3.2`
+Current version: `v3.4.0`
 
 * Everything major has some tests, but code coverage is not 100%.
 * [Last Release: v3.0.0](https://github.com/davidbrowne/dsga/releases)

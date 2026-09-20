@@ -51,16 +51,13 @@
     <ClInclude Include="..\examples\tolerance.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\examples\valarray_convert.hxx">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\examples\stl.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\examples\invoke.hxx">
+    <ClInclude Include="..\examples\transform.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\examples\transform.hxx">
+    <ClInclude Include="..\tests\dsga_doctest.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,19 +65,20 @@
     <None Include="..\README.md" />
     <None Include="..\docs\DETAILS.md" />
     <None Include="..\docs\DOCUMENTATION.md" />
-    <None Include="..\docs\MOTIVATION.md" />
     <None Include="..\docs\dsga.puml">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\docs\dsga.svg">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\docs\API.md" />
-    <None Include="..\docs\CHANGELOG.md" />
+    <None Include="..\CHANGELOG.md" />
+    <None Include="..\cmake\dsga-config.cmake.in" />
+    <None Include="..\PLATFORMS.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\LICENSE_1_0.txt" />
     <Text Include="..\CMakeLists.txt" />
+    <Text Include="..\cmake_and_dsga.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cxx">
@@ -117,6 +115,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\examples\stl.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\iterator_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\main.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\shader_demo.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\line_closest_points.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tests\negative_test.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

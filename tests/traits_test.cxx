@@ -39,6 +39,8 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_trivially_assignable_v<dwrap4 &, dwrap4 &>);
 		CHECK_UNARY(std::is_trivially_assignable_v<dwrap4 &, dwrap4 &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<dwrap4>);
+		CHECK_UNARY(std::is_move_assignable_v<dwrap4>);
+		CHECK_UNARY(std::is_swappable_v<dwrap4>);
 
 		CHECK_UNARY(std::is_aggregate_v<dwrap4>);
 
@@ -53,33 +55,6 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY_FALSE(std::ranges::view<dwrap4>);
 		CHECK_UNARY(std::ranges::contiguous_range<dwrap4>);
 		CHECK_UNARY(std::ranges::common_range<dwrap4>);
-	}
-
-	TEST_CASE("type traits for vec_interface")
-	{
-		using vb1 = vec_interface<true, double, 4, dsga::vec<double, 4>>;
-		using vb2 = vec_interface<true, double, 4, dsga::swizzle_vec<double, 4, 4, 0, 1, 2, 3>>;
-
-		// iterator concepts
-		CHECK_UNARY(std::contiguous_iterator<decltype(std::declval<vb1>().begin())>);
-		CHECK_UNARY_FALSE(std::contiguous_iterator<decltype(std::declval<vb2>().cbegin())>);
-		CHECK_UNARY(std::random_access_iterator<decltype(std::declval<vb2>().cbegin())>);
-
-		// ranges concepts
-		CHECK_UNARY(std::ranges::range<vb1>);
-		CHECK_UNARY_FALSE(std::ranges::borrowed_range<vb1>);
-		CHECK_UNARY(std::ranges::sized_range<vb1>);
-		CHECK_UNARY_FALSE(std::ranges::view<vb1>);
-		CHECK_UNARY(std::ranges::contiguous_range<vb1>);
-		CHECK_UNARY(std::ranges::common_range<vb1>);
-
-		CHECK_UNARY(std::ranges::range<vb2>);
-		CHECK_UNARY_FALSE(std::ranges::borrowed_range<vb2>);
-		CHECK_UNARY(std::ranges::sized_range<vb2>);
-		CHECK_UNARY_FALSE(std::ranges::view<vb2>);
-		CHECK_UNARY(std::ranges::random_access_range<vb2>);
-		CHECK_UNARY_FALSE(std::ranges::contiguous_range<vb2>);
-		CHECK_UNARY(std::ranges::common_range<vb2>);
 	}
 
 	TEST_CASE("type traits for vec")
@@ -110,6 +85,8 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_trivially_assignable_v<dvec4 &, dvec4 &>);
 		CHECK_UNARY(std::is_trivially_assignable_v<dvec4 &, dvec4 &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<dvec4>);
+		CHECK_UNARY(std::is_move_assignable_v<dvec4>);
+		CHECK_UNARY(std::is_swappable_v<dvec4>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<dvec4>);
 
@@ -145,10 +122,12 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &, dswizzle4 &>);
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &, dswizzle4 &&>);
 
-		// this is true for rvalue swizzle_vec assigned from other swizzle_vec, just not from vec_interface.
+		// this is true for rvalue swizzle_vec assigned from other swizzle_vec.
 		// this needs to be true for std::swap() on dsga::vec to work -- dsga::swizzle_vec must be std::is_move_assignable_v<>
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &>);
 		CHECK_UNARY(std::is_assignable_v<dswizzle4 &&, dswizzle4 &&>);
+		CHECK_UNARY(std::is_move_assignable_v<dswizzle4>);
+		CHECK_UNARY(std::is_swappable_v<dswizzle4>);
 
 		CHECK_UNARY(std::is_trivially_assignable_v<dswizzle4 &&, dswizzle4 &>);
 		CHECK_UNARY(std::is_trivially_assignable_v<dswizzle4 &&, dswizzle4 &&>);
@@ -195,6 +174,8 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_trivially_assignable_v<const_iter_t &, const_iter_t &>);
 		CHECK_UNARY(std::is_trivially_assignable_v<const_iter_t &, const_iter_t &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<const_iter_t>);
+		CHECK_UNARY(std::is_move_assignable_v<const_iter_t>);
+		CHECK_UNARY(std::is_swappable_v<const_iter_t>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<const_iter_t>);
 
@@ -227,6 +208,8 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_trivially_assignable_v<iter_t &, iter_t &>);
 		CHECK_UNARY(std::is_trivially_assignable_v<iter_t &, iter_t &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<iter_t>);
+		CHECK_UNARY(std::is_move_assignable_v<iter_t>);
+		CHECK_UNARY(std::is_swappable_v<iter_t>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<iter_t>);
 
@@ -259,6 +242,8 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_trivially_assignable_v<dmat4 &, dmat4 &>);
 		CHECK_UNARY(std::is_trivially_assignable_v<dmat4 &, dmat4 &&>);
 		CHECK_UNARY(std::is_trivially_destructible_v<dmat4>);
+		CHECK_UNARY(std::is_move_assignable_v<dmat4>);
+		CHECK_UNARY(std::is_swappable_v<dmat4>);
 
 		CHECK_UNARY_FALSE(std::is_aggregate_v<dmat4>);
 
@@ -295,6 +280,17 @@ TEST_SUITE("type traits tests")
 	{
 		mock_storage base;
 	};
+
+	struct mock_wrapped_vector
+	{
+		mock_vector v;
+	};
+
+	struct mock_wrapped_wrapper
+	{
+		mock_wrapper w;
+	};
+
 
 
 #if defined(__cpp_lib_is_layout_compatible)
@@ -354,6 +350,14 @@ TEST_SUITE("type traits tests")
 		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 2, 3, 3>::base, &dsga::swizzle_vec<int, 4, 3, 3, 3, 3>::base));
 		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 2, 3, 3>::base, &dsga::swizzle_vec<int, 4, 4, 3, 3, 3, 3>::base));
 		CHECK_UNARY(std::is_corresponding_member(&dsga::swizzle_vec<int, 4, 3, 3, 3, 3>::base, &dsga::swizzle_vec<int, 4, 4, 3, 3, 3, 3>::base));
+
+		CHECK_UNARY(std::is_layout_compatible_v<dsga::swizzle_vec<int, 1, 1, 0>, dsga::vec_storage<int, 1>>);
+		CHECK_UNARY(std::is_layout_compatible_v<dsga::swizzle_vec<int, 2, 2, 1, 1>, dsga::vec_storage<int, 2>>);
+		CHECK_UNARY(std::is_layout_compatible_v<dsga::swizzle_vec<int, 3, 3, 2, 2, 2>, dsga::vec_storage<int, 3>>);
+		CHECK_UNARY(std::is_layout_compatible_v<dsga::swizzle_vec<int, 4, 4, 3, 3, 3, 3>, dsga::vec_storage<int, 4>>);
+		CHECK_UNARY(std::is_layout_compatible_v<mock_storage, mock_indexed>);
+		CHECK_UNARY(std::is_layout_compatible_v<mock_wrapper, mock_vector>);
+		CHECK_UNARY(std::is_layout_compatible_v<mock_wrapped_wrapper, mock_wrapped_vector>);
 
 #endif
 	}

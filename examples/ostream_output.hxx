@@ -14,10 +14,10 @@
 // iostream interface
 //
 
-template <bool Writable, dsga::dimensional_scalar T, std::size_t Count, typename Derived>
-inline std::ostream &operator<<(std::ostream &o, const dsga::vec_interface<Writable, T, Count, Derived> &v)
+template <dsga::vec_like V>
+inline std::ostream &operator<<(std::ostream &o, const V &v)
 {
-	const Derived &derived = v.as_derived();
+	using T = dsga::vec_scalar_t<V>;
 
 	// cache the state of the stream before we modify it
 	const auto cached_flags = o.flags();
@@ -32,9 +32,9 @@ inline std::ostream &operator<<(std::ostream &o, const dsga::vec_interface<Writa
 		o << std::setprecision(std::numeric_limits<double>::max_digits10);
 	}
 
-	o << "[" << derived[0];
-	for (int i = 1; i < derived.length(); ++i)
-		o << ", " << derived[i];
+	o << "[" << v[0];
+	for (int i = 1; i < v.length(); ++i)
+		o << ", " << v[i];
 	o << "]";
 
 	// restore the state of the stream back to what it originally was

@@ -65,14 +65,12 @@
     <None Include="..\README.md" />
     <None Include="..\docs\DETAILS.md" />
     <None Include="..\docs\DOCUMENTATION.md" />
-    <None Include="..\docs\MOTIVATION.md" />
     <None Include="..\docs\dsga.puml">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\docs\dsga.svg">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\docs\API.md" />
     <None Include="..\CHANGELOG.md" />
     <None Include="..\cmake\dsga-config.cmake.in" />
     <None Include="..\PLATFORMS.md" />

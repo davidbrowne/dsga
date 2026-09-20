@@ -37,14 +37,6 @@
 		</Expand>
 	</Type>
 
-	<Type Name="dsga::vec_interface&lt;*,*,*,*&gt;">
-		<DisplayString>{*($T4 *)this}</DisplayString>
-		<Expand HideRawView="true">
-			<ExpandedItem>*($T4 *)this</ExpandedItem>
-			<Item Name="[Raw Derived]">*($T4 *)this,!</Item>
-		</Expand>
-	</Type>
-
 	<Type Name="dsga::vec&lt;*,*&gt;">
 		<DisplayString>{base}</DisplayString>
 		<Expand>

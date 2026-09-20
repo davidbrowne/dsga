@@ -83,24 +83,24 @@ Currently, no testing has been done on other platforms or with other compilers, 
 * **MSVC 2026 18.10**
 
 ```
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2186 | 2186 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **gcc 16.2** on Windows, [MSYS2](https://www.msys2.org/) distribution:
 
 ```
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2186 | 2186 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **clang 23.1** on Windows, [semi-official binaries](https://github.com/llvm/llvm-project/releases):
 
 ```
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2170 | 2170 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 1 skipped
+[doctest] assertions: 2166 | 2166 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -109,16 +109,16 @@ Currently, no testing has been done on other platforms or with other compilers, 
 * **gcc 16.0**
 
 ```
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2186 | 2186 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **clang 22.1**
 
 ```
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2170 | 2170 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 1 skipped
+[doctest] assertions: 2166 | 2166 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -127,16 +127,16 @@ Currently, no testing has been done on other platforms or with other compilers, 
 * **gcc 14.2**
 
 ```
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2186 | 2186 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **clang 20.1**
 
 ```
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2170 | 2170 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 1 skipped
+[doctest] assertions: 2166 | 2166 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -145,24 +145,24 @@ Currently, no testing has been done on other platforms or with other compilers, 
 * **gcc 11.4**
 
 ```
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2170 | 2170 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 1 skipped
+[doctest] assertions: 2166 | 2166 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **gcc 12.3**
 
 ```
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2186 | 2186 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **clang 16.0**
 
 ```
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2170 | 2170 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 1 skipped
+[doctest] assertions: 2166 | 2166 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
@@ -171,15 +171,15 @@ Currently, no testing has been done on other platforms or with other compilers, 
 * **gcc 16.2**
 
 ```
-[doctest] test cases:  111 |  111 passed | 0 failed | 0 skipped
-[doctest] assertions: 2186 | 2186 passed | 0 failed |
+[doctest] test cases:  110 |  110 passed | 0 failed | 0 skipped
+[doctest] assertions: 2189 | 2189 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```
 
 * **clang 21.1**
 
 ```
-[doctest] test cases:  110 |  110 passed | 0 failed | 1 skipped
-[doctest] assertions: 2170 | 2170 passed | 0 failed |
+[doctest] test cases:  109 |  109 passed | 0 failed | 1 skipped
+[doctest] assertions: 2166 | 2166 passed | 0 failed |
 [doctest] Status: SUCCESS!
 ```

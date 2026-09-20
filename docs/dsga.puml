@@ -4,8 +4,7 @@
 	class "vec_like" <<concept>>
 	{
 		+ vec_scalar_t<V>
-		+ vec_derived_t<V>
-		+ vec_writable_v<V>
+		+ vec_size_v<V>
 		+ {static} size()
 		+ operator[](int) : const
 		+ operator[](size_t) : const
@@ -16,8 +15,8 @@
 	class "writable_vec_like" <<concept>>
 	{
 		+ !is_const_v<remove_reference_t<V>>
-		+ set()
-		+ as_derived()
+		+ has_set_v<V>
+		+ vec_writable_v<V>
 		+ operator[](int)
 		+ operator[](size_t)
 		+ at(int)
@@ -25,23 +24,6 @@
 		+ begin() / rbegin()
 	}
 	"vec_like" <|-- "writable_vec_like" : refines
-	abstract vec_interface <Writable, T, Count, Derived>
-	{
-		+ set()
-		+ operator[]()
-		+ at()
-		+ iterator access()
-		+ length()
-		+ size()
-		+ as_derived()
-		+ apply()
-		+ query()
-		+ shift()
-		+ cshift()
-		+ min()
-		+ max()
-		+ sum()
-	}
 	struct swizzle_vec_const_iterator<T, Size, Count, ...Is>
 	{
 		+ mapper_ptr : const swizzle_vec<T, Size, Count, Is ...> *
@@ -61,6 +43,13 @@
 		+ operator=()
 		+ iterator access()
 		+ swap()
+		+ apply()
+		+ query()
+		+ shift()
+		+ cshift()
+		+ min()
+		+ max()
+		+ sum()
 	}
 	annotation vec::anonymous_union
 	{
@@ -88,6 +77,13 @@
 		+ operator=()
 		+ sequence()
 		+ iterator access()
+		+ apply()
+		+ query()
+		+ shift()
+		+ cshift()
+		+ min()
+		+ max()
+		+ sum()
 	}
 	struct mat<T, Cols, Rows>
 	{
@@ -106,8 +102,6 @@
 		+ column_size()
 		+ swap()
 	}
-	vec_interface <|-- vec: inherits
-	vec_interface <|-- swizzle_vec : inherits
 	swizzle_vec_const_iterator <|-- swizzle_vec_iterator
 	"vec_like" ^.. vec : satisfies
 	"vec_like" ^.. swizzle_vec : satisfies
@@ -123,8 +117,6 @@
 	end note
 	swizzle_vec_const_iterator "many" --> "1" swizzle_vec : mapper_ptr
 	swizzle_vec_iterator "many" --> "1" swizzle_vec : mapper_ptr
-	"vec_like" <. vec_interface : constrains Derived (CRTP, unconditional)
-	"writable_vec_like" <. vec_interface : constrains Derived (CRTP, when Writable=true)
 	mat::columns "1" *-- "Cols" vec : columns
 	vec -[hidden]left- swizzle_vec
 	vec_storage .[hidden]right. mat

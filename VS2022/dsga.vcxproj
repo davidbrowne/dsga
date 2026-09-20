@@ -192,30 +192,38 @@
     <ClInclude Include="..\examples\compare.hxx" />
     <ClInclude Include="..\examples\format_output.hxx" />
     <ClInclude Include="..\examples\hash.hxx" />
-    <ClInclude Include="..\examples\invoke.hxx" />
     <ClInclude Include="..\examples\ostream_output.hxx" />
     <ClInclude Include="..\examples\span_convert.hxx" />
     <ClInclude Include="..\examples\stl.hxx" />
     <ClInclude Include="..\examples\tolerance.hxx" />
     <ClInclude Include="..\examples\transform.hxx" />
-    <ClInclude Include="..\examples\valarray_convert.hxx" />
     <ClInclude Include="..\include\dsga.hxx" />
+    <ClInclude Include="..\tests\dsga_doctest.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\docs\API.md" />
-    <None Include="..\docs\CHANGELOG.md" />
+    <None Include="..\cmake\dsga-config.cmake.in" />
+    <None Include="..\CHANGELOG.md" />
     <None Include="..\docs\DETAILS.md" />
     <None Include="..\docs\DOCUMENTATION.md" />
     <None Include="..\docs\dsga.puml" />
     <None Include="..\docs\dsga.svg" />
-    <None Include="..\docs\MOTIVATION.md" />
+    <None Include="..\PLATFORMS.md" />
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\CMakeLists.txt" />
+    <Text Include="..\cmake_and_dsga.txt" />
     <Text Include="..\LICENSE_1_0.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\examples\line_closest_points.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\examples\shader_demo.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\examples\stl.cxx" />
     <ClCompile Include="..\src\main.cxx" />
     <ClCompile Include="..\src\nanobench.cxx" />
@@ -224,6 +232,12 @@
     <ClCompile Include="..\tests\constructor_test.cxx" />
     <ClCompile Include="..\tests\conversion_test.cxx" />
     <ClCompile Include="..\tests\function_test.cxx" />
+    <ClCompile Include="..\tests\iterator_test.cxx" />
+    <ClCompile Include="..\tests\main.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\tests\negative_test.cxx" />
     <ClCompile Include="..\tests\operator_test.cxx" />
     <ClCompile Include="..\tests\swizzle_test.cxx" />
     <ClCompile Include="..\tests\traits_test.cxx" />

@@ -206,14 +206,17 @@ namespace dsga
 		return abs(x - y) <= static_cast<T>(abs(tolerance));
 	}
 
-	template <bool W1, floating_point_scalar T, std::size_t C, typename D1, bool W2, typename D2, floating_point_scalar U>
-	requires implicitly_convertible_to<U, T>
-	[[nodiscard]] constexpr bool within_distance(const vec_interface<W1, T, C, D1> &x,
-												 const vec_interface<W2, T, C, D2> &y,
+	template <vec_like V1, vec_like V2, floating_point_scalar U>
+	requires implicitly_convertible_to<U, vec_scalar_t<V1>> && same_vec_shape<V1, V2> && floating_point_scalar<vec_scalar_t<V1>>
+	[[nodiscard]] constexpr bool within_distance(const V1 &x,
+												 const V2 &y,
 												 U tolerance) noexcept
 	{
+		using T = vec_scalar_t<V1>;
+
 		auto diff = x - y;
-		return dot(diff, diff) <= static_cast<T>(tolerance * tolerance);
+		auto T_tol = static_cast<T>(tolerance);
+		return dot(diff, diff) <= (T_tol * T_tol);
 	}
 
 	template <vec_like V1, vec_like V2, vec_like V3>

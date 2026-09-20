@@ -10,8 +10,6 @@ This is a c++20 library, so that needs to be the minimum standard that you tell 
 
 # Documentation
 
-Go to [detailed API documentation](API.md)
-
 Jump to [API concept descriptions](#api).
 
 This single header library aims to provide the basic functionality of the types and functions in the [OpenGL Shading Language 4.6 specification](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.pdf). We are only interested in the vector and matrix types, along with the corresponding functions that operate on these types. We don't support the language as a whole, just the data types, and that is so we can develop geometric algebraic algorithms. The types are very flexible, and they can be used for a natural rapid prototyping environment for ```c++```.

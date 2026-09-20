@@ -17,9 +17,9 @@ using namespace dsga;
 #include "dsga_doctest.hxx"
 
 
-template <bool W1, dsga::dimensional_scalar T, std::size_t C, typename D1, bool W2, typename D2>
-requires W1
-constexpr void iterator_interface_copy(dsga::vec_interface<W1, T, C, D1> &dest, const dsga::vec_interface<W2, T, C, D2> &src) noexcept
+template <writable_vec_like V1, vec_like V2>
+requires dsga::vec_writable_v<V1> && dsga::same_vec_shape<V1, V2>
+constexpr void iterator_interface_copy(V1 &dest, const V2 &src) noexcept
 {
 	auto dest_iter = dest.begin();
 	auto src_iter = src.cbegin();
@@ -132,7 +132,7 @@ TEST_SUITE("test assignment")
 	constexpr uvec3 uthree(0xae50d46b, 0x10712fd0, 0x47946919);
 	constexpr uvec4 ufour(0x686e22e1, 0x4b79b211, 0x5f70e079, 0x5c30ee44);
 
-	// use iterators from vec_interface to perform assignment
+	// use iterators to perform assignment
 	TEST_CASE("iterator interface assignment")
 	{
 		const auto src = vec4(100, 200, 300, 400);
