@@ -54,7 +54,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 3;
 	constexpr inline int DSGA_MINOR_VERSION = 4;
-	constexpr inline int DSGA_PATCH_VERSION = 0;
+	constexpr inline int DSGA_PATCH_VERSION = 1;
 
 	namespace detail
 	{
@@ -70,44 +70,44 @@ namespace dsga
 			// version info
 
 			constexpr int CXCM_MAJOR_VERSION = 1;
-			constexpr int CXCM_MINOR_VERSION = 3;
-			constexpr int CXCM_PATCH_VERSION = 2;
+			constexpr int CXCM_MINOR_VERSION = 4;
+			constexpr int CXCM_PATCH_VERSION = 0;
 
 			namespace dd_real
 			{
 				// https://www.davidhbailey.com/dhbsoftware/ - QD
 
 				/*
-					Modified BSD 3-Clause License
+				Modified BSD 3-Clause License
 
-					This work was supported by the Director, Office of Science, Division
-					of Mathematical, Information, and Computational Sciences of the
-					U.S. Department of Energy under contract number DE-AC03-76SF00098.
+				This work was supported by the Director, Office of Science, Division
+				of Mathematical, Information, and Computational Sciences of the
+				U.S. Department of Energy under contract number DE-AC03-76SF00098.
 
-					Copyright (c) 2000-2007
+				Copyright (c) 2000-2007
 
-					1. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+				1. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-						(1) Redistributions of source code must retain the copyright notice, this list of conditions and the following disclaimer.
+				(1) Redistributions of source code must retain the copyright notice, this list of conditions and the following disclaimer.
 
-						(2) Redistributions in binary form must reproduce the copyright notice, this list of conditions and the following disclaimer in the documentation
-							and/or other materials provided with the distribution.
+				(2) Redistributions in binary form must reproduce the copyright notice, this list of conditions and the following disclaimer in the documentation
+				and/or other materials provided with the distribution.
 
-						(3) Neither the name of the University of California, Lawrence Berkeley National Laboratory, U.S. Dept. of Energy nor the names of its contributors
-							may be used to endorse or promote products derived from this software without specific prior written permission.
+				(3) Neither the name of the University of California, Lawrence Berkeley National Laboratory, U.S. Dept. of Energy nor the names of its contributors
+				may be used to endorse or promote products derived from this software without specific prior written permission.
 
-					2. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-					   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
-					   BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-					   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-					   IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-					   OF THE POSSIBILITY OF SUCH DAMAGE.
+				2. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+				THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+				BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+				SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+				IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+				OF THE POSSIBILITY OF SUCH DAMAGE.
 
-					3. You are under no obligation whatsoever to provide any bug fixes, patches, or upgrades to the features, functionality or performance of the
-					   source code ("Enhancements") to anyone; however, if you choose to make your Enhancements available either publicly, or directly to Lawrence
-					   Berkeley National Laboratory, without imposing a separate written license agreement for such Enhancements, then you hereby grant the following
-					   license: a non-exclusive, royalty-free perpetual license to install, use, modify, prepare derivative works, incorporate into other computer
-					   software, distribute, and sublicense such enhancements or derivative works thereof, in binary and source code form.
+				3. You are under no obligation whatsoever to provide any bug fixes, patches, or upgrades to the features, functionality or performance of the
+				source code ("Enhancements") to anyone; however, if you choose to make your Enhancements available either publicly, or directly to Lawrence
+				Berkeley National Laboratory, without imposing a separate written license agreement for such Enhancements, then you hereby grant the following
+				license: a non-exclusive, royalty-free perpetual license to install, use, modify, prepare derivative works, incorporate into other computer
+				software, distribute, and sublicense such enhancements or derivative works thereof, in binary and source code form.
 				*/
 
 				//
@@ -399,7 +399,7 @@ namespace dsga
 					return accurate_div(a, b);
 				}
 
-			}	// namespace dd_real
+			} // namespace dd_real
 
 			namespace concepts
 			{
@@ -410,32 +410,6 @@ namespace dsga
 
 			namespace limits
 			{
-				namespace impl
-				{
-					// long doubles vary between compilers and platforms. Windows MSVC and clang on Windows both use
-					// the same representation as double. For gcc and linux, etc., it is often represented by an extended
-					// precision data structure with 80 bits (64 bits of significand). sizeof(long double) on gcc on Windows
-					// (at least MSYS2) is 16, implying it is 128 bits, but std::numeric_limits<long double> returns values
-					// consistent with an 80 bit representation.
-					constexpr long double get_largest_fractional_long_double() noexcept
-					{
-						if constexpr (std::numeric_limits<long double>::digits == 64)
-						{
-							// if digits is 64, then long double is using extended precision, and we can
-							// just barely get away with casting to a long long to remove the fractional
-							// part and keep the rest of the bits, without overflow.
-							return 0x1.fffffffffffffffep+62L;
-						}
-						else
-						{
-							// assuming that long double does the same thing as double (which is true for
-							// MSVC and clang on windows).
-							return 0x1.fffffffffffffp+51L;
-						}
-					}
-
-				}	// namespace impl
-
 				//
 				// largest_fractional_value
 				//
@@ -453,9 +427,9 @@ namespace dsga
 
 			}	// namespace limits
 
-			//
-			// floating-point negative zero support
-			//
+				//
+				// floating-point negative zero support
+				//
 
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr bool is_negative_zero(T) noexcept
@@ -476,7 +450,7 @@ namespace dsga
 			}
 
 			template <cxcm::concepts::basic_floating_point T>
-			constexpr inline T negative_zero = T(-0);
+			constexpr inline T negative_zero = -T(0);
 
 			template <>
 			constexpr inline float negative_zero<float> = std::bit_cast<float>(0x80000000u);
@@ -600,14 +574,22 @@ namespace dsga
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T round(T value) noexcept
 				{
-					// zero could be handled either place, but here it is with the negative values.
+					const T truncated_value = trunc(value);
 
-					// positive value, taking care of halfway case.
-					if (value > T(0))
-						return trunc(value + T(0.5));
+					// the fractional part. this subtraction is exact (no rounding error) because truncated_value
+					// has the same sign as value and is no larger in magnitude. this is the reason we don't use
+					// trunc(value + 0.5), where the addition itself can round up, e.g., the largest value less
+					// than 0.5 would incorrectly round to 1.
+					const T remainder = value - truncated_value;
 
-					// negative or zero value, taking care of halfway case.
-					return trunc(value - T(0.5));
+					// halfway cases go away from zero
+					if (remainder >= T(0.5))
+						return truncated_value + T(1);
+
+					if (remainder <= T(-0.5))
+						return truncated_value - T(1);
+
+					return truncated_value;
 				}
 
 				//
@@ -615,6 +597,7 @@ namespace dsga
 				//
 
 				// the fractional part of a floating point number - always non-negative.
+				// this is value - floor(value), so a tiny negative value rounds up to exactly 1.
 
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T fract(T value) noexcept
@@ -631,6 +614,8 @@ namespace dsga
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T fmod(T x, T y) noexcept
 				{
+					// not exact: x / y and the product both round, and the quotient must fit in the integer type trunc()
+					// uses. the strict layer uses impl::exact_fmod() instead so that results match the standard library.
 					return x - trunc(x / y) * y;
 				}
 
@@ -643,22 +628,29 @@ namespace dsga
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T round_even(T value) noexcept
 				{
-					T trunc_value = trunc(value);
-					bool is_even = (fmod(trunc_value, T(2)) == T(0));
-					bool is_halfway = (fract(value) == T(0.5));
+					const T truncated_value = trunc(value);
 
-					// the special case
-					if (is_halfway && is_even)
-						return trunc_value;
+					// the fractional part, which is exact. see round().
+					const T remainder = value - truncated_value;
 
-					// zero could be handled either place, but here it is with the negative values.
+					if (remainder > T(0.5))
+						return truncated_value + T(1);
 
-					// positive value, taking care of halfway case.
-					if (value > T(0))
-						return trunc(value + T(0.5));
+					if (remainder < T(-0.5))
+						return truncated_value - T(1);
 
-					// negative or zero value, taking care of halfway case.
-					return trunc(value - T(0.5));
+					// exactly halfway: go to whichever neighbor is even
+					if ((remainder == T(0.5)) || (remainder == T(-0.5)))
+					{
+						const bool is_even = ((static_cast<long long>(truncated_value) & 1) == 0);
+
+						if (is_even)
+							return truncated_value;
+
+						return (remainder > T(0)) ? (truncated_value + T(1)) : (truncated_value - T(1));
+					}
+
+					return truncated_value;
 				}
 
 				//
@@ -686,6 +678,99 @@ namespace dsga
 						y *= 1.50000057967625766 - halfx * y * y;
 						y *= 1.5000000000002520 - halfx * y * y;
 						y *= 1.5000000000000000 - halfx * y * y;
+						return y;
+					}
+
+					// the exact sign (-1, 0, or +1) of a + b + c + d, with no rounding error. this accumulates the terms into an
+					// expansion of non-overlapping doubles (Shewchuk's grow-expansion), so it works for any magnitudes and order.
+					constexpr int exact_sign_of_sum(double a, double b, double c, double d) noexcept
+					{
+						const double terms[4] = {a, b, c, d};
+						double expansion[4] = {0.0, 0.0, 0.0, 0.0};		// increasing magnitude, non-overlapping
+						int size = 0;
+
+						for (const double term : terms)
+						{
+							double q = term;
+
+							for (int i = 0; i < size; ++i)
+							{
+								double error = 0.0;
+								q = dd_real::two_sum(q, expansion[i], error);
+								expansion[i] = error;
+							}
+
+							expansion[size++] = q;
+						}
+
+						// the largest nonzero component decides the sign
+						for (int i = size - 1; i >= 0; --i)
+						{
+							if (expansion[i] != 0.0)
+								return (expansion[i] > 0.0) ? 1 : -1;
+						}
+
+						return 0;
+					}
+
+					// makes sure y is the correctly rounded (nearest double) square root of x, given a y that is at most an ulp off.
+					//
+					// dd_real carries about 106 bits, but for a few inputs the exact root is even closer than that to a midpoint
+					// between two doubles (e.g., the largest double below 1, whose root is 2^-109 from a midpoint), so rounding
+					// the dd_real result can pick the wrong neighbor. y is correct exactly when the midpoints to its neighbors
+					// bracket the root:
+					//
+					//     (y - h_below)^2 < x < (y + h_above)^2        where h is half the spacing to that neighbor
+					//
+					// expanding, and using r = x - y^2 (computed exactly below), 2*y*h = y*spacing, and h^2:
+					//
+					//     -y*spacing_below + h_below^2  <  r  <  y*spacing_above + h_above^2
+					//
+					// every quantity is exact (spacings are powers of 2), and the comparisons are done with no rounding error, so
+					// the answer doesn't depend on how close the root is to a midpoint. a root can't land exactly on a midpoint
+					// (it would need 108 bits), so there are no ties to worry about.
+					//
+					// x must be positive and normal, and not so extreme that x*2^-108 or x*2^-53 could underflow. (strict scales
+					// its input to a safe range before calling in.)
+					constexpr double correct_sqrt_rounding(const double x, double y) noexcept
+					{
+						// one step is all that's ever needed, the loop is just a safety net
+						for (int i = 0; i < 4; ++i)
+						{
+							// neighboring doubles. incrementing the bits of a positive double gives the next one up, even across
+							// a power of 2.
+							const auto y_bits = std::bit_cast<unsigned long long>(y);
+							const double above = std::bit_cast<double>(y_bits + 1);
+							const double below = std::bit_cast<double>(y_bits - 1);
+
+							const double spacing_above = above - y;		// exact
+							const double spacing_below = y - below;
+
+							const double half_above = 0.5 * spacing_above;
+							const double half_below = 0.5 * spacing_below;
+
+							// r = x - y*y exactly, as d - e. y*y = p + e exactly, and x - p is exact because p is very close to x.
+							double e = 0.0;
+							const double p = dd_real::two_prod(y, y, e);
+							const double d = x - p;
+
+							// root is above the midpoint to the next double up, so y is too small
+							if (exact_sign_of_sum(d, -e, -(y * spacing_above), -(half_above * half_above)) > 0)
+							{
+								y = above;
+								continue;
+							}
+
+							// root is below the midpoint to the next double down, so y is too big
+							if (exact_sign_of_sum(d, -e, (y * spacing_below), -(half_below * half_below)) < 0)
+							{
+								y = below;
+								continue;
+							}
+
+							break;
+						}
+
 						return y;
 					}
 
@@ -728,7 +813,9 @@ namespace dsga
 								if (++iterations >= max_iterations)
 									break;
 							}
-							return static_cast<double>(current_value);
+							// the dd_real result can be one ulp off in rare cases (see correct_sqrt_rounding()). a float doesn't
+							// have this problem, since the double it's rounded from has way more than enough extra bits.
+							return correct_sqrt_rounding(boosted_arg, static_cast<double>(current_value));
 						}
 						else if constexpr (std::is_same_v<T, float>)
 						{
@@ -834,6 +921,15 @@ namespace dsga
 						}
 					}
 
+					// true only if y * y == x exactly (with no rounding error), so that a loop testing for "the current
+					// guess is already the answer" doesn't stop early on a guess that merely rounds to the right value.
+					constexpr bool is_exact_square_root(double y, double x) noexcept
+					{
+						double error = 0.0;
+						const double product = dd_real::two_prod(y, y, error);
+						return (product == x) && (error == 0.0);
+					}
+
 					template <cxcm::concepts::basic_floating_point T>
 					constexpr T inverse_sqrt(T arg) noexcept
 					{
@@ -858,7 +954,7 @@ namespace dsga
 							constexpr auto half = dd_real::dd_real(0.5);
 
 							while ((current_value[0] != previous_value[0]) &&
-								   (current_value[0] * current_value[0] != boosted_arg))
+								   !is_exact_square_root(current_value[0], boosted_arg))
 							{
 								// update saved values and generate the next one
 								preprevious_value = previous_value;
@@ -908,7 +1004,7 @@ namespace dsga
 
 				}	// namespace impl
 
-				// constexpr square root, uses higher precision behind the scenes
+					// constexpr square root, uses higher precision behind the scenes
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T sqrt(T value) noexcept
 				{
@@ -929,30 +1025,30 @@ namespace dsga
 					return static_cast<T>(impl::fast_rsqrt(static_cast<double>(value)));
 				}
 
-			}	// namespace relaxed
+			} // namespace relaxed
 
-			//
-			// isnan()
-			//
+			  //
+			  // isnan()
+			  //
 
-			// make sure this isn't optimized away if used with fast-math
+			  // make sure this isn't optimized away if used with fast-math
 
-	#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
-	#pragma float_control(precise, on, push)
-	#endif
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
+#pragma float_control(precise, on, push)
+#endif
 
 			template <cxcm::concepts::basic_floating_point T>
-	#if defined(__GNUC__) && !defined(__clang__)
+#if defined(__GNUC__) && !defined(__clang__)
 			__attribute__((optimize("-fno-fast-math")))
-	#endif
-			constexpr bool isnan(T value) noexcept
+#endif
+				constexpr bool isnan(T value) noexcept
 			{
 				return (value != value);
 			}
 
-	#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
-	#pragma float_control(pop)
-	#endif
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
+#pragma float_control(pop)
+#endif
 
 			template <std::integral T>
 			constexpr bool isnan(T value) noexcept
@@ -966,22 +1062,22 @@ namespace dsga
 
 			// make sure this isn't optimized away if used with fast-math
 
-	#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
-	#pragma float_control(precise, on, push)
-	#endif
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
+#pragma float_control(precise, on, push)
+#endif
 
 			template <cxcm::concepts::basic_floating_point T>
-	#if defined(__GNUC__) && !defined(__clang__)
+#if defined(__GNUC__) && !defined(__clang__)
 			__attribute__((optimize("-fno-fast-math")))
-	#endif
-			constexpr bool isinf(T value) noexcept
+#endif
+				constexpr bool isinf(T value) noexcept
 			{
 				return (value == -std::numeric_limits<T>::infinity()) || (value == std::numeric_limits<T>::infinity());
 			}
 
-	#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
-	#pragma float_control(pop)
-	#endif
+#if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
+#pragma float_control(pop)
+#endif
 
 			template <std::integral T>
 			constexpr bool isinf(T value) noexcept
@@ -1082,7 +1178,7 @@ namespace dsga
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr T copysign(T value, T sgn) noexcept
 			{
-				static_assert(std::numeric_limits<T>::is_iec559, "IEC 559 required");
+				static_assert(std::numeric_limits<T>::is_iec559);
 
 				// +0 or -0 for sign makes a difference
 				bool is_neg = signbit(sgn);
@@ -1201,11 +1297,12 @@ namespace dsga
 							return convert_to_quiet_nan(value);
 #endif
 
-					// screen out unnecessary input
+						// screen out unnecessary input
 						if (fails_fractional_input_constraints(value))
 							return value;
 
-						return relaxed::trunc(value);
+						// trunc(-0.3) is -0
+						return cxcm::copysign(relaxed::trunc(value), value);
 					}
 
 					//
@@ -1222,7 +1319,7 @@ namespace dsga
 							return convert_to_quiet_nan(value);
 #endif
 
-					// screen out unnecessary input
+						// screen out unnecessary input
 						if (fails_fractional_input_constraints(value))
 							return value;
 
@@ -1243,11 +1340,12 @@ namespace dsga
 							return convert_to_quiet_nan(value);
 #endif
 
-					// screen out unnecessary input
+						// screen out unnecessary input
 						if (fails_fractional_input_constraints(value))
 							return value;
 
-						return relaxed::ceil(value);
+						// ceil(-0.3) is -0
+						return cxcm::copysign(relaxed::ceil(value), value);
 					}
 
 					//
@@ -1264,19 +1362,12 @@ namespace dsga
 							return convert_to_quiet_nan(value);
 #endif
 
-					// screen out unnecessary input
+						// screen out unnecessary input
 						if (fails_fractional_input_constraints(value))
 							return value;
 
-						// halfway rounding can bump into max long long value for truncation
-						// (for extended precision), so be more gentle at the end points.
-						// this works because the largest_fractional_value remainder is T(0.5).
-						if (value == limits::largest_fractional_value<T>)
-							return value + T(0.5);
-						else if (value == -limits::largest_fractional_value<T>)			// we technically don't have to do this for negative case (one more number in negative range)
-							return value - T(0.5);
-
-						return relaxed::round(value);
+						// round(-0.3) is -0
+						return cxcm::copysign(relaxed::round(value), value);
 					}
 
 					//
@@ -1291,11 +1382,108 @@ namespace dsga
 							return convert_to_quiet_nan(value);
 #endif
 
-					// screen out unnecessary input
-						if (fails_fractional_input_constraints(value))
+						// there is no fractional part of an infinity, and inf - floor(inf) is a NaN
+						if (isinf(value))
+							return std::numeric_limits<T>::quiet_NaN();
+
+						// zeros (and NaNs not handled above) are returned as is
+						if (!isnormal_or_subnormal(value))
 							return value;
 
+						// too large to have a fractional part. (returning value here would be wrong, unlike the
+						// rounding functions, where the value is already integral and is the answer.)
+						if (relaxed::abs(value) > limits::largest_fractional_value<T>)
+							return T(0);
+
 						return relaxed::fract(value);
+					}
+
+					//
+					// exact_fmod()
+					//
+
+					// the result of fmod is always exactly representable, so it can be computed exactly with integer
+					// arithmetic on the significands. this works for the whole range of inputs (any quotient size,
+					// subnormals) and doesn't depend on floating point rounding modes or fast-math flags.
+					// both x and y must be finite and non-zero, which constexpr_fmod() screens for.
+
+					template <cxcm::concepts::basic_floating_point T>
+					constexpr T exact_fmod(T x, T y) noexcept
+					{
+						static_assert(std::numeric_limits<T>::is_iec559);
+
+						using bits_type = std::conditional_t<(sizeof(T) == 4), unsigned int, unsigned long long>;
+
+						constexpr int significand_bits = std::numeric_limits<T>::digits - 1;		// not counting the implicit bit
+						constexpr bits_type sign_mask = bits_type(1) << (sizeof(T) * 8 - 1);
+						constexpr bits_type implicit_bit = bits_type(1) << significand_bits;
+						constexpr bits_type fraction_mask = implicit_bit - 1;
+
+						const bits_type x_bits = std::bit_cast<bits_type>(x);
+						const bits_type x_abs = x_bits & ~sign_mask;
+						const bits_type y_abs = std::bit_cast<bits_type>(y) & ~sign_mask;
+						const bits_type sign = x_bits & sign_mask;
+
+						// |x| < |y| means x is the answer. equal magnitudes give a zero with the sign of x.
+						if (x_abs < y_abs)
+							return x;
+
+						if (x_abs == y_abs)
+							return std::bit_cast<T>(sign);
+
+						// split into biased exponent and integral significand. subnormals have a biased exponent field of 0
+						// but scale like an exponent of 1, and have no implicit bit.
+						int x_exp = static_cast<int>(x_abs >> significand_bits);
+						int y_exp = static_cast<int>(y_abs >> significand_bits);
+						unsigned long long x_sig = x_abs & fraction_mask;
+						unsigned long long y_sig = y_abs & fraction_mask;
+
+						if (x_exp == 0)
+							x_exp = 1;
+						else
+							x_sig |= implicit_bit;
+
+						if (y_exp == 0)
+							y_exp = 1;
+						else
+							y_sig |= implicit_bit;
+
+						// we want (x_sig * 2^(x_exp - y_exp)) mod y_sig. the running remainder is always less than y_sig,
+						// so it can be shifted left by as many bits as still fit in 64 bits before reducing again.
+						x_sig %= y_sig;
+
+						const int max_shift = 64 - static_cast<int>(std::bit_width(y_sig));
+						int remaining = x_exp - y_exp;
+
+						while ((remaining > 0) && (x_sig != 0))
+						{
+							const int shift = (remaining < max_shift) ? remaining : max_shift;
+
+							x_sig = (x_sig << shift) % y_sig;
+							remaining -= shift;
+						}
+
+						if (x_sig == 0)
+							return std::bit_cast<T>(sign);
+
+						// the remainder has y's exponent. renormalize until the implicit bit is set, or we run out of
+						// exponent, in which case the result is subnormal.
+						int result_exp = y_exp;
+
+						const int lead_shift = (significand_bits + 1) - static_cast<int>(std::bit_width(x_sig));
+						const int normalize_shift = (lead_shift < (result_exp - 1)) ? lead_shift : (result_exp - 1);
+
+						x_sig <<= normalize_shift;
+						result_exp -= normalize_shift;
+
+						bits_type result_bits = 0;
+
+						if ((x_sig & implicit_bit) != 0)
+							result_bits = (static_cast<bits_type>(result_exp) << significand_bits) | static_cast<bits_type>(x_sig & fraction_mask);
+						else
+							result_bits = static_cast<bits_type>(x_sig);			// subnormal, exponent field is 0
+
+						return std::bit_cast<T>(static_cast<bits_type>(result_bits | sign));
 					}
 
 					//
@@ -1319,14 +1507,14 @@ namespace dsga
 						if (y == 0)
 							return std::numeric_limits<T>::quiet_NaN();
 
-						return relaxed::fmod(x, y);
+						return exact_fmod(x, y);
 					}
 
 					//
 					// constexpr_round_even()
 					//
 
-					// rounds to nearest integral position, halfway cases away from zero
+					// rounds to nearest integral position, halfway cases towards even
 
 					template <cxcm::concepts::basic_floating_point T>
 					constexpr T constexpr_round_even(T value) noexcept
@@ -1336,19 +1524,12 @@ namespace dsga
 							return convert_to_quiet_nan(value);
 #endif
 
-					// screen out unnecessary input
+						// screen out unnecessary input
 						if (fails_fractional_input_constraints(value))
 							return value;
 
-						// halfway rounding can bump into max long long value for truncation
-						// (for extended precision), so be more gentle at the end points.
-						// this works because the largest_fractional_value remainder is T(0.5).
-						if (value == limits::largest_fractional_value<T>)
-							return value + T(0.5);
-						else if (value == -limits::largest_fractional_value<T>)			// we technically don't have to do this for negative case (one more number in negative range)
-							return value - T(0.5);
-
-						return relaxed::round_even(value);
+						// round_even(-0.3) is -0
+						return cxcm::copysign(relaxed::round_even(value), value);
 					}
 
 					//
@@ -1357,14 +1538,7 @@ namespace dsga
 
 					// make sure this isn't optimized away if used with fast-math
 
-#if defined(_MSC_VER) || defined(__clang__)
-#pragma float_control(precise, on, push)
-#endif
-
 					template <cxcm::concepts::basic_floating_point T>
-#if defined(__GNUC__) && !defined(__clang__)
-					__attribute__((optimize("-fno-fast-math")))
-#endif
 					constexpr T constexpr_sqrt(T value) noexcept
 					{
 						// screen out unnecessary input
@@ -1390,12 +1564,20 @@ namespace dsga
 							return -std::numeric_limits<T>::quiet_NaN();
 						}
 
+						if constexpr (std::is_same_v<T, double>)
+						{
+							// the higher precision iteration loses accuracy for tiny values (the error terms of its intermediate
+							// products become subnormal, and for subnormals the starting guess is also far off so it doesn't
+							// converge), and it overflows right at the top of the range. scaling by an even power of 2 is exact,
+							// and so is undoing it on the result (which is comfortably in the normal range).
+							if (value < 0x1p-900)
+								return relaxed::sqrt(value * 0x1p+200) * 0x1p-100;
+							else if (value > 0x1p+1000)
+								return relaxed::sqrt(value * 0x1p-100) * 0x1p+50;
+						}
+
 						return relaxed::sqrt(value);
 					}
-
-#if defined(_MSC_VER) || defined(__clang__)
-#pragma float_control(pop)
-#endif
 
 					//
 					// constexpr_inverse_sqrt()
@@ -1403,14 +1585,7 @@ namespace dsga
 
 					// make sure this isn't optimized away if used with fast-math
 
-#if defined(_MSC_VER) || defined(__clang__)
-#pragma float_control(precise, on, push)
-#endif
-
 					template <cxcm::concepts::basic_floating_point T>
-#if defined(__GNUC__) && !defined(__clang__)
-					__attribute__((optimize("-fno-fast-math")))
-#endif
 					constexpr T constexpr_rsqrt(T value) noexcept
 					{
 						// screen out unnecessary input
@@ -1436,23 +1611,21 @@ namespace dsga
 							[[ unlikely ]] return -std::numeric_limits<T>::quiet_NaN();
 						}
 
+						if constexpr (std::is_same_v<T, double>)
+						{
+							// see constexpr_sqrt()
+							if (value < 0x1p-900)
+								return relaxed::rsqrt(value * 0x1p+200) * 0x1p+100;
+							else if (value > 0x1p+1000)
+								return relaxed::rsqrt(value * 0x1p-100) * 0x1p-50;
+						}
+
 						[[ likely ]] return relaxed::rsqrt(value);
 					}
 
-#if defined(_MSC_VER) || defined(__clang__)
-#pragma float_control(pop)
-#endif
-
 					// make sure this isn't optimized away if used with fast-math
 
-#if defined(_MSC_VER) || defined(__clang__)
-#pragma float_control(precise, on, push)
-#endif
-
 					template <cxcm::concepts::basic_floating_point T>
-#if defined(__GNUC__) && !defined(__clang__)
-					__attribute__((optimize("-fno-fast-math")))
-#endif
 					constexpr T constexpr_fast_rsqrt(T value) noexcept
 					{
 						// screen out unnecessary input
@@ -1478,21 +1651,24 @@ namespace dsga
 							return -std::numeric_limits<T>::quiet_NaN();
 						}
 
+						if constexpr (std::is_same_v<T, double>)
+						{
+							// the magic number starting guess is far off for subnormals, so scale into the normal range (exactly)
+							if (value < std::numeric_limits<double>::min())
+								return relaxed::fast_rsqrt(value * 0x1p+108) * 0x1p+54;
+						}
+
 						return relaxed::fast_rsqrt(value);
 					}
 
-#if defined(_MSC_VER) || defined(__clang__)
-#pragma float_control(pop)
-#endif
-
 				} // namespace impl
 
-				//
-				// abs(), fabs()
-				//
+				  //
+				  // abs(), fabs()
+				  //
 
 
-				// absolute value
+				  // absolute value
 
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T abs(T value) noexcept
@@ -1518,9 +1694,14 @@ namespace dsga
 				template <std::integral T>
 				constexpr T abs(T value)
 				{
-					if (value == std::numeric_limits<T>::min())
+					// only signed types have a min value that can't be negated. for unsigned types (and bool) min() is 0,
+					// which is a perfectly good value to take the absolute value of.
+					if constexpr (std::signed_integral<T>)
 					{
-						[[ unlikely ]] throw std::domain_error("negation of min value is not a valid integral value");
+						if (value == std::numeric_limits<T>::min())
+						{
+							[[ unlikely ]] throw std::domain_error("negation of min value is not a valid integral value");
+						}
 					}
 
 					[[ likely ]] return relaxed::abs(value);
@@ -1533,14 +1714,10 @@ namespace dsga
 				}
 
 				template <std::integral T>
-				constexpr double fabs(T value)
+				constexpr double fabs(T value) noexcept
 				{
-					if (value == std::numeric_limits<T>::min())
-					{
-						[[ unlikely ]] throw std::domain_error("negation of min value is not a valid integral value");
-					}
-
-					[[ likely ]] return relaxed::fabs(value);
+					// the result is a double, so even the most negative value is fine (as with std::fabs()).
+					return cxcm::abs(static_cast<double>(value));
 				}
 
 				//
@@ -1650,6 +1827,7 @@ namespace dsga
 				// there is no standard c++ version of this, so always call constexpr version
 
 				// the fractional part of a floating point number - always non-negative.
+				// this is value - floor(value), so a tiny negative value rounds up to exactly 1.
 
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T fract(T value) noexcept
@@ -1749,7 +1927,7 @@ namespace dsga
 						return T(1) / std::sqrt(value);
 					}
 
-			}
+				}
 
 				template <std::integral T>
 				constexpr double rsqrt(T value) noexcept
@@ -1775,9 +1953,9 @@ namespace dsga
 					return fast_rsqrt(static_cast<double>(value));
 				}
 
-			}	// namespace strict
+			} // namespace strict
 
-		}	// namespace cxcm
+		} // namespace cxcm
 
 	}	// namespace detail
 
