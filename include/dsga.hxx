@@ -27,6 +27,7 @@
 
 #endif
 
+#include <cstddef>
 #include <utility>
 #include <limits>
 #include <type_traits>				// requirements
@@ -54,7 +55,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 3;
 	constexpr inline int DSGA_MINOR_VERSION = 4;
-	constexpr inline int DSGA_PATCH_VERSION = 1;
+	constexpr inline int DSGA_PATCH_VERSION = 2;
 
 	namespace detail
 	{
@@ -71,7 +72,7 @@ namespace dsga
 
 			constexpr int CXCM_MAJOR_VERSION = 1;
 			constexpr int CXCM_MINOR_VERSION = 4;
-			constexpr int CXCM_PATCH_VERSION = 0;
+			constexpr int CXCM_PATCH_VERSION = 1;
 
 			namespace dd_real
 			{
@@ -162,20 +163,16 @@ namespace dsga
 					double x[2];
 
 					constexpr dd_real() noexcept : x{}
-					{
-					}
+					{}
 
 					constexpr dd_real(double hi, double lo) noexcept : x{hi, lo}
-					{
-					}
+					{}
 
 					explicit constexpr dd_real(double h) noexcept : x{h, 0.}
-					{
-					}
+					{}
 
 					explicit constexpr dd_real(float h) noexcept : x{static_cast<double>(h), 0.}
-					{
-					}
+					{}
 
 					constexpr dd_real(const dd_real &) noexcept = default;
 					constexpr dd_real(dd_real &&) noexcept = default;
@@ -427,9 +424,9 @@ namespace dsga
 
 			}	// namespace limits
 
-				//
-				// floating-point negative zero support
-				//
+			//
+			// floating-point negative zero support
+			//
 
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr bool is_negative_zero(T) noexcept
@@ -659,41 +656,45 @@ namespace dsga
 
 				namespace impl
 				{
+					// relaxed: requires finite x in [min_normal, 0x1p996]
+					// Claude helped tweak it.
 					// "Improving the Accuracy of the Fast Inverse Square Root by Modifying Newton-Raphson Corrections" 2021
 					// https://www.mdpi.com/1099-4300/23/1/86
-					//
-					// in comparison to inverse_sqrt(double), this method gives pretty good results:
-					//    0 ulps: ~68.58%
-					//    1 ulps: ~31.00%
-					//    2 ulps:  ~0.42%
-					//
-					// depending on compiler/platform, this may not be faster than rsqrt()
 					constexpr double fast_rsqrt(double x) noexcept
 					{
 						double halfx = 0.5 * x;
-						long long i = std::bit_cast<long long>(x);
-						i = 0x5FE6ED2102DCBFDA - (i >> 1);
+						auto i = std::bit_cast<unsigned long long>(x);
+						i = 0x5FE6ED2102DCBFDAull - (i >> 1);
 						double y = std::bit_cast<double>(i);
+
 						y *= 1.50087895511633457 - halfx * y * y;
 						y *= 1.50000057967625766 - halfx * y * y;
-						y *= 1.5000000000002520 - halfx * y * y;
-						y *= 1.5000000000000000 - halfx * y * y;
-						return y;
+						y *= 1.5000000000002520  - halfx * y * y;
+
+						// residual r = 1 - x*y*y, with x*y*y carried in double-double
+						double e = 0.0;
+						double t = dd_real::two_prod(x, y, e);					// t + e == x*y exactly
+						auto p = dd_real::dd_real(t, e) * y;					// x*y*y
+						auto r = dd_real::ieee_subtract(1.0, p);
+
+						return y + 0.5 * y * r.x[0];							// single final rounding
 					}
 
-					// the exact sign (-1, 0, or +1) of a + b + c + d, with no rounding error. this accumulates the terms into an
-					// expansion of non-overlapping doubles (Shewchuk's grow-expansion), so it works for any magnitudes and order.
-					constexpr int exact_sign_of_sum(double a, double b, double c, double d) noexcept
+					// From Claude to help it be exactly correct:
+					// 
+					// the exact sign (-1, 0, or +1) of the sum of N terms, with no rounding error. this accumulates the terms into
+					// an expansion of non-overlapping doubles (Shewchuk's grow-expansion), so it works for any magnitudes and order.
+					template <std::size_t N>
+					constexpr int exact_sign_of_sum(const double (&terms)[N]) noexcept
 					{
-						const double terms[4] = {a, b, c, d};
-						double expansion[4] = {0.0, 0.0, 0.0, 0.0};		// increasing magnitude, non-overlapping
-						int size = 0;
+						double expansion[N] = {};								// increasing magnitude, non-overlapping
+						std::size_t size = 0;
 
 						for (const double term : terms)
 						{
 							double q = term;
 
-							for (int i = 0; i < size; ++i)
+							for (std::size_t i = 0; i < size; ++i)
 							{
 								double error = 0.0;
 								q = dd_real::two_sum(q, expansion[i], error);
@@ -704,15 +705,23 @@ namespace dsga
 						}
 
 						// the largest nonzero component decides the sign
-						for (int i = size - 1; i >= 0; --i)
+						for (std::size_t i = size; i > 0; --i)
 						{
-							if (expansion[i] != 0.0)
-								return (expansion[i] > 0.0) ? 1 : -1;
+							if (expansion[i - 1] != 0.0)
+								return (expansion[i - 1] > 0.0) ? 1 : -1;
 						}
 
 						return 0;
 					}
 
+					constexpr int exact_sign_of_sum(double a, double b, double c, double d) noexcept
+					{
+						const double terms[4] = { a, b, c, d };
+						return exact_sign_of_sum(terms);
+					}
+
+					// From Claude to help it be exactly correct:
+					// 
 					// makes sure y is the correctly rounded (nearest double) square root of x, given a y that is at most an ulp off.
 					//
 					// dd_real carries about 106 bits, but for a few inputs the exact root is even closer than that to a midpoint
@@ -763,6 +772,119 @@ namespace dsga
 
 							// root is below the midpoint to the next double down, so y is too big
 							if (exact_sign_of_sum(d, -e, (y * spacing_below), -(half_below * half_below)) < 0)
+							{
+								y = below;
+								continue;
+							}
+
+							break;
+						}
+
+						return y;
+					}
+
+					// From Claude to help it be exactly correct:
+					// 
+					// makes sure y is the correctly rounded (nearest double) inverse square root of x, given a y that is at most an
+					// ulp or so off.
+					//
+					// z = 1/sqrt(x) rounds to y exactly when the midpoints to y's neighbors bracket z. for a positive midpoint m,
+					// z > m  <=>  x*m^2 < 1, so with m = y + h (h is half the spacing to that neighbor, and 2*y*h = y*spacing):
+					//
+					//     y is too small  <=>  1 - x*y^2 - x*y*spacing_above - x*h_above^2  >  0
+					//     y is too big    <=>  1 - x*y^2 + x*y*spacing_below - x*h_below^2  <  0
+					//
+					// everything is computed with no rounding error: x*y = t + e1 and t*y, e1*y are exact two_prod pairs, so x*y^2 is
+					// four doubles. spacings and halves are powers of 2, so multiplying by them is exact. the sign of the resulting
+					// eight-term sum is exact, so the answer never depends on how close z is to a midpoint. z can't be exactly on
+					// a midpoint (that would need x = 4^k, where z = 2^-k is itself a double), so there are no ties to worry about.
+					//
+					// x must be positive and normal in [2^-900, 2^996] so the two_prod calls (Dekker splits) can't overflow and the
+					// error terms can't underflow. (strict scales its input to that range before calling in.)
+					constexpr double correct_rsqrt_rounding(const double x, double y) noexcept
+					{
+						// one step is all that's ever needed, the loop is just a safety net
+						for (int i = 0; i < 4; ++i)
+						{
+							// neighboring doubles. incrementing the bits of a positive double gives the next one up, even across
+							// a power of 2.
+							const auto y_bits = std::bit_cast<unsigned long long>(y);
+							const double above = std::bit_cast<double>(y_bits + 1);
+							const double below = std::bit_cast<double>(y_bits - 1);
+
+							const double spacing_above = above - y;		// exact
+							const double spacing_below = y - below;
+
+							const double half_above = 0.5 * spacing_above;
+							const double half_below = 0.5 * spacing_below;
+
+							// x*y*y exactly, as p1 + e2 + p2 + e3
+							double e1 = 0.0;
+							double e2 = 0.0;
+							double e3 = 0.0;
+							const double t = dd_real::two_prod(x, y, e1);		// x*y = t + e1
+							const double p1 = dd_real::two_prod(t, y, e2);		// t*y = p1 + e2
+							const double p2 = dd_real::two_prod(e1, y, e3);		// e1*y = p2 + e3
+
+							// z is above the midpoint to the next double up, so y is too small
+							const double too_small[8] = { 1.0, -p1, -e2, -p2, -e3,
+								-(t * spacing_above), -(e1 * spacing_above), -((x * half_above) * half_above) };
+							if (exact_sign_of_sum(too_small) > 0)
+							{
+								y = above;
+								continue;
+							}
+
+							// z is below the midpoint to the next double down, so y is too big
+							const double too_big[8] = { 1.0, -p1, -e2, -p2, -e3,
+								t * spacing_below, e1 * spacing_below, -((x * half_below) * half_below) };
+							if (exact_sign_of_sum(too_big) < 0)
+							{
+								y = below;
+								continue;
+							}
+
+							break;
+						}
+
+						return y;
+					}
+
+					// From Claude to help it be exactly correct:
+					// 
+					// float version of correct_rsqrt_rounding(). a midpoint between two floats has 25 bits, so its square (50 bits)
+					// is exact in a double, and x*m^2 is one exact two_prod. the test is the same: z > m  <=>  x*m^2 < 1.
+					//
+					// x must be positive and finite (float subnormals are fine, they're normal as doubles).
+					constexpr float correct_rsqrt_rounding(const float x, float y) noexcept
+					{
+						// one step is all that's ever needed, the loop is just a safety net
+						for (int i = 0; i < 4; ++i)
+						{
+							const auto y_bits = std::bit_cast<unsigned int>(y);
+							const float above = std::bit_cast<float>(y_bits + 1);
+							const float below = std::bit_cast<float>(y_bits - 1);
+
+							// midpoints to the neighbors, exact in double
+							const double mid_above = 0.5 * (static_cast<double>(y) + static_cast<double>(above));
+							const double mid_below = 0.5 * (static_cast<double>(y) + static_cast<double>(below));
+
+							double error = 0.0;
+							double product = dd_real::two_prod(static_cast<double>(x), mid_above * mid_above, error);
+							const double too_small[3] = { 1.0, -product, -error };
+
+							// z is above the midpoint to the next float up (x*m^2 < 1), so y is too small
+							if (exact_sign_of_sum(too_small) > 0)
+							{
+								y = above;
+								continue;
+							}
+
+							product = dd_real::two_prod(static_cast<double>(x), mid_below * mid_below, error);
+							const double too_big[3] = { 1.0, -product, -error };
+
+							// z is below the midpoint to the next float down (x*m^2 > 1), so y is too big
+							if (exact_sign_of_sum(too_big) < 0)
 							{
 								y = below;
 								continue;
@@ -921,6 +1043,8 @@ namespace dsga
 						}
 					}
 
+					// From Claude to help it be exactly correct:
+					// 
 					// true only if y * y == x exactly (with no rounding error), so that a loop testing for "the current
 					// guess is already the answer" doesn't stop early on a guess that merely rounds to the right value.
 					constexpr bool is_exact_square_root(double y, double x) noexcept
@@ -930,6 +1054,7 @@ namespace dsga
 						return (product == x) && (error == 0.0);
 					}
 
+					// From Claude to help it be exactly correct:
 					template <cxcm::concepts::basic_floating_point T>
 					constexpr T inverse_sqrt(T arg) noexcept
 					{
@@ -969,7 +1094,9 @@ namespace dsga
 								if (++iterations >= max_iterations)
 									break;
 							}
-							return static_cast<double>(one / current_value);
+
+							// the dd_real result can be one ulp off in rare cases (see correct_rsqrt_rounding())
+							return correct_rsqrt_rounding(boosted_arg, static_cast<double>(one / current_value));
 						}
 						else if constexpr (std::is_same_v<T, float>)
 						{
@@ -998,13 +1125,15 @@ namespace dsga
 								if (++iterations >= max_iterations)
 									break;
 							}
-							return static_cast<float>(1.0 / current_value);
+
+							// the double result rounded to float can be a float off in rare cases (see correct_rsqrt_rounding())
+							return correct_rsqrt_rounding(arg, static_cast<float>(1.0 / current_value));
 						}
 					}
 
 				}	// namespace impl
 
-					// constexpr square root, uses higher precision behind the scenes
+				// constexpr square root, uses higher precision behind the scenes
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T sqrt(T value) noexcept
 				{
@@ -1025,13 +1154,13 @@ namespace dsga
 					return static_cast<T>(impl::fast_rsqrt(static_cast<double>(value)));
 				}
 
-			} // namespace relaxed
+			}	// namespace relaxed
 
-			  //
-			  // isnan()
-			  //
+			//
+			// isnan()
+			//
 
-			  // make sure this isn't optimized away if used with fast-math
+			// make sure this isn't optimized away if used with fast-math
 
 #if defined(_MSC_VER) || defined(__clang__) || defined(__INTEL_LLVM_COMPILER)
 #pragma float_control(precise, on, push)
@@ -1041,7 +1170,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 			__attribute__((optimize("-fno-fast-math")))
 #endif
-				constexpr bool isnan(T value) noexcept
+			constexpr bool isnan(T value) noexcept
 			{
 				return (value != value);
 			}
@@ -1070,7 +1199,7 @@ namespace dsga
 #if defined(__GNUC__) && !defined(__clang__)
 			__attribute__((optimize("-fno-fast-math")))
 #endif
-				constexpr bool isinf(T value) noexcept
+			constexpr bool isinf(T value) noexcept
 			{
 				return (value == -std::numeric_limits<T>::infinity()) || (value == std::numeric_limits<T>::infinity());
 			}
@@ -1178,7 +1307,7 @@ namespace dsga
 			template <cxcm::concepts::basic_floating_point T>
 			constexpr T copysign(T value, T sgn) noexcept
 			{
-				static_assert(std::numeric_limits<T>::is_iec559);
+				static_assert(std::numeric_limits<T>::is_iec559, "IEC 559 required");
 
 				// +0 or -0 for sign makes a difference
 				bool is_neg = signbit(sgn);
@@ -1399,7 +1528,7 @@ namespace dsga
 					}
 
 					//
-					// exact_fmod()
+					// exact_fmod() - Claude did this implementation
 					//
 
 					// the result of fmod is always exactly representable, so it can be computed exactly with integer
@@ -1566,13 +1695,10 @@ namespace dsga
 
 						if constexpr (std::is_same_v<T, double>)
 						{
-							// the higher precision iteration loses accuracy for tiny values (the error terms of its intermediate
-							// products become subnormal, and for subnormals the starting guess is also far off so it doesn't
-							// converge), and it overflows right at the top of the range. scaling by an even power of 2 is exact,
-							// and so is undoing it on the result (which is comfortably in the normal range).
+							// scaling by an even power of 2 is exact, and so is undoing it on the result
 							if (value < 0x1p-900)
 								return relaxed::sqrt(value * 0x1p+200) * 0x1p-100;
-							else if (value > 0x1p+1000)
+							else if (value > 0x1p+996)
 								return relaxed::sqrt(value * 0x1p-100) * 0x1p+50;
 						}
 
@@ -1616,7 +1742,7 @@ namespace dsga
 							// see constexpr_sqrt()
 							if (value < 0x1p-900)
 								return relaxed::rsqrt(value * 0x1p+200) * 0x1p+100;
-							else if (value > 0x1p+1000)
+							else if (value > 0x1p+996)										// was 0x1p+1000
 								return relaxed::rsqrt(value * 0x1p-100) * 0x1p-50;
 						}
 
@@ -1653,22 +1779,26 @@ namespace dsga
 
 						if constexpr (std::is_same_v<T, double>)
 						{
-							// the magic number starting guess is far off for subnormals, so scale into the normal range (exactly)
+							// scale up to the normal range (exactly) for subnormals, and scale down for very large values (exactly)
+
 							if (value < std::numeric_limits<double>::min())
 								return relaxed::fast_rsqrt(value * 0x1p+108) * 0x1p+54;
+
+							if (value > 0x1p+996)
+								return relaxed::fast_rsqrt(value * 0x1p-108) * 0x1p-54;
 						}
 
 						return relaxed::fast_rsqrt(value);
 					}
 
-				} // namespace impl
+				}	// namespace impl
 
-				  //
-				  // abs(), fabs()
-				  //
+				//
+				// abs(), fabs()
+				//
 
 
-				  // absolute value
+				// absolute value
 
 				template <cxcm::concepts::basic_floating_point T>
 				constexpr T abs(T value) noexcept
@@ -1953,9 +2083,9 @@ namespace dsga
 					return fast_rsqrt(static_cast<double>(value));
 				}
 
-			} // namespace strict
+			}	// namespace strict
 
-		} // namespace cxcm
+		}	// namespace cxcm
 
 	}	// namespace detail
 
@@ -2538,8 +2668,8 @@ namespace dsga
 				return (val < low) ? low : ((val > high) ? high : val);
 			};
 			constexpr int max_val = static_cast<int>(vec_size_v<V>);
-			by = quick_clamp(by, -max_val, max_val);							// avoids UB if trying to negate "by" when it is INT_MIN 
-			auto copy = vec<vec_scalar_t<V>, vec_size_v<V>>(v);
+			by = quick_clamp(by, -max_val, max_val);							// avoids UB if trying to negate "by" when it is INT_MIN
+			auto copy = vec(v);
 
 			if (by > 0)
 			{

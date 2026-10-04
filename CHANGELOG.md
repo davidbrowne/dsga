@@ -1,5 +1,8 @@
 # Change Log
 
+### v3.4.2
+* Upgraded to `cxcm v1.4.1`.
+
 ### v3.4.1
 * Upgraded to `cxcm v1.4.0`.
 
