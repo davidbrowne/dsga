@@ -55,7 +55,7 @@ namespace dsga
 
 	constexpr inline int DSGA_MAJOR_VERSION = 3;
 	constexpr inline int DSGA_MINOR_VERSION = 4;
-	constexpr inline int DSGA_PATCH_VERSION = 2;
+	constexpr inline int DSGA_PATCH_VERSION = 3;
 
 	namespace detail
 	{
@@ -72,7 +72,7 @@ namespace dsga
 
 			constexpr int CXCM_MAJOR_VERSION = 1;
 			constexpr int CXCM_MINOR_VERSION = 4;
-			constexpr int CXCM_PATCH_VERSION = 1;
+			constexpr int CXCM_PATCH_VERSION = 2;
 
 			namespace dd_real
 			{
@@ -132,13 +132,15 @@ namespace dsga
 					return s;
 				}
 
-				// The following code splits a 53-bit IEEE double precision floating number a into a high word and a low word, each with 26
-				// bits of significand, such that a is the sum of the high word with the low word. The high word will contain the first 26 bits,
-				// while the low word will contain the lower 26 bits.
+		// this version is from Claude.
 				constexpr void split(double a, double &high, double &low) noexcept
 				{
-					double temp = 134217729.0 * a;				// 134217729.0 = 2^27 + 1
-					high = temp - (temp - a);
+					// Veltkamp's split done with integer bit operations: round the significand to its top 26 bits (add half of the
+					// cut-off position, then clear the low 27 bits). a multiply-add contraction can't fuse integer operations, unlike
+					// the classic temp = (2^27 + 1) * a; high = temp - (temp - a), where fusing destroys the split. a carry out of
+					// the significand just bumps the exponent, which is correct. a must be finite with |a| < 2^1023.
+					const auto bits = std::bit_cast<unsigned long long>(a);
+					high = std::bit_cast<double>((bits + 0x4000000ull) & ~0x7FFFFFFull);
 					low = a - high;
 				}
 
@@ -656,10 +658,17 @@ namespace dsga
 
 				namespace impl
 				{
+					// Claude tweaked the original implementation.
+					//
 					// relaxed: requires finite x in [min_normal, 0x1p996]
-					// Claude helped tweak it.
 					// "Improving the Accuracy of the Fast Inverse Square Root by Modifying Newton-Raphson Corrections" 2021
 					// https://www.mdpi.com/1099-4300/23/1/86
+					//
+					// three Newton-Raphson steps with tuned coefficients, then a final correction step whose residual
+					// r = 1 - x*y*y is computed with no rounding error, so the result is correctly rounded except for the occasional
+					// input whose exact answer is within about a billionth of an ulp of a rounding midpoint (then it is 1 ulp off).
+					//
+					// depending on compiler/platform, this may not be faster than rsqrt()
 					constexpr double fast_rsqrt(double x) noexcept
 					{
 						double halfx = 0.5 * x;
@@ -671,13 +680,15 @@ namespace dsga
 						y *= 1.50000057967625766 - halfx * y * y;
 						y *= 1.5000000000002520  - halfx * y * y;
 
-						// residual r = 1 - x*y*y, with x*y*y carried in double-double
-						double e = 0.0;
-						double t = dd_real::two_prod(x, y, e);					// t + e == x*y exactly
-						auto p = dd_real::dd_real(t, e) * y;					// x*y*y
-						auto r = dd_real::ieee_subtract(1.0, p);
+						// residual r = 1 - x*y*y. x*y = t + e1 and t*y = p + e2 are exact two_prod pairs. 1 - p is exact because p is
+						// within a few ulps of 1 (Sterbenz), so the only rounding left is in the tiny terms.
+						double e1 = 0.0;
+						double e2 = 0.0;
+						const double t = dd_real::two_prod(x, y, e1);
+						const double p = dd_real::two_prod(t, y, e2);
+						const double r = ((1.0 - p) - e2) - e1 * y;
 
-						return y + 0.5 * y * r.x[0];							// single final rounding
+						return y + 0.5 * y * r;							// single final rounding
 					}
 
 					// From Claude to help it be exactly correct:
@@ -1010,7 +1021,8 @@ namespace dsga
 								if (++iterations >= max_iterations)
 									break;
 							}
-							return static_cast<double>(current_value);
+
+							return correct_rsqrt_rounding(boosted_arg, static_cast<double>(current_value));
 						}
 						else if constexpr (std::is_same_v<T, float>)
 						{
@@ -1039,7 +1051,8 @@ namespace dsga
 								if (++iterations >= max_iterations)
 									break;
 							}
-							return static_cast<float>(current_value);
+
+							return correct_rsqrt_rounding(arg, static_cast<float>(current_value));
 						}
 					}
 
@@ -1730,7 +1743,7 @@ namespace dsga
 						}
 						else if (value == T(0))
 						{
-							[[ unlikely ]] return std::numeric_limits<T>::infinity();
+							[[ unlikely ]] return cxcm::copysign(std::numeric_limits<T>::infinity(), value);
 						}
 						else if (value < T(0))
 						{
